@@ -1,0 +1,40 @@
+{
+  "mijoz_id": "UZ-KATM-992811",
+  "fio": "Akromov Rustam Baxtiyorovich",
+  "jshshir": "31103984520014",
+  "pasport": "AA 8945210",
+  "ish_joyi": "IT Park Uzbekistan MChJ",
+  "lavozimi": "Senior QA Engineer",
+  "staj_oy": 38,
+  "rasmiy_daromad_oylik_netto": 8000000,
+  "katm_skoring_ball": 685,
+  "katm_skoring_toifa": "B1 (Ishonchli mijoz)",
+  "mavjud_kreditlar": [
+    {
+      "bank": "Ipak Yo'li Bank",
+      "turi": "Avtokredit",
+      "jami_summa": 85000000,
+      "qoldiq": 34000000,
+      "oylik_tolov": 2100000,
+      "kechikishlar_soni": 0,
+      "holati": "Faol (O'z vaqtida to'lanmoqda)"
+    }
+  ],
+  "yangi_soralayotgan_kredit": {
+    "bank": "Kapitalbank ATB",
+    "turi": "Mikroqarz / Iste'mol krediti",
+    "so'ralgan_summa": 50000000,
+    "muddati_oy": 36,
+    "foiz_stavkasi_yillik": 24,
+    "oylik_tolov_hisoblangan": 1850000,
+    "maqsad": "Uy ta'miri va texnika xaridi"
+  },
+  "oylik_daromad_tarixi_oxirgi_6_oy": [
+    {"oy": "Aprel 2026", "tushum": 8000000, "soliq": 960000},
+    {"oy": "May 2026", "tushum": 8000000, "soliq": 960000},
+    {"oy": "Iyun 2026", "tushum": 8000000, "soliq": 960000},
+    {"oy": "Iyul 2026", "tushum": 8500000, "soliq": 1020000},
+    {"oy": "Avgust 2026", "tushum": 8000000, "soliq": 960000},
+    {"oy": "Sentyabr 2026", "tushum": 8000000, "soliq": 960000}
+  ]
+}
