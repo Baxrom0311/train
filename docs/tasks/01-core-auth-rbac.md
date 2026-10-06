@@ -62,9 +62,10 @@ bering** (production'da `*` + `allow_credentials=True` birikmasi xavfli
   ilova ishga tushmasin, aniq xatolik chiqarsin.** Hech qachon kodda
   "haqiqiy ko'rinadigan" fallback secret yozmang (eski loyihada aynan
   shu xato bor edi — audit buni kritik xavf deb topgan).
-- `DATABASE_URL`: sqlite (dev) / postgres (prod), eski loyihadagi mantiq
-  qayta ishlatilishi mumkin (`postgres://` → `postgresql+psycopg2://`
-  almashtirish).
+- `DATABASE_URL`: **faqat PostgreSQL** (dev va prod, ikkisida ham) —
+  SQLite hech qayerda, hech qanday fallback sifatida ham ishlatilmaydi.
+  `postgres://` → `postgresql+asyncpg://` (yoki tanlangan async drayver)
+  almashtirish eski loyihadagi mantiqdan qayta ishlatilishi mumkin.
 - `REDIS_URL`: `.env`dan, default `redis://localhost:6379/0`.
 
 ### 3. Parol va JWT
@@ -177,8 +178,9 @@ class University(Base):
   vaqtincha dummy route yaratishingiz mumkin).
 - `admin` roli shu ruxsatga ega bo'lsa — 200.
 
-Hammasi `cd backend && pytest -q` bilan o'tishi shart (SQLite, temp DB,
-`conftest.py`da sozlanadi).
+Hammasi `cd backend && pytest -q` bilan o'tishi shart (alohida test
+PostgreSQL database'ga ulanadi, `conftest.py`da sozlanadi —
+`CONTRACT.md` §3.1).
 
 ## Nazorat ro'yxati (topshirishdan oldin)
 

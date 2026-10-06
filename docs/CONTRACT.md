@@ -82,11 +82,20 @@ Quyidagi §6 jadvalidagi barcha yo'llar shu tuzilishga nisbatan o'qiladi
 | Backend | FastAPI (async), SQLAlchemy 2.0, Alembic | Saqlanadi |
 | Auth/JWT | `python-jose[cryptography]` | Qo'lda yozilgan HMAC JWT olib tashlanadi |
 | Parol hash | `passlib[bcrypt]` | Statik-salt PBKDF2 olib tashlanadi, per-hash random salt |
-| DB (dev) | SQLite | O'zgarishsiz |
-| DB (prod) | PostgreSQL | O'zgarishsiz |
+| DB (dev va prod) | **PostgreSQL — yagona**, SQLite UMUMAN ishlatilmaydi | Foydalanuvchi talabi: loyiha to'liq psql ustida, hech qanday SQLite fallback/dev-shortcut yo'q |
 | Cache/Queue | Redis + `arq` | **Yangi**: rate-limiting + AI retry queue uchun real ishlatiladi |
 | Frontend | React + TypeScript + shadcn/ui | Eski Jinja2 + eski React (mock-auth) butunlay o'chiriladi |
 | Admin panel | Shu React ilova ichida, `role`-gated route | Alohida tool YO'Q |
+
+### 3.1 Testlarda ham PostgreSQL (SQLite emas)
+
+`backend/tests/conftest.py` (Modul 1 egalik qiladi) test uchun **alohida
+PostgreSQL database** ishlatadi (masalan `tryjob_test`, `deploy/docker-
+compose.yml`dagi `postgres` servisida), har test funksiyasidan keyin
+tranzaksiya rollback qilinadi yoki test boshida schema qayta yaratiladi.
+`DATABASE_URL` test uchun `.env.test` yoki muhit o'zgaruvchisi orqali
+beriladi — **hech qanday joyda** `sqlite://` qatori yozilmasin
+(`grep -rn "sqlite" backend/` natijasi bo'sh bo'lishi shart).
 
 ---
 

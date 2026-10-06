@@ -1,0 +1,82 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from typing import Literal, Union
+from pydantic import BaseModel, ConfigDict
+from datetime import datetime, UTC
+import uuid
+
+from app.database import get_db
+from app.core.deps import require_permission
+from app.models.user import User
+from app.models.billing import Company, University
+
+router = APIRouter(prefix="/api/v1/admin/orgs", tags=["admin_orgs"])
+
+class OrgApproveIn(BaseModel):
+    org_type: Literal["company", "university"]
+
+class CompanyOut(BaseModel):
+    id: uuid.UUID
+    name: str
+    industry: str
+    contact_email: str
+    is_verified: bool
+    verified_at: datetime | None = None
+    verified_by_admin_id: uuid.UUID | None = None
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+class UniversityOut(BaseModel):
+    id: uuid.UUID
+    name: str
+    city: str
+    contact_email: str
+    is_verified: bool
+    verified_at: datetime | None = None
+    verified_by_admin_id: uuid.UUID | None = None
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+@router.get("", response_model=dict[str, list[Union[CompanyOut, UniversityOut]]])
+async def get_unverified_orgs(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_permission("approve_companies"))
+):
+    companies_stmt = select(Company).where(Company.is_verified == False)
+    companies_result = await db.execute(companies_stmt)
+    companies = companies_result.scalars().all()
+    
+    unis_stmt = select(University).where(University.is_verified == False)
+    unis_result = await db.execute(unis_stmt)
+    unis = unis_result.scalars().all()
+    
+    return {
+        "companies": companies,
+        "universities": unis
+    }
+
+@router.post("/{org_id}/approve")
+async def approve_org(
+    org_id: uuid.UUID,
+    data: OrgApproveIn,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_permission("approve_companies"))
+):
+    model = Company if data.org_type == "company" else University
+    stmt = select(model).where(model.id == org_id)
+    result = await db.execute(stmt)
+    org = result.scalars().first()
+    
+    if not org:
+        raise HTTPException(status_code=404, detail=f"{data.org_type.capitalize()} not found")
+        
+    if org.is_verified:
+        return {"msg": "Already verified"}
+        
+    org.is_verified = True
+    org.verified_at = datetime.now(UTC)
+    org.verified_by_admin_id = user.id
+    await db.commit()
+    
+    return {"msg": "Approved successfully"}
