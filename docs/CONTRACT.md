@@ -154,12 +154,28 @@ schema / endpoint shakli) orqali gaplashadi.
 | 7 | **Frontend (React+shadcn)** | `frontend/` | Har modul backend API'si tayyor bo'lgach, mos ekranlar — vertical slice, lekin alohida agent/task |
 | 8 | **Deploy** | `deploy/` | Docker-compose, nginx, Dockerfile'lar — backend/frontend tuzilishi barqarorlashgach yangilanadi |
 
-Qurish ketma-ketligi: **1 → 2 → 3 → (4,5,6 parallel, chunki bir-biriga
-tegmaydi) → 7 har bosqichda mos ravishda**.
+Qurish ketma-ketligi: **1 → (2,3 parallel) → (4,5,6 parallel) → 7 har
+bosqichda mos ravishda**.
 
 Har modul uchun agentga beriladigan task: shu jadvaldagi papkalar + ushbu
 shartnomaning tegishli bo'limi. Boshqa modul faylini o'zgartirish kerak
 bo'lib qolsa — bu "shartnoma to'liq emas" degani, avval shartnoma yangilanadi.
+
+### 6.1 Umumiy fayllarga to'qnashuvni oldini olish
+
+`backend/app/main.py`, `backend/app/config.py`, `backend/app/database.py`,
+`backend/tests/conftest.py` — faqat **Modul 1** egalik qiladi va bir marta
+yozadi. Boshqa modullar bu fayllarga **hech qachon** tegmaydi. Buning
+o'rniga:
+
+- `main.py` har bir `backend/app/api/*.py` faylidagi `router` obyektini
+  **avtomatik topib** ulaydi (`pkgutil`/`importlib` orqali papkani skanerlash) —
+  yangi modul `app/api/` ichiga yangi fayl qo'yadi, `main.py`ga qo'l tegmaydi.
+- Har bir modul o'z Pydantic schemalarini **o'z API faylida yoki
+  `app/api/<modul>_schemas.py`da** saqlaydi — umumiy `schemas.py` yo'q.
+- Testlar: `conftest.py`dagi umumiy fixture'lardan (`client`, `db_session`,
+  `test_user_factory`) foydalaniladi, lekin uni o'zgartirmaydi; har modul
+  faqat o'zining `backend/tests/test_<modul>.py` faylini yozadi.
 
 ---
 
