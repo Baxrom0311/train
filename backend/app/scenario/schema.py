@@ -61,8 +61,10 @@ class Persona(_Strict):
     tone: str = ""
     knows: list[str] = []
     secrets: list[str] = []
-    # AI limiti tugaganda yoki anti-spoiler javobni bloklaganda (§9.4)
+    # AI ishlamasa yoki limit tugaganda (§9.4)
     busy_reply: str = "Hozir band edim, keyinroq yozing."
+    # Anti-spoiler AI javobini bloklaganda (§9.4, 3-qavat)
+    deflect_reply: str = "Buni o'zingiz hal qilib ko'ring — brief va hujjatlarni yana bir ko'rib chiqing."
 
 
 class Document(_Strict):

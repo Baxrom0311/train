@@ -11,7 +11,8 @@ qaror variantlarining bahosi hech qachon chiqmaydi.
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -19,10 +20,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.scenarios import PersonaPublic, published_version
-from app.core.deps import get_current_active_user
-from app.core.redis_client import get_arq_pool
+from app.core.deps import get_current_active_user, rate_limit
+from app.core.redis_client import get_arq_pool, redis_client
 from app.database import get_db
-from app.models.enums import AIEvalStatus, NodeType, RunEventStatus, RunStatus, Sector
+from app.models.enums import AIEvalStatus, ChatContentType, ChatSender, NodeType, RunEventStatus, RunStatus, Sector
 from app.models.scenario import Run, RunEvent, ScenarioVersion
 from app.models.simulation import Submission
 from app.models.user import User
@@ -39,9 +40,17 @@ from app.scenario.engine import (
     definition_for,
     lock_run,
     submit_answer,
+    take_hint,
 )
 from app.scenario.holidays import load_calendar
 from app.scenario.jobs import enqueue_evaluation
+from app.scenario.persona import (
+    StudentMessage,
+    accept_student_message,
+    find_persona,
+    history,
+    produce_reply,
+)
 
 router = APIRouter(tags=["runs"])
 
@@ -178,8 +187,9 @@ async def _detail(db: AsyncSession, run: Run, now: datetime) -> RunDetailOut:
     events = (await db.execute(
         select(RunEvent)
         .where(RunEvent.run_id == run.id, RunEvent.status.in_(VISIBLE_STATUSES))
-        .order_by(RunEvent.delivered_at, RunEvent.node_id)
     )).scalars().all()
+    order = {n.id: i for i, n in enumerate(defn.nodes)}
+    events = sorted(events, key=lambda e: (e.delivered_at, order[e.node_id]))
     subs = (await db.execute(
         select(Submission).where(Submission.run_id == run.id).order_by(Submission.attempt)
     )).scalars().all()
@@ -350,3 +360,129 @@ async def abandon_run(
     await db.commit()
     await notify.publish(notes)
     return await _detail(db, run, now)
+
+
+# ── Hint (§9.4) ───────────────────────────────────────────────────────
+
+
+class HintOut(BaseModel):
+    hint: str
+    hints_used: int
+    hints_left: int
+    penalty: float
+
+
+@router.post("/runs/{run_id}/events/{node_id}/hint", response_model=HintOut)
+async def hint(
+    run_id: uuid.UUID,
+    node_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_active_user),
+    now: datetime = Depends(get_now),
+):
+    run, notes = await _locked(db, run_id, user, now)
+    try:
+        info, more = await take_hint(db, run, node_id, now)
+    except EngineError as exc:
+        await db.commit()
+        await notify.publish(notes)
+        raise _engine_error(exc)
+    await db.commit()
+    await notify.publish(notes + more)
+    return HintOut(**info.__dict__)
+
+
+# ── Personaj chati (§9.4, §9.5) ───────────────────────────────────────
+
+
+class ChatIn(BaseModel):
+    text: str | None = Field(default=None, max_length=4000)
+    file_id: uuid.UUID | None = None
+    link_url: str | None = Field(default=None, max_length=2048)
+
+
+class ChatMessageOut(BaseModel):
+    id: uuid.UUID
+    persona_key: str
+    sender: ChatSender
+    content_type: ChatContentType
+    body: str
+    file_id: uuid.UUID | None
+    link_url: str | None
+    generated: bool
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class ChatExchangeOut(BaseModel):
+    message: ChatMessageOut
+    reply: ChatMessageOut
+
+
+@router.get("/runs/{run_id}/chat/{persona_key}", response_model=list[ChatMessageOut])
+async def get_chat(
+    run_id: uuid.UUID,
+    persona_key: str,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_active_user),
+    now: datetime = Depends(get_now),
+):
+    run, notes = await _locked(db, run_id, user, now)
+    try:
+        find_persona(definition_for(run.scenario_version), persona_key)
+    except EngineError as exc:
+        raise _engine_error(exc)
+    await db.commit()
+    await notify.publish(notes)
+    return await history(db, run.id, persona_key)
+
+
+@router.post("/runs/{run_id}/chat/{persona_key}", response_model=ChatExchangeOut)
+async def post_chat(
+    run_id: uuid.UUID,
+    persona_key: str,
+    body: ChatIn,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(rate_limit("persona_chat", max_requests=10, window_seconds=60)),
+    now: datetime = Depends(get_now),
+):
+    run, notes = await _locked(db, run_id, user, now)
+    try:
+        message, plan = await accept_student_message(db, run, persona_key, StudentMessage(**body.model_dump()), now)
+    except EngineError as exc:
+        await db.commit()
+        await notify.publish(notes)
+        raise _engine_error(exc)
+    await db.commit()          # qulf LLM chaqiruvidan oldin bo'shatiladi
+    await notify.publish(notes)
+    reply = await produce_reply(db, plan, now)
+    await notify.publish([Note(run.id, "chat_message", {"persona_key": persona_key, "id": str(reply.id)})])
+    return ChatExchangeOut(
+        message=ChatMessageOut.model_validate(message), reply=ChatMessageOut.model_validate(reply)
+    )
+
+
+# ── SSE (§9.8) ────────────────────────────────────────────────────────
+
+
+@router.get("/runs/{run_id}/stream")
+async def stream(
+    run_id: uuid.UUID,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_active_user),
+):
+    """
+    `text/event-stream`. Auth — `Authorization` header (brauzerda
+    `fetch` asosidagi SSE mijozi bilan; `EventSource` header yubora olmaydi).
+    """
+    owned = await db.scalar(select(Run.id).where(Run.id == run_id, Run.user_id == user.id))
+    if owned is None:
+        raise HTTPException(status_code=404, detail="Run topilmadi")
+    await db.close()   # uzoq ulanish DB ulanishini ushlab turmasin
+    return StreamingResponse(
+        notify.sse_events(redis_client, run_id, is_disconnected=request.is_disconnected),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
