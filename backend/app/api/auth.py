@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.future import select
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
@@ -33,7 +35,7 @@ class UserCreateOrg(UserCreate):
     shu yerda, is_verified=False holatda, yangi yaratiladi.
     """
     org_type: OrgType
-    org_name: str = Field(min_length=1)
+    org_name: str = Field(min_length=2, max_length=120)
     industry: Optional[str] = None  # faqat org_type=company uchun
     city: Optional[str] = None      # faqat org_type=university uchun
 
@@ -41,6 +43,12 @@ class Token(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
+
+class OrgRegistered(BaseModel):
+    """Ariza qabul qilindi; token yo'q — akkaunt admin tasdiqlaguncha yopiq (CONTRACT.md §11.1)."""
+    status: str = "pending"
+    org_type: OrgType
+    org_name: str
 
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
@@ -79,7 +87,7 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
 
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
-@router.post("/register-org", response_model=Token)
+@router.post("/register-org", response_model=OrgRegistered, status_code=status.HTTP_202_ACCEPTED)
 async def register_org(user_in: UserCreateOrg, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.email == user_in.email))
     if result.scalars().first():
@@ -95,18 +103,24 @@ async def register_org(user_in: UserCreateOrg, db: AsyncSession = Depends(get_db
     if not org_role:
         raise HTTPException(status_code=500, detail=f"Role {role_name} not found")
 
+    org_model = Company if user_in.org_type == OrgType.COMPANY else University
+    org_name = user_in.org_name.strip()
+    taken = await db.execute(select(org_model.id).where(func.lower(org_model.name) == org_name.lower()))
+    if taken.first():
+        raise HTTPException(status_code=409, detail="Organization with this name already exists")
+
     # Tashkilot shu yerda yaratiladi (is_verified=False) — client'dan
     # mavjud org_id qabul qilinmaydi, shuning uchun soxta/boshqa tashkilot
     # ID'siga ulanib olish mumkin emas.
     if user_in.org_type == OrgType.COMPANY:
         org = Company(
-            name=user_in.org_name,
+            name=org_name,
             industry=user_in.industry or "N/A",
             contact_email=user_in.email,
         )
     else:
         org = University(
-            name=user_in.org_name,
+            name=org_name,
             city=user_in.city or "N/A",
             contact_email=user_in.email,
         )
@@ -123,13 +137,13 @@ async def register_org(user_in: UserCreateOrg, db: AsyncSession = Depends(get_db
         is_active=False,  # admin tasdiqlamaguncha yopiq
     )
     db.add(new_user)
-    await db.commit()
-    await db.refresh(new_user)
+    try:
+        await db.commit()
+    except IntegrityError:  # parallel ariza bilan bir xil nom/email
+        await db.rollback()
+        raise HTTPException(status_code=409, detail="Organization or email already registered")
 
-    access_token = create_access_token(subject=str(new_user.id))
-    refresh_token = create_refresh_token(subject=str(new_user.id))
-
-    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
+    return OrgRegistered(org_type=user_in.org_type, org_name=org_name)
 
 @router.post("/login", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):

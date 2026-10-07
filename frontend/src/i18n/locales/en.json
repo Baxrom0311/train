@@ -9,7 +9,9 @@
     "theme": "Theme",
     "talents": "Candidates",
     "sentOffers": "My offers",
-    "offers": "Job offers"
+    "offers": "Job offers",
+    "billing": "Billing",
+    "admin": "Admin"
   },
   "auth": {
     "login": {
@@ -40,13 +42,35 @@
       "loginLink": "Sign in",
       "terms": "By registering, you agree to our",
       "termsLink": "terms of use",
-      "termsEnd": ""
+      "termsEnd": "",
+      "subtitle_student": "Try a real workday",
+      "subtitle_company": "Find candidates by how they actually work",
+      "subtitle_university": "Follow your students' results",
+      "accountType": "Account type",
+      "kind": {
+        "student": "Student",
+        "company": "Company",
+        "university": "University"
+      },
+      "orgName_company": "Company name",
+      "orgName_university": "University name",
+      "industry": "Industry",
+      "industryPlaceholder": "e.g. Fintech",
+      "city": "City",
+      "cityPlaceholder": "e.g. Tashkent",
+      "contactName": "Contact person",
+      "workEmail": "Work email",
+      "university": "Your university (optional)",
+      "noUniversity": "Don't specify",
+      "orgNote": "An admin reviews the application. Once approved, sign in with this email and password.",
+      "submitOrg": "Submit application"
     },
     "errors": {
       "invalid": "Wrong email or password",
-      "inactive": "Account is not active yet",
+      "inactive": "Account not active yet: your organization is awaiting admin approval",
       "mismatch": "Passwords do not match",
-      "exists": "An account with this email already exists"
+      "exists": "An account with this email already exists",
+      "orgExists": "An organization with this name is already registered"
     },
     "hero": {
       "badge": "Real-time job simulation",
@@ -56,6 +80,10 @@
       "realTime": "A real workday on Tashkent time: 09:00–18:00",
       "colleagues": "Chat with your team lead, mentor and colleagues",
       "feedback": "AI feedback on every task and a final competency report"
+    },
+    "pending": {
+      "title": "Application received",
+      "body": "The application for “{{org}}” is with an admin for review. Once approved, sign in with this email and password."
     }
   },
   "dashboard": {
@@ -305,5 +333,56 @@
     "notePlaceholderDecline": "Optional: reason",
     "hideCompany": "Hide me from {{company}}",
     "acceptedHint": "The company has your email and will reach out soon."
+  },
+  "billing": {
+    "title": "Billing",
+    "subtitle": "Invoices issued to your organization. Pay by bank transfer; an admin confirms payment.",
+    "none": "No invoices yet",
+    "dueTotal_one": "{{count}} unpaid invoice",
+    "dueTotal_other": "{{count}} unpaid invoices",
+    "status": {
+      "pending": "Awaiting payment",
+      "paid": "Paid",
+      "cancelled": "Cancelled"
+    }
+  },
+  "admin": {
+    "title": "Admin panel",
+    "subtitle": "Organization applications and invoices",
+    "tabs": {
+      "pending": "Applications",
+      "verified": "Organizations",
+      "invoices": "Invoices"
+    },
+    "stats": {
+      "pending": "Pending applications",
+      "companies": "Companies",
+      "universities": "Universities",
+      "invoicesPending": "Unpaid invoices"
+    },
+    "orgType": {
+      "company": "Company",
+      "university": "University"
+    },
+    "approve": "Approve",
+    "reject": "Reject",
+    "rejectConfirm": "The “{{name}}” application and its account will be deleted. Continue?",
+    "rejectConflict": "This organization cannot be rejected: it is already active",
+    "noPending": "No pending applications",
+    "noVerified": "No verified organizations yet",
+    "verifiedAt": "verified {{date}}",
+    "filterStatus": "By status",
+    "allStatuses": "All statuses",
+    "newInvoice": "New invoice",
+    "markPaid": "Mark paid",
+    "cancel": "Cancel",
+    "cancelConfirm": "Cancel this invoice?",
+    "payer": "Payer",
+    "choosePayer": "Choose an organization",
+    "amount": "Amount",
+    "currency": "Currency",
+    "notes": "Note",
+    "notesPlaceholder": "e.g. October subscription",
+    "issue": "Issue invoice"
   }
 }

@@ -79,10 +79,12 @@ async def setup_db(create_tables):
         session.add_all([student_role, hr_role, uni_role, admin_role])
         view_candidates = Permission(id=uuid.uuid4(), key="view_candidates")
         receive_offers = Permission(id=uuid.uuid4(), key="receive_offers")
+        view_org_invoices = Permission(id=uuid.uuid4(), key="view_org_invoices")
 
-        session.add_all([manage_billing, approve_companies, view_candidates, receive_offers])
+        session.add_all([manage_billing, approve_companies, view_candidates, receive_offers, view_org_invoices])
         admin_role.permissions.extend([manage_billing, approve_companies])
-        hr_role.permissions.append(view_candidates)
+        hr_role.permissions.extend([view_candidates, view_org_invoices])
+        uni_role.permissions.append(view_org_invoices)
         student_role.permissions.append(receive_offers)
         await session.commit()
 

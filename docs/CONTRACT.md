@@ -210,6 +210,7 @@ GET    /api/v1/submissions/{id}
 POST   /api/v1/admin/orgs/{id}/approve    permission: approve_companies
 POST   /api/v1/admin/invoices             permission: manage_billing (create)
 POST   /api/v1/admin/invoices/{id}/mark-paid
+# Tashkilot ariza/rad etish, invoice bekor qilish, o'z invoice'lari — §11
 
 PATCH  /api/v1/users/me/visibility        { is_open_to_work, hidden_from_company_ids }
 GET    /api/v1/talents                    only is_verified company + only visible candidates
@@ -779,3 +780,56 @@ hamma narsa + `competencies` (to'liq) + `runs: [{scenario_title,
 company_name, sector, completed_at, overall_score, competency_scores,
 strengths}]`. Ro'yxatda faqat kamida bitta tugallangan Run'i bor nomzodlar
 chiqadi.
+
+---
+
+## 11. Tashkilotlar va admin panel (Modul 1, 3)
+
+Talent Hunt (§10) va Universitet portali faqat **tasdiqlangan** tashkilotga
+ochiladi. Bu bo'lim tashkilot ro'yxatdan o'tishidan to admin tasdiqlashi va
+invoice'gacha bo'lgan oqimni brauzerda to'liq qiladi.
+
+### 11.1 Ro'yxatdan o'tish
+
+- `POST /auth/register-org` → **202** `{status: "pending", org_type, org_name}`;
+  token **qaytarilmaydi** (foydalanuvchi `is_active=false`, token baribir
+  ishlamasdi). Login 403 bilan "admin tasdiqlashini kutmoqda" deydi.
+- Tashkilot nomi katta-kichik harfga qaramay takrorlanmaydi → 409.
+- Talaba `/auth/register`da ixtiyoriy ravishda tasdiqlangan universitetni
+  tanlaydi (`GET /university/list` — ochiq ro'yxat).
+
+### 11.2 Admin: tashkilotlar
+
+- `approve_companies` ruxsati kompaniya **va** universitetlarni boshqaradi
+  (alohida `approve_universities` yaratilmaydi — bitta admin roli).
+- `GET /admin/orgs?status=pending|verified` → `{companies, universities}`;
+  har tashkilotda arizachi (`owner_name`, `owner_email`) bor.
+- `POST /admin/orgs/{id}/approve {org_type}` — tasdiqlaydi, kutayotgan
+  xodimlarini faollashtiradi.
+- `POST /admin/orgs/{id}/reject {org_type}` — faqat tasdiqlanmagan ariza:
+  tashkilot va uning hech qachon faollashmagan akkauntlari o'chiriladi
+  (ular tizimda hech narsa qilmagan). Tasdiqlanganini rad etib bo'lmaydi → 409.
+- `GET /admin/stats` (`approve_companies` yoki `manage_billing`): kutilayotgan
+  arizalar, tasdiqlangan tashkilotlar, to'lanmagan invoice'lar soni.
+
+### 11.3 Invoice'lar
+
+- Faqat **tasdiqlangan** tashkilotga yoziladi (aks holda 400). Valyuta:
+  `UZS` yoki `USD`; summa > 0, 2 xonagacha.
+- Holatlar: `pending` → `paid` (mark-paid) yoki `pending` → `cancelled`
+  (cancel). `paid`/`cancelled` qaytmaydi → 409 (paid'ni qayta mark-paid —
+  o'zgarishsiz qaytariladi).
+- `GET /admin/invoices?status=&payer_type=` — to'lovchi nomi bilan, yangilari
+  tepada.
+- `GET /billing/invoices` — **`view_org_invoices`** (yangi; `company_hr`,
+  `university_admin`): faqat o'z tashkilotining invoice'lari.
+
+### 11.4 Frontend
+
+- `/register`: talaba | kompaniya | universitet; tashkilot arizasidan keyin
+  "tasdiqlash kutilmoqda" ekrani.
+- `/admin` (`approve_companies`): statistika, arizalar (tasdiqlash/rad etish),
+  tasdiqlangan tashkilotlar, invoice'lar (yaratish, to'landi, bekor qilish).
+- `/billing` (`view_org_invoices`): tashkilotning o'z invoice'lari.
+- Kirishdan keyingi sahifa va menyu ruxsatga qarab: admin → `/admin`,
+  kompaniya → `/talents`, universitet → `/billing`, talaba → `/simulations`.

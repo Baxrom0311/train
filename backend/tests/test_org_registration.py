@@ -48,7 +48,9 @@ async def test_register_org_creates_company_unverified(client: AsyncClient, db_s
             "industry": "IT",
         },
     )
-    assert res.status_code == 200
+    # ariza qabul qilindi, token yo'q — akkaunt hali yopiq (CONTRACT.md §11.1)
+    assert res.status_code == 202
+    assert res.json() == {"status": "pending", "org_type": "company", "org_name": "NorthStack LLC"}
 
     result = await db_session.execute(select(Company).where(Company.name == "NorthStack LLC"))
     company = result.scalars().first()
@@ -132,7 +134,7 @@ async def test_register_org_university_creates_university(client: AsyncClient, d
             "city": "Tashkent",
         },
     )
-    assert res.status_code == 200
+    assert res.status_code == 202
     result = await db_session.execute(select(University).where(University.name == "New State University"))
     uni = result.scalars().first()
     assert uni is not None
@@ -195,3 +197,12 @@ async def test_invalid_email_rejected(client: AsyncClient):
         json={"email": "not-an-email", "password": "pass12345", "full_name": "Bad Email"},
     )
     assert res.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_register_org_duplicate_name_rejected(client: AsyncClient):
+    body = {"password": "pass12345", "full_name": "HR", "org_type": "company", "industry": "IT"}
+    r = await client.post("/api/v1/auth/register-org", json={**body, "email": "a@dup.uz", "org_name": "Dup Labs"})
+    assert r.status_code == 202
+    r = await client.post("/api/v1/auth/register-org", json={**body, "email": "b@dup.uz", "org_name": "  dup labs "})
+    assert r.status_code == 409
