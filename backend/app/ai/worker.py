@@ -23,6 +23,7 @@ from app.ai.router import run_ai_chain, _pick_persona, _build_user_prompt
 from app.scenario.jobs import (
     EVAL_JOB,
     deliver_due_events,
+    embed_document_chunks_job,
     evaluate_run_submission_job,
     sync_work_holidays_job,
 )
@@ -152,6 +153,8 @@ class WorkerSettings:
         cron(deliver_due_events, second=0, unique=True, timeout=50),
         # §9.2: haftalik bayramlar (va worker ishga tushganda bir marta)
         cron(sync_work_holidays_job, weekday="mon", hour=3, minute=0, run_at_startup=True),
+        # §9.4: yangi import qilingan hujjatlar uchun embedding (kalit bo'lmasa — no-op)
+        cron(embed_document_chunks_job, minute=set(range(0, 60, 5)), second=30, unique=True),
     ]
     redis_settings = RedisSettings.from_dsn(settings.REDIS_URL)
     on_startup = startup

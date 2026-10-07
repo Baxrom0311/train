@@ -6,6 +6,7 @@ Ssenariy dvigatelining arq job'lari (CONTRACT.md §9.8). `WorkerSettings`ga
   navbatga tushmay qolgan `pending` javoblarni qayta navbatga qo'yish.
 - `evaluate_run_submission_job` — bitta Run javobini baholash.
 - `sync_work_holidays_job` — haftalik bayramlar sinxronizatsiyasi.
+- `embed_document_chunks_job` — embedding'i yo'q RAG bo'laklarini to'ldirish.
 """
 
 import logging
@@ -20,6 +21,7 @@ from app.scenario import notify
 from app.scenario.engine import advance
 from app.scenario.evaluation import evaluate_run_submission
 from app.scenario.holidays import sync_work_holidays
+from app.scenario.rag import embed_pending_chunks
 
 log = logging.getLogger(__name__)
 
@@ -80,4 +82,13 @@ async def sync_work_holidays_job(ctx: dict) -> int:
         count = await sync_work_holidays(db, datetime.now(timezone.utc).date())
         await db.commit()
     log.info("work_holidays: %d ta auto sana yozildi", count)
+    return count
+
+
+async def embed_document_chunks_job(ctx: dict) -> int:
+    async with _sessions(ctx)() as db:
+        count = await embed_pending_chunks(db)
+        await db.commit()
+    if count:
+        log.info("document_chunks: %d ta embedding yozildi", count)
     return count

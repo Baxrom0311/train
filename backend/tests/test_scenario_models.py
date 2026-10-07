@@ -119,12 +119,16 @@ async def test_submission_target_and_attempts(db_session, test_user_factory):
 
 async def test_chunk_vector_and_tsv(db_session):
     version, _ = await import_scenario(db_session, _defn())
-    doc = (await db_session.execute(
-        select(ScenarioDocument).where(ScenarioDocument.scenario_version_id == version.id)
-    )).scalars().first()
-    chunk = DocumentChunk(document_id=doc.id, chunk_index=0, text="Standup har kuni 09:00 da",
-                          embedding=[0.1] * 768, embedding_model="test")
-    db_session.add(chunk)
+    # import hujjatlarni bo'laklaydi (embedding'siz)
+    chunks = (await db_session.execute(
+        select(DocumentChunk)
+        .join(ScenarioDocument, ScenarioDocument.id == DocumentChunk.document_id)
+        .where(ScenarioDocument.scenario_version_id == version.id)
+    )).scalars().all()
+    assert len(chunks) == 2 and all(c.embedding is None for c in chunks)
+    for c in chunks:
+        c.embedding = [0.1] * 768
+        c.embedding_model = "test"
     await db_session.commit()
 
     hit = await db_session.scalar(text(

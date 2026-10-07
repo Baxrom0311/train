@@ -6,6 +6,8 @@ import pytest
 import yaml
 from sqlalchemy import select
 
+from app.ai.evaluator import CriterionScore, RubricResult
+from app.ai.llm import LLMResult
 from app.models.enums import AIEvalStatus, HolidaySource, RunEventStatus, RunStatus
 from app.models.scenario import RunEvent, WorkHoliday
 from app.models.simulation import Submission
@@ -341,16 +343,23 @@ async def test_evaluation_applies_penalties(db_session, setup):
 
     calls = []
 
-    async def fake_chain(client, system, prompt):
-        calls.append(prompt)
-        return 90.0, "Yaxshi"
+    async def fake_evaluate(brief, answer, rubric, *, reference_answer, sector):
+        calls.append((brief, answer, [c.id for c in rubric], reference_answer, sector))
+        return RubricResult(
+            criteria=[CriterionScore(id="root_cause", score=90), CriterionScore(id="fix_quality", score=90)],
+            score=90.0, short_feedback="Yaxshi",
+            llm=LLMResult(text="{}", data=None, provider="fake", model="fake"),
+        )
 
-    notes, retry = await evaluate_run_submission(db_session, sub.id, T("12:01"), ai_chain=fake_chain)
+    notes, retry = await evaluate_run_submission(db_session, sub.id, T("12:01"), evaluate=fake_evaluate)
     stored = await db_session.get(Submission, sub.id)
     await db_session.refresh(stored)
     assert not retry and stored.ai_eval_status == AIEvalStatus.COMPLETED
     assert stored.ai_score == 72.0                            # 90 × (1 − 0.2)
-    assert "REFERENCE ANSWER" in calls[0] and "root_cause" in calls[0]
+    assert stored.rubric_scores["raw_score"] == 90.0 and stored.rubric_scores["penalty_factor"] == 0.8
+    assert [c["id"] for c in stored.rubric_scores["criteria"]] == ["root_cause", "fix_quality"]
+    brief, answer, ids, reference, sector = calls[0]
+    assert ids == ["root_cause", "fix_quality"] and reference and sector == "IT"
     assert notes[0].data["score"] == 72.0
 
 
@@ -360,12 +369,12 @@ async def test_evaluation_retry_then_permanent(db_session, setup):
     sub, _ = await submit_answer(db_session, run, "bug_orders", Answer(text="fix"), T("10:00"))
     await db_session.commit()
 
-    async def down(client, system, prompt):
+    async def down(*args, **kwargs):
         return None
 
-    _, retry = await evaluate_run_submission(db_session, sub.id, T("10:01"), job_try=1, ai_chain=down)
+    _, retry = await evaluate_run_submission(db_session, sub.id, T("10:01"), job_try=1, evaluate=down)
     assert retry
-    _, retry = await evaluate_run_submission(db_session, sub.id, T("10:05"), job_try=3, ai_chain=down)
+    _, retry = await evaluate_run_submission(db_session, sub.id, T("10:05"), job_try=3, evaluate=down)
     stored = await db_session.get(Submission, sub.id)
     await db_session.refresh(stored)
     assert not retry and stored.ai_eval_status == AIEvalStatus.FAILED_PERMANENT
@@ -422,5 +431,5 @@ def test_worker_settings_register_scenario_jobs():
     names = {getattr(f, "name", getattr(f, "__name__", None)) for f in WorkerSettings.functions}
     assert "evaluate_run_submission_job" in names
     assert {c.name for c in WorkerSettings.cron_jobs} == {
-        "cron:deliver_due_events", "cron:sync_work_holidays_job",
+        "cron:deliver_due_events", "cron:sync_work_holidays_job", "cron:embed_document_chunks_job",
     }
