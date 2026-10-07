@@ -1,0 +1,139 @@
+{
+  "nav": {
+    "dashboard": "Главная",
+    "simulations": "Симуляции",
+    "login": "Войти",
+    "register": "Регистрация",
+    "logout": "Выйти",
+    "language": "Язык",
+    "theme": "Тема"
+  },
+  "auth": {
+    "login": {
+      "title": "Вход в систему",
+      "subtitle": "Войдите в свой аккаунт",
+      "email": "Электронная почта",
+      "emailPlaceholder": "пример@email.com",
+      "password": "Пароль",
+      "passwordPlaceholder": "Введите пароль",
+      "submit": "Войти",
+      "noAccount": "Нет аккаунта?",
+      "registerLink": "Зарегистрироваться",
+      "forgotPassword": "Забыли пароль?"
+    },
+    "register": {
+      "title": "Регистрация",
+      "subtitle": "Создайте новый аккаунт",
+      "fullName": "Полное имя",
+      "fullNamePlaceholder": "Введите имя",
+      "email": "Электронная почта",
+      "emailPlaceholder": "пример@email.com",
+      "password": "Пароль",
+      "passwordPlaceholder": "Создайте надёжный пароль",
+      "confirmPassword": "Подтверждение пароля",
+      "confirmPasswordPlaceholder": "Повторите пароль",
+      "submit": "Зарегистрироваться",
+      "hasAccount": "Уже есть аккаунт?",
+      "loginLink": "Войти",
+      "terms": "Регистрируясь, вы принимаете",
+      "termsLink": "условия использования",
+      "termsEnd": ""
+    }
+  },
+  "dashboard": {
+    "title": "Главная",
+    "welcome": "Добро пожаловать!",
+    "welcomeSubtitle": "Добро пожаловать на платформу TryJob — мир виртуальных рабочих симуляций",
+    "stats": {
+      "completedSims": "Завершённые симуляции",
+      "activeSims": "Активные симуляции",
+      "totalScore": "Общий балл",
+      "rank": "Рейтинг"
+    },
+    "recentActivity": "Последняя активность",
+    "noActivity": "Активности пока нет",
+    "startFirst": "Начните свою первую симуляцию",
+    "quickActions": "Быстрые действия",
+    "browseSimulations": "Просмотр симуляций",
+    "viewProfile": "Просмотр профиля"
+  },
+  "simulations": {
+    "title": "Симуляции",
+    "subtitle": "Получите виртуальный опыт работы",
+    "search": "Поиск...",
+    "filter": "Фильтр",
+    "all": "Все",
+    "it": "IT/Программирование",
+    "finance": "Банк/Финансы",
+    "duration": "Продолжительность",
+    "difficulty": "Уровень сложности",
+    "easy": "Лёгкий",
+    "medium": "Средний",
+    "hard": "Сложный",
+    "startSim": "Начать",
+    "viewDetails": "Подробнее",
+    "hours": "часов",
+    "company": "Компания",
+    "category": "Категория",
+    "mockCards": {
+      "card1": {
+        "title": "Задача инженера-программиста",
+        "company": "TechNova Solutions",
+        "category": "IT/Программирование",
+        "duration": "3-5 часов",
+        "difficulty": "Средний",
+        "description": "Разработка backend API и оптимизация кода в реальной проектной среде"
+      },
+      "card2": {
+        "title": "Симуляция финансового аналитика",
+        "company": "NorthBank UZ",
+        "category": "Банк/Финансы",
+        "duration": "2-4 часов",
+        "difficulty": "Лёгкий",
+        "description": "Развитие навыков анализа финансовых данных и подготовки отчётов"
+      },
+      "card3": {
+        "title": "Задача frontend-разработчика",
+        "company": "Pixel Digital Agency",
+        "category": "IT/Программирование",
+        "duration": "4-6 часов",
+        "difficulty": "Сложный",
+        "description": "Создание современных UI-компонентов и улучшение пользовательского опыта"
+      },
+      "card4": {
+        "title": "Специалист кредитного отдела",
+        "company": "Atlas Global Finance",
+        "category": "Банк/Финансы",
+        "duration": "3-4 часов",
+        "difficulty": "Средний",
+        "description": "Изучение процессов рассмотрения кредитных заявок и оценки рисков"
+      }
+    }
+  },
+  "common": {
+    "loading": "Загрузка...",
+    "error": "Произошла ошибка",
+    "retry": "Попробуйте снова",
+    "cancel": "Отмена",
+    "save": "Сохранить",
+    "edit": "Редактировать",
+    "delete": "Удалить",
+    "confirm": "Подтвердить",
+    "close": "Закрыть",
+    "back": "Назад",
+    "next": "Следующий",
+    "previous": "Предыдущий",
+    "appName": "TryJob",
+    "appTagline": "Платформа виртуальных рабочих симуляций"
+  },
+  "theme": {
+    "light": "Светлая тема",
+    "dark": "Тёмная тема",
+    "toggle": "Переключить тему"
+  },
+  "languages": {
+    "uz": "O'zbek",
+    "ru": "Русский",
+    "en": "English"
+  }
+}

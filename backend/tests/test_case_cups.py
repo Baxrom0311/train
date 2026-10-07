@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import patch, AsyncMock
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -7,6 +8,17 @@ from app.models.billing import Company
 from app.models.case_cup import CaseCup
 import uuid
 from datetime import datetime, timedelta, timezone
+
+
+@pytest.fixture(autouse=True)
+def _mock_ai_chain():
+    """
+    .env'da haqiqiy AI API kalitlari yo'q (test muhiti) — shuning uchun
+    run_ai_chain real tarmoq chaqiruvisiz, deterministik ball qaytarsin.
+    Bu Case Cup testlarini real DeepSeek/Gemini/OpenAI'ga bog'lab qo'ymaydi.
+    """
+    with patch("app.ai.router.run_ai_chain", new=AsyncMock(return_value=(85.0, "Mocked AI feedback"))):
+        yield
 
 @pytest.fixture
 async def setup_case_cup_permissions(db_session: AsyncSession):

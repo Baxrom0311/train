@@ -5,7 +5,8 @@ from sqlalchemy.future import select
 from pydantic import BaseModel
 from typing import Optional, List
 from app.database import get_db
-from app.models.user import User, CandidateVisibility
+from app.models.user import User
+from app.models.talent import CandidateVisibility
 from app.models.rbac import Role
 from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token
 from app.core.deps import get_current_active_user
@@ -111,9 +112,13 @@ async def refresh(req: RefreshTokenRequest):
         user_id: str = payload.get("sub")
         if user_id is None:
             raise HTTPException(status_code=401, detail="Invalid refresh token")
+        # token_type tekshiruvi: faqat refresh token qabul qilinadi
+        token_type: str = payload.get("token_type")
+        if token_type != "refresh":
+            raise HTTPException(status_code=401, detail="Access token cannot be used as refresh token")
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
-        
+
     access_token = create_access_token(subject=user_id)
     refresh_token = create_refresh_token(subject=user_id)
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}

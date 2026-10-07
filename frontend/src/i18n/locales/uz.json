@@ -1,0 +1,139 @@
+{
+  "nav": {
+    "dashboard": "Bosh sahifa",
+    "simulations": "Simulyatsiyalar",
+    "login": "Kirish",
+    "register": "Ro'yxatdan o'tish",
+    "logout": "Chiqish",
+    "language": "Til",
+    "theme": "Mavzu"
+  },
+  "auth": {
+    "login": {
+      "title": "Tizimga kirish",
+      "subtitle": "Hisobingizga kiring",
+      "email": "Elektron pochta",
+      "emailPlaceholder": "misol@email.com",
+      "password": "Parol",
+      "passwordPlaceholder": "Parolingizni kiriting",
+      "submit": "Kirish",
+      "noAccount": "Hisobingiz yo'qmi?",
+      "registerLink": "Ro'yxatdan o'ting",
+      "forgotPassword": "Parolni unutdingizmi?"
+    },
+    "register": {
+      "title": "Ro'yxatdan o'tish",
+      "subtitle": "Yangi hisob yarating",
+      "fullName": "To'liq ism",
+      "fullNamePlaceholder": "Ismingizni kiriting",
+      "email": "Elektron pochta",
+      "emailPlaceholder": "misol@email.com",
+      "password": "Parol",
+      "passwordPlaceholder": "Kuchli parol yarating",
+      "confirmPassword": "Parolni tasdiqlash",
+      "confirmPasswordPlaceholder": "Parolni qayta kiriting",
+      "submit": "Ro'yxatdan o'tish",
+      "hasAccount": "Hisobingiz bormi?",
+      "loginLink": "Kiring",
+      "terms": "Ro'yxatdan o'tish orqali siz",
+      "termsLink": "foydalanish shartlarini",
+      "termsEnd": "qabul qilasiz"
+    }
+  },
+  "dashboard": {
+    "title": "Bosh sahifa",
+    "welcome": "Xush kelibsiz!",
+    "welcomeSubtitle": "TryJob platformasiga xush kelibsiz — virtual ish simulyatsiyalari dunyosi",
+    "stats": {
+      "completedSims": "Bajarilgan simulyatsiyalar",
+      "activeSims": "Faol simulyatsiyalar",
+      "totalScore": "Umumiy ball",
+      "rank": "Reyting"
+    },
+    "recentActivity": "So'nggi faoliyat",
+    "noActivity": "Hali hech qanday faoliyat yo'q",
+    "startFirst": "Birinchi simulyatsiyangizni boshlang",
+    "quickActions": "Tezkor harakatlar",
+    "browseSimulations": "Simulyatsiyalarni ko'rish",
+    "viewProfile": "Profilni ko'rish"
+  },
+  "simulations": {
+    "title": "Simulyatsiyalar",
+    "subtitle": "Virtual ish tajribasini egallang",
+    "search": "Qidirish...",
+    "filter": "Filtr",
+    "all": "Barchasi",
+    "it": "IT/Dasturlash",
+    "finance": "Bank/Moliya",
+    "duration": "Davomiylik",
+    "difficulty": "Qiyinchilik darajasi",
+    "easy": "Oson",
+    "medium": "O'rta",
+    "hard": "Qiyin",
+    "startSim": "Boshlash",
+    "viewDetails": "Batafsil",
+    "hours": "soat",
+    "company": "Kompaniya",
+    "category": "Soha",
+    "mockCards": {
+      "card1": {
+        "title": "Dasturiy ta'minot muhandisi vazifasi",
+        "company": "TechNova Solutions",
+        "category": "IT/Dasturlash",
+        "duration": "3-5 soat",
+        "difficulty": "O'rta",
+        "description": "Real loyiha muhitida backend API ishlab chiqish va kodni optimizatsiya qilish"
+      },
+      "card2": {
+        "title": "Moliyaviy tahlilchi simulyatsiyasi",
+        "company": "NorthBank UZ",
+        "category": "Bank/Moliya",
+        "duration": "2-4 soat",
+        "difficulty": "Oson",
+        "description": "Moliyaviy ma'lumotlarni tahlil qilish va hisobot tayyorlash ko'nikmalarini rivojlantirish"
+      },
+      "card3": {
+        "title": "Frontend ishlab chiquvchi vazifasi",
+        "company": "Pixel Digital Agency",
+        "category": "IT/Dasturlash",
+        "duration": "4-6 soat",
+        "difficulty": "Qiyin",
+        "description": "Zamonaviy UI komponentlarini yaratish va foydalanuvchi tajribasini yaxshilash"
+      },
+      "card4": {
+        "title": "Kredit bo'limi mutaxassisi",
+        "company": "Atlas Global Finance",
+        "category": "Bank/Moliya",
+        "duration": "3-4 soat",
+        "difficulty": "O'rta",
+        "description": "Kredit arizalarini ko'rib chiqish va riskni baholash jarayonlarini o'rganish"
+      }
+    }
+  },
+  "common": {
+    "loading": "Yuklanmoqda...",
+    "error": "Xatolik yuz berdi",
+    "retry": "Qayta urinib ko'ring",
+    "cancel": "Bekor qilish",
+    "save": "Saqlash",
+    "edit": "Tahrirlash",
+    "delete": "O'chirish",
+    "confirm": "Tasdiqlash",
+    "close": "Yopish",
+    "back": "Orqaga",
+    "next": "Keyingi",
+    "previous": "Oldingi",
+    "appName": "TryJob",
+    "appTagline": "Virtual ish simulyatsiyalari platformasi"
+  },
+  "theme": {
+    "light": "Yorug' mavzu",
+    "dark": "Qorong'u mavzu",
+    "toggle": "Mavzuni almashtirish"
+  },
+  "languages": {
+    "uz": "O'zbek",
+    "ru": "Русский",
+    "en": "English"
+  }
+}

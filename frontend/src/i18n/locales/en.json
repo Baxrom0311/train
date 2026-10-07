@@ -1,0 +1,139 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "simulations": "Simulations",
+    "login": "Sign In",
+    "register": "Sign Up",
+    "logout": "Sign Out",
+    "language": "Language",
+    "theme": "Theme"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign In",
+      "subtitle": "Sign in to your account",
+      "email": "Email address",
+      "emailPlaceholder": "example@email.com",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "submit": "Sign In",
+      "noAccount": "Don't have an account?",
+      "registerLink": "Sign up",
+      "forgotPassword": "Forgot password?"
+    },
+    "register": {
+      "title": "Create Account",
+      "subtitle": "Create your new account",
+      "fullName": "Full name",
+      "fullNamePlaceholder": "Enter your name",
+      "email": "Email address",
+      "emailPlaceholder": "example@email.com",
+      "password": "Password",
+      "passwordPlaceholder": "Create a strong password",
+      "confirmPassword": "Confirm password",
+      "confirmPasswordPlaceholder": "Repeat your password",
+      "submit": "Create Account",
+      "hasAccount": "Already have an account?",
+      "loginLink": "Sign in",
+      "terms": "By registering, you agree to our",
+      "termsLink": "terms of use",
+      "termsEnd": ""
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome!",
+    "welcomeSubtitle": "Welcome to TryJob — your gateway to virtual work simulations",
+    "stats": {
+      "completedSims": "Completed Simulations",
+      "activeSims": "Active Simulations",
+      "totalScore": "Total Score",
+      "rank": "Ranking"
+    },
+    "recentActivity": "Recent Activity",
+    "noActivity": "No activity yet",
+    "startFirst": "Start your first simulation",
+    "quickActions": "Quick Actions",
+    "browseSimulations": "Browse Simulations",
+    "viewProfile": "View Profile"
+  },
+  "simulations": {
+    "title": "Simulations",
+    "subtitle": "Gain virtual work experience",
+    "search": "Search...",
+    "filter": "Filter",
+    "all": "All",
+    "it": "IT/Programming",
+    "finance": "Banking/Finance",
+    "duration": "Duration",
+    "difficulty": "Difficulty",
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard",
+    "startSim": "Start",
+    "viewDetails": "View Details",
+    "hours": "hours",
+    "company": "Company",
+    "category": "Category",
+    "mockCards": {
+      "card1": {
+        "title": "Software Engineer Task",
+        "company": "TechNova Solutions",
+        "category": "IT/Programming",
+        "duration": "3-5 hours",
+        "difficulty": "Medium",
+        "description": "Build a backend API and optimize code in a real project environment"
+      },
+      "card2": {
+        "title": "Financial Analyst Simulation",
+        "company": "NorthBank UZ",
+        "category": "Banking/Finance",
+        "duration": "2-4 hours",
+        "difficulty": "Easy",
+        "description": "Develop financial data analysis and reporting skills"
+      },
+      "card3": {
+        "title": "Frontend Developer Task",
+        "company": "Pixel Digital Agency",
+        "category": "IT/Programming",
+        "duration": "4-6 hours",
+        "difficulty": "Hard",
+        "description": "Build modern UI components and improve user experience"
+      },
+      "card4": {
+        "title": "Credit Department Specialist",
+        "company": "Atlas Global Finance",
+        "category": "Banking/Finance",
+        "duration": "3-4 hours",
+        "difficulty": "Medium",
+        "description": "Learn the process of reviewing credit applications and assessing risk"
+      }
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Try again",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "appName": "TryJob",
+    "appTagline": "Virtual Work Simulations Platform"
+  },
+  "theme": {
+    "light": "Light theme",
+    "dark": "Dark theme",
+    "toggle": "Toggle theme"
+  },
+  "languages": {
+    "uz": "O'zbek",
+    "ru": "Русский",
+    "en": "English"
+  }
+}

@@ -3,8 +3,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models.billing import Company
-from app.models.user import CandidateVisibility
-from app.models.talent import TalentOffer
+from app.models.talent import CandidateVisibility, TalentOffer
 from app.models.rbac import Role, Permission
 import uuid
 from app.models.simulation import Submission
@@ -140,7 +139,8 @@ async def test_send_offer(client: AsyncClient, test_user_factory, verified_compa
     token = response.json()["access_token"]
     
     offer_data = {
-        "candidate_id": str(open_candidate.id),
+        "candidate_user_id": str(open_candidate.id),
+        "position_title": "Backend Engineer",
         "message": "We want to hire you!"
     }
     res = await client.post("/api/v1/talents/offers", json=offer_data, headers={"Authorization": f"Bearer {token}"})
@@ -148,4 +148,4 @@ async def test_send_offer(client: AsyncClient, test_user_factory, verified_compa
     data = res.json()
     assert data["message"] == "We want to hire you!"
     assert data["company_id"] == str(verified_company.id)
-    assert data["candidate_id"] == str(open_candidate.id)
+    assert data["candidate_user_id"] == str(open_candidate.id)
