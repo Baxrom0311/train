@@ -44,6 +44,34 @@ class OfferResponse(str, enum.Enum):
     DECLINED = "declined"
 
 
+# ── Vakansiyalar (CONTRACT.md §23) ───────────────────────────────────
+
+
+class VacancyStatus(str, enum.Enum):
+    DRAFT = "draft"
+    OPEN = "open"
+    CLOSED = "closed"
+
+
+class Employment(str, enum.Enum):
+    FULL_TIME = "full_time"
+    PART_TIME = "part_time"
+    INTERNSHIP = "internship"
+
+
+class WorkFormat(str, enum.Enum):
+    OFFICE = "office"
+    REMOTE = "remote"
+    HYBRID = "hybrid"
+
+
+class ApplicationStatus(str, enum.Enum):
+    APPLIED = "applied"
+    WITHDRAWN = "withdrawn"
+    REJECTED = "rejected"
+    OFFERED = "offered"
+
+
 class AIEvalStatus(str, enum.Enum):
     PENDING = "pending"  # §9.7 — Run submission'i arq job'da baholanishini kutmoqda
     COMPLETED = "completed"

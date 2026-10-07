@@ -15,7 +15,8 @@
     "students": "Students",
     "portfolio": "Portfolio",
     "scenarios": "Scenarios",
-    "companyReport": "Report"
+    "companyReport": "Report",
+    "vacancies": "Vacancies"
   },
   "auth": {
     "login": {
@@ -957,7 +958,9 @@
       "report_ready": "Final report ready",
       "offer_received": "New job offer",
       "offer_accepted": "Offer accepted",
-      "offer_declined": "Offer declined"
+      "offer_declined": "Offer declined",
+      "application_received": "New application to a vacancy",
+      "application_rejected": "Your application was declined"
     },
     "setting": {
       "task_delivered": "New tasks and incidents",
@@ -965,7 +968,9 @@
       "mentor_review": "Mentor comments",
       "report_ready": "Final report and certificate",
       "offer_received": "Job offers",
-      "offer_responded": "Candidate replies to offers"
+      "offer_responded": "Candidate replies to offers",
+      "application_received": "New application to a vacancy",
+      "application_rejected": "Application declined"
     },
     "email": {
       "title": "By email",
@@ -1134,6 +1139,114 @@
       "unsupported": "This browser doesn't support push notifications. You'll still get them on the site and by email.",
       "denied": "The browser blocked notifications. Allow them in site settings (the lock icon in the address bar) and reload the page.",
       "error": "Couldn't connect. Please try again later."
+    }
+  },
+  "vacancy": {
+    "notFound": "Vacancy not found",
+    "requirements": "Requirements",
+    "noRequirements": "No competency requirements — candidates are ranked by overall score.",
+    "minScore": "Overall score",
+    "status": {
+      "draft": "Draft",
+      "open": "Open",
+      "closed": "Closed"
+    },
+    "employment": {
+      "full_time": "Full-time",
+      "part_time": "Part-time",
+      "internship": "Internship"
+    },
+    "format": {
+      "office": "On-site",
+      "remote": "Remote",
+      "hybrid": "Hybrid"
+    },
+    "application": {
+      "applied": "Applied",
+      "withdrawn": "Withdrawn",
+      "rejected": "Declined",
+      "offered": "Offer sent"
+    },
+    "salary": {
+      "range": "{{min}} – {{max}} UZS",
+      "exact": "{{v}} UZS",
+      "from": "from {{v}} UZS",
+      "upTo": "up to {{v}} UZS"
+    },
+    "fit": {
+      "value": "{{value}}% match",
+      "meets": "Meets all requirements",
+      "partial": "Partial match",
+      "sectorMatch": "Has experience in this field"
+    },
+    "company": {
+      "title": "Vacancies",
+      "subtitle": "Post a job — the platform suggests candidates based on their Run results.",
+      "new": "New vacancy",
+      "empty": "No vacancies yet",
+      "emptyHint": "Create a vacancy and set the competencies you need: students apply, and matching candidates show up automatically.",
+      "published": "published {{date}}",
+      "created": "created {{date}}",
+      "applications": "Applications",
+      "matches": "Matching candidates",
+      "newCount_one": "{{count}} new",
+      "newCount_other": "{{count}} new",
+      "close": "Close",
+      "reopen": "Reopen",
+      "sections": "Sections",
+      "noApplications": "No applications yet. While the vacancy is open, students see it in their list.",
+      "noMatches": "No matching candidates yet. Try relaxing the requirements or wait for the pool to grow.",
+      "matchesHint": "Only candidates who are open to work and haven't hidden from you, with a match of 50% or more. Email is revealed once an offer is accepted.",
+      "alreadyApplied": "Applied",
+      "offer": "Send offer",
+      "reject": "Decline",
+      "rejectConfirm": "Decline {{name}}'s application? The student will be notified."
+    },
+    "editor": {
+      "newTitle": "New vacancy",
+      "editTitle": "Edit vacancy",
+      "basics": "Basics",
+      "titleLabel": "Position",
+      "titlePlaceholder": "e.g. Junior Backend Developer",
+      "description": "Description",
+      "descriptionPlaceholder": "Responsibilities, team, what they will learn, conditions...",
+      "employment": "Employment",
+      "format": "Work format",
+      "location": "Location",
+      "locationPlaceholder": "Tashkent",
+      "salaryMin": "Salary from (UZS)",
+      "salaryMax": "Salary up to (UZS)",
+      "salaryInvalid": "Minimum salary can't exceed the maximum.",
+      "requirements": "Competency requirements",
+      "requirementsHint": "Pick the competencies you need and set a minimum score (from Run results, 0–100).",
+      "minScore": "Overall score threshold",
+      "scenarios": "Practice scenarios",
+      "scenariosHint": "Scenarios close to this job (up to {{count}}) — shown to students as \"practice\".",
+      "save": "Save",
+      "saveDraft": "Save as draft",
+      "publish": "Publish",
+      "limit": "You can have at most 20 open vacancies at a time. Close an older one first."
+    },
+    "student": {
+      "title": "Vacancies",
+      "subtitle": "Companies look for candidates by their Run results. The match compares your scores with the requirements.",
+      "myApplications": "My applications",
+      "closed": "Vacancy closed",
+      "empty": "No open vacancies right now.",
+      "noProfile": "Complete at least one scenario to see your match and apply.",
+      "noFit": "Match not calculated yet",
+      "fitHint": "Your best Run results are compared with the requirements.",
+      "yourApplication": "Your application",
+      "seeOffer": "See the offer →",
+      "note": "Note",
+      "notePlaceholder": "Why this job? (optional)",
+      "apply": "Apply",
+      "withdraw": "Withdraw application",
+      "consent": "Applying lets the company see your Run results (even if your profile is hidden). Your email is shared only if you accept an offer.",
+      "practice": "Practice",
+      "practiceHint": "Scenarios the company recommends and ones that train the competencies you're missing.",
+      "done": "Completed",
+      "start": "Start"
     }
   }
 }

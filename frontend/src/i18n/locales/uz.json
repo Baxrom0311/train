@@ -15,7 +15,8 @@
     "students": "Talabalar",
     "portfolio": "Portfolio",
     "scenarios": "Ssenariylar",
-    "companyReport": "Hisobot"
+    "companyReport": "Hisobot",
+    "vacancies": "Vakansiyalar"
   },
   "auth": {
     "login": {
@@ -957,7 +958,9 @@
       "report_ready": "Yakuniy hisobot tayyor",
       "offer_received": "Yangi ish taklifi",
       "offer_accepted": "Taklif qabul qilindi",
-      "offer_declined": "Taklif rad etildi"
+      "offer_declined": "Taklif rad etildi",
+      "application_received": "Vakansiyaga yangi ariza",
+      "application_rejected": "Arizangiz rad etildi"
     },
     "setting": {
       "task_delivered": "Yangi vazifa va vaziyatlar",
@@ -965,7 +968,9 @@
       "mentor_review": "Mentor izohlari",
       "report_ready": "Yakuniy hisobot va sertifikat",
       "offer_received": "Ish takliflari",
-      "offer_responded": "Nomzod taklifga javob berganda"
+      "offer_responded": "Nomzod taklifga javob berganda",
+      "application_received": "Vakansiyaga ariza kelganda",
+      "application_rejected": "Ariza rad etilganda"
     },
     "email": {
       "title": "Email orqali",
@@ -1134,6 +1139,114 @@
       "unsupported": "Bu brauzer push bildirishnomalarni qo'llab-quvvatlamaydi. Xabarlar sayt ichida va emailda keladi.",
       "denied": "Brauzer bildirishnomalarni bloklagan. Sayt sozlamalarida (manzil satridagi qulf belgisi) ruxsat bering va sahifani yangilang.",
       "error": "Ulab bo'lmadi. Keyinroq qayta urinib ko'ring."
+    }
+  },
+  "vacancy": {
+    "notFound": "Vakansiya topilmadi",
+    "requirements": "Talablar",
+    "noRequirements": "Kompetensiya talablari yo'q — umumiy ball bo'yicha baholanadi.",
+    "minScore": "Umumiy ball",
+    "status": {
+      "draft": "Qoralama",
+      "open": "Ochiq",
+      "closed": "Yopilgan"
+    },
+    "employment": {
+      "full_time": "To'liq stavka",
+      "part_time": "Yarim stavka",
+      "internship": "Amaliyot"
+    },
+    "format": {
+      "office": "Ofisda",
+      "remote": "Masofaviy",
+      "hybrid": "Gibrid"
+    },
+    "application": {
+      "applied": "Ariza berilgan",
+      "withdrawn": "Qaytarib olingan",
+      "rejected": "Rad etilgan",
+      "offered": "Taklif yuborilgan"
+    },
+    "salary": {
+      "range": "{{min}} – {{max}} so'm",
+      "exact": "{{v}} so'm",
+      "from": "{{v}} so'mdan",
+      "upTo": "{{v}} so'mgacha"
+    },
+    "fit": {
+      "value": "{{value}}% mos",
+      "meets": "Talablarga to'liq javob beradi",
+      "partial": "Qisman mos",
+      "sectorMatch": "Shu sohada tajribasi bor"
+    },
+    "company": {
+      "title": "Vakansiyalar",
+      "subtitle": "Ish e'lon qiling — tizim Run natijalariga qarab mos nomzodlarni ko'rsatadi.",
+      "new": "Yangi vakansiya",
+      "empty": "Hali vakansiya yo'q",
+      "emptyHint": "Vakansiya yarating va kerakli kompetensiyalarni belgilang: talabalar ariza beradi, mos nomzodlar esa avtomatik chiqadi.",
+      "published": "e'lon qilingan: {{date}}",
+      "created": "yaratilgan: {{date}}",
+      "applications": "Arizalar",
+      "matches": "Mos nomzodlar",
+      "newCount_one": "{{count}} ta yangi",
+      "newCount_other": "{{count}} ta yangi",
+      "close": "Yopish",
+      "reopen": "Qayta ochish",
+      "sections": "Bo'limlar",
+      "noApplications": "Hali ariza yo'q. Vakansiya ochiq bo'lsa, talabalar uni ro'yxatda ko'radi.",
+      "noMatches": "Hozircha mos nomzod yo'q. Talablarni yumshatib ko'ring yoki nomzodlar bazasi o'sishini kuting.",
+      "matchesHint": "Faqat ishga ochiq va sizdan yashirinmagan nomzodlar, moslik 50% dan yuqori. Email taklif qabul qilingach ochiladi.",
+      "alreadyApplied": "Ariza bergan",
+      "offer": "Taklif yuborish",
+      "reject": "Rad etish",
+      "rejectConfirm": "{{name}} arizasini rad etasizmi? Talabaga xabar boradi."
+    },
+    "editor": {
+      "newTitle": "Yangi vakansiya",
+      "editTitle": "Vakansiyani tahrirlash",
+      "basics": "Asosiy ma'lumot",
+      "titleLabel": "Lavozim",
+      "titlePlaceholder": "Masalan: Junior Backend dasturchi",
+      "description": "Tavsif",
+      "descriptionPlaceholder": "Vazifalar, jamoa, nimani o'rganadi, qanday sharoit...",
+      "employment": "Bandlik",
+      "format": "Ish formati",
+      "location": "Joylashuv",
+      "locationPlaceholder": "Toshkent",
+      "salaryMin": "Maosh, dan (so'm)",
+      "salaryMax": "Maosh, gacha (so'm)",
+      "salaryInvalid": "Eng kam maosh eng ko'pidan katta bo'lmasin.",
+      "requirements": "Kompetensiya talablari",
+      "requirementsHint": "Kerakli kompetensiyalarni belgilang va eng kam ballni tanlang (Run natijalari bo'yicha, 0–100).",
+      "minScore": "Umumiy ball chegarasi",
+      "scenarios": "Mashq uchun ssenariylar",
+      "scenariosHint": "Shu ishga yaqin ssenariylar (ko'pi bilan {{count}} ta) — talabalarga \"mashq qiling\" sifatida ko'rsatiladi.",
+      "save": "Saqlash",
+      "saveDraft": "Qoralama sifatida saqlash",
+      "publish": "E'lon qilish",
+      "limit": "Bir vaqtda 20 tadan ortiq ochiq vakansiya bo'lmaydi. Avval eskisini yoping."
+    },
+    "student": {
+      "title": "Vakansiyalar",
+      "subtitle": "Kompaniyalar Run natijalariga qarab nomzod qidiradi. Moslik — sizning ballaringiz va talablar solishtirmasi.",
+      "myApplications": "Mening arizalarim",
+      "closed": "Vakansiya yopilgan",
+      "empty": "Hozircha ochiq vakansiya yo'q.",
+      "noProfile": "Moslikni ko'rish va ariza berish uchun avval bitta ssenariyni tugating.",
+      "noFit": "Moslik hali hisoblanmagan",
+      "fitHint": "Talablar bo'yicha eng yaxshi Run natijalaringiz solishtiriladi.",
+      "yourApplication": "Arizangiz",
+      "seeOffer": "Taklifni ko'rish →",
+      "note": "Izoh",
+      "notePlaceholder": "Nega aynan shu ish? (ixtiyoriy)",
+      "apply": "Ariza berish",
+      "withdraw": "Arizani qaytarib olish",
+      "consent": "Ariza bilan kompaniya Run natijalaringizni ko'radi (profil ochiq bo'lmasa ham). Email faqat taklifni qabul qilsangiz ochiladi.",
+      "practice": "Mashq qiling",
+      "practiceHint": "Kompaniya tavsiya qilgan va yetishmayotgan kompetensiyalarni mashq qildiradigan ssenariylar.",
+      "done": "Tugatilgan",
+      "start": "Boshlash"
     }
   }
 }

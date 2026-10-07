@@ -24,6 +24,11 @@ import PortfolioPage from './pages/PortfolioPage'
 import ScenarioListPage from './pages/ScenarioListPage'
 import NotificationsPage from './pages/NotificationsPage'
 import ScenarioEditorPage from './pages/ScenarioEditorPage'
+import CompanyVacanciesPage from './pages/CompanyVacanciesPage'
+import CompanyVacancyPage from './pages/CompanyVacancyPage'
+import VacancyEditorPage from './pages/VacancyEditorPage'
+import VacanciesPage from './pages/VacanciesPage'
+import VacancyPage from './pages/VacancyPage'
 
 /** `/`: mehmon — landing (CONTRACT.md §14), kirgan — o'z bosh sahifasi (talaba — dashboard). */
 function Home() {
@@ -52,6 +57,12 @@ export default function App() {
               <Route path="/runs/:id/report" element={<RequireAuth><RunReportPage /></RequireAuth>} />
               <Route path="/notifications" element={<RequireAuth><NotificationsPage /></RequireAuth>} />
               <Route path="/offers" element={<RequirePermission permission="receive_offers"><OffersPage /></RequirePermission>} />
+              <Route path="/vacancies" element={<RequirePermission permission="receive_offers"><VacanciesPage /></RequirePermission>} />
+              <Route path="/vacancies/:id" element={<RequirePermission permission="receive_offers"><VacancyPage /></RequirePermission>} />
+              <Route path="/company/vacancies" element={<RequirePermission permission="manage_vacancies"><CompanyVacanciesPage /></RequirePermission>} />
+              <Route path="/company/vacancies/new" element={<RequirePermission permission="manage_vacancies"><VacancyEditorPage key="new" /></RequirePermission>} />
+              <Route path="/company/vacancies/:id" element={<RequirePermission permission="manage_vacancies"><CompanyVacancyPage /></RequirePermission>} />
+              <Route path="/company/vacancies/:id/edit" element={<RequirePermission permission="manage_vacancies"><VacancyEditorPage /></RequirePermission>} />
               <Route path="/talents" element={<RequirePermission permission="view_candidates"><TalentsPage /></RequirePermission>} />
               <Route path="/talents/offers" element={<RequirePermission permission="view_candidates"><SentOffersPage /></RequirePermission>} />
               <Route path="/talents/report" element={<RequirePermission permission="view_candidates"><CompanyReportPage /></RequirePermission>} />

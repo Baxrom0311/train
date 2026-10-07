@@ -151,10 +151,13 @@ async def test_settings_per_permissions(client, world):  # noqa: F811
     url = "/api/v1/users/me/notification-settings"
     student = (await client.get(url, headers=world["cand_h"])).json()
     assert student["email_enabled"] is True
-    assert student["available"] == ["task_delivered", "deadline_soon", "mentor_review", "report_ready", "offer_received"]
+    assert student["available"] == [
+        "task_delivered", "deadline_soon", "mentor_review", "report_ready", "offer_received", "application_rejected",
+    ]
     assert student["email_kinds"] == ["deadline_soon", "report_ready", "offer_received"]
     hr = (await client.get(url, headers=world["alpha_h"])).json()
-    assert hr["available"] == ["offer_responded"] and hr["email_kinds"] == ["offer_responded"]
+    assert hr["available"] == ["offer_responded", "application_received"]
+    assert hr["email_kinds"] == ["offer_responded", "application_received"]
 
     r = await client.put(url, headers=world["cand_h"], json={"email_enabled": False, "email_kinds": ["mentor_review"]})
     assert r.json()["email_enabled"] is False and r.json()["email_kinds"] == ["mentor_review"]

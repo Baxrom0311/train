@@ -160,7 +160,7 @@ schema / endpoint shakli) orqali gaplashadi.
 | 1 | **Core & Auth & RBAC** | `backend/app/core/`, `backend/app/models/user.py`, `backend/app/models/rbac.py`, `backend/app/api/auth.py` | Yo'q (birinchi quriladi) |
 | 2 | **Simulations & AI Mentor** | `backend/app/models/simulation.py`, `backend/app/models/ai_usage.py`, `backend/app/api/simulations.py`, `backend/app/api/submissions.py`, `backend/app/ai/` | (1)ga bog'liq |
 | 3 | **Billing & Admin approval** | `backend/app/models/billing.py`, `backend/app/api/billing.py`, `backend/app/api/admin.py` | (1)ga bog'liq |
-| 4 | **Talent Hunt** | `backend/app/models/talent.py`, `backend/app/api/talent_hunt.py`, `backend/app/talent/` | (1),(3),(9)ga bog'liq — ball Run natijalaridan (§10) |
+| 4 | **Talent Hunt** | `backend/app/models/talent.py`, `backend/app/api/talent_hunt.py`, `backend/app/api/vacancies.py`, `backend/app/talent/` | (1),(3),(9)ga bog'liq — ball Run natijalaridan (§10) |
 | 5 | **Case Cup** | `backend/app/api/case_cups.py` | (1),(2)ga bog'liq |
 | 6 | **University Portal** | `backend/app/api/university_portal.py` | (1),(3),(9)ga bog'liq — natijalar Run'lardan (§12) |
 | 7 | **Frontend (React+shadcn)** | `frontend/` | Har modul backend API'si tayyor bo'lgach, mos ekranlar — vertical slice, lekin alohida agent/task |
@@ -224,6 +224,7 @@ POST   /api/v1/talents/offers             counts against subscription's "intervi
 # Kompaniya hisobotlari (nomzodlar bazasi, takliflar voronkasi, CSV) — §20
 # Platforma statistikasi va AI sarfi (admin) — §21
 # Push obunalari va PWA — §22
+# Kompaniya vakansiyalari, moslik, arizalar — §23
 # Universitet portali (talabalar natijalari, bog'lanish) — §12.2
 ```
 
@@ -1143,6 +1144,8 @@ email_kinds JSONB` — qator yo'q bo'lsa default'lar.
 | `offer_received` | talaba | kompaniya taklif yubordi (§10.2) | offer_id, company, position | ha |
 | `offer_responded` | kompaniyaning faol xodimlari (taklifni kim yuborgani saqlanmaydi) | talaba javob berdi | offer_id, candidate, position, accepted | ha |
 
+Vakansiya arizalari turlari — §23.7.
+
 `dedupe_key`: `event:{run_id}:{node_id}:delivered`, `event:{run_id}:{node_id}:deadline`,
 `review:{submission_id}`, `final:{run_id}`, `offer:{id}`, `offer:{id}:response`.
 `title` — `short_title(brief)`; incident/decision nomi bildirishnomada
@@ -1676,3 +1679,140 @@ Push o'chirilgan (`enabled=false`) bo'lsa POST — 409.
 - `/notifications`: "Push bildirishnomalar" kartasi — holat (qo'llab-quvvatlanmaydi,
   ruxsat berilmagan, yoqilgan), yoqish/o'chirish, iOS uchun o'rnatish ko'rsatmasi.
   Server push'siz (`enabled=false`) bo'lsa karta ko'rsatilmaydi.
+
+---
+
+## 23. Kompaniya vakansiyalari (Modul 4 + 11 + 7)
+
+Talent Hunt (§10) kompaniyaga nomzodni o'zi qidirishni beradi. Vakansiya
+buning teskarisi: kompaniya ishni bir marta e'lon qiladi va qaysi
+kompetensiya qancha kerakligini aytadi. Tizim Run natijalariga (§10.1)
+qarab mos nomzodlarni ko'rsatadi, talaba esa vakansiyani ko'rib, o'zi qanchalik
+mosligini va nimani mashq qilishi kerakligini biladi va ariza beradi.
+CV yo'q — ariza = talabaning Run natijalari (profil).
+
+### 23.1 Ma'lumot (Modul 4, `models/talent.py`)
+
+`vacancies`:
+- `id, company_id (FK), created_by (FK users, SET NULL)`;
+- `title` (2–120), `description` (20–4000), `sector` (§9 `Sector`);
+- `employment` (`full_time | part_time | internship`), `work_format`
+  (`office | remote | hybrid`), `location` (≤ 120, ixtiyoriy);
+- `salary_min`, `salary_max` (so'm, butun, ≥ 0, ixtiyoriy; ikkalasi berilsa
+  `min ≤ max`);
+- `requirements` JSONB `{competency: min_score}` — §9.6 kompetensiyalaridan,
+  0–100, ko'pi bilan 6 ta (bo'sh ham mumkin); `min_score` — umumiy ball
+  chegarasi (0–100, ixtiyoriy);
+- `scenario_ids` JSONB — shu ishga yaqin ssenariylar (≤ 5, faol va nashr
+  qilingan, §9); talabaga "mashq qiling" sifatida ko'rinadi;
+- `status` (`draft | open | closed`), `published_at` (birinchi `open`),
+  `closed_at`, `created_at`, `updated_at`.
+- Bir kompaniyada bir vaqtda ko'pi bilan **20** ta `open` vakansiya (21-si —
+  409). `closed` qayta `open` qilinishi mumkin (limit tekshiriladi), `draft`ga
+  qaytmaydi.
+
+`vacancy_applications`:
+- `id, vacancy_id (FK, CASCADE), user_id (FK), note` (≤ 1000, ixtiyoriy),
+  `status` (`applied | withdrawn | rejected | offered`), `created_at`,
+  `updated_at`; `UNIQUE(vacancy_id, user_id)`.
+- `talent_offers.vacancy_id` (FK, SET NULL, ixtiyoriy) — taklif qaysi
+  vakansiyadan.
+
+### 23.2 Moslik (`talent/vacancies.py`, sof funksiya)
+
+Nomzod profili (§10.1, eng yaxshi Run'lar) va vakansiya talablaridan:
+
+- `requirements` bo'sh — `fit = overall_score` (yo'q bo'lsa 0).
+- Aks holda har talab uchun `min(1, ball / talab)` (kompetensiya bo'yicha ball
+  yo'q — 0, talab 0 — 1), `fit` = ularning o'rtachasi × 100 (1 xona).
+- `gaps: [{competency, required, actual | null}]` — `actual < required`
+  bo'lganlar (talab tartibida).
+- `meets` — `gaps` bo'sh va (`min_score` yo'q yoki `overall_score ≥ min_score`).
+- `sector_match` — vakansiya sohasida tugallangan Run bor.
+- Saralash (nomzodlar ro'yxatida): `meets`, keyin `fit`, `sector_match`,
+  `overall_score` — kamayish tartibida.
+
+### 23.3 Maxfiylik va ariza
+
+- **Mos nomzodlar** — faqat shu kompaniyaga ko'rinadigan nomzodlar (§10:
+  `is_open_to_work`, yashirmagan, faol). `fit ≥ 50` bo'lganlar, ko'pi bilan
+  50 ta.
+- **Ariza** — talabaning roziligi: ariza bergan talaba shu vakansiya
+  egasiga, `is_open_to_work=false` bo'lsa ham, **ariza ro'yxatida** ko'rinadi
+  (profil kartasi, `note`). Email baribir faqat taklif `accepted`da (§10.2).
+  Talaba arizani qaytarib olsa (`withdrawn`) — kompaniya uni boshqa ko'rmaydi.
+- Ariza faqat `open` vakansiyaga va kamida bitta tugallangan Run'i
+  (profil) bor talabadan (aks holda 422). Takror — 409; `withdrawn`dan
+  qayta `applied` mumkin, `rejected`/`offered`dan — yo'q (409).
+- Kompaniya ariza beruvchiga vakansiyadan taklif yuborsa (`POST
+  /talents/offers` + `vacancy_id`), §10 ko'rinish sharti o'rniga "shu
+  vakansiyaga `applied` ariza bor" sharti tekshiriladi; ariza — `offered`.
+  Ko'rinadigan (mos) nomzodga `vacancy_id` bilan taklif — oddiy §10 qoidasi.
+- Rad etish: `applied` → `rejected`, talabaga bildirishnoma. Vakansiya
+  yopilsa arizalar holati o'zgarmaydi (talaba "yopilgan" ko'radi).
+- Talaba vakansiyalarni ko'rinish sozlamasidan qat'i nazar ko'radi
+  (faqat tasdiqlangan kompaniyalarning `open` vakansiyalari).
+
+### 23.4 Mashq qilish
+
+Vakansiya sahifasida talabaga: kompaniya ko'rsatgan `scenario_ids`
+(faol va nashr qilinganlari, "tugatgan" belgisi bilan), so'ng `gaps`
+kompetensiyalarini baholanadigan node'larda mashq qildiradigan, talaba
+hali tugatmagan ssenariylar (§17.1 tavsiya hisobi kabi), jami ko'pi bilan 5 ta.
+
+### 23.5 Ruxsatlar
+
+- `manage_vacancies` (**yangi**, `company_hr`): o'z kompaniyasining
+  vakansiyalari, mos nomzodlar, arizalar. Shart §10.3 kabi: `org_type=company`
+  va kompaniya tasdiqlangan (aks holda 403). Boshqa kompaniya vakansiyasi — 404.
+- `receive_offers` (talaba): vakansiyalar ro'yxati, ariza, o'z arizalari.
+
+### 23.6 API (`api/vacancies.py`)
+
+```
+GET    /api/v1/company/vacancies                  manage_vacancies → [VacancyOut + counts]
+POST   /api/v1/company/vacancies                  manage_vacancies; {…, status: draft|open} → 201
+GET    /api/v1/company/vacancies/{id}             → VacancyOut + counts
+PUT    /api/v1/company/vacancies/{id}             to'liq tahrir (status'siz)
+POST   /api/v1/company/vacancies/{id}/status      {status: open|closed}
+GET    /api/v1/company/vacancies/{id}/matches     → [CandidateCard + fit, meets, gaps, sector_match, applied]
+GET    /api/v1/company/vacancies/{id}/applications → [{id, status, note, created_at, candidate: CandidateCard + fit…}]
+POST   /api/v1/company/vacancies/{id}/applications/{app_id}/reject
+
+GET    /api/v1/vacancies?sector=                  receive_offers → [VacancyCard + my fit, application_status]
+GET    /api/v1/vacancies/{id}                     receive_offers → VacancyCard + description, gaps, practice
+POST   /api/v1/vacancies/{id}/apply               {note?} → 201
+POST   /api/v1/vacancies/{id}/withdraw            → 200
+GET    /api/v1/users/me/applications              receive_offers → o'z arizalari (yangilari tepada)
+```
+
+`counts`: `applications` (`applied|offered`), `new` (`applied`),
+`matches` (`meets` bo'lgan ko'rinadigan nomzodlar). `VacancyCard`: vakansiya
+maydonlari (talablar bilan) + `company: {id, name, industry}`. Talabaga
+ro'yxat `fit` bo'yicha (profil yo'q — `null`, oxirida), teng bo'lsa
+`published_at` bo'yicha saralanadi. Talabaga `draft` va boshqa kompaniyaning
+`closed` vakansiyasi ko'rinmaydi (404), ariza bergan `closed` vakansiyasi —
+ko'rinadi.
+
+### 23.7 Bildirishnomalar (§15.2 ga qo'shimcha)
+
+| kind | Kimga | Qachon | params | Email default |
+|---|---|---|---|---|
+| `application_received` | kompaniyaning faol xodimlari | talaba ariza berdi | vacancy_id, vacancy, candidate | ha |
+| `application_rejected` | talaba | kompaniya arizani rad etdi | vacancy_id, vacancy, company | yo'q |
+
+`dedupe_key`: `application:{id}` (qayta ariza bilan qayta yuborilmaydi),
+`application:{id}:rejected`. `available`: `receive_offers` —
+`application_rejected` ham; `manage_vacancies` — `application_received`.
+
+### 23.8 Frontend
+
+- Kompaniya: `/company/vacancies` — vakansiyalar (holat, arizalar, mos
+  nomzodlar soni), yaratish/tahrirlash formasi (talablar — kompetensiya +
+  chegara slayderi, ssenariylar tanlovi); vakansiya sahifasi — "Arizalar"
+  va "Mos nomzodlar" bo'limlari, moslik foizi, yetishmayotgan
+  kompetensiyalar, taklif yuborish (lavozim nomi vakansiyadan).
+- Talaba: `/vacancies` — ro'yxat (soha filtri, moslik foizi, ariza holati),
+  vakansiya sahifasi — tavsif, talablar va o'z ballari solishtirmasi,
+  mashq qilish uchun ssenariylar ("Boshlash"), ariza / qaytarib olish.
+  Profil yo'q bo'lsa — "avval bitta ssenariyni tugating".

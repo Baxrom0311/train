@@ -45,6 +45,10 @@ def render(n: Notification) -> tuple[str, str]:
         return f"Yakuniy hisobot: {p['scenario_title']}", f"«{p['scenario_title']}» ssenariysi bo'yicha yakuniy hisobotingiz tayyor.{extra}"
     if kind == Kind.OFFER_RECEIVED:
         return f"Ish taklifi: {p['position']}", f"{p['company']} sizga «{p['position']}» lavozimiga taklif yubordi."
+    if kind == Kind.APPLICATION_RECEIVED:
+        return f"Yangi ariza: {p['vacancy']}", f"{p['candidate']} «{p['vacancy']}» vakansiyangizga ariza berdi."
+    if kind == Kind.APPLICATION_REJECTED:
+        return f"Ariza javobi: {p['vacancy']}", f"{p['company']} «{p['vacancy']}» vakansiyasi bo'yicha arizangizni rad etdi."
     answer = "qabul qildi" if p.get("accepted") else "rad etdi"
     return f"Taklifga javob: {p['position']}", f"{p['candidate']} «{p['position']}» taklifingizni {answer}."
 

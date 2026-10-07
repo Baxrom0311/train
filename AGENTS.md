@@ -38,6 +38,9 @@ AI sarfi (`ai_usage` — har `chat()` chaqiruvi `purpose` bilan; narx `.env` `LL
 Mobil PWA (`CONTRACT.md` §22): sayt telefonga o'rnatiladi (`public/manifest.webmanifest`, `public/sw.js`),
 Web Push (`pywebpush`, VAPID `.env`dan, kalit: `tools/gen_vapid_keys.py`) — vazifa, dedlayn, mentor izohi;
 Run ish stoli telefonda ixcham, bildirishnoma havolasi `?event=` bilan hodisani ochadi.
+Kompaniya vakansiyalari (`CONTRACT.md` §23, `/company/vacancies`, `/vacancies`): kompaniya talablar (kompetensiya ≥ ball)
+bilan vakansiya e'lon qiladi, mos nomzodlarni ko'radi; talaba moslik foizi, yetishmayotgan kompetensiyalar
+va mashq ssenariylarini ko'radi, ariza beradi (ariza — rozilik: yopiq profil ham kompaniyaga ko'rinadi).
 
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da

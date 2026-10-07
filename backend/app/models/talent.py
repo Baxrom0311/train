@@ -3,11 +3,14 @@ Talent Hunt moduli modellari (CONTRACT.md §5, §6 Modul 4 egaligi).
 """
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, ForeignKey, DateTime, Boolean, JSON, Enum as SAEnum, Index, text
+from sqlalchemy import Boolean, DateTime, Enum as SAEnum, ForeignKey, Index, Integer, JSON, String, UniqueConstraint, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 from app.models.rbac import GUID
-from app.models.enums import OfferResponse, TalentOfferStatus
+from app.models.enums import (
+    ApplicationStatus, Employment, OfferResponse, Sector, TalentOfferStatus, VacancyStatus, WorkFormat,
+)
 
 
 class CandidateVisibility(Base):
@@ -75,7 +78,65 @@ class TalentOffer(Base):
     )
     response_note = mapped_column(String(500), nullable=True)
     responded_at = mapped_column(DateTime(timezone=True), nullable=True)
+    # qaysi vakansiyadan (§23.3); vakansiya o'chsa taklif qoladi
+    vacancy_id = mapped_column(GUID, ForeignKey("vacancies.id", ondelete="SET NULL"), nullable=True)
     created_at = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
     )
+
+
+def _str_enum(enum_cls, name: str, length: int = 20):
+    """Postgres native enum emas — VARCHAR + CHECK (yangi qiymat migratsiyasi oson)."""
+    return SAEnum(enum_cls, native_enum=False, values_callable=lambda e: [m.value for m in e], length=length,
+                  create_constraint=True, name=name)
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+class Vacancy(Base):
+    """Kompaniya vakansiyasi va uning talablari (CONTRACT.md §23.1)."""
+    __tablename__ = "vacancies"
+    __table_args__ = (Index("ix_vacancies_company_status", "company_id", "status"),)
+
+    id = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    company_id = mapped_column(GUID, ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    created_by = mapped_column(GUID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    title = mapped_column(String(120), nullable=False)
+    description = mapped_column(String(4000), nullable=False)
+    sector = mapped_column(_str_enum(Sector, "ck_vacancies_sector"), nullable=False)
+    employment = mapped_column(_str_enum(Employment, "ck_vacancies_employment"), nullable=False)
+    work_format = mapped_column(_str_enum(WorkFormat, "ck_vacancies_work_format"), nullable=False)
+    location = mapped_column(String(120), nullable=True)
+    salary_min = mapped_column(Integer, nullable=True)
+    salary_max = mapped_column(Integer, nullable=True)
+    # {competency: min_score} — §9.6 kompetensiyalari, 0–100
+    requirements = mapped_column(JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb"))
+    min_score = mapped_column(Integer, nullable=True)
+    # shu ishga yaqin ssenariylar (str uuid), talabaga "mashq qiling"
+    scenario_ids = mapped_column(JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb"))
+    status = mapped_column(_str_enum(VacancyStatus, "ck_vacancies_status"), nullable=False, default=VacancyStatus.DRAFT)
+    published_at = mapped_column(DateTime(timezone=True), nullable=True)
+    closed_at = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow)
+    updated_at = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow, onupdate=_utcnow)
+
+
+class VacancyApplication(Base):
+    """Talabaning vakansiyaga arizasi — profilini shu kompaniyaga ko'rsatishga rozilik (§23.3)."""
+    __tablename__ = "vacancy_applications"
+    __table_args__ = (
+        UniqueConstraint("vacancy_id", "user_id", name="uq_vacancy_applications_pair"),
+        Index("ix_vacancy_applications_user", "user_id"),
+    )
+
+    id = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    vacancy_id = mapped_column(GUID, ForeignKey("vacancies.id", ondelete="CASCADE"), nullable=False)
+    user_id = mapped_column(GUID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    note = mapped_column(String(1000), nullable=True)
+    status = mapped_column(_str_enum(ApplicationStatus, "ck_vacancy_applications_status"), nullable=False,
+                           default=ApplicationStatus.APPLIED)
+    created_at = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow)
+    updated_at = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow, onupdate=_utcnow)

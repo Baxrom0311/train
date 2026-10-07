@@ -21,8 +21,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.deps import require_permission
 from app.database import get_db
 from app.models.billing import Company
-from app.models.enums import Competency, OfferResponse, OrgType, Sector, TalentOfferStatus
-from app.models.talent import CandidateVisibility, TalentOffer
+from app.models.enums import ApplicationStatus, Competency, OfferResponse, OrgType, Sector, TalentOfferStatus
+from app.models.talent import CandidateVisibility, TalentOffer, Vacancy, VacancyApplication
 from app.models.user import User
 from app.notifications.offers import offer_received, offer_responded
 from app.scenario.clock import WorkCalendar
@@ -89,6 +89,8 @@ class TalentOfferCreate(BaseModel):
     candidate_user_id: uuid.UUID
     position_title: str = Field(min_length=2, max_length=120)
     message: str = Field(min_length=10, max_length=2000)
+    # vakansiyadan yuborilsa (§23.3): ariza bergan nomzodga ko'rinish sharti o'rniga ariza tekshiriladi
+    vacancy_id: uuid.UUID | None = None
 
 
 class TalentOfferOut(BaseModel):
@@ -102,6 +104,7 @@ class TalentOfferOut(BaseModel):
     response_note: str | None
     respond_due_at: datetime | None
     responded_at: datetime | None
+    vacancy_id: uuid.UUID | None = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -200,24 +203,29 @@ ReportDays = Annotated[int | None, Query(ge=1, le=3650)]
 # Yordamchilar
 # ---------------------------------------------------------------------------
 
+async def company_of(db: AsyncSession, user: User) -> Company:
+    """Foydalanuvchi tasdiqlangan kompaniyaga tegishli (§10.3, §23.5); aks holda 403."""
+    if user.org_type != OrgType.COMPANY or not user.org_id:
+        raise HTTPException(status_code=403, detail="Only company users can access candidates")
+    company = await db.get(Company, user.org_id)
+    if not company or not company.is_verified:
+        raise HTTPException(status_code=403, detail="Company is not verified")
+    return company
+
+
 async def verified_company(
     current_user: Annotated[User, Depends(require_permission("view_candidates"))],
     db: AsyncSession = Depends(get_db),
 ) -> Company:
     """`view_candidates` + foydalanuvchi tasdiqlangan kompaniyaga tegishli (§10.3)."""
-    if current_user.org_type != OrgType.COMPANY or not current_user.org_id:
-        raise HTTPException(status_code=403, detail="Only company users can access candidates")
-    company = await db.get(Company, current_user.org_id)
-    if not company or not company.is_verified:
-        raise HTTPException(status_code=403, detail="Company is not verified")
-    return company
+    return await company_of(db, current_user)
 
 
 Candidate = Annotated[User, Depends(require_permission("receive_offers"))]
 VerifiedCompany = Annotated[Company, Depends(verified_company)]
 
 
-def _visible_to(company_id: uuid.UUID):
+def visible_to(company_id: uuid.UUID):
     """Shu kompaniyaga ko'rinadigan nomzodlar id'lari (INNER JOIN — yozuv yo'q = yopiq)."""
     hidden = cast(CandidateVisibility.hidden_from_company_ids, JSONB)
     return select(CandidateVisibility.user_id).where(
@@ -226,7 +234,7 @@ def _visible_to(company_id: uuid.UUID):
     )
 
 
-def _card(user: User, p: Profile) -> CandidateCard:
+def candidate_card(user: User, p: Profile) -> CandidateCard:
     return CandidateCard(
         id=user.id,
         full_name=user.full_name,
@@ -240,7 +248,7 @@ def _card(user: User, p: Profile) -> CandidateCard:
 
 def _profile(user: User, p: Profile) -> CandidateProfile:
     return CandidateProfile(
-        **_card(user, p).model_dump(),
+        **candidate_card(user, p).model_dump(),
         competencies=p.competencies,
         runs=[RunSummaryOut(**{k: getattr(r, k) for k in RunSummaryOut.model_fields}) for r in p.runs],
     )
@@ -248,7 +256,7 @@ def _profile(user: User, p: Profile) -> CandidateProfile:
 
 async def _visible_candidate(db: AsyncSession, company: Company, user_id: uuid.UUID) -> tuple[User, Profile]:
     """Shu kompaniyaga ko'rinadigan, faol va profili bor nomzod; aks holda 404."""
-    visible = _visible_to(company.id).where(CandidateVisibility.user_id == user_id)
+    visible = visible_to(company.id).where(CandidateVisibility.user_id == user_id)
     p = (await build_profiles(db, visible)).get(user_id)
     user = await db.get(User, user_id) if p else None
     if p is None or user is None or not user.is_active:
@@ -256,9 +264,9 @@ async def _visible_candidate(db: AsyncSession, company: Company, user_id: uuid.U
     return user, p
 
 
-async def _visible_profiles(db: AsyncSession, company: Company) -> tuple[dict[uuid.UUID, User], list[Profile]]:
+async def visible_profiles(db: AsyncSession, company: Company) -> tuple[dict[uuid.UUID, User], list[Profile]]:
     """Shu kompaniyaga ko'rinadigan faol nomzodlar va ularning profillari (§10.1)."""
-    profiles = await build_profiles(db, _visible_to(company.id))
+    profiles = await build_profiles(db, visible_to(company.id))
     if not profiles:
         return {}, []
     users = {u.id: u for u in (await db.execute(
@@ -347,7 +355,7 @@ async def get_talents(
     offset: int = Query(default=0, ge=0),
 ):
     """Ko'rinadigan, kamida bitta tugallangan Run'i bor nomzodlar (§10.4)."""
-    users, profiles = await _visible_profiles(db, company)
+    users, profiles = await visible_profiles(db, company)
 
     def score(p: Profile) -> float:
         value = p.competencies.get(competency.value) if competency else p.overall_score
@@ -365,7 +373,7 @@ async def get_talents(
         matched.sort(key=lambda p: (score(p), p.last_completed_at), reverse=True)
 
     page = matched[offset:offset + limit]
-    return CandidatePage(items=[_card(users[p.user_id], p) for p in page], total=len(matched))
+    return CandidatePage(items=[candidate_card(users[p.user_id], p) for p in page], total=len(matched))
 
 
 async def _company_offers(db: AsyncSession, company: Company, since: datetime | None = None) -> list[report.OfferRow]:
@@ -422,7 +430,7 @@ async def get_company_report(company: VerifiedCompany, days: ReportDays = None, 
     """Ko'rinadigan nomzodlar bazasi va kompaniya takliflari voronkasi (§20)."""
     now = _now()
     since = _since(now, days)
-    _, profiles = await _visible_profiles(db, company)
+    _, profiles = await visible_profiles(db, company)
     offers = [row.offer for row in await _company_offers(db, company, since)]
     return CompanyReport(
         company=ReportCompanyOut(id=company.id, name=company.name, industry=company.industry),
@@ -445,7 +453,7 @@ async def get_offers_csv(company: VerifiedCompany, days: ReportDays = None, db: 
 @router.get("/report/candidates.csv", response_class=Response)
 async def get_candidates_csv(company: VerifiedCompany, db: AsyncSession = Depends(get_db)):
     """Faqat ko'rinadigan nomzodlar, email'siz (§10.2), ball bo'yicha."""
-    users, profiles = await _visible_profiles(db, company)
+    users, profiles = await visible_profiles(db, company)
     profiles.sort(key=lambda p: (p.overall_score if p.overall_score is not None else -1, p.last_completed_at), reverse=True)
     rows = [(users[p.user_id].full_name, p) for p in profiles]
     return _csv_response(report.candidates_csv(rows), "candidates", _now())
@@ -484,8 +492,26 @@ async def create_talent_offer(offer_in: TalentOfferCreate, company: VerifiedComp
     """
     Faqat ko'rinadigan va profili bor nomzodga. Yo'q, yopiq yoki yashirilgan —
     barchasi 404 (leak yo'q). Javob kutilayotgan taklif turganda — 409.
+    Vakansiyadan: shu vakansiyaga `applied` ariza bergan nomzod ko'rinmasa ham bo'ladi (§23.3).
     """
-    await _visible_candidate(db, company, offer_in.candidate_user_id)
+    application = None
+    if offer_in.vacancy_id is not None:
+        vacancy = await db.get(Vacancy, offer_in.vacancy_id)
+        if vacancy is None or vacancy.company_id != company.id:
+            raise HTTPException(status_code=404, detail="Vacancy not found")
+        application = (await db.execute(
+            select(VacancyApplication).where(
+                VacancyApplication.vacancy_id == vacancy.id,
+                VacancyApplication.user_id == offer_in.candidate_user_id,
+                VacancyApplication.status == ApplicationStatus.APPLIED,
+            ).with_for_update()
+        )).scalars().first()
+    if application is None:
+        await _visible_candidate(db, company, offer_in.candidate_user_id)
+    else:
+        candidate = await db.get(User, offer_in.candidate_user_id)
+        if candidate is None or not candidate.is_active:
+            raise HTTPException(status_code=404, detail="Candidate not found")
 
     now = _now()
     calendar = WorkCalendar()
@@ -496,9 +522,12 @@ async def create_talent_offer(offer_in: TalentOfferCreate, company: VerifiedComp
         message=offer_in.message.strip(),
         status=TalentOfferStatus.SENT,
         respond_due_at=calendar.add_work_minutes(now, RESPOND_WORKDAYS * calendar.minutes_per_day),
+        vacancy_id=offer_in.vacancy_id,
         created_at=now,
     )
     db.add(offer)
+    if application is not None:
+        application.status = ApplicationStatus.OFFERED
     try:
         await db.flush()
         await offer_received(db, offer, company.name, now)   # §15.2
