@@ -91,21 +91,9 @@
     }
   },
   "dashboard": {
-    "title": "Dashboard",
-    "welcome": "Welcome!",
-    "welcomeSubtitle": "Welcome to TryJob — your gateway to virtual work simulations",
-    "stats": {
-      "completedSims": "Completed Simulations",
-      "activeSims": "Active Simulations",
-      "totalScore": "Total Score",
-      "rank": "Ranking"
-    },
     "recentActivity": "Recent Activity",
     "noActivity": "No activity yet",
-    "startFirst": "Start your first simulation",
-    "quickActions": "Quick Actions",
     "browseSimulations": "Browse Simulations",
-    "viewProfile": "View Profile",
     "welcomeName": "Welcome, {{name}}!",
     "university": {
       "title": "My university",
@@ -113,6 +101,58 @@
       "hint": "Your university sees your simulation results (scores and competencies). Answers and chat stay private.",
       "save": "Save",
       "saved": "Saved"
+    }
+  },
+  "growth": {
+    "title": "My growth",
+    "subtitle": "How your score and competencies change after every finished workday, and what to focus on next.",
+    "stats": {
+      "completed": "Finished runs",
+      "avgScore": "Average score",
+      "bestScore": "Best score",
+      "onTime": "Submitted on time",
+      "certificates": "Certificates"
+    },
+    "chart": {
+      "title": "Score over time",
+      "hint": "Each point is a finished run; click to open its report",
+      "single": "Finish one more run and your growth line will appear.",
+      "none": "Your reports have no overall score yet."
+    },
+    "competencies": {
+      "title": "Competencies",
+      "hint": "Current value is the average of your latest results; change is relative to your first run"
+    },
+    "trend": {
+      "up": "Growing",
+      "down": "Dropped",
+      "flat": "Steady",
+      "new": "New"
+    },
+    "focus": {
+      "title": "Worth focusing on",
+      "hint": "Your two lowest competencies right now",
+      "ai": "Latest mentor advice"
+    },
+    "recs": {
+      "title": "Next step",
+      "hint": "Scenarios that practise your weakest competencies",
+      "tasks_one": "{{count}} task",
+      "tasks_other": "{{count}} tasks",
+      "start": "Start",
+      "none": "No matching new scenarios yet.",
+      "catalog": "Browse the catalog"
+    },
+    "sectors": {
+      "title": "Sectors",
+      "runs_one": "{{count}} run",
+      "runs_other": "{{count}} runs"
+    },
+    "empty": {
+      "title": "Your growth will show up here",
+      "body": "Once you finish your first simulation, you'll see your score over time, competencies and personal recommendations.",
+      "bodyOpen": "Once you finish your current simulation, you'll see your score over time, competencies and personal recommendations here.",
+      "cta": "Choose a simulation"
     }
   },
   "simulations": {

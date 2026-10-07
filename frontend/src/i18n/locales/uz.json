@@ -91,21 +91,9 @@
     }
   },
   "dashboard": {
-    "title": "Bosh sahifa",
-    "welcome": "Xush kelibsiz!",
-    "welcomeSubtitle": "TryJob platformasiga xush kelibsiz — virtual ish simulyatsiyalari dunyosi",
-    "stats": {
-      "completedSims": "Bajarilgan simulyatsiyalar",
-      "activeSims": "Faol simulyatsiyalar",
-      "totalScore": "Umumiy ball",
-      "rank": "Reyting"
-    },
     "recentActivity": "So'nggi faoliyat",
     "noActivity": "Hali hech qanday faoliyat yo'q",
-    "startFirst": "Birinchi simulyatsiyangizni boshlang",
-    "quickActions": "Tezkor harakatlar",
     "browseSimulations": "Simulyatsiyalarni ko'rish",
-    "viewProfile": "Profilni ko'rish",
     "welcomeName": "Xush kelibsiz, {{name}}!",
     "university": {
       "title": "Universitetim",
@@ -113,6 +101,58 @@
       "hint": "Universitetingiz simulyatsiya natijalaringizni (ball va kompetensiyalar) ko'radi. Javoblar va chat ko'rinmaydi.",
       "save": "Saqlash",
       "saved": "Saqlandi"
+    }
+  },
+  "growth": {
+    "title": "Mening o'sishim",
+    "subtitle": "Har bir tugatilgan ish kunidan keyin ball va kompetensiyalaringiz qanday o'zgarayotgani, qaysi biriga e'tibor berish kerakligi.",
+    "stats": {
+      "completed": "Tugatilgan ishlar",
+      "avgScore": "O'rtacha ball",
+      "bestScore": "Eng yuqori ball",
+      "onTime": "O'z vaqtida topshirilgan",
+      "certificates": "Sertifikatlar"
+    },
+    "chart": {
+      "title": "Ball dinamikasi",
+      "hint": "Har nuqta — tugatilgan ish; bosing, hisobot ochiladi",
+      "single": "Yana bitta ishni tugatsangiz, o'sish chizig'i paydo bo'ladi.",
+      "none": "Hisobotlarda umumiy ball hali yo'q."
+    },
+    "competencies": {
+      "title": "Kompetensiyalar",
+      "hint": "Joriy qiymat — oxirgi natijalar o'rtachasi; o'zgarish — birinchi ishingizga nisbatan"
+    },
+    "trend": {
+      "up": "O'syapti",
+      "down": "Pasaydi",
+      "flat": "Barqaror",
+      "new": "Yangi"
+    },
+    "focus": {
+      "title": "Diqqat qaratish kerak",
+      "hint": "Hozircha eng past ikki kompetensiya",
+      "ai": "Mentorning oxirgi maslahatlari"
+    },
+    "recs": {
+      "title": "Keyingi qadam",
+      "hint": "Zaif kompetensiyalaringizni mashq qildiradigan ssenariylar",
+      "tasks_one": "{{count}} ta vazifa",
+      "tasks_other": "{{count}} ta vazifa",
+      "start": "Boshlash",
+      "none": "Hozircha mos yangi ssenariy yo'q.",
+      "catalog": "Katalogni ko'rish"
+    },
+    "sectors": {
+      "title": "Sohalar",
+      "runs_one": "{{count}} ta ish",
+      "runs_other": "{{count}} ta ish"
+    },
+    "empty": {
+      "title": "O'sishingiz shu yerda ko'rinadi",
+      "body": "Birinchi simulyatsiyani tugatganingizdan keyin ball dinamikasi, kompetensiyalar va shaxsiy tavsiyalar paydo bo'ladi.",
+      "bodyOpen": "Joriy simulyatsiyani tugatganingizdan keyin bu yerda ball dinamikasi, kompetensiyalar va shaxsiy tavsiyalar paydo bo'ladi.",
+      "cta": "Simulyatsiya tanlash"
     }
   },
   "simulations": {

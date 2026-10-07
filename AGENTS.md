@@ -25,6 +25,8 @@ Ssenariy muharriri (`CONTRACT.md` §16, `/admin/scenarios`): admin ssenariyni br
 tahrirlaydi (jonli tekshiruv, YAML ikki tomonlama), qoralama sifatida saqlaydi va nashr qiladi.
 Bildirishnomalar (`CONTRACT.md` §15): yangi vazifa, dedlayn, mentor izohi, hisobot va takliflar —
 navbar qo'ng'iroqchasi, `/notifications` va email (SMTP `.env`dan; bo'sh bo'lsa faqat sayt ichida).
+Talaba analitikasi (`CONTRACT.md` §17, `/dashboard`): ball dinamikasi, kompetensiyalar o'zgarishi,
+fokus kompetensiyalar, AI maslahatlari va ularni mashq qildiradigan ssenariy tavsiyalari.
 
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da

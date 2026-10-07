@@ -168,6 +168,7 @@ schema / endpoint shakli) orqali gaplashadi.
 | 9 | **Scenario Engine** | §9.10 ro'yxati (`backend/app/scenario/`, `models/scenario.py`, `api/scenarios.py`, `api/runs.py`, `api/files.py`, `backend/content/scenarios/`, `tools/import_scenario.py`) | (1),(2) interfeyslari — §9.10 |
 | 10 | **Credentials** | `backend/app/models/credential.py`, `backend/app/api/credentials.py`, `backend/app/credentials/` | (1),(6),(9)ga bog'liq — sertifikat Run'dan, portfolio §10.1 profilidan (§13) |
 | 11 | **Notifications** | `backend/app/models/notification.py`, `backend/app/api/notifications.py`, `backend/app/notifications/` | (1),(4),(9),(10)ga bog'liq — manbalar §15.2 |
+| 12 | **Analytics** | `backend/app/api/analytics.py`, `backend/app/analytics/` | (9),(10)ga bog'liq — Run natijalarini faqat o'qiydi (§17) |
 
 Qurish ketma-ketligi: **1 → (2,3 parallel) → (4,5,6 parallel) → 7 har
 bosqichda mos ravishda**. Modul 9: avval (1),(2),(8)dagi §9.10
@@ -1236,3 +1237,65 @@ noto'g'ri ta'rifni 422 bilan rad etadi (xuddi shu `errors` bilan).
   konstruktor, murakkabi — JSON); `checks` faqat YAML bo'limida;
 - "Qoralamani saqlash" va "Nashr qilish" (tasdiq bilan); nashr qilingan
   versiyani ochganda tahrir yangi qoralama bo'lib saqlanadi.
+
+---
+
+## 17. Talaba analitikasi (Modul 12 + 7)
+
+Talaba o'z o'sishini ko'radi: ball va kompetensiyalar Run'dan Run'ga qanday
+o'zgargan, qaysi kompetensiya eng zaif va uni qaysi ssenariy mashq qildiradi.
+Hisob §10.1 bilan bir xil manbadan, lekin **barcha** tugallangan Run'lar
+olinadi (profil kabi "eng yaxshisi" emas) — o'sish aynan qayta urinishlarda
+ko'rinadi.
+
+### 17.1 Manba
+
+- Faqat o'z Run'lari, `status=completed`, `final_report` yozilgan,
+  sertifikati bekor qilinmagan (§13.1). `expired`/`abandoned` hisobga
+  kirmaydi; joriy (`scheduled`/`active`) Run'lar faqat soni bilan.
+- Vaqt o'qi — `completed_at` (`last_activity_at`), o'sish tartibida.
+- Kompetensiya: har Run'ning `competency_scores`i. `first` — birinchi
+  qiymat (boshlang'ich nuqta); `current` — undan **keyingi** oxirgi 3 ta
+  qiymat o'rtachasi (bitta qiymat bo'lsa — o'sha qiymat); `delta = current −
+  first` (kamida 2 qiymat bo'lsa, aks holda `null`). Birinchi qiymat
+  `current`ga kirmaydi — aks holda 60 → 80 o'sishi "+10" ko'rinardi.
+  `trend` shu `delta`dan: ±3 ichida `flat`, katta — `up`, kichik — `down`,
+  bitta qiymat — `new`.
+- **Fokus**: `current` bo'yicha eng past 2 ta kompetensiya (ma'lumot bor
+  bo'lsa), har birida `trend`.
+- **Maslahatlar**: oxirgi Run yakuniy hisobotidagi AI `improvements`
+  (≤ 4 ta, o'zgartirilmagan holda).
+- **Tavsiya**: nashr qilingan, faol ssenariylardan talaba hali
+  tugatmaganlari; har biri fokus kompetensiyalarini baholanadigan
+  node'larida necha marta mashq qildirishi bo'yicha saralanadi (teng
+  bo'lsa — sarlavha), ko'pi bilan 3 ta; birorta fokus kompetensiyasi
+  yo'q ssenariy tavsiya qilinmaydi. Fokus bo'lmasa (hali Run yo'q) —
+  tavsiya ham yo'q, frontend katalogga yuboradi.
+
+### 17.2 API
+
+```
+GET /api/v1/users/me/analytics          kirgan foydalanuvchi, faqat o'ziniki
+→ {
+    summary: { completed, in_progress, avg_score, best_score, on_time_rate, certificates },
+    timeline: [{ run_id, scenario_title, sector, completed_at, overall_score,
+                 on_time_rate, competency_scores }],          # eskidan yangiga
+    competencies: [{ key, current, first, delta, trend, values: [number] }],   # current bo'yicha kamayish
+    sectors: [{ sector, runs, avg_score }],
+    focus: [{ key, current, trend }],
+    improvements: [string],
+    recommendations: [{ scenario_id, title, sector, company_name, duration_days,
+                        difficulty, practices: { competency: count } }]
+  }
+```
+
+`avg_score`, `on_time_rate` — Run'lar o'rtachasi (ma'lumot yo'q — `null`);
+`on_time_rate` — foiz (0–100), §9.6 hisobotidagi kabi.
+
+### 17.3 Frontend
+
+`/dashboard` (talaba) — "Mening o'sishim": umumiy raqamlar, ball chizig'i
+(har nuqta — Run, bosilsa hisobot), kompetensiyalar (joriy qiymat, o'zgarish,
+mini-chiziq), fokus va AI maslahatlari, tavsiya qilingan ssenariylar
+("Boshlash" — `POST /runs`, ochiq Run bo'lsa 409 xabari), sohalar,
+oxirgi ishlar va universitet kartasi. Grafiklar SVG, kutubxonasiz.

@@ -435,3 +435,53 @@ export interface NotificationSettings {
   email_kinds: NotificationKind[]
   available: NotificationKind[]
 }
+
+// Talaba analitikasi (backend/app/api/analytics.py, CONTRACT.md §17)
+
+export type Trend = 'up' | 'down' | 'flat' | 'new'
+
+export interface AnalyticsPoint {
+  run_id: string
+  scenario_title: string
+  sector: Sector
+  completed_at: string
+  overall_score: number | null
+  on_time_rate: number | null
+  competency_scores: Partial<Record<Competency, number>>
+}
+
+export interface CompetencyTrend {
+  key: Competency
+  current: number
+  first: number
+  delta: number | null
+  trend: Trend
+  values: number[]
+}
+
+export interface Recommendation {
+  scenario_id: string
+  title: string
+  sector: Sector
+  company_name: string
+  duration_days: number
+  difficulty: string
+  practices: Partial<Record<Competency, number>>
+}
+
+export interface StudentAnalytics {
+  summary: {
+    completed: number
+    in_progress: number
+    avg_score: number | null
+    best_score: number | null
+    on_time_rate: number | null
+    certificates: number
+  }
+  timeline: AnalyticsPoint[]
+  competencies: CompetencyTrend[]
+  sectors: { sector: Sector; runs: number; avg_score: number | null }[]
+  focus: { key: Competency; current: number; trend: Trend }[]
+  improvements: string[]
+  recommendations: Recommendation[]
+}

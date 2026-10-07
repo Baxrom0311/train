@@ -68,7 +68,8 @@ class Profile:
         return max((r.completed_at for r in self.runs), default=None)
 
 
-def _completed_runs(user_ids: Select | list[uuid.UUID]) -> Select:
+def completed_runs(user_ids: Select | list[uuid.UUID]) -> Select:
+    """Profilga kiradigan Run'lar (§10.1); talaba analitikasi ham shu filtrdan (§17.1)."""
     return (
         select(Run, Scenario)
         .join(ScenarioVersion, Run.scenario_version_id == ScenarioVersion.id)
@@ -107,7 +108,7 @@ def _better(a: RunSummary, b: RunSummary) -> bool:
 async def build_profiles(db: AsyncSession, user_ids: Select | list[uuid.UUID]) -> dict[uuid.UUID, Profile]:
     """Har foydalanuvchi uchun profil; tugallangan Run'i yo'qlar natijaga kirmaydi."""
     best: dict[tuple[uuid.UUID, uuid.UUID], RunSummary] = {}
-    for run, scenario in (await db.execute(_completed_runs(user_ids))).all():
+    for run, scenario in (await db.execute(completed_runs(user_ids))).all():
         summary = _summary(run, scenario)
         key = (run.user_id, scenario.id)
         if key not in best or _better(summary, best[key]):
