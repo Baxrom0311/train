@@ -21,7 +21,11 @@ from app.models.enums import AIEvalStatus
 from app.ai.guardrail import validate_submission_content
 from app.ai.router import run_ai_chain, _pick_persona, _build_user_prompt
 from app.scenario.jobs import (
+    DAY_REPORT_JOB,
     EVAL_JOB,
+    FINAL_REPORT_JOB,
+    day_report_job,
+    final_report_job,
     deliver_due_events,
     embed_document_chunks_job,
     evaluate_run_submission_job,
@@ -147,6 +151,9 @@ class WorkerSettings:
     functions = [
         retry_ai_eval,
         func(evaluate_run_submission_job, name=EVAL_JOB, max_tries=MAX_ATTEMPTS),
+        # natija saqlanmaydi — hisobot hali yozilmagan bo'lsa cron shu _job_id bilan qayta qo'ya oladi
+        func(day_report_job, name=DAY_REPORT_JOB, keep_result=0, max_tries=1),
+        func(final_report_job, name=FINAL_REPORT_JOB, keep_result=0, max_tries=1),
     ]
     cron_jobs = [
         # §9.8: har daqiqa — yetkazish, dedlaynlar, Run yopilishi
