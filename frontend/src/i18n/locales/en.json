@@ -38,6 +38,12 @@
       "terms": "By registering, you agree to our",
       "termsLink": "terms of use",
       "termsEnd": ""
+    },
+    "errors": {
+      "invalid": "Wrong email or password",
+      "inactive": "Account is not active yet",
+      "mismatch": "Passwords do not match",
+      "exists": "An account with this email already exists"
     }
   },
   "dashboard": {
@@ -55,7 +61,8 @@
     "startFirst": "Start your first simulation",
     "quickActions": "Quick Actions",
     "browseSimulations": "Browse Simulations",
-    "viewProfile": "View Profile"
+    "viewProfile": "View Profile",
+    "welcomeName": "Welcome, {{name}}!"
   },
   "simulations": {
     "title": "Simulations",
@@ -74,41 +81,7 @@
     "viewDetails": "View Details",
     "hours": "hours",
     "company": "Company",
-    "category": "Category",
-    "mockCards": {
-      "card1": {
-        "title": "Software Engineer Task",
-        "company": "TechNova Solutions",
-        "category": "IT/Programming",
-        "duration": "3-5 hours",
-        "difficulty": "Medium",
-        "description": "Build a backend API and optimize code in a real project environment"
-      },
-      "card2": {
-        "title": "Financial Analyst Simulation",
-        "company": "NorthBank UZ",
-        "category": "Banking/Finance",
-        "duration": "2-4 hours",
-        "difficulty": "Easy",
-        "description": "Develop financial data analysis and reporting skills"
-      },
-      "card3": {
-        "title": "Frontend Developer Task",
-        "company": "Pixel Digital Agency",
-        "category": "IT/Programming",
-        "duration": "4-6 hours",
-        "difficulty": "Hard",
-        "description": "Build modern UI components and improve user experience"
-      },
-      "card4": {
-        "title": "Credit Department Specialist",
-        "company": "Atlas Global Finance",
-        "category": "Banking/Finance",
-        "duration": "3-4 hours",
-        "difficulty": "Medium",
-        "description": "Learn the process of reviewing credit applications and assessing risk"
-      }
-    }
+    "category": "Category"
   },
   "common": {
     "loading": "Loading...",
@@ -135,5 +108,114 @@
     "uz": "O'zbek",
     "ru": "Русский",
     "en": "English"
+  },
+  "catalog": {
+    "subtitle": "A real-time workday or week: tasks, colleagues, deadlines",
+    "alreadyOpen": "You have an unfinished simulation — finish it first",
+    "openRun": "Simulation in progress · until {{date}}",
+    "continue": "Continue",
+    "sector": {
+      "IT": "IT",
+      "Banking": "Banking"
+    },
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "empty": "No simulations yet",
+    "history": "Past simulations",
+    "report": "Report"
+  },
+  "run": {
+    "status": {
+      "scheduled": "Scheduled",
+      "active": "Active",
+      "completed": "Completed",
+      "expired": "Expired",
+      "abandoned": "Abandoned"
+    }
+  },
+  "desk": {
+    "inbox": "Inbox",
+    "inboxEmpty": "Nothing has arrived yet. The workday starts at 09:00.",
+    "selectEvent": "Pick a message or task on the left",
+    "type": {
+      "message": "Message",
+      "task": "Task",
+      "incident": "Incident",
+      "decision": "Decision",
+      "day_end": "End of day"
+    },
+    "status": {
+      "pending": "Upcoming",
+      "delivered": "Awaiting answer",
+      "submitted": "Submitted",
+      "missed": "Missed",
+      "skipped": "Skipped"
+    },
+    "due": "Due: {{time}}",
+    "left": "{{time}} left",
+    "dayEndDefault": "Write a short report: what you did, what is left, tomorrow's plan.",
+    "attempts": "Attempt {{used}}/{{max}}",
+    "evaluating": "Your answer is being evaluated…",
+    "evalFailed": "Automatic evaluation failed — your answer is saved",
+    "resubmit": "Submit again",
+    "yourAnswer": "Your answer",
+    "answer": {
+      "text": "Text",
+      "code": "Code",
+      "link": "Link",
+      "file": "File (PDF, DOCX, XLSX, image)"
+    },
+    "submit": "Submit",
+    "hint": "Ask mentor for a hint",
+    "hintConfirm": "A hint lowers this task's maximum score. Continue?",
+    "hintLeft": "{{count}} hints left",
+    "chat": {
+      "mentor": "mentor",
+      "empty": "No messages yet. Ask a question.",
+      "typing": "{{name}} is typing…",
+      "placeholder": "Write a message… (Enter to send)",
+      "send": "Send",
+      "tooFast": "Too many messages — wait a moment"
+    },
+    "notFound": "Simulation not found",
+    "abandon": "Abandon",
+    "abandonConfirm": "An abandoned simulation cannot be resumed. Abandon?",
+    "tashkentTime": "Tashkent time",
+    "offHours": "Outside work hours",
+    "scheduled": "The simulation starts at {{date}}",
+    "pane": {
+      "inbox": "Inbox",
+      "event": "Task",
+      "chat": "Chat"
+    }
+  },
+  "report": {
+    "title": "Report",
+    "backToDesk": "Back to desk",
+    "pending": "Final report is being prepared…",
+    "none": "No report yet — it appears after the end of the day",
+    "final": "Final result",
+    "certificate": "Certificate",
+    "incomplete": "Incomplete",
+    "overall": "Overall score",
+    "onTime": "On time",
+    "tasksDone": "Submitted",
+    "competencies": "Competencies",
+    "strengths": "Strengths",
+    "improvements": "To improve",
+    "day": "Day {{day}}",
+    "task": "Task",
+    "status": "Status",
+    "score": "Score",
+    "late": "late",
+    "abandoned": "The simulation was abandoned — no report is generated"
+  },
+  "competency": {
+    "technical": "Technical skills",
+    "communication": "Communication",
+    "prioritization": "Prioritization",
+    "time_management": "Time management",
+    "stress_handling": "Stress handling",
+    "initiative": "Initiative"
   }
 }

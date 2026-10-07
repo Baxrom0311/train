@@ -9,11 +9,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useTheme } from '@/context/ThemeContext'
+import { useAuth } from '@/context/AuthContext'
 
 export default function Navbar() {
   const { t, i18n } = useTranslation()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
+  const { user, logout } = useAuth()
 
   const languages = [
     { code: 'uz', label: t('languages.uz') },
@@ -82,12 +84,30 @@ export default function Navbar() {
             )}
           </Button>
 
-          <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>
-            {t('nav.login')}
-          </Button>
-          <Button size="sm" onClick={() => navigate('/register')}>
-            {t('nav.register')}
-          </Button>
+          {user ? (
+            <>
+              <span className="hidden text-sm text-muted-foreground sm:inline">{user.full_name}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  logout()
+                  navigate('/login')
+                }}
+              >
+                {t('nav.logout')}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>
+                {t('nav.login')}
+              </Button>
+              <Button size="sm" onClick={() => navigate('/register')}>
+                {t('nav.register')}
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </nav>

@@ -8,8 +8,9 @@
 
 Loyiha 2026-10-07 sanasida noldan qayta qurildi (eski kod `0e4be5e`
 commitida tarixda saqlanadi). `CONTRACT.md` §6 dagi 1–6 va 8-modullar
-`main`da bor (backend API, Alembic migratsiyalari, testlar, `deploy/`);
-frontend (Modul 7) boshlang'ich holatda.
+`main`da bor (backend API, Alembic migratsiyalari, testlar, `deploy/`).
+Modul 9 (ssenariy dvigateli) backend'da tayyor, kontent `backend/content/scenarios/`da;
+frontend'da talaba "ish stoli" bor (katalog, Run sahifasi, chat, hisobot).
 
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da
@@ -20,11 +21,8 @@ tools/
 docs/CONTRACT.md
 ```
 
-Keyingi ish — **Modul 9, ssenariy dvigateli** (`CONTRACT.md` §9): eski
-`simulations` muzlatilgan, o'rniga real vaqtdagi "ishdagi kun/hafta"
-Run'lari quriladi. Qurish tartibi: §9.10 interfeyslari (Modul 1, 2, 8) →
-`backend/app/scenario/` (soat, shartlar, sxema) → modellar va migratsiya →
-dvigatel va API → AI qatlami → chat/fayllar → hisobotlar → kontent → frontend.
+Ssenariy dvigateli: `CONTRACT.md` §9. Eski `simulations` muzlatilgan,
+o'rniga real vaqtdagi "ishdagi kun/hafta" Run'lari ishlaydi.
 
 ## Ishlash qoidalari
 
@@ -47,5 +45,16 @@ dvigatel va API → AI qatlami → chat/fayllar → hisobotlar → kontent → f
 
 ## Lokal ishga tushirish
 
-Hali skelet bosqichida — birinchi modul (Core & Auth & RBAC) qurilgandan
-keyin shu bo'lim to'ldiriladi.
+PostgreSQL (pgvector) va Redis kerak. Backend (`backend/` papkasidan, `.env` bilan):
+
+```
+pip install -r requirements.txt
+alembic -c alembic/alembic.ini upgrade head          # rollar/ruxsatlar seed ham shu yerda
+python ../tools/import_scenario.py --publish content/scenarios/*.yaml
+uvicorn app.main:app --port 8000
+arq app.ai.worker.WorkerSettings                     # baholash, yetkazish cron'i, hisobotlar
+```
+
+Frontend (`frontend/`): `npm ci && npm run dev` — Vite `/api`ni
+`http://localhost:8000`ga proksilaydi (boshqa manzil: `VITE_API_TARGET`).
+Testlar: `backend/`dan `TEST_DATABASE_URL=... pytest -q`.
