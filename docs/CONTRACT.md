@@ -160,7 +160,7 @@ schema / endpoint shakli) orqali gaplashadi.
 | 1 | **Core & Auth & RBAC** | `backend/app/core/`, `backend/app/models/user.py`, `backend/app/models/rbac.py`, `backend/app/api/auth.py` | Yo'q (birinchi quriladi) |
 | 2 | **Simulations & AI Mentor** | `backend/app/models/simulation.py`, `backend/app/api/simulations.py`, `backend/app/api/submissions.py`, `backend/app/ai/` | (1)ga bog'liq |
 | 3 | **Billing & Admin approval** | `backend/app/models/billing.py`, `backend/app/api/billing.py`, `backend/app/api/admin.py` | (1)ga bog'liq |
-| 4 | **Talent Hunt** | `backend/app/models/talent.py`, `backend/app/api/talent_hunt.py` | (1),(2),(3)ga bog'liq (ball/visibility kerak) |
+| 4 | **Talent Hunt** | `backend/app/models/talent.py`, `backend/app/api/talent_hunt.py`, `backend/app/talent/` | (1),(3),(9)ga bog'liq — ball Run natijalaridan (§10) |
 | 5 | **Case Cup** | `backend/app/api/case_cups.py` | (1),(2)ga bog'liq |
 | 6 | **University Portal** | `backend/app/api/university_portal.py` | (1),(2),(3)ga bog'liq |
 | 7 | **Frontend (React+shadcn)** | `frontend/` | Har modul backend API'si tayyor bo'lgach, mos ekranlar — vertical slice, lekin alohida agent/task |
@@ -214,6 +214,8 @@ POST   /api/v1/admin/invoices/{id}/mark-paid
 PATCH  /api/v1/users/me/visibility        { is_open_to_work, hidden_from_company_ids }
 GET    /api/v1/talents                    only is_verified company + only visible candidates
 POST   /api/v1/talents/offers             counts against subscription's "interview SLA" commitment
+
+# Talent Hunt to'liq ro'yxati (profil, takliflarga javob) — §10.4
 ```
 
 ---
@@ -702,3 +704,78 @@ turi; ssenariy muharriri (admin UI).
 - **Real vaqt va talabaning darslari:** pauza yo'q qaror qabul qilingan;
   pilotdan keyin "yonib ketgan" Run'lar ulushi kuzatilsin va kerak bo'lsa
   ssenariy dedlaynlari yumshatilsin.
+
+---
+
+## 10. Talent Hunt — Run natijalari asosidagi kandidat profili
+
+Modul 4 (§6) eski `submissions` soniga emas, ssenariy dvigateli (§9)
+natijalariga tayanadi. Maxfiylik qoidalari (§5, `candidate_visibility`)
+o'zgarmaydi: yozuv yo'q yoki `is_open_to_work=false` — nomzod hech qayerda
+ko'rinmaydi; yashirilgan kompaniya uchun "topilmadi" (404), "yashirilgan" emas.
+
+### 10.1 Profil qanday hisoblanadi
+
+- Faqat `status=completed` va `final_report` yozilgan Run'lar kiradi
+  (sertifikatli ishlar). `expired`/`abandoned` profilga chiqmaydi — talaba
+  ochgan narsa uning portfoliosi, xatolar jurnali emas.
+- Bir ssenariy bir necha marta o'tilgan bo'lsa — eng yuqori
+  `overall_score`li Run olinadi.
+- `overall_score` — tanlangan Run'lar `overall_score`ining o'rtachasi;
+  `competencies` — har kompetensiya bo'yicha shu Run'lardagi ballar
+  o'rtachasi (ma'lumot yo'q kompetensiya chiqmaydi); `sectors` — ssenariy
+  sohalari.
+- Kompaniyaga talabaning javoblari, chat va fayllari **ko'rsatilmaydi** —
+  faqat ssenariy nomi, soha, sana, ball, kompetensiyalar va yakuniy
+  hisobotdagi AI xulosasi (kuchli tomonlar).
+- Modul 4 `runs`/`scenario_*` jadvallarini **faqat o'qiydi** (§9.10
+  interfeysi); dvigatel kodiga tegmaydi.
+
+### 10.2 Takliflar (`talent_offers`)
+
+- Qo'shimcha ustunlar: `response` (`accepted|declined`, nullable),
+  `response_note` (≤ 500 belgi), `responded_at`.
+- Holat: `sent` → (talaba ochdi) `viewed` → (javob berdi) `responded`.
+- `respond_due_at` = yuborilgan vaqt + **5 ish kuni** (§9.2 ish kalendari).
+- Bir kompaniya bir nomzodga javob kutilayotgan (`sent|viewed`) taklif
+  turganida yana yubora olmaydi — 409.
+- Kontakt (email) kompaniyaga **faqat talaba `accepted` qilgandan keyin**
+  ochiladi. Talaba taklifni rad etib, shu kompaniyadan yashirinishi mumkin
+  (`hidden_from_company_ids`ga qo'shiladi) — shundan keyin u kompaniya
+  nomzodni ro'yxatda ham, profilda ham ko'rmaydi.
+
+### 10.3 Ruxsatlar
+
+- `view_candidates` (`company_hr`): nomzodlar ro'yxati/profili, taklif
+  yuborish, yuborilgan takliflar. Qo'shimcha shart: foydalanuvchi
+  `org_type=company` va kompaniya `is_verified=true` (aks holda 403).
+- `receive_offers` (**yangi**, `student`): o'z ko'rinish sozlamasi, o'z
+  profili ko'rinishi, kelgan takliflar va ularga javob.
+- `GET /users/me` javobiga `permissions: [key]` qo'shiladi — frontend
+  menyuni shu ro'yxat bo'yicha quradi (rol nomi bo'yicha emas).
+
+### 10.4 API
+
+```
+GET   /api/v1/users/me/visibility          receive_offers → {is_open_to_work, hidden_from_company_ids}
+PATCH /api/v1/users/me/visibility          receive_offers
+GET   /api/v1/users/me/talent-profile      receive_offers → o'z CandidateProfile'i (ko'rinishdan qat'i nazar)
+
+GET   /api/v1/talents                      view_candidates
+      ?sector=&competency=&min_score=&sort=score|recent&limit=&offset=
+      → {items: [CandidateCard], total}
+GET   /api/v1/talents/{user_id}            view_candidates → CandidateProfile | 404
+POST  /api/v1/talents/offers               view_candidates; 404 ko'rinmasa; 409 javob kutilayotgan bo'lsa
+GET   /api/v1/talents/offers/sent          view_candidates → kompaniya takliflari (+ email faqat accepted'da)
+
+GET   /api/v1/talents/offers/my            receive_offers → kelgan takliflar (+ kompaniya nomi, sohasi)
+POST  /api/v1/talents/offers/{id}/view     receive_offers; sent → viewed
+POST  /api/v1/talents/offers/{id}/respond  receive_offers; {decision: accepted|declined, note?, hide_company?}
+```
+
+`CandidateCard`: `id, full_name, overall_score, runs_completed, sectors,
+top_competencies (3 ta), last_completed_at`. `CandidateProfile`: kartadagi
+hamma narsa + `competencies` (to'liq) + `runs: [{scenario_title,
+company_name, sector, completed_at, overall_score, competency_scores,
+strengths}]`. Ro'yxatda faqat kamida bitta tugallangan Run'i bor nomzodlar
+chiqadi.

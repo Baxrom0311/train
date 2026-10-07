@@ -183,5 +183,7 @@ async def get_me(current_user: User = Depends(get_current_active_user)):
         "full_name": current_user.full_name,
         "role": current_user.role.name,
         "org_type": current_user.org_type,
-        "org_id": current_user.org_id
+        "org_id": current_user.org_id,
+        # Frontend menyusi rol nomiga emas, ruxsatlarga qarab quriladi (CONTRACT.md §10.3)
+        "permissions": sorted(p.key for p in current_user.role.permissions),
     }
