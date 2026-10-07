@@ -351,7 +351,9 @@ har modul uchun alohida agent task yoziladi.
 | `decision` | Variantli tanlov (A/B/C); natija `flag` qo'yadi | Ha (rubrikada `correct`/`acceptable` variantlar) |
 | `day_end` | Kun yakuni: talaba qisqa hisobot yozadi → kunlik AI hisobot | Ha (muloqot) |
 
-`task`/`incident` maydonlari: `brief`, `attachments` (ssenariy fayllari),
+`task`/`incident` maydonlari: `brief`, `attachments` (ssenariy `documents`
+kalitlari — talaba hodisa yetkazilgandan keyin shu hujjatlarni o'qiy oladi;
+qolgan hujjatlarni faqat personajlar "biladi" va chatda aytadi),
 `answer_types` (`text|file|link|code`), `due_in_minutes`, `weight`,
 `competencies` (§9.6), `rubric` (faqat baholovchi ko'radi), `checks`
 (deterministik: sandbox testlari, sonli javob ± tolerance), `hints` (mentor uchun),
@@ -643,6 +645,7 @@ GET    /api/v1/runs/{id}/chat/{persona_key}
 POST   /api/v1/runs/{id}/chat/{persona_key}      AI javob; rate-limit
 POST   /api/v1/runs/{id}/abandon
 GET    /api/v1/runs/{id}/report                  kunlik + yakuniy hisobot
+GET    /api/v1/runs/{id}/documents/{key}         ilova hujjat (faqat yetkazilgan hodisaga biriktirilgan bo'lsa)
 POST   /api/v1/files                             multipart; auth + rate-limit
 GET    /api/v1/files/{id}                        faqat egasi / baholovchi / admin
 
@@ -680,7 +683,10 @@ fayliga **tegmaydi**):
 **v1:** real vaqt; kunlik va haftalik; `text`/`file`/`link`; skript + AI
 personaj (RAG, anti-spoiler); cheklangan shartlar DSL; task feedback +
 kunlik + yakuniy hisobot; kontent: **1 ta IT (1 kun) + 1 ta Bank (1 kun)**,
-keyin 1 ta haftalik.
+keyin 1 ta haftalik. Kontent `backend/content/scenarios/`da: `lazurit-go-backend-day1`
+(IT, Junior Backend), `oqsaroy-bank-credit-day1` (Bank, Junior kredit tahlilchisi).
+Barcha kompaniya, mijoz va raqamlar o'ylab topilgan; bank chegaralari
+(DSCR, ta'minot, AML) o'quv maqsadidagi ichki siyosat, real normativ emas.
 
 **v2:** `voice`/`image`/`video`; email/push bildirishnoma; murakkab
 shartlar va ko'p yakunli ssenariylar; `meeting` (jonli savol-javob) node

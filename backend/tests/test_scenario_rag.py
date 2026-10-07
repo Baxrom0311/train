@@ -25,6 +25,8 @@ def _defn(documents=None) -> ScenarioDefinition:
         data["documents"] = documents
         data["personas"][0]["knows"] = [d["key"] for d in documents]
         data["personas"][1]["knows"] = []
+        for n in data["nodes"]:
+            n.pop("attachments", None)
     return ScenarioDefinition.model_validate(data)
 
 

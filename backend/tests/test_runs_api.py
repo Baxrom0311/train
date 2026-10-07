@@ -163,3 +163,21 @@ async def test_admin_holidays(client, db_session, test_user_factory):
     assert [h["date"] for h in r.json()] == ["2026-10-08"]
     assert (await client.delete("/api/v1/admin/holidays/2026-10-08", headers=admin)).status_code == 204
     assert (await client.delete("/api/v1/admin/holidays/2026-10-08", headers=admin)).status_code == 404
+
+
+async def test_attached_documents(client, test_user_factory, scenario, clock, queue):
+    h = await _login(client, test_user_factory, "docs@example.com")
+    other = await _login(client, test_user_factory, "docs-other@example.com")
+    run_id = (await client.post("/api/v1/runs", json={"scenario_id": str(scenario)}, headers=h)).json()["run"]["id"]
+    url = f"/api/v1/runs/{run_id}/documents/doc_orders_api"
+    assert (await client.get(url, headers=h)).status_code == 404          # bug_orders hali kelmagan
+
+    clock.set("09:30")
+    r = await client.get(f"/api/v1/runs/{run_id}", headers=h)
+    bug = next(e for e in r.json()["events"] if e["node_id"] == "bug_orders")
+    assert bug["attachments"] == [{"key": "doc_orders_api", "title": "Orders API"}]
+    r = await client.get(url, headers=h)
+    assert r.status_code == 200 and r.json()["content"].startswith("/orders")
+    # biriktirilmagan (faqat personaj biladigan) hujjat va boshqa foydalanuvchi — 404
+    assert (await client.get(f"/api/v1/runs/{run_id}/documents/doc_onboarding", headers=h)).status_code == 404
+    assert (await client.get(url, headers=other)).status_code == 404

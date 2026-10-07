@@ -190,6 +190,8 @@ class ScenarioDefinition(_Strict):
                 raise ValueError(f"persona {p.key}: noma'lum hujjat(lar) {sorted(unknown)}")
 
         for n in self.nodes:
+            if unknown := set(n.attachments) - doc_keys:
+                raise ValueError(f"{n.id}: attachments → noma'lum hujjat(lar) {sorted(unknown)}")
             if n.from_ is not None and n.from_ not in persona_keys:
                 raise ValueError(f"{n.id}: noma'lum personaj `{n.from_}`")
             if n.day is not None and n.day > self.duration_days:

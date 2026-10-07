@@ -1,0 +1,335 @@
+# CONTRACT.md §9.11 — v1 Bank kontenti. Bank, mijozlar va raqamlar o'ylab topilgan;
+# chegaralar (DSCR, ta'minot, AML) o'quv maqsadidagi ichki siyosat, real normativ emas.
+slug: oqsaroy-bank-credit-day1
+title: "Oqsaroy Bank — Junior kredit tahlilchisi, 1 kun"
+sector: Banking
+company_name: "Oqsaroy Bank"          # fictional
+difficulty: junior
+duration_days: 1
+
+personas:
+  - key: gulnora
+    name: "Gulnora Azimova"
+    role: "Kichik biznes kreditlash bo'limi boshlig'i"
+    tone: "rasmiy, xotirjam, raqam va siyosatga tayanadi; xatoni ochiq, lekin hurmat bilan aytadi"
+    knows: [doc_onboarding, doc_credit_policy, doc_application, doc_bureau, doc_complaints_policy]
+    secrets:
+      - "Kredit tarixidagi 2026-yil fevraldagi 38 kunlik kechikish siyosat bo'yicha kredit qo'mitasini talab qiladi."
+    busy_reply: "Kredit qo'mitasidaman, chiqqach javob beraman."
+    deflect_reply: "Xulosani siz chiqarishingiz kerak. Kredit siyosatidagi har bir talabni arizadagi raqamlar bilan birma-bir solishtiring."
+  - key: feruza
+    name: "Feruza Saidova"
+    role: "Katta kredit tahlilchisi, mentor"
+    kind: mentor
+    tone: "iliq, sabrli, formulani eslatadi, lekin hisobni o'zi qilib bermaydi"
+    knows: [doc_onboarding, doc_credit_policy]
+    busy_reply: "Mijoz bilan uchrashuvdaman, keyinroq yozaman."
+    deflect_reply: "Raqamni o'zingiz hisoblang — formulasini kredit siyosatidan topasiz. Qaysi qadamda ikkilanayotganingizni yozing."
+  - key: jasur
+    name: "Jasur Ergashev"
+    role: "Compliance (AML) mutaxassisi"
+    tone: "qat'iy, qisqa, maxfiylikka juda e'tiborli"
+    knows: [doc_aml_policy, doc_aml_alert]
+    secrets:
+      - "Mevali Bog' MChJ bo'yicha boshqa bankdan ham so'rov kelgan."
+    busy_reply: "Hozir tekshiruvdaman. Shoshilinch bo'lsa — AML siyosatidagi tartib bo'yicha ish yuriting."
+  - key: bekzod
+    name: "Bekzod Hamidov"
+    role: "Mijoz, «Shirin Non» MChJ direktori"
+    tone: "xushmuomala, lekin shoshqaloq; tezroq ijobiy javob olishga bosim o'tkazadi"
+    knows: [doc_application]
+    secrets:
+      - "Fevralda to'lovni 38 kun kechiktirgan: yirik xaridor (supermarketlar tarmog'i) to'lovni ikki oy ushlab qolgan, keyin hammasi to'langan."
+    busy_reply: "Hozir sexdaman, keyinroq qo'ng'iroq qilaman."
+    deflect_reply: "Men bankir emasman, buni o'zingiz hisoblaysiz-da. Menga faqat tezroq javob kerak."
+
+documents:
+  - key: doc_onboarding
+    title: "Kichik biznes kreditlash bo'limi: onboarding"
+    content: |
+      Oqsaroy Bank — Toshkentdagi xususiy tijorat banki. Bo'lim kichik va o'rta biznesga kredit beradi.
+      Jamoa: Gulnora (bo'lim boshlig'i), Feruza (katta tahlilchi, yangi xodimlar mentori), 4 tahlilchi.
+      Compliance (AML) savollari — Jasur.
+
+      Ish kuni 09:00–18:00, tushlik 13:00–14:00. Har kuni 09:00 da qisqa yig'ilish (standup):
+      bugun qaysi arizalar bilan ishlayman / qaysi muddatlar bor / nima to'sib turibdi.
+
+      Asosiy qoidalar:
+      - Tahlilchi kreditni tasdiqlamaydi va mijozga va'da bermaydi. Tahlilchi xulosa yozadi,
+        qarorni limit bo'yicha bo'lim boshlig'i yoki kredit qo'mitasi qabul qiladi.
+      - Mijozdan sovg'a yoki xizmat qabul qilish taqiqlanadi; taklif bo'lsa — rahbarga xabar beriladi.
+      - Mijoz ma'lumoti faqat bank ichki tizimlarida; shaxsiy messenjerga yuborilmaydi.
+      - Har xulosa: raqamlar + qaysi siyosat bandiga asoslangani + tavsiya va shartlar.
+
+  - key: doc_credit_policy
+    title: "Kichik biznes kredit siyosati (ichki, o'quv versiyasi)"
+    content: |
+      1. Qarzni qoplash koeffitsienti (DSCR) = oylik sof operatsion daromad / barcha oylik qarz to'lovlari
+         (mavjud + yangi kredit). Talab: DSCR ≥ 1.25.
+         Sof operatsion daromad = tushum − operatsion xarajatlar (qarz to'lovlarisiz).
+      2. Ta'minot: garov bahosi ≥ kredit summasining 120% i.
+      3. Kredit tarixi: oxirgi 12 oyda 30 kundan ortiq kechikish bo'lsa — standart tasdiqlash yo'q,
+         ariza kredit qo'mitasiga chiqariladi; qo'mita stavkaga +2 foiz punkt qo'shishi mumkin.
+      4. Muddat: asbob-uskuna uchun 36 oygacha. Stavka: yillik 24%, annuitet to'lov.
+         Annuitet: to'lov = S × r / (1 − (1 + r)^−n), r — oylik stavka (yillik/12), n — oylar soni.
+      5. Biror talab bajarilmasa tahlilchi rad etishni yoki shartlarni (summani kamaytirish,
+         qo'shimcha garov, kafillik) tavsiya qiladi va ularni raqam bilan asoslaydi.
+
+  - key: doc_application
+    title: "Kredit arizasi: «Shirin Non» MChJ"
+    content: |
+      Mijoz: «Shirin Non» MChJ, non va qandolat ishlab chiqarish, 6 yil faoliyat, 34 xodim.
+      So'ralgan kredit: 300 000 000 so'm, 24 oy, maqsad — yangi tunnel pech sotib olish.
+
+      Oylik o'rtacha (oxirgi 12 oy, auditsiz hisobot):
+      - Tushum: 128 000 000 so'm
+      - Operatsion xarajatlar (xomashyo, ish haqi, ijara, kommunal, soliqlar): 99 000 000 so'm
+      - Mavjud qarz: lizing to'lovi 6 500 000 so'm/oy (yana 14 oy)
+
+      Garov: mavjud ishlab chiqarish uskunalari, mustaqil baholovchi bahosi 330 000 000 so'm.
+      Direktor: Bekzod Hamidov. Kafil taklif qilinmagan.
+
+  - key: doc_bureau
+    title: "Kredit byurosi ko'chirmasi: «Shirin Non» MChJ"
+    content: |
+      Joriy kreditlar: 1 (lizing, «Yashil Lizing» MChJ), qoldiq 87 mln so'm, to'lovlar joriy.
+      Kechikishlar (oxirgi 24 oy):
+      - 2026-yil fevral: 38 kun, to'liq to'langan.
+      - 2025-yil iyun: 4 kun.
+      Byuro reytingi: B (o'rta).
+
+  - key: doc_aml_policy
+    title: "AML: shubhali operatsiyalar tartibi (ichki, o'quv versiyasi)"
+    content: |
+      Ichki chegara: bitta naqd operatsiya 100 000 000 so'm va undan ko'p bo'lsa avtomatik nazoratga tushadi.
+      Shubha belgilari:
+      - naqd pulni chegaradan sal kam qismlarga bo'lib kiritish (strukturalash);
+      - pulning tez, ko'pincha yangi kontragentga yoki chet elga o'tkazilishi;
+      - aylanmaning mijozning odatdagi faoliyati va profiliga mos kelmasligi.
+      Tartib:
+      1. Belgilar bo'lsa — o'sha ish kuni ichida Compliance'ga ichki shubhali operatsiya xabarnomasi
+         (ISOX): mijoz, davr, operatsiyalar, qaysi belgilar, nega shubhali.
+      2. Mijozga tekshiruv haqida aytish TAQIQLANADI (ogohlantirib qo'yish).
+      3. Hisobni to'xtatish yoki operatsiyani rad etish haqida Compliance qaror qiladi, tahlilchi emas.
+      4. Faktlar yoziladi, taxmin "ehtimol" deb belgilanadi; ayblov ohangi ishlatilmaydi.
+
+  - key: doc_aml_alert
+    title: "Monitoring signali: «Mevali Bog'» MChJ hisobi"
+    content: |
+      Profil: meva-sabzavot ulgurji savdosi, odatdagi oylik aylanma ~150 mln so'm, asosan pul o'tkazmalari.
+      Oxirgi 8 kun (naqd kirim):
+      28.09  99 000 000      29.09  98 500 000      30.09  99 200 000
+      01.10  97 800 000      02.10  99 500 000      05.10  98 000 000      06.10  98 900 000
+      Jami naqd: 690 900 000 so'm.
+      Chiqim: 06.10 — 680 000 000 so'm «Silk Grain Trading FZE» (BAA) foydasiga, maqsad: "mahsulot uchun oldindan to'lov".
+      Kontragent bilan oldin operatsiya bo'lmagan. Shartnoma nusxasi bankka berilmagan.
+
+  - key: doc_complaints_policy
+    title: "Mijozlar shikoyati: standart"
+    content: |
+      - Shikoyatga 30 daqiqa ichida birinchi javob: kechirim, nima tekshirilishi, keyingi qadam va muddat.
+      - Karta bo'yicha ikki marta yechilgan summa: ikkinchi tranzaksiya tekshiruvga (chargeback) qo'yiladi,
+        natija 10 ish kunigacha. Tekshiruv tugamasdan "pul qaytadi" deb aniq va'da berilmaydi,
+        lekin xato tasdiqlansa to'liq qaytishi aytiladi.
+      - Ijtimoiy tarmoqdagi post bo'lsa — javob shaxsiy kanalda, mijoz ma'lumotlari ochiq yozilmaydi.
+      - Javobda karta raqami to'liq yozilmaydi (faqat oxirgi 4 raqam).
+      - Ichki: Karta operatsiyalari bo'limiga so'rov, CRM'da murojaat raqami.
+
+nodes:
+  - id: welcome
+    type: message
+    day: 1
+    at: "09:00"
+    from: gulnora
+    brief: |
+      Oqsaroy Bank'ga xush kelibsiz! Bugun kichik biznes kreditlash bo'limidagi birinchi kuningiz.
+      Onboarding hujjatini o'qing — ayniqsa "tahlilchi va'da bermaydi" qoidasini.
+
+  - id: standup
+    type: task
+    day: 1
+    at: "09:00"
+    from: gulnora
+    brief: |
+      Ertalabki yig'ilish. Onboarding'dagi formatda bugungi rejangizni yozing: qaysi ishlar,
+      qaysi muddatlar, nima to'sib turishi mumkin. 3–5 qator.
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Formatga mos: ishlar / muddatlar / to'siqlar"}
+      - {id: concrete, description: "Reja aniq: qaysi ariza yoki vazifa, qanday natija", weight: 2}
+      - {id: blockers, description: "To'siq yoki savol ochiq aytilgan (tizimlarga kirish, siyosat bilan tanishish)"}
+    hints:
+      - "Birinchi kunda ham reja bo'ladi: siyosat bilan tanishish, birinchi arizani tahlil qilish, muddat."
+    reference_answer: |
+      Bugun: kredit siyosati bilan tanishaman, menga berilgan birinchi arizani tahlil qilib, xulosa yozaman.
+      Muddat: xulosa tushlikkacha. To'siq: kredit byurosi tizimiga kirish huquqim hali yo'q — so'rayman.
+
+  - id: mentor_intro
+    type: message
+    day: 1
+    at: "09:20"
+    from: feruza
+    brief: |
+      Salom! Men Feruza, mentoringizman. Hisobni siz uchun qilmayman, lekin formulani yoki siyosat
+      bandini birga topamiz. Qiyin bo'lsa hint so'rang — faqat har hint task balini biroz kamaytiradi.
+
+  - id: credit_analysis
+    type: task
+    day: 1
+    at: "09:30"
+    from: gulnora
+    brief: |
+      Birinchi ariza: «Shirin Non» MChJ, 300 mln so'm, 24 oy. Siyosat bo'yicha tahlil qiling:
+      oylik to'lov, DSCR, ta'minot koeffitsienti, kredit tarixi. Xulosa: tasdiqlash / rad etish /
+      shartlar bilan — va nega. Hisob-kitoblarni ko'rsating (matn yoki Excel fayl).
+    attachments: [doc_credit_policy, doc_application, doc_bureau]
+    answer_types: [text, file]
+    due_in_minutes: 150
+    weight: 2
+    competencies: [technical]
+    rubric:
+      - {id: payment, description: "Annuitet to'lovni to'g'ri hisoblagan (≈15.86 mln so'm/oy, ±1%)"}
+      - {id: dscr, description: "DSCR to'g'ri: sof daromad 29 mln, qarz to'lovlari ≈22.36 mln, DSCR ≈1.30 ≥ 1.25 — bajariladi", weight: 2}
+      - {id: collateral, description: "Ta'minot 110% < 120% — talab bajarilmaganini aniqlagan", weight: 2}
+      - {id: history, description: "Fevraldagi 38 kunlik kechikish 12 oy ichida — standart tasdiqlash yo'q, qo'mitaga chiqariladi", weight: 1.5}
+      - {id: recommendation, description: "Tavsiya raqam bilan asoslangan: summani ≈275 mln gacha kamaytirish yoki qo'shimcha garov (≥360 mln jami), qo'mitaga chiqarish; stavka +2 p.p. ehtimoli", weight: 2}
+      - {id: structure, description: "Xulosa tartibli: raqamlar, siyosat bandlari, tavsiya, shartlar"}
+    hints:
+      - "Avval oylik to'lovni toping: r = 0.24/12 = 0.02, n = 24. Keyin DSCR maxrajiga lizing to'lovini ham qo'shing."
+      - "Siyosatning 4 ta talabini jadvalga yozing: talab → arizadagi qiymat → bajariladimi."
+      - "Ta'minot talabi bajarilmasa, garov o'zgarmagan holda maksimal summa qancha bo'lardi?"
+    reference_answer: |
+      To'lov: 300 mln × 0.02 / (1 − 1.02^−24) ≈ 15.86 mln so'm/oy.
+      Sof operatsion daromad: 128 − 99 = 29 mln. Qarz to'lovlari: 6.5 + 15.86 = 22.36 mln. DSCR ≈ 1.30 ≥ 1.25 — bajariladi.
+      Ta'minot: 330 / 300 = 110% < 120% — bajarilmaydi. Garov bilan maksimal summa 330 / 1.2 = 275 mln (DSCR ≈ 1.38).
+      Kredit tarixi: 2026-fevral 38 kun kechikish (12 oy ichida) — standart tasdiqlash yo'q, kredit qo'mitasiga.
+      Tavsiya: so'ralgan shartlarda tasdiqlash mumkin emas. Qo'mitaga: 275 mln gacha kamaytirish yoki
+      ≥30 mln qo'shimcha garov (jami ≥360 mln), kechikish sababini hujjat bilan tushuntirish; qo'mita stavkani 26% qilishi mumkin.
+
+  - id: lead_ack
+    type: message
+    after: {node: credit_analysis, event: submitted, minutes: 15}
+    from: gulnora
+    brief: "Xulosangizni oldim, tushlikdan keyin ko'rib chiqaman."
+
+  - id: client_pressure
+    type: decision
+    day: 1
+    at: "11:30"
+    from: bekzod
+    brief: |
+      Assalomu alaykum! Pech yetkazib beruvchi chegirmani faqat shu haftagacha ushlab turadi.
+      Bugun "kredit tasdiqlandi" desangiz, avans to'layman. Sizga ham rahmat sifatida yangi yil
+      bayramiga katta tort tayyorlab beraman. Nima deysiz?
+    competencies: [communication, stress_handling]
+    options:
+      - key: explain_process
+        label: "Muloyimlik bilan tushuntiraman: qarorni men emas, bank qabul qiladi; jarayon va taxminiy muddatni aytaman, sovg'ani rad etaman va Gulnora opaga xabar beraman"
+        grade: correct
+      - key: escalate_only
+        label: "Mijozga javob bermay, darhol Gulnora opaga uzataman"
+        grade: acceptable
+      - key: promise
+        label: "Mijozni yo'qotmaslik uchun \"masala hal, avansni to'layvering\" deyman"
+        grade: wrong
+        flag: promised_client
+
+  - id: lead_on_promise
+    type: message
+    day: 1
+    at: "12:00"
+    when: {flag: promised_client}
+    from: gulnora
+    brief: |
+      Bekzod aka menga qo'ng'iroq qilib, "kredit tasdiqlandi, avans to'ladim" dedi. Tahlilchi va'da bermaydi —
+      ariza hali qo'mitaga ham chiqmagan. Bu bank uchun ham, mijoz uchun ham xavf. Keyingi safar avval menga yozing.
+
+  - id: mentor_review
+    type: message
+    day: 1
+    at: "14:00"
+    when: {any: [{missed: credit_analysis}, {score_lt: {node: credit_analysis, value: 60}}]}
+    from: feruza
+    brief: |
+      «Shirin Non» xulosasini ko'rdim — siyosatning hamma talablari tekshirilmagan ko'rinadi.
+      Urinishlar qolgan bo'lsa, qayta ko'rib chiqing; formulada ikkilansangiz menga yozing.
+
+  - id: aml_review
+    type: task
+    day: 1
+    at: "14:00"
+    from: jasur
+    brief: |
+      Monitoring tizimi «Mevali Bog'» MChJ hisobi bo'yicha signal berdi. Operatsiyalarni AML tartibiga
+      ko'ra ko'rib chiqing. Agar shubha belgilari bo'lsa — Compliance uchun ichki xabarnoma (ISOX) matnini
+      yozing; bo'lmasa — nega yo'qligini asoslang.
+    attachments: [doc_aml_policy, doc_aml_alert]
+    answer_types: [text]
+    due_in_minutes: 90
+    weight: 1.5
+    competencies: [technical, communication]
+    rubric:
+      - {id: indicators, description: "Uchala belgini aniqlagan: chegaradan sal kam bo'lingan naqd kirim, yangi xorijiy kontragentga tez o'tkazma, profilga mos kelmaydigan aylanma", weight: 2}
+      - {id: facts, description: "Raqamlar va sanalar aniq: 7 operatsiya, jami ≈690.9 mln, 680 mln BAA'ga, odatdagi aylanma ~150 mln"}
+      - {id: procedure, description: "Tartibga mos: shu kunning o'zida Compliance'ga, mijozga aytilmaydi, hisobni o'zi to'xtatmaydi", weight: 2}
+      - {id: tone, description: "Faktga asoslangan neytral matn, taxminlar 'ehtimol' deb belgilangan, ayblov yo'q"}
+    hints:
+      - "AML siyosatidagi uchta belgini signal ma'lumotlari bilan birma-bir solishtiring."
+      - "Xabarnomada kim, qachon, qancha, nega shubhali — to'rt savolga javob bo'lsin. Mijozga nima deyish mumkin emas?"
+    reference_answer: |
+      ISOX: «Mevali Bog'» MChJ, 28.09–06.10. 7 ta naqd kirim 97.8–99.5 mln so'm (har biri 100 mln chegarasidan sal kam), jami 690.9 mln.
+      06.10 da 680 mln yangi kontragent «Silk Grain Trading FZE» (BAA) ga "oldindan to'lov", shartnoma yo'q.
+      Odatdagi oylik aylanma ~150 mln, asosan o'tkazmalar — 8 kunda 4.6 baravar ko'p naqd.
+      Belgilar: strukturalash ehtimoli, tez xorijga o'tkazish, profilga mos emas. Compliance'ga bugun; mijozga aytilmaydi;
+      hisob bo'yicha qaror Compliance'da. Taklif: shartnoma va kelib chiqish hujjatlarini so'rash Compliance orqali.
+
+  - id: complaint_incident
+    type: incident
+    day: 1
+    at: "15:00"
+    from: gulnora
+    brief: |
+      Shoshilinch: mijoz Dilshod R. kartasidan do'kondagi xarid uchun 2 450 000 so'm ikki marta yechilgan.
+      U ijtimoiy tarmoqda "Oqsaroy Bank pulimni o'g'irladi" deb post yozgan va bizga murojaat qilgan.
+      Call-markaz band — 30 daqiqa ichida birinchi javobni siz tayyorlang: 1) mijozga javob matni,
+      2) bank ichida qanday qadamlar qilinadi.
+    attachments: [doc_complaints_policy]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 1.5
+    competencies: [stress_handling, communication]
+    rubric:
+      - {id: empathy, description: "Kechirim va xotirjam, hurmatli ohang; mijozni ayblamaydi", weight: 1.5}
+      - {id: accurate_promise, description: "Tekshiruv (chargeback) va 10 ish kunigacha muddat aytilgan; tasdiqlanmagan qaytarishga aniq va'da yo'q", weight: 2}
+      - {id: privacy, description: "Javob shaxsiy kanalda, karta raqami to'liq yozilmagan, post ostida shaxsiy ma'lumot yo'q"}
+      - {id: internal_steps, description: "Ichki qadamlar: karta operatsiyalariga so'rov, CRM murojaat raqami, mijozga keyingi aloqa vaqti"}
+    hints:
+      - "Shikoyatlar standartidagi 30 daqiqalik birinchi javobda nima bo'lishi kerakligini sanab chiqing."
+    reference_answer: |
+      Mijozga (shaxsiy xabar): Dilshod aka, noqulaylik uchun uzr so'raymiz. *1234 kartangizdan 2 450 000 so'm ikki marta yechilganini
+      ko'rdik, ikkinchi tranzaksiya tekshiruvga qo'yildi (murojaat №...). Natija 10 ish kunigacha; xato tasdiqlansa summa to'liq qaytadi.
+      Har bosqichda sizga xabar beramiz. Ichki: karta operatsiyalari bo'limiga chargeback so'rovi, CRM'da murojaat,
+      ijtimoiy tarmoqda faqat "shaxsiy xabarda bog'landik" javobi, 2 ish kuni ichida mijozga holat bo'yicha qo'ng'iroq.
+
+  - id: complaint_thanks
+    type: message
+    after: {node: complaint_incident, event: submitted, minutes: 20}
+    from: gulnora
+    brief: "Rahmat, javobni call-markazga uzatdim. Ertaga shikoyat qanday yopilganini birga ko'ramiz."
+
+  - id: day1_end
+    type: day_end
+    day: 1
+    at: "17:30"
+    brief: |
+      Kun yakuni. Gulnora opaga qisqa hisobot yozing: bugun nima qildingiz, nima ochiq qoldi,
+      ertangi reja va bugungi kundan bitta xulosa.
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Bugungi natijalar aniq: kredit xulosasi, AML xabarnomasi, shikoyat", weight: 1.5}
+      - {id: open_items, description: "Ochiq qolgan ishlar va ertangi reja aytilgan"}
+      - {id: reflection, description: "Kundan aniq xulosa (masalan, va'da bermaslik, siyosatni raqam bilan tekshirish)"}

@@ -79,12 +79,17 @@ class OptionOut(BaseModel):
     label: str
 
 
+class AttachmentOut(BaseModel):
+    key: str
+    title: str
+
+
 class EventOut(BaseModel):
     node_id: str
     type: NodeType
     from_persona: str | None
     brief: str
-    attachments: list[str]
+    attachments: list[AttachmentOut]
     answer_types: list[str]
     options: list[OptionOut]
     status: RunEventStatus
@@ -197,6 +202,7 @@ async def _detail(db: AsyncSession, run: Run, now: datetime) -> RunDetailOut:
     for s in subs:
         by_event.setdefault(s.run_event_id, []).append(s)
 
+    docs = {d.key: d.title for d in defn.documents}
     out = []
     for e in events:
         node = defn.node(e.node_id)
@@ -207,7 +213,7 @@ async def _detail(db: AsyncSession, run: Run, now: datetime) -> RunDetailOut:
             type=node.type,
             from_persona=node.from_,
             brief=node.brief,
-            attachments=node.attachments,
+            attachments=[AttachmentOut(key=k, title=docs[k]) for k in node.attachments],
             answer_types=[t.value for t in node.answer_types],
             options=[OptionOut(key=o.key, label=o.label) for o in node.options],
             status=e.status,
@@ -520,3 +526,31 @@ async def get_report(
         competency_scores=run.competency_scores,
         final_pending=run.status in (RunStatus.COMPLETED, RunStatus.EXPIRED) and run.final_report is None,
     )
+
+
+class DocumentOut(BaseModel):
+    key: str
+    title: str
+    content: str
+
+
+@router.get("/runs/{run_id}/documents/{key}", response_model=DocumentOut)
+async def get_document(
+    run_id: uuid.UUID,
+    key: str,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_active_user),
+    now: datetime = Depends(get_now),
+):
+    """Faqat yetkazilgan hodisaga biriktirilgan hujjat; qolganlari — 404 (§9.3.2)."""
+    run, notes = await _locked(db, run_id, user, now)
+    defn = definition_for(await db.get(ScenarioVersion, run.scenario_version_id))
+    visible = (await db.execute(
+        select(RunEvent.node_id).where(RunEvent.run_id == run.id, RunEvent.status.in_(VISIBLE_STATUSES))
+    )).scalars().all()
+    await db.commit()
+    await notify.publish(notes)
+    if not any(key in defn.node(node_id).attachments for node_id in visible):
+        raise HTTPException(status_code=404, detail="Hujjat topilmadi")
+    doc = next(d for d in defn.documents if d.key == key)
+    return DocumentOut(key=doc.key, title=doc.title, content=doc.content)
