@@ -8,7 +8,8 @@ Tekshirilgan ssenariyni DB'ga yozish (CONTRACT.md §9.3.1).
 - `publish_version` — versiyani o'zgarmas qiladi; avvalgi `published`
   versiyalar `archived` bo'ladi (ularga bog'langan Run'lar ishlashda davom etadi).
 
-Hujjatlarni bo'laklash va embedding — RAG qatlami (P5) vazifasi.
+Hujjatlar shu yerda bo'laklanadi (`rag.build_chunks`); embedding'lar fon
+job'ida to'ldiriladi (`rag.embed_pending_chunks`), import tashqi API'ga bog'liq emas.
 """
 
 from datetime import datetime, timezone
@@ -18,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import ScenarioVersionStatus
 from app.models.scenario import Scenario, ScenarioDocument, ScenarioVersion
+from app.scenario.rag import build_chunks
 from app.scenario.schema import ScenarioDefinition
 
 
@@ -70,6 +72,7 @@ async def import_scenario(db: AsyncSession, defn: ScenarioDefinition) -> tuple[S
             visible_to_personas=[p.key for p in defn.personas if doc.key in p.knows],
         ))
     await db.flush()
+    await build_chunks(db, version.id)
     return version, True
 
 

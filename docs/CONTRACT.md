@@ -437,13 +437,24 @@ nodes:
   bo'laklanib, **pgvector** orqali PostgreSQL'da saqlanadi (§3: Postgres
   yagona DB qoidasi saqlanadi). Qidiruv faqat shu `scenario_version` va
   shu personajning `knows` ro'yxati bilan cheklanadi.
+  - Import paytida hujjatlar ~1200 belgilik bo'laklarga bo'linadi (150
+    belgi overlap); embedding'larni har 5 daqiqada arq cron
+    (`embed_document_chunks_job`) to'ldiradi — import tashqi API'ga bog'liq emas.
+  - Personaj biladigan hujjatlar jami 6000 belgidan kam bo'lsa — qidirilmaydi,
+    butunligicha beriladi (v1 ssenariylarining aksariyati shunday).
+  - Aks holda **gibrid**: pgvector cosine (top 20) + full-text
+    (`to_tsquery('simple', so'z1 | so'z2 ...)`, top 20) → Reciprocal Rank
+    Fusion (k=60) → top 4. Embedding yo'q bo'lsa (Gemini kaliti/API ishlamasa)
+    faqat full-text.
 - **Javobni oshkor qilmaslik (anti-spoiler), 4 qavat:**
   1. **Ma'lumot izolyatsiyasi:** rubrika, namunaviy javob, `checks` testlari
      va `hints` RAG indeksiga **hech qachon** kirmaydi — faqat baholovchi/mentor oladi.
   2. `secrets` faqat talaba aniq so'raganda aytiladi (system prompt qoidasi).
-  3. **Chiqish tekshiruvi:** AI javobi namunaviy javobga o'xshashligi
-     (embedding cosine) chegaradan oshsa → javob tashlanadi, ssenariyda
-     yozilgan zaxira javob ("Buni o'zingiz hal qiling, lekin ... ga qarang") yuboriladi.
+  3. **Chiqish tekshiruvi** (`ai/spoiler.py`): namunaviy javobning so'z
+     5-gramlaridan ≥30% i AI javobida bo'lsa **yoki** embedding cosine ≥ 0.85
+     bo'lsa → javob tashlanadi, ssenariyda yozilgan zaxira javob ("Buni
+     o'zingiz hal qiling, lekin ... ga qarang") yuboriladi. n-gram tekshiruvi
+     embedding'siz ham ishlaydi.
   4. Talaba matni mavjud `ai/guardrail.py`dan o'tadi.
 - **AI chat Run holatini o'zgartirmaydi.** Branching faqat strukturaviy
   harakatlardan (task topshirish, decision, missed) kelib chiqadi —
@@ -494,8 +505,12 @@ Kompetensiyalar (sobit ro'yxat, `enums.py`):
 
 1. **Task baholash** (arq job, topshirgandan keyin):
    - avval **deterministik** `checks` (sandbox testlari, sonli tekshiruv);
-   - keyin **rubrika bo'yicha LLM** → tuzilgan JSON:
-     `{criteria: [{id, score, evidence}], score, short_feedback}`;
+   - keyin **rubrika bo'yicha LLM** (`ai/evaluator.py: evaluate_rubric`) →
+     tuzilgan JSON `{criteria: [{id, score, evidence}], short_feedback}`;
+     mezon id'lari rubrikadagidan farq qilsa javob yaroqsiz (keyingi
+     provayder). Umumiy ball kodda: mezon ballarining og'irlikli o'rtachasi.
+     Rubrikasiz node — bitta `overall` mezoni. `submissions.rubric_scores` =
+     `{criteria, raw_score, penalty_factor, provider, model}`;
    - `short_feedback` (2–3 gap) talabaga darhol SSE orqali ko'rsatiladi.
    - Jarimalar: `late`, ishlatilgan `hints` — hammasi kodda, LLM'ning
      umumiy ballidan emas, mezon og'irliklaridan hisoblanadi.
@@ -627,7 +642,7 @@ fayliga **tegmaydi**):
 
 | Modul | Nima qo'shadi |
 |---|---|
-| 2 (AI) | `ai/llm.py`: umumiy `chat(messages, schema?) -> LLMResult` (JSON-rejim, Pydantic tekshiruv, token hisobi, model nomlari `.env`dan); `ai/` ichida: `persona_reply(ctx, history) -> str`, `evaluate_rubric(task, answer, rubric) -> RubricResult`, `embed(texts) -> list[list[float]]`, `summarize_day(...)`, `final_report(...)`; `submissions` migratsiyasi (§9.7); arq cron `deliver_due_events`ni `WorkerSettings`ga ulash (funksiyaning o'zi Modul 9'da) |
+| 2 (AI) | `ai/llm.py`: umumiy `chat(messages, schema?) -> LLMResult` (JSON-rejim, Pydantic tekshiruv, token hisobi, provayder tartibi `LLM_PROVIDERS` va model nomlari `.env`dan); `ai/` ichida: `persona_reply(ctx, history, message) -> LLMResult`, `evaluate_rubric(task, answer, rubric) -> RubricResult`, `embed(texts) -> list[list[float]]`, `summarize_day(...)`, `final_report(...)`; `submissions` migratsiyasi (§9.7); arq cron `deliver_due_events`ni `WorkerSettings`ga ulash (funksiyaning o'zi Modul 9'da) |
 | 1 (Core) | `models/enums.py`ga `Competency`, `RunStatus`, `RunEventStatus`, `NodeType`, `ChatContentType`, `ChatSender`, `ScenarioVersionStatus`, `HolidaySource`, `AIEvalStatus.PENDING`; `requirements.txt`ga `tzdata`, `holidays`, `pgvector`; `conftest.py`da `create_all`dan oldin `CREATE EXTENSION IF NOT EXISTS vector`; `file_validator`ga yangi turlar (v2) |
 | 8 (Deploy) | `postgres` image → `pgvector/pgvector:pg16`; `UPLOAD_DIR` volume; nginx'da `/api/v1/runs/*/stream` uchun `proxy_buffering off` va uzun `proxy_read_timeout` |
 | 7 (Frontend) | "Ish stoli": inbox, personajlar chati, task board, kalendar, soat, hisobot sahifasi |

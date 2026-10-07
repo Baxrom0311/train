@@ -15,6 +15,10 @@ x-backend-env: &backend-env
   DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
   GEMINI_API_KEY: ${GEMINI_API_KEY:-}
   OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  LLM_PROVIDERS: ${LLM_PROVIDERS:-deepseek,gemini,openai}
+  DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
+  GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+  OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
   UPLOAD_DIR: /data/uploads
 
 services:

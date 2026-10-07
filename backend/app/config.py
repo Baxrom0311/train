@@ -13,6 +13,19 @@ class Settings(BaseSettings):
     # (`/data/uploads`), lokalda repo ichidagi `uploads/` (.gitignore'da).
     UPLOAD_DIR: str = "uploads"
 
+    # AI provayderlari (CONTRACT.md §9.10, `app/ai/llm.py`). Kalitlar faqat
+    # .env'dan; bo'sh kalitli provayder o'tkazib yuboriladi.
+    DEEPSEEK_API_KEY: str = ""
+    GEMINI_API_KEY: str = ""
+    OPENAI_API_KEY: str = ""
+    LLM_PROVIDERS: str = "deepseek,gemini,openai"   # urinish tartibi
+    DEEPSEEK_MODEL: str = "deepseek-chat"
+    GEMINI_MODEL: str = "gemini-2.5-flash"
+    OPENAI_MODEL: str = "gpt-4o-mini"
+    LLM_TIMEOUT_SECONDS: float = 20.0
+    # §9.0 Q12 — o'lcham `models/scenario.py: EMBEDDING_DIM` bilan bir xil
+    EMBEDDING_MODEL: str = "gemini-embedding-001"
+
     # Frontend domenlari (vergul bilan ajratilgan). Bo'sh qoldirilsa CORS
     # umuman ochilmaydi (xavfsiz default) — "*" + credentials birikmasi
     # ataylab qo'llanilmaydi.
@@ -23,5 +36,9 @@ class Settings(BaseSettings):
     @property
     def cors_origins_list(self) -> List[str]:
         return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
+
+    @property
+    def llm_providers_list(self) -> List[str]:
+        return [p.strip().lower() for p in self.LLM_PROVIDERS.split(",") if p.strip()]
 
 settings = Settings()
