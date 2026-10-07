@@ -1,0 +1,346 @@
+# CONTRACT.md §9.11 — Marketing kontenti. Brend, odamlar, mijozlar va raqamlar o'ylab topilgan;
+# KPI, marja va brend qoidalari o'quv maqsadidagi ichki siyosat, real normativ emas.
+slug: oydinbarg-marketing-day1
+title: "Oydinbarg — Junior digital marketolog (SMM/performance), 1 kun"
+sector: Marketing
+company_name: "Oydinbarg"            # fictional: mahalliy tabiiy kosmetika brendi
+difficulty: junior
+duration_days: 1
+
+personas:
+  - key: dilnoza
+    name: "Dilnoza Yusupova"
+    role: "Marketing bo'limi rahbari"
+    tone: "xotirjam, talabchan, raqam va brend qoidalariga tayanadi; xatoni ochiq, lekin hurmat bilan aytadi"
+    knows: [doc_onboarding, doc_brand_guide, doc_campaign_brief, doc_campaign_results, doc_crisis_policy]
+    secrets:
+      - "Oktabr budjeti ham 15 mln so'm; rahbariyat Stories formatini to'xtatishga allaqachon moyil, lekin buni tahlil bilan asoslashni kutyapti."
+      - "Xato narx bo'yicha qaror: 15:00 gacha tushgan 37 ta buyurtma 9 900 so'mdan bajariladi — brend ishonchi qimmatroq."
+    busy_reply: "Direktor bilan yig'ilishdaman, chiqqach javob beraman."
+    deflect_reply: "Xulosani siz chiqarishingiz kerak. Brifdagi KPI'larni har bir ad set raqamlari bilan birma-bir solishtiring."
+  - key: shoxrux
+    name: "Shoxrux Aliqulov"
+    role: "Senior performance marketolog, mentor"
+    kind: mentor
+    tone: "iliq, sabrli, formulani yoki brif bandini eslatadi, lekin hisobni o'zi qilib bermaydi"
+    knows: [doc_onboarding, doc_campaign_brief, doc_brand_guide]
+    busy_reply: "Reklama kabinetida kampaniya sozlayapman, birozdan keyin yozaman."
+    deflect_reply: "Raqamni o'zingiz hisoblang — formulalar brifning oxirida bor. Qaysi ko'rsatkichda ikkilanayotganingizni yozing."
+    nudge_reply: "«{task}» dedlayni {time}da. Qaysi qadamda to'xtadingiz? Bitta ad set'ni hisoblab menga yozing — mantiqini birga tekshiramiz."
+  - key: kamola
+    name: "Kamola Nazarova"
+    role: "SMM menejer"
+    tone: "do'stona, tez yozadi, emoji'ni yaxshi ko'radi, lekin brend qoidalarini biladi"
+    knows: [doc_brand_guide, doc_product_card, doc_crisis_policy]
+    secrets:
+      - "Xato post Telegram'da avtomatik rejalashtirilgan edi; narx shablondan nusxa olinganda bitta nol tushib qolgan."
+    busy_reply: "Fotosessiyadaman, telefonni keyinroq ko'raman."
+    deflect_reply: "Matnni o'zingiz yozib ko'ring — brendbukdagi taqiqlangan so'zlar ro'yxatiga qarab chiqing, keyin ko'rib beraman."
+  - key: rustam
+    name: "Rustam Toshpo'latov"
+    role: "Tijorat direktori"
+    tone: "shoshqaloq, sotuv raqamiga e'tiborli, marketing qoidalariga sabrsiz; bosim o'tkazadi"
+    knows: [doc_product_card]
+    secrets:
+      - "Bir raqobatchi \"davolaydi\" deb yozib sotuvni oshirgan, deb eshitgan, lekin buning hech qanday dalili yo'q."
+    busy_reply: "Distribyutorlar bilan uchrashuvdaman, keyin gaplashamiz."
+    deflect_reply: "Men marketolog emasman, qanday yozishni o'zingiz bilasiz. Menga sotuv kerak."
+
+documents:
+  - key: doc_onboarding
+    title: "Marketing bo'limi: onboarding"
+    content: |
+      Oydinbarg — Toshkentdagi tabiiy kosmetika brendi: qo'l va yuz kremlari, sovun, lab balzami.
+      Sotuv: o'z sayti, Telegram-bot va 40 ta do'kon. Marketing jamoasi: Dilnoza (rahbar),
+      Shoxrux (senior performance, yangi xodimlar mentori), Kamola (SMM), dizayner va siz.
+
+      Ish kuni 09:00–18:00, tushlik 13:00–14:00. Har kuni 09:00 da qisqa yig'ilish (standup):
+      bugun nima qilaman / qaysi muddatlar bor / nima to'sib turibdi. 3–5 qator.
+
+      Asosiy qoidalar:
+      - Har bir reklama matni va post brendbukdan o'tadi. Mahsulot haqidagi da'vo faqat
+        mahsulot kartasi va laboratoriya xulosasidagi faktlarga tayanadi.
+      - Obunachi, layk yoki izoh sotib olish taqiqlanadi.
+      - Budjetni o'zgartirish faqat rahbar tasdig'i bilan; tahlilchi tavsiya beradi.
+      - Hisobot: raqam + formula + xulosa + keyingi qadam. "Yaxshi ishladi" degan baho raqamsiz yozilmaydi.
+
+  - key: doc_brand_guide
+    title: "Oydinbarg brendbuki (qisqa versiya)"
+    content: |
+      Ovoz: samimiy, xotirjam, g'amxo'r. Mijozga "siz" deb murojaat. Ilmiy asosli, ortiqcha va'dasiz.
+      Taqiqlangan so'z va da'volar: "davolaydi", "shifo", "100%", "mo'jiza", "eng zo'r", "kafolatlangan natija",
+      kasallik nomlari (ekzema, dermatit va h.k.). Kosmetika dori emas — tibbiy da'vo qilinmaydi.
+      Raqobatchi nomi yoki logotipini ishlatish taqiqlanadi.
+      Ruxsat etilgan da'volar faqat mahsulot kartasidagi tasdiqlangan faktlar.
+      Format:
+      - Instagram post: 120 so'zgacha, 1 ta aniq CTA, ko'pi bilan 2 emoji, 3 tagacha xeshteg, #oydinbarg majburiy.
+      - Telegram post: 3 xatboshigacha, havola yoki bot buyrug'i bilan tugaydi, emoji ko'pi bilan 2 ta.
+      - Narx va promokod muddati bilan yoziladi; aksiya shartlari yashirilmaydi.
+      - Blogger bilan hamkorlik postida "Reklama" belgisi majburiy.
+
+  - key: doc_campaign_brief
+    title: "Brif: «Qishki parvarish» kampaniyasi (sentyabr) va oktabr rejasi"
+    content: |
+      Mahsulot: «Bodom va shi» qo'l kremi, 75 ml, 99 000 so'm. Maqsad: saytdagi buyurtmalar.
+      Sentyabr budjeti: 15 000 000 so'm, 4 ta ad set. Oktabr budjeti ham 15 000 000 so'm.
+      KPI: CPA ≤ 75 000 so'm, ROAS ≥ 3.0. Mahsulotning yalpi marjasi 50% (tannarx, qadoq, yetkazish chiqarilgan),
+      demak ROAS 2.0 dan past ad set zarar keltiradi.
+      Retargeting auditoriyasi (oxirgi 30 kunda saytga kirganlar) ~20 000 kishi. Chastota 4.0 dan
+      oshsa reklama "charchaydi" — shu sababli retargeting budjeti chastota 4.0 ga yetguncha oshiriladi.
+      Formulalar:
+      CTR = kliklar / ko'rsatishlar; CPC = xarajat / kliklar; CR = buyurtmalar / kliklar;
+      CPA = xarajat / buyurtmalar; ROAS = daromad / xarajat; yalpi foyda = daromad × marja − xarajat;
+      chastota = ko'rsatishlar / qamrov.
+
+  - key: doc_campaign_results
+    title: "Sentyabr natijalari: reklama kabinetidan eksport"
+    content: |
+      | Ad set                               | Xarajat, so'm | Ko'rsatish | Qamrov  | Klik  | Buyurtma | Daromad, so'm |
+      |--------------------------------------|---------------|------------|---------|-------|----------|---------------|
+      | A. Instagram Reels, video            | 6 000 000     | 400 000    | 210 000 | 4 800 | 96       | 21 120 000    |
+      | B. Instagram Stories, karusel        | 4 500 000     | 500 000    | 260 000 | 3 000 | 36       | 7 560 000     |
+      | C. Telegram kanallarda reklama posti | 3 000 000     | 250 000    | 180 000 | 2 000 | 50       | 10 500 000    |
+      | D. Retargeting (Instagram)           | 1 500 000     | 60 000     | 20 000  | 1 200 | 40       | 9 600 000     |
+      Buyurtma va daromad — saytdagi analitika (UTM belgilari) bo'yicha, 7 kunlik atributsiya oynasi.
+      Telegram'dagi buyurtmalar QISH15 promokodi bilan ham tekshirilgan, farq 2 tadan kam.
+
+  - key: doc_product_card
+    title: "Mahsulot kartasi: «Bodom va shi» qo'l kremi"
+    content: |
+      Hajm 75 ml, narx 99 000 so'm. Tarkib: shi yog'i, bodom yog'i, glitserin, aloe ekstrakti, E vitamini.
+      Laboratoriya xulosasi (mustaqil sertifikatlash laboratoriyasi, 2026-avgust):
+      - ingredientlarning 92% i tabiiy kelib chiqishli;
+      - dermatologik nazorat ostida 30 kishida sinalgan, 28 kishida (93%) teri qurishi 14 kunda kamaygan;
+      - parabensiz, sun'iy bo'yoqsiz.
+      Tasnif: kosmetik vosita. Dori vositasi emas, kasallikni davolash bo'yicha sinov o'tkazilmagan.
+      Aksiya: QISH15 promokodi — 15% chegirma, 31-oktabrgacha.
+
+  - key: doc_crisis_policy
+    title: "Ijtimoiy tarmoqlarda xato va inqiroz: tartib"
+    content: |
+      1. Xato post yoki tarqalayotgan salbiy izohga 30 daqiqa ichida birinchi ochiq javob.
+      2. Xato post jim o'chirilmaydi: matn tuzatiladi va "Tuzatildi" deb belgilanadi yoki alohida
+         tuzatish posti chiqariladi; skrinshotlar baribir tarqaladi.
+      3. Salbiy izohlar o'chirilmaydi (faqat haqorat, spam yoki shaxsiy ma'lumot bo'lsa yashiriladi).
+      4. Ohang: uzr, nima bo'lgani, nima qilinyapti, mijoz uchun keyingi qadam. Ayblovsiz, bahssiz.
+      5. Kompensatsiya va narx bo'yicha qarorni marketing rahbari qabul qiladi; SMM unga zid va'da bermaydi.
+      6. Ichki: reklama/boost to'xtatiladi, sotuv va call-markazga xabar, xato sababi va qayta bo'lmasligi
+         uchun chora — o'sha kuni rahbarga qisqa hisobot.
+
+nodes:
+  - id: welcome
+    type: message
+    day: 1
+    at: "09:00"
+    from: dilnoza
+    brief: |
+      Oydinbarg'ga xush kelibsiz! Bugun marketing bo'limidagi birinchi kuningiz.
+      Onboarding va brendbukni o'qing — ayniqsa mahsulot da'volari haqidagi qoidani.
+
+  - id: standup
+    type: task
+    day: 1
+    at: "09:00"
+    from: dilnoza
+    brief: |
+      Ertalabki yig'ilish. Onboarding'dagi formatda bugungi rejangizni yozing: qaysi ishlar,
+      qaysi muddatlar, nima to'sib turishi mumkin. 3–5 qator.
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Formatga mos: ishlar / muddatlar / to'siqlar"}
+      - {id: concrete, description: "Reja aniq: qaysi vazifa, qanday natija (masalan, kampaniya tahlili tushlikkacha)", weight: 2}
+      - {id: blockers, description: "To'siq yoki savol ochiq aytilgan (reklama kabinetiga kirish, brendbuk bilan tanishish)"}
+    hints:
+      - "Birinchi kunda ham reja bo'ladi: hujjatlar bilan tanishish, birinchi vazifa va uning muddati."
+    reference_answer: |
+      Bugun: brendbuk va brifni o'qiyman, sentyabr kampaniyasi natijalarini tahlil qilib, oktabr uchun tavsiya yozaman.
+      Muddat: tahlil tushlikkacha. To'siq: reklama kabinetiga kirish huquqim hali yo'q — Shoxrux akadan so'rayman.
+
+  - id: mentor_intro
+    type: message
+    day: 1
+    at: "09:20"
+    from: shoxrux
+    brief: |
+      Salom! Men Shoxrux, mentoringizman. Hisobni siz uchun qilmayman, lekin formulani yoki brif bandini
+      birga topamiz. Qiyin bo'lsa hint so'rang — faqat har hint task balini biroz kamaytiradi.
+
+  - id: campaign_analysis
+    type: task
+    day: 1
+    at: "09:30"
+    from: dilnoza
+    brief: |
+      Sentyabrdagi «Qishki parvarish» kampaniyasi natijalarini tahlil qiling. Har bir ad set va jami uchun
+      CTR, CPC, CPA, ROAS va yalpi foydani hisoblang, KPI bilan solishtiring. Oxirida oktabrdagi 15 mln so'mni
+      ad set'lar bo'yicha qanday taqsimlashni tavsiya qiling va raqam bilan asoslang (matn yoki Excel fayl).
+    attachments: [doc_campaign_brief, doc_campaign_results]
+    answer_types: [text, file]
+    due_in_minutes: 150
+    weight: 2
+    competencies: [technical, initiative]
+    rubric:
+      - {id: metrics, description: "Ad set ko'rsatkichlari to'g'ri (±1%): A — CTR 1.2%, CPC 1 250, CPA 62 500, ROAS 3.52; B — 0.6%, 1 500, 125 000, 1.68; C — 0.8%, 1 500, 60 000, 3.5; D — 2.0%, 1 250, 37 500, 6.4", weight: 2}
+      - {id: totals, description: "Jami to'g'ri (±1%): xarajat 15 mln, 222 buyurtma, daromad 48.78 mln, CTR ≈0.91%, CPC ≈1 364, CPA ≈67 568, ROAS ≈3.25 — umumiy KPI bajarilgan"}
+      - {id: profit, description: "Yalpi foyda (marja 50%): A +4.56 mln, B −0.72 mln (zarar, ROAS < 2.0), C +2.25 mln, D +3.3 mln, jami +9.39 mln", weight: 2}
+      - {id: kpi_check, description: "B ikkala KPI'ni ham bajarmaganini (CPA 125 000 > 75 000, ROAS 1.68 < 3.0) aniqlagan; A, C, D bajargan", weight: 1.5}
+      - {id: reallocation, description: "Oktabr taqsimoti jami 15 mln: B o'chirilgan yoki kichik kreativ testiga (≤1 mln) qisqartirilgan; D chastota tufayli ≈2 mln gacha (chastota 3.0 → 4.0), qolgani A va C ga; har bir o'zgarish raqam bilan asoslangan", weight: 2}
+      - {id: structure, description: "Hisobot tartibli: jadval, formulalar, xulosa, keyingi qadam; retargeting cheklovi va atributsiya haqida eslatma"}
+    hints:
+      - "Avval bitta jadval tuzing: har bir ad set uchun beshta ko'rsatkich va KPI ustuni. Jami qatorda o'rtacha foizlarni emas, yig'indilarni bo'ling."
+      - "Brifda marja berilgan. ROAS qanday qiymatdan pastda reklama pul yo'qotadi?"
+      - "Retargeting eng samarali ko'rinadi, lekin auditoriya cheklangan. Qamrov va ko'rsatishdan chastotani toping — budjetni qanchagacha oshirish mumkin?"
+    reference_answer: |
+      A (Reels): CTR 4 800/400 000 = 1.2%, CPC 1 250, CPA 6 000 000/96 = 62 500, ROAS 21.12/6 = 3.52, foyda 10.56 − 6 = +4.56 mln.
+      B (Stories): CTR 0.6%, CPC 1 500, CPA 125 000, ROAS 1.68, foyda 3.78 − 4.5 = −0.72 mln — ikkala KPI bajarilmagan, zarar.
+      C (Telegram): CTR 0.8%, CPC 1 500, CPA 60 000, ROAS 3.5, foyda 5.25 − 3 = +2.25 mln.
+      D (Retargeting): CTR 2.0%, CPC 1 250, CPA 37 500, ROAS 6.4, foyda 4.8 − 1.5 = +3.3 mln; chastota 60 000/20 000 = 3.0.
+      Jami: 15 mln, 11 000 klik, 222 buyurtma, 48.78 mln daromad. CTR 0.91%, CPC 1 364, CPA 67 568, ROAS 3.25, foyda +9.39 mln.
+      Umumiy KPI bajarilgan, lekin B natijani pastga tortyapti.
+      Oktabr tavsiyasi (15 mln): B — to'xtatish, yangi kreativ bilan 0.5 mln test; D — 2.0 mln (chastota 4.0 chegarasi,
+      1.5 × 4/3); A — 7.5 mln; C — 5.0 mln. Ogohlantirish: budjet oshganda CPA odatda o'sadi, A va C ni haftalik nazorat qilaman;
+      D auditoriyasi kichik, natijani 7 kunlik atributsiya bilan qayta tekshiraman. Tasdiq — Dilnoza opada.
+
+  - id: lead_ack
+    type: message
+    after: {node: campaign_analysis, event: submitted, minutes: 15}
+    from: dilnoza
+    brief: "Tahlilingizni oldim, tushlikdan keyin taqsimotni birga ko'rib chiqamiz."
+
+  - id: director_claim
+    type: decision
+    day: 1
+    at: "11:30"
+    from: rustam
+    brief: |
+      Salom! Bugungi Telegram va Instagram reklamasiga shu jumlani qo'shing: "100% tabiiy krem — ekzema
+      va dermatitni 7 kunda davolaydi!" Raqobatchilar shunaqa yozib sotuvni ikki barobar oshirgan.
+      Dilnoza yig'ilishda, kutib o'tirmang — men tijorat direktoriman, javobgarlik menda. Soat 12:00 gacha chiqsin.
+    competencies: [communication, stress_handling]
+    options:
+      - key: compliant_alternative
+        label: "Hurmat bilan tushuntiraman: bu da'vo laboratoriya xulosasiga va brendbukka zid, krem dori emas. Tasdiqlangan faktlar bilan muqobil matn taklif qilaman (92% tabiiy kelib chiqishli, 93% sinovchida quruqlik kamaygan) va Dilnoza opaga xabar beraman"
+        grade: correct
+      - key: wait_for_lead
+        label: "Rustam akaga javob bermay, savolni Dilnoza opaga uzataman"
+        grade: acceptable
+      - key: publish_claim
+        label: "Direktor aytdi — jumlani reklamaga qo'shib, 12:00 gacha chiqaraman"
+        grade: wrong
+        flag: unverified_claim
+
+  - id: lead_on_claim
+    type: message
+    day: 1
+    at: "12:00"
+    when: {flag: unverified_claim}
+    from: dilnoza
+    brief: |
+      Reklamada "100% tabiiy, ekzemani davolaydi" degan jumla chiqibdi — men to'xtatdim. Laboratoriya xulosasida 92% tabiiy
+      kelib chiqish deyilgan, davolash haqida esa hech qanday sinov yo'q. Bu mijozni aldash, reklama platformasi
+      bloklashi va brend obro'si uchun xavf. Direktor bosim qilsa ham, tibbiy da'vo chiqmaydi — keyingi safar avval menga yozing.
+
+  - id: mentor_review
+    type: message
+    day: 1
+    at: "14:00"
+    when: {any: [{missed: campaign_analysis}, {score_lt: {node: campaign_analysis, value: 60}}]}
+    from: shoxrux
+    brief: |
+      Sentyabr tahlilingizni ko'rdim — hamma ad set'lar uchun foyda va KPI tekshirilmagan ko'rinadi.
+      Urinishlar qolgan bo'lsa, qayta ko'rib chiqing; formulada ikkilansangiz menga yozing.
+
+  - id: launch_copy
+    type: task
+    day: 1
+    at: "14:00"
+    from: kamola
+    brief: |
+      Ertaga «Bodom va shi» krem uchun oktabr aksiyasi boshlanadi. Tayyorlang: 1) Instagram post matni,
+      2) Telegram kanal posti, 3) A/B test uchun reklamaning ikki xil sarlavhasi (har biri 40 belgigacha)
+      va har biri qaysi gipotezani tekshirishini bir jumlada yozing. Brendbuk va mahsulot kartasiga qat'iy amal qiling.
+    attachments: [doc_brand_guide, doc_product_card]
+    answer_types: [text]
+    due_in_minutes: 90
+    weight: 1.5
+    competencies: [communication, initiative]
+    rubric:
+      - {id: claims, description: "Faqat tasdiqlangan faktlar (92% tabiiy kelib chiqishli, 30 kishidan 28 tasida quruqlik kamaygan, parabensiz); taqiqlangan so'zlar va kasallik nomlari yo'q", weight: 2}
+      - {id: offer, description: "Narx 99 000 so'm, QISH15 — 15% chegirma va 31-oktabr muddati aniq yozilgan; chegirmali narx to'g'ri bo'lsa (84 150 so'm) — qo'shimcha ijobiy", weight: 1.5}
+      - {id: format, description: "Formatga mos: Instagram ≤120 so'z, 1 CTA, ≤2 emoji, ≤3 xeshteg va #oydinbarg; Telegram ≤3 xatboshi, havola yoki bot bilan tugaydi", weight: 1.5}
+      - {id: voice, description: "Brend ovozi: samimiy, 'siz' murojaati, ortiqcha va'dasiz"}
+      - {id: ab_test, description: "Ikki sarlavha bitta o'zgaruvchi bo'yicha farqlanadi (masalan, foyda va narx), har birining gipotezasi aniq"}
+    hints:
+      - "Avval mahsulot kartasidan ishlatish mumkin bo'lgan faktlarni, brendbukdan esa taqiqlangan so'zlarni yozib oling."
+      - "A/B testda ikki sarlavha faqat bitta jihat bilan farq qilsa, natijadan xulosa chiqarish mumkin bo'ladi."
+    reference_answer: |
+      Instagram: Sovuq kunlarda qo'llaringiz ham parvarish so'raydi 🤍 «Bodom va shi» kremi shi va bodom yog'i bilan teringizni
+      namlab, yumshatadi. Ingredientlarning 92% i tabiiy kelib chiqishli, parabensiz. Sinovda 30 kishidan 28 tasida teri qurishi
+      14 kunda kamaydi. QISH15 promokodi bilan 99 000 o'rniga 84 150 so'm — 31-oktabrgacha. Buyurtma — profildagi havola orqali.
+      #oydinbarg #qishkiparvarish
+      Telegram: 1) Qish yaqin — qo'l terisi birinchi bo'lib quriydi. 2) «Bodom va shi» kremi: 75 ml, shi va bodom yog'i, E vitamini,
+      92% tabiiy kelib chiqishli tarkib. 3) QISH15 — 15% chegirma, 31-oktabrgacha. Buyurtma: @... bot, /start.
+      Sarlavhalar: A "Qishda ham yumshoq qo'llar" (foyda/hissiyot), B "Qo'l kremi 15% arzon — QISH15" (narx/taklif).
+      Gipoteza: auditoriya foydaga yoki chegirmaga ko'proq bosadimi — CTR va CPA bilan solishtiriladi.
+
+  - id: copy_ack
+    type: message
+    after: {node: launch_copy, event: submitted, minutes: 10}
+    from: kamola
+    brief: "Matnlarni oldim, dizaynerga beraman. Sarlavhalarni ertaga testga qo'yamiz!"
+
+  - id: price_incident
+    type: incident
+    day: 1
+    at: "15:00"
+    from: kamola
+    brief: |
+      SHOSHILINCH! 14:30 da Telegram kanalimizda rejalashtirilgan post chiqib ketibdi: "«Bodom va shi» kremi — atigi 9 900 so'm!"
+      Saytda esa 99 000. 30 daqiqada 37 ta buyurtma tushdi, izohlarda "aldov", "narxni yashirishyapti" degan
+      yozuvlar ko'paymoqda, bitta izoh skrinshot bilan boshqa kanallarga tarqalyapti. Dilnoza opa bilan gaplashdim:
+      bu 37 ta buyurtma 9 900 so'mdan bajariladi, undan keyingilari — yo'q. 30 daqiqa ichida tayyorlang:
+      1) kanal uchun tuzatish posti, 2) jahldor izohlarga javob shabloni, 3) ichki qadamlar va bizning taxminiy zarar.
+    attachments: [doc_crisis_policy]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 1.5
+    competencies: [stress_handling, communication]
+    rubric:
+      - {id: correction, description: "Tuzatish posti: uzr, xato aniq aytilgan (to'g'ri narx 99 000), 37 ta buyurtma 9 900 dan bajarilishi va post tuzatilgani; asl post jim o'chirilmagan", weight: 2}
+      - {id: comment_reply, description: "Izohlarga javob xotirjam, ayblovsiz, bahssiz; salbiy izohlar o'chirilmaydi; rahbar qaroridan tashqari va'da yo'q", weight: 1.5}
+      - {id: internal_steps, description: "Ichki qadamlar: rejalashtirilgan postlar va boost to'xtatiladi, sotuv/call-markazga xabar, xato sababi (shablon) va qayta bo'lmasligi uchun chora (narxni ikki kishi tekshiradi)"}
+      - {id: loss, description: "Taxminiy zarar to'g'ri: 37 × (99 000 − 9 900) = 3 296 700 so'm (±1%) — tushmagan tushum sifatida"}
+    hints:
+      - "Inqiroz tartibidagi 6 bandni o'qing: qaysi biri ochiq javob uchun, qaysi biri ichki ish uchun?"
+    reference_answer: |
+      Tuzatish posti: "Kechirasiz, bugun 14:30 dagi postda «Bodom va shi» kremi narxi xato yozildi — to'g'ri narx 99 000 so'm.
+      Xato bizniki: shu vaqtgacha 9 900 so'mdan buyurtma bergan 37 nafar mijozimiz uchun buyurtma aynan shu narxda bajariladi.
+      Asl post tuzatildi va «Tuzatildi» deb belgilandi. QISH15 promokodi bilan 15% chegirma 31-oktabrgacha amal qiladi."
+      Izohlarga: "Xato uchun uzr so'raymiz, bu ataylab qilinmagan. To'g'ri narx 99 000 so'm; xato narxda berilgan buyurtmalar
+      bajariladi. Savol bo'lsa, shaxsiy xabarda yordam beramiz." Salbiy izohlar o'chirilmaydi.
+      Ichki: rejalashtirilgan postlar va boost to'xtatildi, sotuv va call-markazga 37 ta buyurtma ro'yxati, yangi buyurtmalar 99 000 dan.
+      Sabab: shablondan nusxada bir nol tushgan; chora — narxli postni chiqarishdan oldin ikkinchi kishi tekshiradi.
+      Zarar: 37 × 89 100 = 3 296 700 so'm. Bugun Dilnoza opaga qisqa hisobot.
+
+  - id: incident_thanks
+    type: message
+    after: {node: price_incident, event: submitted, minutes: 20}
+    from: dilnoza
+    brief: "Rahmat, tuzatish postini tasdiqladim. Ertaga xato sababi va yangi tekshiruv tartibini birga yozamiz."
+
+  - id: day1_end
+    type: day_end
+    day: 1
+    at: "17:30"
+    brief: |
+      Kun yakuni. Dilnoza opaga qisqa hisobot yozing: bugun nima qildingiz, nima ochiq qoldi,
+      ertangi reja va bugungi kundan bitta xulosa.
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Bugungi natijalar aniq: kampaniya tahlili va oktabr taqsimoti, aksiya matnlari, narx xatosi bo'yicha choralar", weight: 1.5}
+      - {id: open_items, description: "Ochiq qolgan ishlar va ertangi reja aytilgan (taqsimot tasdig'i, A/B test, xato tahlili)"}
+      - {id: reflection, description: "Kundan aniq xulosa (masalan, da'voni faktga tayantirish, ROAS'ni marja bilan solishtirish, narxni ikki marta tekshirish)"}

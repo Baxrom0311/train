@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.simulation import Submission
 from app.models.enums import Sector, AIEvalStatus
 from app.ai.guardrail import validate_submission_content
-from app.ai.personas import IT_MENTOR, FINANCE_MENTOR
+from app.ai.personas import for_sector
 
 log = logging.getLogger(__name__)
 
@@ -22,9 +22,7 @@ log = logging.getLogger(__name__)
 # ──────────────────────────────────────────────
 
 def _pick_persona(sector: Sector | str | None):
-    if sector == Sector.BANKING:
-        return FINANCE_MENTOR
-    return IT_MENTOR
+    return for_sector(sector)
 
 
 def _build_user_prompt(content: str, expected_skills: list) -> str:

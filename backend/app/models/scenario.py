@@ -43,8 +43,8 @@ def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def _enum(e):
-    return SAEnum(e, native_enum=False, values_callable=lambda x: [m.value for m in x])
+def _enum(e, **kw):
+    return SAEnum(e, native_enum=False, values_callable=lambda x: [m.value for m in x], **kw)
 
 
 def _uuid_pk() -> Mapped[uuid.UUID]:
@@ -57,7 +57,7 @@ class Scenario(Base):
     id: Mapped[uuid.UUID] = _uuid_pk()
     slug: Mapped[str] = mapped_column(String(80), unique=True, nullable=False)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
-    sector: Mapped[Sector] = mapped_column(_enum(Sector), nullable=False)
+    sector: Mapped[Sector] = mapped_column(_enum(Sector, length=20), nullable=False)
     company_name: Mapped[str] = mapped_column(String(120), nullable=False)
     difficulty: Mapped[str] = mapped_column(String(20), nullable=False)
     duration_days: Mapped[int] = mapped_column(Integer, nullable=False)

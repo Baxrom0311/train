@@ -14,7 +14,7 @@ import Initials from '@/components/talent/Initials'
 import { Badge } from './Badge'
 import { api, ApiError } from '@/lib/api'
 import { formatDateTime } from '@/lib/time'
-import { COMPETENCIES, type CandidateCard, type CandidatePage, type CandidateProfile, type Sector } from '@/lib/types'
+import { COMPETENCIES, SECTORS, type CandidateCard, type CandidatePage, type CandidateProfile, type Sector } from '@/lib/types'
 
 const PAGE = 12
 const SELECT = 'h-10 rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring'
@@ -83,8 +83,7 @@ export default function TalentsPage() {
           {t('talent.filter.sector')}
           <select className={`${SELECT} block w-full sm:w-auto`} value={filters.sector} onChange={(e) => set('sector', e.target.value as Sector | '')}>
             <option value="">{t('talent.filter.any')}</option>
-            <option value="IT">{t('catalog.sector.IT')}</option>
-            <option value="Banking">{t('catalog.sector.Banking')}</option>
+            {SECTORS.map((s) => <option key={s} value={s}>{t(`catalog.sector.${s}`)}</option>)}
           </select>
         </label>
         <label className="space-y-1 text-xs font-medium text-muted-foreground">

@@ -12,11 +12,10 @@ import Initials from '@/components/talent/Initials'
 import { Badge } from './Badge'
 import { api, ApiError } from '@/lib/api'
 import { formatDateTime } from '@/lib/time'
-import type { Sector, StudentDetail, StudentPage, StudentRow, UniversityOverview } from '@/lib/types'
+import { SECTORS, type Sector, type StudentDetail, type StudentPage, type StudentRow, type UniversityOverview } from '@/lib/types'
 
 const PAGE = 25
 const SELECT = 'h-10 rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring'
-const SECTORS: Sector[] = ['IT', 'Banking']
 
 interface Filters {
   q: string

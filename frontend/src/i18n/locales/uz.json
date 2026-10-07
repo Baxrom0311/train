@@ -165,14 +165,18 @@
     "continue": "Davom etish",
     "sector": {
       "IT": "IT",
-      "Banking": "Bank"
+      "Banking": "Bank",
+      "Marketing": "Marketing",
+      "Data": "Ma'lumotlar tahlili",
+      "HR": "HR"
     },
     "days_one": "{{count}} kun",
     "days_other": "{{count}} kun",
     "empty": "Hozircha simulyatsiyalar yo'q",
     "history": "Oldingi simulyatsiyalar",
     "report": "Hisobot",
-    "realTime": "Real vaqtda"
+    "realTime": "Real vaqtda",
+    "noMatch": "Bu filtr bo'yicha ssenariy topilmadi."
   },
   "run": {
     "status": {

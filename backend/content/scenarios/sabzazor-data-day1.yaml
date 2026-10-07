@@ -1,0 +1,405 @@
+# CONTRACT.md §9.11 — Data kontenti. Kompaniya, odamlar, jadvallar va raqamlar o'ylab topilgan;
+# metrika ta'riflari va ma'lumotlar siyosati o'quv maqsadidagi ichki qoidalar.
+slug: sabzazor-data-day1
+title: "Sabzazor — Junior Data analyst, 1 kun"
+sector: Data
+company_name: "Sabzazor"             # fictional: oziq-ovqat do'konlari tarmog'i
+difficulty: junior
+duration_days: 1
+
+personas:
+  - key: madina
+    name: "Madina Yusupova"
+    role: "Analitika bo'limi rahbari"
+    tone: "xotirjam, aniq; raqamning manbasini so'raydi; halollik va maxfiylikda murosaga bormaydi"
+    knows: [doc_onboarding, doc_data_dictionary, doc_metrics, doc_reporting_policy, doc_ab_test, doc_dashboard_incident]
+    secrets:
+      - "Sergeli do'konida 1–3 oktabr kunlari muzlatgich buzilib, sut va go'sht bo'limi yopilgan — haftalik pasayishning sababi shu."
+    busy_reply: "Kengashga taqdimot tayyorlayapman, 30 daqiqadan keyin yozaman."
+    deflect_reply: "Raqamni siz chiqarishingiz kerak. Metrikalar hujjatidagi ta'rifni jadvaldagi har bir ustun bilan solishtiring."
+  - key: otabek
+    name: "Otabek Nazarov"
+    role: "Katta data analyst, mentor"
+    kind: mentor
+    tone: "do'stona, savol bilan yo'naltiradi; SQL'ni o'zi yozib bermaydi, lekin qaysi qadamni tekshirishni eslatadi"
+    knows: [doc_onboarding, doc_data_dictionary, doc_metrics]
+    busy_reply: "So'rovni optimizatsiya qilyapman, birozdan keyin javob beraman."
+    deflect_reply: "Tayyor so'rovni bermayman. Avval jadvalni ko'z bilan ko'ring: har bir qator haqiqatan alohida, to'langan va shu haftaga tegishli buyurtmami?"
+    nudge_reply: "«{task}» dedlayni {time}da. Qaysi qadamda turibsiz — so'rovmi, tozalashmi yoki xulosa? Bitta qatorni yozing, birga ko'ramiz."
+  - key: rustam
+    name: "Rustam Aliyev"
+    role: "Operatsiyalar direktori"
+    tone: "shoshqaloq, natijaga yo'naltirilgan, bosim o'tkazadi; SQL'ni bilmaydi, grafik va bitta raqamni yaxshi ko'radi"
+    knows: [doc_reporting_policy]
+    secrets:
+      - "Kengashda Sergeli bo'yicha savol bo'lsa, do'kon direktorini almashtirish masalasi ko'tarilishidan xavotirda."
+    busy_reply: "Do'konlarni aylanyapman, kechqurun yozaman."
+    deflect_reply: "Men analitik emasman, menga faqat to'g'ri va tushunarli raqam kerak."
+  - key: dilnoza
+    name: "Dilnoza Ergasheva"
+    role: "Marketing menejeri"
+    tone: "ochiq, g'oyalarga boy, statistikani kam biladi; tezroq ha yoki yo'q javob istaydi"
+    knows: [doc_ab_test]
+    secrets:
+      - "Push-xabar segmentlash sozlamasida xato bo'lgan: B guruhiga asosan yangi mijozlar tushgan, bu haqda marketingda hali hech kim bilmaydi."
+    busy_reply: "Reklama agentligi bilan uchrashuvdaman, keyin yozaman."
+  - key: sherzod
+    name: "Sherzod Toshev"
+    role: "Data engineer"
+    tone: "qisqa, texnik, ochiq; xatosini tan oladi"
+    knows: [doc_data_dictionary, doc_dashboard_incident]
+    secrets:
+      - "Bugun 14:40 da dashboard view'iga order_items jadvali bilan JOIN qo'shilgan (mahsulot kategoriyasi filtri uchun), SUM esa buyurtma darajasida qolgan."
+    busy_reply: "ETL pipeline'ni tuzatyapman, 15 daqiqadan keyin yozaman."
+
+documents:
+  - key: doc_onboarding
+    title: "Analitika bo'limi: onboarding"
+    content: |
+      Sabzazor — Toshkentdagi 12 ta do'kondan iborat oziq-ovqat tarmog'i, onlayn buyurtma va yetkazish ham bor.
+      Analitika bo'limi: Madina (rahbar), Otabek (katta analyst, yangi xodimlar mentori), 3 analyst.
+      Ma'lumotlar ombori va ETL — Sherzod (data engineer). Asosiy buyurtmachilar: operatsiyalar (Rustam), marketing (Dilnoza).
+
+      Ish kuni 09:00–18:00, tushlik 13:00–14:00. Har kuni 09:00 da standup:
+      bugun qaysi so'rov / hisobot ustida ishlayman / qachon tayyor bo'ladi / nima to'sib turibdi.
+
+      Asosiy qoidalar:
+      - Har bir raqamning manbasi bo'ladi: qaysi jadval, qaysi filtr, qaysi davr. So'rov (SQL) hisobotga ilova qilinadi.
+      - Raqamni chiqarishdan oldin ma'lumot sifati tekshiriladi: dublikatlar, NULL, qaytarilgan buyurtmalar, vaqt mintaqasi.
+      - Rahbariyat uchun xulosa texnik bo'lmagan tilda: 3–5 qator, raqam, xulosa, tavsiya, cheklovlar.
+      - Mijozlarning shaxsiy ma'lumotlari (ism, telefon) hisobot va umumiy chatlarga chiqarilmaydi.
+
+  - key: doc_data_dictionary
+    title: "Ma'lumotlar lug'ati: orders jadvali (+ namuna)"
+    content: |
+      Jadval: dwh.orders — har bir buyurtma bitta qator (do'kon kassasi va onlayn).
+      | Ustun       | Turi        | Izoh |
+      | order_id    | bigint      | Buyurtma raqami. Biznes bo'yicha unikal, lekin jadvalda PRIMARY KEY yo'q (yuklash tarixiy sabablarga ko'ra). |
+      | store_id    | text        | Do'kon kodi: CHL — Chilonzor, YUN — Yunusobod, SRG — Sergeli. |
+      | customer_id | text NULL   | Sodiqlik kartasi egasi. NULL — kartasiz (mehmon) xaridor. |
+      | order_ts    | timestamp   | Buyurtma vaqti, UTC'da saqlanadi (vaqt mintaqasisiz). Toshkent = UTC+5, yozgi vaqt yo'q. |
+      | amount_sum  | bigint      | Buyurtma summasi, so'm (chegirmadan keyin). |
+      | status      | text        | paid — to'langan; refunded — to'liq qaytarilgan. |
+
+      Bog'liq jadval: dwh.order_items — buyurtmadagi har bir mahsulot bitta qator
+      (order_id, product_id, category, qty, price). Bitta buyurtmada o'rtacha 3 ta mahsulot.
+
+      Namuna: 3 do'kon, 2026-yil 28.09–04.10 haftasi atrofidagi yuklama (o'quv uchun qisqartirilgan, 14 qator):
+      order_id | store_id | customer_id | order_ts (UTC)    | amount_sum | status
+      1001     | CHL      | C01         | 2026-09-27 21:10  | 185000     | paid
+      1002     | CHL      | C02         | 2026-09-28 06:45  |  92000     | paid
+      1003     | YUN      | C03         | 2026-09-28 09:20  | 240000     | paid
+      1004     | CHL      | C01         | 2026-09-29 12:05  |  64000     | paid
+      1005     | SRG      | C04         | 2026-09-29 14:30  | 310000     | paid
+      1005     | SRG      | C04         | 2026-09-29 14:30  | 310000     | paid
+      1006     | YUN      | C05         | 2026-09-30 08:15  | 128000     | refunded
+      1007     | YUN      | NULL        | 2026-09-30 10:40  |  76000     | paid
+      1008     | SRG      | C06         | 2026-10-01 07:55  |  54000     | paid
+      1009     | CHL      | C02         | 2026-10-02 13:10  | 143000     | paid
+      1010     | YUN      | C03         | 2026-10-03 11:25  |  99000     | paid
+      1011     | SRG      | C04         | 2026-10-03 16:50  |  87000     | paid
+      1012     | CHL      | C07         | 2026-10-04 19:40  | 210000     | paid
+      1013     | YUN      | C08         | 2026-10-04 05:30  |  66000     | paid
+
+  - key: doc_metrics
+    title: "Metrikalar ta'rifi (ichki standart)"
+    content: |
+      Hisobot haftasi: dushanba 00:00 dan yakshanba 23:59 gacha, Toshkent vaqti bo'yicha.
+      1. Tushum = hafta ichidagi status = 'paid' buyurtmalar amount_sum yig'indisi. Qaytarilganlar kiritilmaydi.
+      2. Buyurtmalar soni = noyob order_id soni (faqat to'langanlar).
+      3. O'rtacha chek = tushum / buyurtmalar soni, so'mgacha yaxlitlanadi.
+      4. Takroriy xaridor ulushi = hafta ichida kamida 2 ta to'langan buyurtmasi bor xaridorlar /
+         kamida 1 ta to'langan buyurtmasi bor xaridorlar. Kartasiz (customer_id NULL) xaridorlar
+         ikkala qismga ham kiritilmaydi. Foizda, 1 xona aniqlikda.
+      5. Har bir hisobotda: davr, filtrlar, chiqarib tashlangan qatorlar soni va sababi yoziladi.
+
+  - key: doc_reporting_policy
+    title: "Hisobot va ma'lumotlar halolligi siyosati"
+    content: |
+      - Rahbariyat va kengash hisobotlarida ma'lumot tanlab olib tashlanmaydi. Biror do'kon yoki davr
+        chiqarilsa, bu sahifada ochiq yoziladi va sababi aytiladi.
+      - Grafik o'qlari manipulyatsiya qilinmaydi: ustunli grafikda Y o'qi 0 dan boshlanadi.
+      - Yomon natija yashirilmaydi — izoh bilan beriladi: sabab (ma'lum bo'lsa), ta'sir, choralar.
+      - Kelishmovchilik bo'lsa, analyst o'zi qaror qilmaydi: analitika bo'limi rahbariga yozadi.
+      - Mijozlarning shaxsiy ma'lumotlari faqat agregat ko'rinishda; telefon, ism umumiy kanalga chiqarilmaydi.
+
+  - key: doc_ab_test
+    title: "A/B test: «Hafta oxiri −10%» push-kuponi"
+    content: |
+      Maqsad: ilovadagi push-xabar orqali 10% chegirma kuponi xaridni oshiradimi?
+      Davr: 21–27 sentyabr. Tasodifiy taqsimot 50/50 rejalashtirilgan. Konversiya = push olgan foydalanuvchi
+      7 kun ichida kamida bitta buyurtma qilgan.
+
+      | Guruh          | Segment          | Foydalanuvchilar | Buyurtma qilganlar |
+      | A (kuponsiz)   | yangi mijozlar   | 200              | 10                 |
+      | A (kuponsiz)   | doimiy mijozlar  | 800              | 160                |
+      | B (kupon −10%) | yangi mijozlar   | 800              | 56                 |
+      | B (kupon −10%) | doimiy mijozlar  | 200              | 44                 |
+
+      Marketing dashboard'idagi umumiy natija: A — 170 / 1000 = 17%, B — 100 / 1000 = 10%.
+      Eslatma: yangi mijozlar odatda doimiylardan ancha kam xarid qiladi.
+
+  - key: doc_dashboard_incident
+    title: "«Kunlik tushum» dashboard'i: view va bugungi ko'rsatkichlar"
+    content: |
+      View (bugun 14:40 da yangilangan versiya):
+      ```sql
+      CREATE OR REPLACE VIEW mart.daily_revenue AS
+      SELECT o.store_id,
+             DATE(o.order_ts + INTERVAL '5 hours') AS day,
+             SUM(o.amount_sum) AS revenue,
+             COUNT(*) AS orders
+      FROM dwh.orders o
+      JOIN dwh.order_items i ON i.order_id = o.order_id
+      WHERE o.status = 'paid'
+      GROUP BY 1, 2;
+      ```
+
+      Kecha (06.10) tarmoq bo'yicha:
+      - Dashboard 14:30 dagi holat: tushum 486.4 mln so'm, buyurtmalar 13 890.
+      - Dashboard hozir: tushum 1 452.7 mln so'm, buyurtmalar 41 670.
+      - Kassa tizimi (POS) hisoboti 06.10: 486.4 mln so'm.
+      - dwh.order_items: 06.10 uchun 41 670 qator.
+
+nodes:
+  - id: welcome
+    type: message
+    day: 1
+    at: "09:00"
+    from: madina
+    brief: |
+      Sabzazor analitika bo'limiga xush kelibsiz! Bugun birinchi kuningiz. Onboarding hujjatini o'qing —
+      ayniqsa "har raqamning manbasi bo'ladi" va "avval ma'lumot sifati" qoidalarini.
+
+  - id: standup
+    type: task
+    day: 1
+    at: "09:00"
+    from: madina
+    brief: |
+      Ertalabki standup. Onboarding'dagi formatda bugungi rejangizni yozing: qaysi hisobot,
+      qachon tayyor bo'ladi, nima to'sib turishi mumkin. 3–5 qator.
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Formatga mos: ish / muddat / to'siqlar"}
+      - {id: concrete, description: "Reja aniq: qaysi hisobot yoki so'rov, qanday natija, qachongacha", weight: 2}
+      - {id: blockers, description: "To'siq yoki savol ochiq aytilgan (omborga kirish huquqi, metrikalar ta'rifi bilan tanishish)"}
+    hints:
+      - "Birinchi kunda ham reja bo'ladi: lug'at va metrikalar bilan tanishish, birinchi hisobot, muddat."
+    reference_answer: |
+      Bugun: ma'lumotlar lug'ati va metrikalar ta'rifi bilan tanishaman, haftalik do'konlar hisobotini (tushum,
+      o'rtacha chek, takroriy xaridorlar) SQL bilan chiqaraman. Muddat: tushlikkacha.
+      To'siq: dwh sxemasiga kirish huquqim hali yo'q — Sherzoddan so'rayman.
+
+  - id: mentor_intro
+    type: message
+    day: 1
+    at: "09:20"
+    from: otabek
+    brief: |
+      Salom! Men Otabek, mentoringizman. SQL'ni siz uchun yozmayman, lekin qayerdan boshlashni birga topamiz.
+      Bitta maslahat: so'rov yozishdan oldin jadvalni 5 daqiqa ko'z bilan ko'ring. Hint so'rasangiz beraman —
+      faqat har hint task balini biroz kamaytiradi.
+
+  - id: weekly_report
+    type: task
+    day: 1
+    at: "09:30"
+    from: madina
+    brief: |
+      Birinchi vazifa: 28.09–04.10 haftasi bo'yicha do'konlar hisoboti. Har do'kon (CHL, YUN, SRG) va tarmoq
+      bo'yicha: tushum, buyurtmalar soni, o'rtacha chek; tarmoq bo'yicha takroriy xaridor ulushi.
+      SQL so'rovini va natija jadvalini yuboring. Lug'atdagi namuna ustida hisoblang va qaysi qatorlarni
+      nega chiqarib tashlaganingizni yozing.
+    attachments: [doc_data_dictionary, doc_metrics]
+    answer_types: [code, text]
+    due_in_minutes: 150
+    weight: 2
+    competencies: [technical]
+    rubric:
+      - {id: sql, description: "SQL to'g'ri va o'qiladigan: paid filtri, Toshkent vaqtiga o'tkazish (+5 soat), dublikatni olib tashlash (DISTINCT/ROW_NUMBER), do'kon bo'yicha GROUP BY", weight: 2}
+      - {id: data_quality, description: "Uchala muammoni topgan va yozgan: 1005 dublikati, 1006 refunded, 1001 kiritiladi / 1012 chiqariladi (UTC → Toshkent hafta chegarasi); 1007 mehmon takroriy ulushga kirmaydi", weight: 2}
+      - {id: store_numbers, description: "Do'konlar: CHL 484 000 / 4 / 121 000; YUN 481 000 / 4 / 120 250; SRG 451 000 / 3 / ≈150 333", weight: 2}
+      - {id: total_numbers, description: "Tarmoq: tushum 1 416 000 so'm, 11 buyurtma, o'rtacha chek ≈128 727 so'm", weight: 1.5}
+      - {id: repeat_share, description: "Takroriy xaridor ulushi 4/6 = 66.7% (C01, C02, C03, C04 / C01–C04, C06, C08)", weight: 1.5}
+      - {id: transparency, description: "Hisobotda davr, filtrlar va chiqarilgan qatorlar soni (3 ta) sababi bilan yozilgan"}
+    hints:
+      - "Har bir qatorni metrikalar ta'rifiga solishtiring: to'langanmi, takrorlanmaganmi, shu haftagami? Lug'atdagi order_id va order_ts izohlarini qayta o'qing."
+      - "Hafta Toshkent vaqti bo'yicha. 27.09 kechqurun va 04.10 kechqurun UTC'da yozilgan buyurtmalar Toshkentda qaysi kunga to'g'ri keladi?"
+      - "Takroriy ulushning maxrajida kimlar bo'lishi kerak: barcha qatorlarmi yoki shu haftada to'lov qilgan kartali xaridorlarmi?"
+    reference_answer: |
+      WITH clean AS (
+        SELECT DISTINCT order_id, store_id, customer_id, order_ts, amount_sum
+        FROM dwh.orders
+        WHERE status = 'paid'
+          AND order_ts + INTERVAL '5 hours' >= '2026-09-28'
+          AND order_ts + INTERVAL '5 hours' <  '2026-10-05'
+      )
+      SELECT COALESCE(store_id, 'JAMI') AS store, SUM(amount_sum) AS revenue,
+             COUNT(*) AS orders, ROUND(AVG(amount_sum)) AS avg_check
+      FROM clean GROUP BY ROLLUP (store_id);
+
+      SELECT ROUND(100.0 * COUNT(*) FILTER (WHERE n >= 2) / COUNT(*), 1) AS repeat_share
+      FROM (SELECT customer_id, COUNT(*) AS n FROM clean
+            WHERE customer_id IS NOT NULL GROUP BY customer_id) t;
+
+      Natija: CHL 484 000 so'm / 4 / 121 000; YUN 481 000 / 4 / 120 250; SRG 451 000 / 3 / 150 333.
+      Tarmoq: 1 416 000 so'm, 11 buyurtma, o'rtacha chek 128 727 so'm. Takroriy xaridorlar: 4 / 6 = 66.7%.
+      Chiqarilgan 3 qator: 1005 ikkinchi nusxasi (dublikat, order_id PK emas), 1006 (refunded),
+      1012 (04.10 19:40 UTC = 05.10 00:40 Toshkent — keyingi hafta). 1001 (27.09 21:10 UTC = 28.09 02:10) kiritildi.
+      1007 tushumga kiradi, lekin kartasiz — takroriy ulushda hisobga olinmaydi.
+      Tozalanmagan "hamma qatorlar yig'indisi" 2 064 000 so'm bo'lardi — 46% ga oshirilgan raqam.
+
+  - id: report_ack
+    type: message
+    after: {node: weekly_report, event: submitted, minutes: 15}
+    from: madina
+    brief: "Hisobotni oldim. Tushlikdan keyin raqamlarni POS hisoboti bilan solishtirib ko'raman."
+
+  - id: board_chart
+    type: decision
+    day: 1
+    at: "11:30"
+    from: rustam
+    brief: |
+      Salom! Ertaga kengash. Haftalik grafikda Sergeli juda yomon ko'rinyapti — o'tgan haftaga nisbatan −18%.
+      Uni grafikdan olib tashlang, Y o'qini ham 400 mln dan boshlang, o'sish kattaroq ko'rinsin.
+      Kengashda ortiqcha savol bo'lmasin. Bugun kechgacha slaydni yangilab yuboring.
+    competencies: [communication, stress_handling]
+    options:
+      - key: honest_note
+        label: "Hamma do'konlarni va 0 dan boshlanadigan o'qni qoldiraman; Sergeli yoniga pasayish sababi bo'yicha izoh qo'shishni taklif qilaman va Madina opaga xabar beraman"
+        grade: correct
+      - key: escalate_only
+        label: "Rustam akaga javob bermay, so'rovni darhol Madina opaga uzataman"
+        grade: acceptable
+      - key: hide_store
+        label: "Direktor so'radi — Sergelini olib tashlayman va o'qni 400 mln dan boshlayman"
+        grade: wrong
+        flag: hid_data
+
+  - id: lead_on_hidden_data
+    type: message
+    day: 1
+    at: "12:00"
+    when: {flag: hid_data}
+    from: madina
+    brief: |
+      Rustam akaning slaydini ko'rdim — Sergeli yo'q, o'q 400 mln dan boshlangan. Bu bizning hisobot siyosatiga zid:
+      kengash noto'g'ri qaror qabul qilishi mumkin, keyin analitikaga ishonch qolmaydi. Slaydni eski holatiga
+      qaytaring, Sergeli pasayishiga izoh qo'shamiz (1–3 oktabr muzlatgich nosozligi). Keyingi safar bunday
+      so'rov bo'lsa, avval menga yozing.
+
+  - id: mentor_review
+    type: message
+    day: 1
+    at: "14:00"
+    when: {any: [{missed: weekly_report}, {score_lt: {node: weekly_report, value: 60}}]}
+    from: otabek
+    brief: |
+      Haftalik hisobotingizni ko'rdim — raqamlar hali ma'lumot sifati tekshiruvidan to'liq o'tmagan ko'rinadi.
+      Urinishlar qolgan bo'lsa, qayta ko'rib chiqing: har qatorni "to'langanmi / takrormi / qaysi haftaga tegishli"
+      degan uchta savol bilan tekshiring. Qaysi qadamda ikkilansangiz, menga yozing.
+
+  - id: ab_analysis
+    type: task
+    day: 1
+    at: "14:00"
+    from: dilnoza
+    brief: |
+      Salom! Kupon testi natijasi chiqdi: dashboard'da B guruhida konversiya 10%, A'da 17%. Demak kupon savdoni
+      buzyapti va kampaniyani to'xtatamizmi? Ertaga ertalab qaror qilishim kerak. Iltimos, natijani tekshirib,
+      menga tushunarli tilda tavsiya yozing (statistikani yaxshi bilmayman).
+    attachments: [doc_ab_test]
+    answer_types: [text, file]
+    due_in_minutes: 120
+    weight: 1.5
+    competencies: [technical, communication]
+    rubric:
+      - {id: segment_rates, description: "Segment bo'yicha konversiyalar to'g'ri: yangi A 5% / B 7%; doimiy A 20% / B 22%", weight: 2}
+      - {id: simpson, description: "Umumiy 17% vs 10% guruhlar tarkibi har xilligidan (B'da 80% yangi, A'da 20%) — Simpson paradoksi; segment ichida B yaxshiroq", weight: 2}
+      - {id: randomization, description: "Taqsimot 50/50 segmentlar bo'yicha buzilganini test xatosi sifatida ko'rsatgan, sababini tekshirishni taklif qilgan"}
+      - {id: significance, description: "Farq (+2 p.p.; nisbiy +40% yangi, +10% doimiy) kichik tanlovda statistik ishonchli emasligini aytgan (z ≈ 1.0 va 0.6)", weight: 1.5}
+      - {id: recommendation, description: "Menejer uchun aniq tavsiya: kampaniyani 'yomon' deb to'xtatmaslik va tarqatmaslik, segment bo'yicha to'g'ri taqsimlangan testni qayta o'tkazish; kupon xarajatini ham hisobga olish", weight: 1.5}
+      - {id: plain_language, description: "Texnik bo'lmagan, qisqa tilda yozilgan: 3–6 qator, jargon tushuntirilgan"}
+    hints:
+      - "Umumiy foizga ishonishdan oldin har guruhdagi yangi va doimiy mijozlar ulushini solishtiring."
+      - "Har segment ichida A va B konversiyasini alohida hisoblang. Natija umumiy rasmga mos keladimi?"
+      - "Farqni 'ishonchli' deyish uchun qancha foydalanuvchi va qancha buyurtma bor? Yangi mijozlar A guruhida nechta xarid qilgan?"
+    reference_answer: |
+      Segmentlar: yangi — A 10/200 = 5%, B 56/800 = 7% (+2 p.p., nisbiy +40%); doimiy — A 160/800 = 20%, B 44/200 = 22% (+2 p.p., +10%).
+      Umumiy 17% vs 10% chalg'ituvchi: B guruhining 80% i yangi mijozlar (ular kam xarid qiladi), A'da esa 80% doimiy —
+      bu Simpson paradoksi. Teng tarkibda (50/50) A ≈ 12.5%, B ≈ 14.5% bo'lardi.
+      Taqsimot rejadagidek 50/50 bo'lmagan — push segmentlash sozlamasini tekshirish kerak.
+      Farqlar kichik tanlovda ishonchli emas (yangi: z ≈ 1.0; doimiy: z ≈ 0.6; p > 0.05).
+      Dilnoza uchun: "Kupon savdoni buzmayapti — dashboard'dagi farq guruhlarga turli mijozlar tushgani uchun.
+      Hozircha kupon foyda beradi deb ham aytolmaymiz. Tavsiya: kampaniyani hamma do'konlarga yoymaslik,
+      1–2 hafta ichida har segmentda 50/50 taqsimlangan testni qayta o'tkazish va 10% chegirma xarajatini marja bilan solishtirish."
+
+  - id: ab_thanks
+    type: message
+    after: {node: ab_analysis, event: submitted, minutes: 20}
+    from: dilnoza
+    brief: "Rahmat, endi tushundim! Kampaniyani to'xtatmayman, lekin kengaytirmayman ham — testni qayta qilamiz."
+
+  - id: dashboard_incident
+    type: incident
+    day: 1
+    at: "15:30"
+    from: rustam
+    brief: |
+      Shoshilinch! Dashboard kecha 1.45 mlrd so'm tushum ko'rsatyapti — odatda 480–500 mln. Rekordmi?
+      Kengash slaydiga yozaymi? 30 daqiqa ichida ayting: bu raqam to'g'rimi, nega shunday chiqdi va
+      menga hamda do'kon direktorlariga nima deb yozamiz.
+    attachments: [doc_dashboard_incident]
+    answer_types: [text, code]
+    due_in_minutes: 30
+    weight: 1.5
+    competencies: [stress_handling, technical, communication]
+    rubric:
+      - {id: cause, description: "Sabab gipotezasi: 14:40 da qo'shilgan order_items JOIN har buyurtmani mahsulotlar soniga ko'paytirgan (~3×), SUM buyurtma darajasida qolgan", weight: 2}
+      - {id: check_query, description: "Tekshiruv so'rovi: JOIN'dan keyin COUNT(*) vs COUNT(DISTINCT order_id) yoki JOIN'siz SUM ni POS (486.4 mln) bilan solishtirish", weight: 1.5}
+      - {id: fix, description: "Tuzatish yo'li: view'ni oldingi versiyaga qaytarish yoki order_items'ni oldin order_id bo'yicha agregatlash; Sherzod bilan kelishib"}
+      - {id: stakeholder_msg, description: "Rustam va direktorlarga qisqa xabar: raqam noto'g'ri, rekord emas, to'g'ri qiymat ≈486 mln, dashboard tuzatilguncha ishlatmaslik, tuzatish muddati", weight: 2}
+      - {id: calm, description: "Xotirjam, ayblovsiz ohang; kengash slaydiga noto'g'ri raqam tushishining oldi olingan"}
+    hints:
+      - "Dashboard'dagi buyurtmalar soni va order_items qatorlari sonini solishtiring. View'da bugun nima o'zgargan?"
+      - "Xabarda uch narsa bo'lsin: raqam to'g'rimi, hozir nima qilish kerak, qachon tuzatiladi."
+    reference_answer: |
+      Sabab: 14:40 da view'ga dwh.order_items bilan JOIN qo'shilgan. Har buyurtma mahsulot soniga ko'paygan
+      (41 670 qator / 13 890 buyurtma = 3.0), SUM(o.amount_sum) esa buyurtma summasini har mahsulot uchun qayta qo'shgan:
+      1 452.7 mln ≈ 3 × 486.4 mln. POS ham 486.4 mln — haqiqiy tushum shu.
+      Tekshiruv:
+        SELECT COUNT(*) AS rows_after_join, COUNT(DISTINCT o.order_id) AS orders
+        FROM dwh.orders o JOIN dwh.order_items i ON i.order_id = o.order_id
+        WHERE o.status = 'paid' AND DATE(o.order_ts + INTERVAL '5 hours') = '2026-10-06';
+      Tuzatish (Sherzod bilan): view'ni oldingi versiyaga qaytarish yoki kategoriya uchun
+      SUM(i.qty * i.price) ishlatish / order_items'ni avval order_id bo'yicha agregatlash.
+      Xabar: "Rustam aka, dashboard'dagi 1.45 mlrd noto'g'ri — bugungi view o'zgarishida summa uch marta qo'shilgan.
+      Kechagi haqiqiy tushum 486.4 mln (POS bilan mos). Tuzatilguncha (taxminan 1 soat) dashboard raqamlarini
+      kengash slaydiga va do'konlarga ishlatmang, tuzatilgach yozaman."
+
+  - id: engineer_reply
+    type: message
+    after: {node: dashboard_incident, event: submitted, minutes: 10}
+    from: sherzod
+    brief: |
+      Xabaringizni oldim, rahmat. Ha, sabab view'da — JOIN'ni men qo'shgandim, kategoriya filtri uchun. View'ni oldingi versiyaga qaytardim,
+      dashboard yana 486.4 mln ko'rsatyapti. Ertaga to'g'ri agregatsiya bilan qayta chiqaraman va review'ga sizni qo'shaman.
+
+  - id: day1_end
+    type: day_end
+    day: 1
+    at: "17:30"
+    brief: |
+      Kun yakuni. Madina opaga qisqa hisobot yozing: bugun nima qildingiz, nima ochiq qoldi,
+      ertangi reja va bugungi kundan bitta xulosa.
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Bugungi natijalar aniq: haftalik hisobot raqamlari, A/B test xulosasi, dashboard incident'i", weight: 1.5}
+      - {id: open_items, description: "Ochiq ishlar va ertangi reja aytilgan (A/B testni qayta rejalash, view tuzatilishini tekshirish)"}
+      - {id: reflection, description: "Kundan aniq xulosa (masalan, avval ma'lumot sifati, JOIN'dan keyin qatorlar sonini tekshirish, yomon raqamni yashirmaslik)"}

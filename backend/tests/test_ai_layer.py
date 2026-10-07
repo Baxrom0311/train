@@ -195,6 +195,11 @@ def test_grader_uses_sector_mentor():
     banking = grader_messages("b", "a", RUBRIC, None, "Banking")[0]["content"]
     it = grader_messages("b", "a", RUBRIC, None, "IT")[0]["content"]
     assert "Dilnoza" in banking and "Kamron" in it and "GRADER" in it
+    names = {s: grader_messages("b", "a", RUBRIC, None, s)[0]["content"] for s in ("Marketing", "Data", "HR")}
+    assert "Madina" in names["Marketing"] and "Javohir" in names["Data"] and "Nargiza" in names["HR"]
+    # noma'lum yoki bo'sh soha (eski simulyatsiyalar) — IT
+    assert "Kamron" in grader_messages("b", "a", RUBRIC, None, None)[0]["content"]
+    assert "Kamron" in grader_messages("b", "a", RUBRIC, None, "Logistics")[0]["content"]
 
 
 # ── anti-spoiler ──────────────────────────────────────────────────────
