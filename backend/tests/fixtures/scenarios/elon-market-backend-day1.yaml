@@ -1,0 +1,75 @@
+# CONTRACT.md §9.3.4 misoli asosida (testlar uchun, haqiqiy kontent emas).
+slug: elon-market-backend-day1
+title: "Elon Market — Junior Backend, 1 kun"
+sector: IT
+company_name: "Elon Market"        # fictional
+duration_days: 1
+personas:
+  - key: dilnoza
+    name: "Dilnoza"
+    role: "Team Lead"
+    tone: "talabchan, lekin adolatli"
+    knows: [doc_onboarding, doc_orders_api]
+    secrets: ["Buyurtma bug'i faqat qaytarilgan (refund) buyurtmalarda chiqadi"]
+  - key: kamron
+    name: "Kamron"
+    role: "Senior Engineer, mentor"
+    kind: mentor
+    knows: [doc_onboarding]
+documents:
+  - key: doc_onboarding
+    title: "Onboarding"
+    content: "Ish vaqti 09:00–18:00. Standup har kuni 09:00 da."
+  - key: doc_orders_api
+    title: "Orders API"
+    content: "/orders endpointi buyurtmalar ro'yxatini qaytaradi."
+nodes:
+  - id: welcome
+    type: message
+    day: 1
+    at: "09:00"
+    from: dilnoza
+    brief: "Xush kelibsiz! Birinchi ish — standup."
+  - id: standup
+    type: task
+    day: 1
+    at: "09:00"
+    from: dilnoza
+    brief: "Standup: bugungi rejangizni 3–5 qatorda yozing."
+    answer_types: [text]
+    due_in_minutes: 20
+    competencies: [communication]
+  - id: bug_orders
+    type: task
+    day: 1
+    at: "09:30"
+    from: dilnoza
+    brief: "Ticket ORD-142: /orders ba'zan 500 qaytaryapti."
+    answer_types: [code, text]
+    due_in_minutes: 120
+    checks: {sandbox_tests: tests/orders_refund.py}
+    competencies: [technical]
+    rubric:
+      - {id: root_cause, description: "Refund holatidagi sababni topgan", weight: 2}
+      - {id: fix_quality, description: "Tuzatish xavfsiz va test bilan"}
+    hints: ["Qaysi buyurtmalarda xato chiqishini solishtiring."]
+    reference_answer: "Refund qilingan buyurtmada amount None bo'ladi; None tekshiruvi qo'shish kerak."
+  - id: lead_followup
+    type: message
+    after: {node: bug_orders, event: submitted, minutes: 15}
+    from: dilnoza
+    brief: "Rahmat, ko'rib chiqaman."
+  - id: incident_payments
+    type: incident
+    day: 1
+    at: "14:00"
+    when: {any: [{missed: bug_orders}, {score_lt: {node: bug_orders, value: 60}}]}
+    from: dilnoza
+    brief: "Prod: to'lov xizmati 500. Mijozlar shikoyat qilyapti!"
+    answer_types: [text]
+    due_in_minutes: 30
+    competencies: [stress_handling, technical]
+  - id: day1_end
+    type: day_end
+    day: 1
+    at: "17:30"

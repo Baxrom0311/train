@@ -293,12 +293,14 @@ har modul uchun alohida agent task yoziladi.
 - **Node vaqti:** `day` (1..`duration_days`) + `at` (`"HH:MM"`, ish
   bo'laklari ichida) ssenariyning **ish-daqiqa siljishi**ga aylantiriladi:
   `offset = (day-1)·480 + work_minutes(09:00 → at)`, va
-  `scheduled_at = add_work_minutes(start_at, offset)`. Run 09:00 da
+  `scheduled_at = normalize(add_work_minutes(start_at, offset))` — hodisa
+  boshlanishi bo'lak oxiriga (13:00, 18:00) tushmaydi, keyingi bo'lak
+  boshiga suriladi (`WorkCalendar.start_after`). Run 09:00 da
   boshlansa bu aynan ssenariydagi soatlar; 15:00 da boshlansa butun jadval
   5 ish soatiga siljiydi (1-kun ertasi 15:00 da tugaydi). Bunday holatda
   `POST /runs` javobida `warning` va 1-kunning haqiqiy tugash vaqti qaytadi.
 - **Nisbiy node:** `after: {node, event: delivered|submitted, minutes}` →
-  `scheduled_at = add_work_minutes(trigger_vaqti, minutes)`.
+  `scheduled_at = start_after(trigger_vaqti, minutes)` (yuqoridagidek normallashtiriladi).
 - **Dedlayn:** `due_at = add_work_minutes(delivered_at, due_in_minutes)` —
   `scheduled_at`dan emas, cron kechiksa talaba vaqt yo'qotmaydi.
 - **Pauza yo'q.** `compression_ratio` ham yo'q (v1'dan olib tashlandi) — 1
@@ -439,7 +441,7 @@ nodes:
 - **AI chat Run holatini o'zgartirmaydi.** Branching faqat strukturaviy
   harakatlardan (task topshirish, decision, missed) kelib chiqadi —
   dvigatel deterministik va test qilinadigan bo'lib qoladi.
-- **Mentor** — alohida personaj (`role: mentor`). Javobni aytmaydi,
+- **Mentor** — alohida personaj (YAML'da `kind: mentor`; `role` — erkin matnli lavozim). Javobni aytmaydi,
   yo'naltiradi. Har bir `hint` shu task'ning maksimal balini kamaytiradi
   (standart −10%, node'da sozlanadi).
 - **Limitlar:** Redis rate-limit (personaj chatiga daqiqasiga 10 xabar),
