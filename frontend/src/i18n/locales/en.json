@@ -888,5 +888,59 @@
     "errors_one": "{{count}} error",
     "errors_other": "{{count}} errors",
     "hasErrors": "Has errors"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "bellUnread_one": "Notifications: {{count}} new",
+    "bellUnread_other": "Notifications: {{count}} new",
+    "readAll": "Mark all read",
+    "empty": "No notifications yet",
+    "emptyLong": "No notifications yet. New tasks, deadlines, mentor comments and job offers will show up here.",
+    "all": "All notifications",
+    "unreadMark": "Unread",
+    "unreadCount_one": "{{count}} unread",
+    "unreadCount_other": "{{count}} unread",
+    "allRead": "All caught up",
+    "more": "Show more",
+    "due": "due {{time}}",
+    "certificate": "certificate {{code}}",
+    "kind": {
+      "task_delivered": {
+        "task": "New task",
+        "incident": "Incident",
+        "decision": "Decision needed"
+      },
+      "deadline_soon": "Deadline approaching",
+      "mentor_review": "{{mentor}} left a comment",
+      "report_ready": "Final report ready",
+      "offer_received": "New job offer",
+      "offer_accepted": "Offer accepted",
+      "offer_declined": "Offer declined"
+    },
+    "setting": {
+      "task_delivered": "New tasks and incidents",
+      "deadline_soon": "30 minutes before a deadline",
+      "mentor_review": "Mentor comments",
+      "report_ready": "Final report and certificate",
+      "offer_received": "Job offers",
+      "offer_responded": "Candidate replies to offers"
+    },
+    "email": {
+      "title": "By email",
+      "hint": "Notifications you've already read on the site aren't emailed.",
+      "enabled": "Email notifications",
+      "kinds": "Which ones",
+      "saved": "Saved"
+    },
+    "settingsError": "Couldn't load settings",
+    "ago": {
+      "now": "just now",
+      "minutes_one": "{{count}} minute ago",
+      "minutes_other": "{{count}} minutes ago",
+      "hours_one": "{{count}} hour ago",
+      "hours_other": "{{count}} hours ago",
+      "days_one": "{{count}} day ago",
+      "days_other": "{{count}} days ago"
+    }
   }
 }

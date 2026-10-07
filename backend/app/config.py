@@ -26,6 +26,17 @@ class Settings(BaseSettings):
     # §9.0 Q12 — o'lcham `models/scenario.py: EMBEDDING_DIM` bilan bir xil
     EMBEDDING_MODEL: str = "gemini-embedding-001"
 
+    # Email bildirishnomalar (CONTRACT.md §15.3). SMTP_HOST bo'sh — email
+    # o'chirilgan, faqat ilova ichidagi bildirishnoma ishlaydi.
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM: str = "TryJob <no-reply@localhost>"
+    SMTP_STARTTLS: bool = True
+    # Emaildagi havolalar uchun frontend manzili
+    PUBLIC_URL: str = "http://localhost:5173"
+
     # Frontend domenlari (vergul bilan ajratilgan). Bo'sh qoldirilsa CORS
     # umuman ochilmaydi (xavfsiz default) — "*" + credentials birikmasi
     # ataylab qo'llanilmaydi.

@@ -29,6 +29,7 @@ from app.ai.spoiler import is_spoiler
 from app.models.enums import AIEvalStatus, ChatSender, NodeType, RunStatus
 from app.models.scenario import CHAT_PURPOSE_REVIEW, ChatMessage, Run, RunEvent, ScenarioVersion
 from app.models.simulation import Submission
+from app.notifications.run_events import review_posted
 from app.scenario.engine import Note, definition_for
 from app.scenario.limits import RUN_AI_TOKEN_BUDGET
 from app.scenario.reports import task_title
@@ -171,6 +172,7 @@ async def post_review(
         generated=generated, created_at=now, purpose=CHAT_PURPOSE_REVIEW, node_id=node.id, submission_id=sub.id,
     )
     db.add(reply)
+    await review_posted(db, run, node.id, task_title(node), mentor.name, sub.id, now)   # §15.2
     if tokens:
         await db.execute(update(Run).where(Run.id == run.id).values(ai_tokens_used=Run.ai_tokens_used + tokens))
     try:

@@ -23,6 +23,8 @@ sertifikat (ochiq tekshiruv `/c/{code}`, QR, A4 PDF), talabaning ochiq portfolio
 Landing (`CONTRACT.md` §14): mehmon uchun `/` — ochiq `GET /api/v1/showcase` asosida; kirgan foydalanuvchi o'z bosh sahifasiga.
 Ssenariy muharriri (`CONTRACT.md` §16, `/admin/scenarios`): admin ssenariyni brauzerda yaratadi,
 tahrirlaydi (jonli tekshiruv, YAML ikki tomonlama), qoralama sifatida saqlaydi va nashr qiladi.
+Bildirishnomalar (`CONTRACT.md` §15): yangi vazifa, dedlayn, mentor izohi, hisobot va takliflar —
+navbar qo'ng'iroqchasi, `/notifications` va email (SMTP `.env`dan; bo'sh bo'lsa faqat sayt ichida).
 
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da
