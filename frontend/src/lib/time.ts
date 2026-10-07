@@ -62,3 +62,15 @@ export function formatDayMonth(iso: string | Date): string {
   const part = (type: string) => parts.find((p) => p.type === type)?.value.padStart(2, '0')
   return `${part('day')}.${part('month')}`
 }
+
+// iyun/iyul uch harfda bir xil bo'lib qolmasin
+const UZ_MONTHS_SHORT = ['yan', 'fev', 'mar', 'apr', 'may', 'iyn', 'iyl', 'avg', 'sen', 'okt', 'noy', 'dek']
+
+/** Oy yorlig'i "2026-10" → "okt" / "окт." / "Oct" (`withYear` — grafik o'qida yil boshlanganda). */
+export function formatMonth(ym: string, lang: string, withYear = false): string {
+  const [year, month] = ym.split('-').map(Number)
+  const label = lang === 'uz'
+    ? UZ_MONTHS_SHORT[month - 1]
+    : new Intl.DateTimeFormat(lang, { month: 'short', timeZone: 'UTC' }).format(new Date(Date.UTC(year, month - 1, 15)))
+  return withYear ? `${label} ${year}` : label
+}

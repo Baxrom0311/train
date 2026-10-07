@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Award, Briefcase, Clapperboard, Globe, GraduationCap, Handshake, LayoutGrid, LogOut, Moon, Receipt, ShieldCheck, Sun, Users } from 'lucide-react'
+import { Award, Briefcase, ChartColumn, Clapperboard, Globe, GraduationCap, Handshake, LayoutGrid, LogOut, Moon, Receipt, ShieldCheck, Sun, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -51,6 +51,7 @@ export default function Navbar() {
     ...(can('view_candidates') ? [
       { to: '/talents', label: t('nav.talents'), Icon: Users },
       { to: '/talents/offers', label: t('nav.sentOffers'), Icon: Handshake },
+      { to: '/talents/report', label: t('nav.companyReport'), Icon: ChartColumn },
     ] : []),
     ...(can('manage_universities') ? [{ to: '/university', label: t('nav.students'), Icon: GraduationCap }] : []),
     ...(can('view_org_invoices') ? [{ to: '/billing', label: t('nav.billing'), Icon: Receipt }] : []),

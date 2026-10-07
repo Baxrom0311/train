@@ -14,7 +14,8 @@
     "admin": "Admin",
     "students": "Talabalar",
     "portfolio": "Portfolio",
-    "scenarios": "Ssenariylar"
+    "scenarios": "Ssenariylar",
+    "companyReport": "Hisobot"
   },
   "auth": {
     "login": {
@@ -990,6 +991,65 @@
       "error": "Kod ishga tushmadi (sintaksis yoki import xatosi) — testlar bajarilmadi",
       "timeout": "Kod vaqt chegarasida tugamadi",
       "no_code": "Kod topshirilmagan — testlar o'tkazilmadi"
+    }
+  },
+  "companyReport": {
+    "title": "Hisobot",
+    "generated": "{{date}} holatiga",
+    "noOffers": "Bu davrda taklif yuborilmagan. Nomzodlar bo'limida mos talabani topib, birinchi taklifni yuboring.",
+    "toTalents": "Nomzodlarga o'tish",
+    "lessThanHour": "1 soatdan kam",
+    "hours_one": "{{count}} soat",
+    "hours_other": "{{count}} soat",
+    "days_one": "{{count}} kun",
+    "days_other": "{{count}} kun",
+    "period": {
+      "label": "Davr",
+      "days_one": "{{count}} kun",
+      "days_other": "{{count}} kun",
+      "all": "Hammasi"
+    },
+    "stats": {
+      "sent": "Yuborilgan takliflar",
+      "responseRate": "Javob berganlar",
+      "acceptanceRate": "Qabul qilganlar (javoblardan)",
+      "medianResponse": "Javob vaqti (mediana)"
+    },
+    "funnel": {
+      "title": "Takliflar voronkasi",
+      "sent": "Yuborildi",
+      "viewed": "Ko'rildi",
+      "responded": "Javob berdi",
+      "accepted": "Qabul qildi",
+      "declined_one": "{{count}} ta rad etdi",
+      "declined_other": "{{count}} ta rad etdi",
+      "pending_one": "{{count}} ta javob kutyapti",
+      "pending_other": "{{count}} ta javob kutyapti",
+      "overdue_one": "{{count}} tasining muddati o'tgan",
+      "overdue_other": "{{count}} tasining muddati o'tgan"
+    },
+    "months": {
+      "title": "Oylar bo'yicha",
+      "declined": "Rad etdi"
+    },
+    "positions": {
+      "title": "Lavozimlar bo'yicha",
+      "position": "Lavozim",
+      "pending": "Kutilmoqda"
+    },
+    "pool": {
+      "title": "Nomzodlar bazasi",
+      "subtitle": "Sizga ochiq bo'lgan nomzodlar — hozirgi holat. Yashiringan talabalar hisobga kirmaydi.",
+      "candidates": "Ochiq nomzodlar",
+      "active": "Faol nomzodlar",
+      "activeDays_one": "Oxirgi {{count}} kunda faol",
+      "activeDays_other": "Oxirgi {{count}} kunda faol",
+      "avgScore": "O'rtacha ball",
+      "bands": "Ball taqsimoti"
+    },
+    "csv": {
+      "offers": "Takliflar CSV",
+      "candidates": "Nomzodlar CSV"
     }
   }
 }

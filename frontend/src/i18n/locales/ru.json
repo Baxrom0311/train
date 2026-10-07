@@ -14,7 +14,8 @@
     "admin": "Админ",
     "students": "Студенты",
     "portfolio": "Портфолио",
-    "scenarios": "Сценарии"
+    "scenarios": "Сценарии",
+    "companyReport": "Отчёт"
   },
   "auth": {
     "login": {
@@ -1036,6 +1037,79 @@
       "error": "Код не запустился (синтаксис или импорт) — тесты не выполнены",
       "timeout": "Код не уложился в лимит времени",
       "no_code": "Код не отправлен — тесты не запускались"
+    }
+  },
+  "companyReport": {
+    "title": "Отчёт",
+    "generated": "по состоянию на {{date}}",
+    "noOffers": "За этот период предложений не было. Найдите подходящего студента в разделе «Кандидаты» и отправьте первое предложение.",
+    "toTalents": "К кандидатам",
+    "lessThanHour": "меньше часа",
+    "hours_one": "{{count}} час",
+    "hours_few": "{{count}} часа",
+    "hours_many": "{{count}} часов",
+    "hours_other": "{{count}} часа",
+    "days_one": "{{count}} день",
+    "days_few": "{{count}} дня",
+    "days_many": "{{count}} дней",
+    "days_other": "{{count}} дня",
+    "period": {
+      "label": "Период",
+      "days_one": "{{count}} день",
+      "days_few": "{{count}} дня",
+      "days_many": "{{count}} дней",
+      "days_other": "{{count}} дня",
+      "all": "Всё время"
+    },
+    "stats": {
+      "sent": "Отправлено предложений",
+      "responseRate": "Ответили",
+      "acceptanceRate": "Приняли (из ответов)",
+      "medianResponse": "Время ответа (медиана)"
+    },
+    "funnel": {
+      "title": "Воронка предложений",
+      "sent": "Отправлено",
+      "viewed": "Просмотрено",
+      "responded": "Ответили",
+      "accepted": "Приняли",
+      "declined_one": "{{count}} отказ",
+      "declined_few": "{{count}} отказа",
+      "declined_many": "{{count}} отказов",
+      "declined_other": "{{count}} отказа",
+      "pending_one": "{{count}} ждёт ответа",
+      "pending_few": "{{count}} ждут ответа",
+      "pending_many": "{{count}} ждут ответа",
+      "pending_other": "{{count}} ждут ответа",
+      "overdue_one": "{{count}} просрочено",
+      "overdue_few": "{{count}} просрочено",
+      "overdue_many": "{{count}} просрочено",
+      "overdue_other": "{{count}} просрочено"
+    },
+    "months": {
+      "title": "По месяцам",
+      "declined": "Отказали"
+    },
+    "positions": {
+      "title": "По должностям",
+      "position": "Должность",
+      "pending": "Ожидают"
+    },
+    "pool": {
+      "title": "База кандидатов",
+      "subtitle": "Кандидаты, открытые для вас, — текущее состояние. Скрывшиеся студенты не учитываются.",
+      "candidates": "Открытые кандидаты",
+      "active": "Активные кандидаты",
+      "activeDays_one": "Активны за {{count}} день",
+      "activeDays_few": "Активны за {{count}} дня",
+      "activeDays_many": "Активны за {{count}} дней",
+      "activeDays_other": "Активны за {{count}} дня",
+      "avgScore": "Средний балл",
+      "bands": "Распределение баллов"
+    },
+    "csv": {
+      "offers": "Предложения CSV",
+      "candidates": "Кандидаты CSV"
     }
   }
 }

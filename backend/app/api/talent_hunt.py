@@ -7,11 +7,11 @@ bo'lgan, yoki kompaniyani yashirgan nomzod kompaniya uchun mavjud emas —
 har doim 404, hech qachon "yashirilgan" emas.
 """
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import cast, func, not_, select
 from sqlalchemy.dialects.postgresql import JSONB
@@ -26,6 +26,7 @@ from app.models.talent import CandidateVisibility, TalentOffer
 from app.models.user import User
 from app.notifications.offers import offer_received, offer_responded
 from app.scenario.clock import WorkCalendar
+from app.talent import report
 from app.talent.profile import Profile, build_profiles
 
 router = APIRouter(prefix="/api/v1/talents", tags=["Talent Hunt"])
@@ -128,6 +129,73 @@ class SortBy(str, Enum):
     RECENT = "recent"
 
 
+class ScoreBandOut(BaseModel):
+    band: str
+    candidates: int
+
+
+class PoolSectorOut(BaseModel):
+    sector: str
+    candidates: int
+    avg_score: float | None
+
+
+class PoolOut(BaseModel):
+    candidates: int
+    active_in_period: int
+    avg_score: float | None
+    score_bands: list[ScoreBandOut]
+    sectors: list[PoolSectorOut]
+    competencies: dict[str, float]
+
+
+class OfferStatsOut(BaseModel):
+    sent: int
+    viewed: int
+    responded: int
+    accepted: int
+    declined: int
+    pending: int
+    overdue: int
+    response_rate: float | None
+    acceptance_rate: float | None
+    median_response_hours: float | None
+
+
+class PositionOut(BaseModel):
+    position_title: str
+    sent: int
+    accepted: int
+    declined: int
+    pending: int
+
+
+class MonthOut(BaseModel):
+    month: str
+    sent: int
+    accepted: int
+    declined: int
+
+
+class ReportCompanyOut(BaseModel):
+    id: uuid.UUID
+    name: str
+    industry: str
+
+
+class CompanyReport(BaseModel):
+    company: ReportCompanyOut
+    generated_at: datetime
+    days: int | None
+    pool: PoolOut
+    offers: OfferStatsOut
+    by_position: list[PositionOut]
+    by_month: list[MonthOut]
+
+
+ReportDays = Annotated[int | None, Query(ge=1, le=3650)]
+
+
 # ---------------------------------------------------------------------------
 # Yordamchilar
 # ---------------------------------------------------------------------------
@@ -186,6 +254,17 @@ async def _visible_candidate(db: AsyncSession, company: Company, user_id: uuid.U
     if p is None or user is None or not user.is_active:
         raise HTTPException(status_code=404, detail="Candidate not found")
     return user, p
+
+
+async def _visible_profiles(db: AsyncSession, company: Company) -> tuple[dict[uuid.UUID, User], list[Profile]]:
+    """Shu kompaniyaga ko'rinadigan faol nomzodlar va ularning profillari (§10.1)."""
+    profiles = await build_profiles(db, _visible_to(company.id))
+    if not profiles:
+        return {}, []
+    users = {u.id: u for u in (await db.execute(
+        select(User).where(User.id.in_(profiles.keys()), User.is_active.is_(True))
+    )).scalars()}
+    return users, [p for p in profiles.values() if p.user_id in users]
 
 
 async def _visibility(db: AsyncSession, user_id: uuid.UUID, *, lock: bool = False) -> CandidateVisibility | None:
@@ -268,21 +347,15 @@ async def get_talents(
     offset: int = Query(default=0, ge=0),
 ):
     """Ko'rinadigan, kamida bitta tugallangan Run'i bor nomzodlar (§10.4)."""
-    profiles = await build_profiles(db, _visible_to(company.id))
-    if not profiles:
-        return CandidatePage(items=[], total=0)
-    users = {u.id: u for u in (await db.execute(
-        select(User).where(User.id.in_(profiles.keys()), User.is_active.is_(True))
-    )).scalars()}
+    users, profiles = await _visible_profiles(db, company)
 
     def score(p: Profile) -> float:
         value = p.competencies.get(competency.value) if competency else p.overall_score
         return value if value is not None else -1
 
     matched = [
-        p for p in profiles.values()
-        if p.user_id in users
-        and (sector is None or sector.value in p.sectors)
+        p for p in profiles
+        if (sector is None or sector.value in p.sectors)
         and (competency is None or competency.value in p.competencies)
         and score(p) >= min_score
     ]
@@ -295,22 +368,87 @@ async def get_talents(
     return CandidatePage(items=[_card(users[p.user_id], p) for p in page], total=len(matched))
 
 
-@router.get("/offers/sent", response_model=list[SentOfferOut])
-async def get_sent_offers(company: VerifiedCompany, db: AsyncSession = Depends(get_db)):
-    rows = (await db.execute(
+async def _company_offers(db: AsyncSession, company: Company, since: datetime | None = None) -> list[report.OfferRow]:
+    """Kompaniya takliflari, yangilari tepada; email faqat accepted'da (§10.2)."""
+    q = (
         select(TalentOffer, User)
         .join(User, User.id == TalentOffer.candidate_user_id)
         .where(TalentOffer.company_id == company.id)
         .order_by(TalentOffer.created_at.desc())
-    )).all()
+    )
+    if since is not None:
+        q = q.where(TalentOffer.created_at >= since)
     return [
-        SentOfferOut(
-            **TalentOfferOut.model_validate(offer).model_dump(),
+        report.OfferRow(
+            offer=offer,
             candidate_name=user.full_name,
             candidate_email=user.email if offer.response == OfferResponse.ACCEPTED else None,
         )
-        for offer, user in rows
+        for offer, user in (await db.execute(q)).all()
     ]
+
+
+@router.get("/offers/sent", response_model=list[SentOfferOut])
+async def get_sent_offers(company: VerifiedCompany, db: AsyncSession = Depends(get_db)):
+    return [
+        SentOfferOut(
+            **TalentOfferOut.model_validate(row.offer).model_dump(),
+            candidate_name=row.candidate_name,
+            candidate_email=row.candidate_email,
+        )
+        for row in await _company_offers(db, company)
+    ]
+
+
+# ---------------------------------------------------------------------------
+# Kompaniya hisoboti (§20)
+# ---------------------------------------------------------------------------
+
+def _since(now: datetime, days: int | None) -> datetime | None:
+    return now - timedelta(days=days) if days else None
+
+
+def _csv_response(body: str, name: str, now: datetime) -> Response:
+    filename = f"tryjob-{name}-{now.astimezone(report.TASHKENT):%Y-%m-%d}.csv"
+    return Response(
+        content=body.encode("utf-8"),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/report", response_model=CompanyReport)
+async def get_company_report(company: VerifiedCompany, days: ReportDays = None, db: AsyncSession = Depends(get_db)):
+    """Ko'rinadigan nomzodlar bazasi va kompaniya takliflari voronkasi (§20)."""
+    now = _now()
+    since = _since(now, days)
+    _, profiles = await _visible_profiles(db, company)
+    offers = [row.offer for row in await _company_offers(db, company, since)]
+    return CompanyReport(
+        company=ReportCompanyOut(id=company.id, name=company.name, industry=company.industry),
+        generated_at=now,
+        days=days,
+        pool=PoolOut(**report.pool_stats(profiles, since)),
+        offers=OfferStatsOut(**report.offer_stats(offers, now)),
+        by_position=[PositionOut(**r) for r in report.by_position(offers)],
+        by_month=[MonthOut(**r) for r in report.by_month(offers, since, now)],
+    )
+
+
+@router.get("/report/offers.csv", response_class=Response)
+async def get_offers_csv(company: VerifiedCompany, days: ReportDays = None, db: AsyncSession = Depends(get_db)):
+    now = _now()
+    rows = await _company_offers(db, company, _since(now, days))
+    return _csv_response(report.offers_csv(rows), "offers", now)
+
+
+@router.get("/report/candidates.csv", response_class=Response)
+async def get_candidates_csv(company: VerifiedCompany, db: AsyncSession = Depends(get_db)):
+    """Faqat ko'rinadigan nomzodlar, email'siz (§10.2), ball bo'yicha."""
+    users, profiles = await _visible_profiles(db, company)
+    profiles.sort(key=lambda p: (p.overall_score if p.overall_score is not None else -1, p.last_completed_at), reverse=True)
+    rows = [(users[p.user_id].full_name, p) for p in profiles]
+    return _csv_response(report.candidates_csv(rows), "candidates", _now())
 
 
 @router.get("/offers/my", response_model=list[ReceivedOfferOut])

@@ -249,6 +249,36 @@ export interface ReceivedOffer extends TalentOffer {
   company_industry: string
 }
 
+// Kompaniya hisoboti (backend/app/talent/report.py, CONTRACT.md §20)
+
+export interface CompanyReport {
+  company: { id: string; name: string; industry: string }
+  generated_at: string
+  days: number | null
+  pool: {
+    candidates: number
+    active_in_period: number
+    avg_score: number | null
+    score_bands: { band: string; candidates: number }[]
+    sectors: { sector: Sector; candidates: number; avg_score: number | null }[]
+    competencies: Record<string, number>
+  }
+  offers: {
+    sent: number
+    viewed: number
+    responded: number
+    accepted: number
+    declined: number
+    pending: number
+    overdue: number
+    response_rate: number | null
+    acceptance_rate: number | null
+    median_response_hours: number | null
+  }
+  by_position: { position_title: string; sent: number; accepted: number; declined: number; pending: number }[]
+  by_month: { month: string; sent: number; accepted: number; declined: number }[]
+}
+
 // Admin va invoice'lar (backend/app/api/admin.py, billing.py, CONTRACT.md §11)
 
 export type OrgType = 'company' | 'university'

@@ -221,6 +221,7 @@ GET    /api/v1/talents                    only is_verified company + only visibl
 POST   /api/v1/talents/offers             counts against subscription's "interview SLA" commitment
 
 # Talent Hunt to'liq ro'yxati (profil, takliflarga javob) — §10.4
+# Kompaniya hisobotlari (nomzodlar bazasi, takliflar voronkasi, CSV) — §20
 # Universitet portali (talabalar natijalari, bog'lanish) — §12.2
 ```
 
@@ -1451,3 +1452,73 @@ berilmaydi (§9.4 anti-spoiler) — faqat test **nomlari** va o'tdi/yiqildi.
 Run sahifasida task tafsilotida va hisobotda: "Avtomatik testlar: 5/7" va
 yiqilgan test nomlari.
 
+
+## 20. Kompaniya hisobotlari (Modul 4 + 7)
+
+Kompaniya Talent Hunt (§10) natijasini bir sahifada ko'radi: unga ochiq
+nomzodlar bazasi qanday (soha, ball, kompetensiyalar) va yuborgan
+takliflari qayerga yetib bordi (ko'rildi, javob, qabul). Ssenariylar
+platformaniki (§9), kompaniyaga tegishli emas — shuning uchun hisobot
+"kompaniya ssenariylari" emas, **nomzodlar bazasi + takliflar voronkasi**.
+
+### 20.1 Manba va maxfiylik
+
+- Ruxsat va shart §10.3 bilan bir xil: `view_candidates` + tasdiqlangan
+  kompaniya (aks holda 403). Yangi ruxsat yo'q.
+- **Baza** — faqat shu kompaniyaga hozir ko'rinadigan nomzodlar (§10:
+  `is_open_to_work`, yashirmagan, faol), profil §10.1 hisobidan
+  (`build_profiles`). Ko'rinmaydigan nomzod hech qaysi songa kirmaydi —
+  aks holda yashiringan talabalar soni "oqib" chiqardi.
+- **Takliflar** — faqat shu kompaniyaning `talent_offers` yozuvlari.
+  Nomzod keyin yashiringan bo'lsa ham taklif statistikasi saqlanadi
+  (bu kompaniyaning o'z harakati), lekin ism va email §10.2 qoidasida:
+  email faqat `accepted`da.
+- Davr (`days`): takliflar `created_at` bo'yicha oxirgi N kunda; baza —
+  joriy holat, davr unga faqat `active_in_period` (shu davrda Run tugatgan
+  nomzodlar) soni orqali ta'sir qiladi. `days` berilmasa — butun tarix.
+
+### 20.2 Ko'rsatkichlar
+
+- `pool`: `candidates`, `active_in_period`, `avg_score` (profillar
+  `overall_score` o'rtachasi), `score_bands` — `0–49`, `50–69`, `70–84`,
+  `85–100` oraliqlarida nomzodlar soni (balli yo'q nomzod kirmaydi),
+  `sectors: [{sector, candidates, avg_score}]` (nomzod har sohasida
+  sanaladi), `competencies: {key: avg}`.
+- `offers` (davr ichida): `sent` (hammasi), `viewed` (`viewed` yoki
+  `responded`), `responded`, `accepted`, `declined`, `pending`
+  (`sent|viewed`), `overdue` (pending va `respond_due_at` o'tgan),
+  `response_rate = responded / sent`, `acceptance_rate = accepted /
+  responded` (foiz, 0–100, maxraj 0 bo'lsa `null`),
+  `median_response_hours` — `responded_at − created_at` medianasi
+  (kalendar soatlari, 1 xona; javob bo'lmasa `null`).
+- `by_position: [{position_title, sent, accepted, declined, pending}]` —
+  lavozim nomi bo'yicha (katta-kichik harf va chetdagi bo'sh joy
+  farqlanmaydi, ko'rsatishda eng ko'p yozilgani), `sent` kamayishi bo'yicha.
+- `by_month: [{month: "YYYY-MM", sent, accepted, declined}]` — Toshkent
+  vaqti bo'yicha oy, eskidan yangiga, bo'sh oylar ham (0) kiradi.
+
+### 20.3 API
+
+```
+GET /api/v1/talents/report                 view_candidates; ?days=1..3650
+    → {company, generated_at, days, pool, offers, by_position, by_month}
+GET /api/v1/talents/report/offers.csv      view_candidates; ?days=
+    created_at, position_title, candidate_name, status, response,
+    respond_due_at, responded_at, response_hours, candidate_email (faqat accepted)
+GET /api/v1/talents/report/candidates.csv  view_candidates
+    full_name, overall_score, runs_completed, sectors, <har kompetensiya>, last_completed_at
+```
+
+CSV: UTF-8 BOM bilan (Excel kirill/o'zbek harflarini to'g'ri ochadi),
+`Content-Disposition: attachment`, vaqtlar Toshkent vaqtida. `= + - @`
+(va tab/CR) bilan boshlanadigan matn katakchasi oldiga `'` qo'yiladi —
+CSV/formula injection'ga qarshi (ism va lavozim foydalanuvchi matni).
+Nomzodlar CSV'sida email yo'q (§10.2).
+
+### 20.4 Frontend
+
+`/talents/report` (`view_candidates`), menyuda "Hisobot": davr tanlovi
+(30 / 90 / 365 kun / hammasi), takliflar voronkasi va asosiy raqamlar,
+oylar bo'yicha takliflar, lavozimlar jadvali, baza kesimi (ball
+oraliqlari, sohalar, kompetensiyalar) va ikkala CSV yuklab olish tugmasi.
+Grafiklar SVG/CSS, kutubxonasiz.
