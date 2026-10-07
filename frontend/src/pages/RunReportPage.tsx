@@ -9,6 +9,7 @@ import { api } from '@/lib/api'
 import { CompetencyBars, ScoreRing } from '@/components/score'
 import { linkedInUrl } from '@/components/credentials/share'
 import type { Certificate, DayReport, RunReport, TaskResult } from '@/lib/types'
+import { ChecksBadge } from '@/components/desk/Checks'
 
 const score = (v: number | null | undefined) => (v === null || v === undefined ? '—' : Math.round(v))
 
@@ -208,7 +209,10 @@ function TaskTable({ tasks }: { tasks: TaskResult[] }) {
         <tbody className="divide-y">
           {tasks.map((task) => (
             <tr key={task.node_id}>
-              <td className="py-2 pr-2">{task.title}</td>
+              <td className="py-2 pr-2">
+                {task.title}
+                {task.checks && <span className="ml-2 align-middle"><ChecksBadge checks={task.checks} /></span>}
+              </td>
               <td className="py-2 pr-2 text-muted-foreground">
                 {t(`desk.status.${task.status}`)}
                 {task.late && ` · ${t('report.late')}`}

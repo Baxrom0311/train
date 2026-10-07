@@ -39,6 +39,7 @@ from app.models.enums import (
 from app.models.scenario import ChatMessage, Run, RunEvent, ScenarioVersion
 from app.models.simulation import Submission
 from app.scenario.engine import REPORT_DUE, definition_for
+from app.scenario.evaluation import public_checks
 from app.scenario.schema import Node, ScenarioDefinition
 
 EVAL_WAIT = timedelta(minutes=15)
@@ -60,6 +61,7 @@ class TaskResult:
     score_history: list[float] = field(default_factory=list)
     competencies: list[str] = field(default_factory=list)
     weight: float = 1.0
+    checks: dict | None = None   # §19.4 — oxirgi testlangan urinish
 
     def public(self) -> dict:
         d = asdict(self)
@@ -133,6 +135,7 @@ async def load_results(db: AsyncSession, run: Run) -> tuple[ScenarioDefinition, 
             score_history=[s.ai_score for s in attempts if s.ai_score is not None],
             competencies=[c.value for c in node.competencies],
             weight=node.weight,
+            checks=next((c for s in reversed(attempts) if (c := public_checks(s.check_results))), None),
         ))
     return defn, results, subs
 

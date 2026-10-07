@@ -1,7 +1,11 @@
 """
-sandbox.py — AST-asosida Python kodi xavfsizlik filtri + subprocess bajarish.
+sandbox.py — talaba kodini bajarish (CONTRACT.md §19.2).
 
-**MUHIM CHEKLOV (bu kodni o'qigan har kim bilishi shart):**
+Production: `SANDBOX_URL` — alohida runner konteyneri (`sandbox/runner.py`,
+tarmoqsiz, secretsiz). Bu fayldagi lokal rejim (AST filtri + subprocess)
+faqat `SANDBOX_URL` bo'sh bo'lganda — lokal ishlab chiqish va testlar uchun.
+
+**LOKAL REJIM CHEKLOVI (bu kodni o'qigan har kim bilishi shart):**
 Bu — AST blacklist + OS resurs cheklovlari (defense-in-depth), **HAQIQIY
 KONTEYNER IZOLYATSIYASI EMAS**. Blacklist tamoyili tub e'tiqodda mo'rt:
 Python kabi dinamik tilda "taqiqlangan funksiyani boshqa nomga bog'lab olish"
@@ -19,10 +23,19 @@ Xavfsizlik yondashuvi:
 """
 
 import ast
+import asyncio
+import logging
 import resource
 import subprocess
 import sys
 from typing import NamedTuple
+
+import httpx
+
+from app.config import settings
+
+log = logging.getLogger(__name__)
+REQUEST_TIMEOUT = 20.0   # runner'ning eng uzun bajarishi (10 s) + navbat
 
 # Taqiqlangan modul nomlari (import va from...import).
 # "io" — eng muhimi: shu orqali `from io import open as o` bilan fayl
@@ -199,3 +212,56 @@ def run_code(code: str, timeout: float = 2.0) -> SandboxResult:
         )
     except Exception as exc:
         return SandboxResult(success=False, stdout="", stderr="", error=f"Bajarish xatosi: {exc}")
+
+
+# ── Runner mijozi (§19.2) ─────────────────────────────────────────────
+
+
+class SandboxUnavailable(Exception):
+    """Runner javob bermadi, band yoki xato qaytardi — keyinroq qayta urinish mumkin."""
+
+
+class SandboxDisabled(Exception):
+    """`SANDBOX_URL` sozlanmagan — yashirin testlar o'chiq (lokal rejim)."""
+
+
+async def _call_runner(payload: dict) -> dict:
+    try:
+        async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
+            r = await client.post(
+                f"{settings.SANDBOX_URL.rstrip('/')}/run", json=payload,
+                headers={"Authorization": f"Bearer {settings.SANDBOX_TOKEN}"},
+            )
+    except httpx.HTTPError as exc:
+        raise SandboxUnavailable(f"runner'ga ulanib bo'lmadi: {type(exc).__name__}") from exc
+    if r.status_code != 200:
+        raise SandboxUnavailable(f"runner {r.status_code} qaytardi")
+    return r.json()
+
+
+async def run_script(code: str, timeout: float = 2.0) -> SandboxResult:
+    """`POST /tools/sandbox` uchun: runner bo'lsa unda, aks holda lokal (dev)."""
+    timeout = min(float(timeout), 3.0)
+    if not settings.SANDBOX_URL:
+        return await asyncio.to_thread(run_code, code, timeout)
+    # runner'da ham AST filtri — konteyner noto'g'ri sozlansa ham qo'shimcha qatlam
+    try:
+        validate_code(code)
+    except SecurityViolation as exc:
+        return SandboxResult(success=False, stdout="", stderr="", error=f"Xavfsizlik xatosi: {exc}")
+    except SyntaxError as exc:
+        return SandboxResult(success=False, stdout="", stderr="", error=f"Syntax xatosi: {exc}")
+    try:
+        r = await _call_runner({"code": code, "timeout": timeout})
+    except SandboxUnavailable as exc:
+        log.warning("sandbox: %s", exc)
+        return SandboxResult(success=False, stdout="", stderr="", error="Sandbox hozir band, birozdan keyin urinib ko'ring")
+    error = "Timeout: kod {:.1f}s ichida tugamadi".format(timeout) if r["status"] == "timeout" else None
+    return SandboxResult(success=r["status"] == "ok", stdout=r["stdout"], stderr=r["stderr"], error=error)
+
+
+async def run_tests(code: str, tests: str, module: str) -> dict:
+    """Yashirin testlar (§19.1) — runner javobi: `{status, passed, total, tests, ...}`."""
+    if not settings.SANDBOX_URL:
+        raise SandboxDisabled
+    return await _call_runner({"code": code, "tests": tests, "module": module})

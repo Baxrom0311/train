@@ -31,6 +31,7 @@ from app.models.scenario import CHAT_PURPOSE_REVIEW, ChatMessage, Run, RunEvent,
 from app.models.simulation import Submission
 from app.notifications.run_events import review_posted
 from app.scenario.engine import Note, definition_for
+from app.scenario.evaluation import checks_line, public_checks
 from app.scenario.limits import RUN_AI_TOKEN_BUDGET
 from app.scenario.reports import task_title
 from app.scenario.schema import Node, Persona, ScenarioDefinition, short_title
@@ -106,6 +107,9 @@ def student_work_lines(
                 parts.append(f"eng zaif mezon: {weak.description} ({weak.evidence})")
         elif sub.ai_eval_status in (AIEvalStatus.PENDING, AIEvalStatus.QUEUED_RETRY):
             parts.append("hali baholanmoqda")
+        if public_checks(sub.check_results):
+            # §19.4: faqat son va yiqilgan test nomlari — test kodi mentorga berilmaydi
+            parts.append(checks_line(sub.check_results).strip("[]"))
         if sub.late:
             parts.append("kech topshirilgan")
         excerpt = sub.content[:ANSWER_EXCERPT] + ("…" if len(sub.content) > ANSWER_EXCERPT else "")

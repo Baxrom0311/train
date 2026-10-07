@@ -29,6 +29,11 @@ class Settings(BaseSettings):
     # §18.1: production'da false — /docs, /redoc, /openapi.json yopiladi
     DOCS_ENABLED: bool = True
 
+    # §19.2: talaba kodi runner'i. Bo'sh — lokal rejim (faqat dev/test):
+    # skript shu konteynerda, yashirin testlar o'chiq.
+    SANDBOX_URL: str = ""
+    SANDBOX_TOKEN: str = ""
+
     # Email bildirishnomalar (CONTRACT.md §15.3). SMTP_HOST bo'sh — email
     # o'chirilgan, faqat ilova ichidagi bildirishnoma ishlaydi.
     SMTP_HOST: str = ""

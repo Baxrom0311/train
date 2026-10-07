@@ -169,6 +169,7 @@ schema / endpoint shakli) orqali gaplashadi.
 | 10 | **Credentials** | `backend/app/models/credential.py`, `backend/app/api/credentials.py`, `backend/app/credentials/` | (1),(6),(9)ga bog'liq — sertifikat Run'dan, portfolio §10.1 profilidan (§13) |
 | 11 | **Notifications** | `backend/app/models/notification.py`, `backend/app/api/notifications.py`, `backend/app/notifications/` | (1),(4),(9),(10)ga bog'liq — manbalar §15.2 |
 | 12 | **Analytics** | `backend/app/api/analytics.py`, `backend/app/analytics/` | (9),(10)ga bog'liq — Run natijalarini faqat o'qiydi (§17) |
+| 13 | **Sandbox runner** | `sandbox/`, `deploy/sandbox.Dockerfile` | Tashqi bog'liqliksiz (faqat stdlib); backend `core/sandbox.py` orqali chaqiradi (§19) |
 
 Qurish ketma-ketligi: **1 → (2,3 parallel) → (4,5,6 parallel) → 7 har
 bosqichda mos ravishda**. Modul 9: avval (1),(2),(8)dagi §9.10
@@ -420,7 +421,11 @@ nodes:
     brief: "Ticket ORD-142: /orders ba'zan 500 qaytaryapti."
     answer_types: [code, text]
     due_in_minutes: 120
-    checks: {sandbox_tests: tests/orders_refund.py}
+    checks:                       # §19.3 — yashirin testlar
+      tests: |
+        from solution import total_amount
+        def test_refund_has_no_amount():
+            assert total_amount([{"amount": None, "status": "refunded"}]) == 0
     competencies: [technical]
   - id: incident_payments
     type: incident
@@ -1346,3 +1351,103 @@ Tiklash tartibi `deploy/README.md`da. Serverdan tashqariga ko'chirish
 - `definition_for` keshi kaliti `(versiya id, created_at)`: bir nechta API
   jarayoni va worker bo'lsa ham qoralama tahriridan keyin eski ta'rif
   ishlatilmaydi (§16.1).
+
+---
+
+## 19. Kod tekshiruvi va sandbox (Modul 13 + 9 + 1)
+
+Talaba kodi backend jarayonida emas, alohida **runner** konteynerida
+bajariladi. `code` javobli task'larda ssenariy muallifi yozgan yashirin
+testlar ishlaydi va natija baholashga qo'shiladi (§9.6 "avval
+deterministik `checks`").
+
+### 19.1 Runner (`sandbox/runner.py`, `deploy/sandbox.Dockerfile`)
+
+- Runner kodi faqat stdlib (Python 3.13), `ThreadingHTTPServer`, port 8100;
+  image'da talaba kodi uchun `pytest` bor (o'z testlarini import qilsa yiqilmasin).
+  `POST /run`, `Authorization: Bearer <SANDBOX_TOKEN>` (`hmac.compare_digest`);
+  token bo'sh bo'lsa runner ishga tushmaydi. `GET /health` — ochiq, `{ok}`.
+- So'rov: `{code, tests?, module?, timeout?}` (tana ≤ 256 KB). `tests` yo'q —
+  **skript rejimi** (`code` bajariladi); bor — **test rejimi**: `code`
+  `{module}.py` (standart `solution`) bo'lib yoziladi, `tests` ichidagi
+  `test_*` funksiyalari e'lon tartibida chaqiriladi.
+- Javob: `{status, stdout, stderr, passed, total, tests: [{name, ok, message}]}`;
+  `status`: `ok` (kod/testlar ishga tushdi; testlar yiqilgan bo'lishi
+  mumkin) `| error` (import/sintaksis xatosi — barcha testlar yiqilgan
+  hisoblanadi) `| timeout`. stdout ≤ 4 KB, stderr ≤ 2 KB, `message` ≤ 300 belgi.
+- Har so'rov: yangi vaqtinchalik papka (`/tmp`, tmpfs), alohida `python -I`
+  jarayoni, bo'sh muhit o'zgaruvchilari, rlimit: CPU = timeout, xotira
+  256 MB, fayl 1 MB, yangi jarayon 0, fayl deskriptor 32. Timeout: skript
+  ≤ 3 s, test ≤ 10 s (server cheklaydi). Bir vaqtda ≤ 2 bajarish, ortig'i —
+  503 `busy`.
+- Konteyner: `read_only`, `/tmp` tmpfs (64 MB), root emas (uid 10002),
+  `cap_drop: ALL`, `no-new-privileges`, `pids_limit`, xotira va CPU limiti,
+  volume va secret yo'q (faqat `SANDBOX_TOKEN`).
+- Tarmoq: runner faqat `sandbox` ichki tarmog'ida (`internal: true`) —
+  internetga, Postgres va Redis'ga chiqa olmaydi. `backend` va `worker`
+  ikkala tarmoqda. **Qolgan xavf:** runner ichidagi kod `backend:8000` API'ga
+  ulana oladi (internetdagi har kim kabi, auth va rate-limit amal qiladi).
+- Test natijasi xavfsizlik chegarasi emas: talaba kodi test bilan bitta
+  jarayonda ishlaydi va natijani soxtalashtirishga urinishi mumkin. Natija
+  satri tasodifiy nonce bilan belgilanadi (oddiy `print` bilan
+  soxtalashtirib bo'lmaydi); baribir test balli rubrika bahosi bilan
+  birga ishlatiladi va kod LLM baholovchiga to'liq ko'rinadi.
+
+### 19.2 Backend mijozi (`app/core/sandbox.py`)
+
+- `SANDBOX_URL` (masalan `http://sandbox:8100`) va `SANDBOX_TOKEN` `.env`dan.
+  Compose ikkalasini majburiy qiladi.
+- `SANDBOX_URL` bo'sh — **faqat lokal ishlab chiqish va testlar uchun**:
+  skript rejimi shu jarayonda subprocess (AST filtri + rlimit,
+  izolyatsiyasiz, `asyncio.to_thread` orqali — event loop to'xtamaydi);
+  test rejimi o'chiq (`checks` o'tkazib yuboriladi, `status: "disabled"`).
+  Lokal testlar kerak bo'lsa runner'ni o'zi ishga tushiriladi:
+  `SANDBOX_TOKEN=dev python sandbox/runner.py`.
+- Runner javob bermasa/503 — `SandboxUnavailable`.
+- `POST /api/v1/tools/sandbox` (auth + Redis rate-limit, o'zgarishsiz) skript
+  rejimida shu mijozdan foydalanadi; AST filtri runner oldidan ham qo'llanadi
+  (qo'shimcha qatlam). Test rejimida AST filtri yo'q — talaba kodi oddiy
+  importlarni ishlatadi, himoya — konteyner.
+
+### 19.3 Ssenariy: `checks`
+
+```yaml
+checks:
+  module: solution        # talaba kodi fayl nomi (standart)
+  weight: 0.5             # task ballidagi ulushi (0 < w ≤ 1, standart 0.5)
+  tests: |
+    from solution import calculate_total, Item, Promo
+    def test_percent_not_on_delivery():
+        assert calculate_total([Item(80000, 1)], 15000, Promo("S", "percent", 20, 0)) == 79000
+```
+
+`checks` faqat `answer_types`da `code` bo'lgan `task`/`incident`da; `tests`da
+kamida bitta `test_*` funksiya (import paytida AST bilan tekshiriladi).
+`checks` testlari talabaga, RAG'ga, mentorga va API'ga **hech qachon**
+berilmaydi (§9.4 anti-spoiler) — faqat test **nomlari** va o'tdi/yiqildi.
+
+### 19.4 Baholash
+
+- `submissions.code` (yangi ustun): talabaning `code` javobi alohida
+  saqlanadi (`content`da ham avvalgidek).
+- `checks` bor node'da baholash oldidan runner chaqiriladi →
+  `submissions.check_results = {status, passed, total, failed: [nom]}`.
+  Kod topshirilmagan bo'lsa — `{status: "no_code", passed: 0, total: N}`.
+- Runner ishlamasa — AI xatosi kabi `queued_retry`; oxirgi urinishda ham
+  ishlamasa testlarsiz (faqat rubrika) baholanadi,
+  `check_results.status = "unavailable"`. Runner sozlanmagan
+  (`SANDBOX_URL` bo'sh) — darhol `"disabled"`, faqat rubrika.
+- Test natijasi LLM baholovchiga javob oxirida qisqa satr bo'lib beriladi
+  (`[Avtomatik testlar: 5/7 o'tdi; yiqilgan: …]`); mentor (§9.13) talaba
+  ishi xulosasida xuddi shu satrni oladi.
+- Xom ball = `(1 − w) × rubrika + w × 100 × passed/total`; jarimalar
+  (§9.6) shundan keyin. `unavailable`/`disabled` — faqat rubrika.
+- `submission_evaluated` hodisasi va `EventOut.last_checks`:
+  `{status, passed, total, failed}` (`unavailable`/`disabled` — `null`);
+  hisobotdagi task natijasida `checks` (oxirgi baholangan urinishniki).
+
+### 19.5 Frontend
+
+Run sahifasida task tafsilotida va hisobotda: "Avtomatik testlar: 5/7" va
+yiqilgan test nomlari.
+

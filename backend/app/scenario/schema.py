@@ -12,6 +12,7 @@ Ogohlantirishlar (import qilinadi, lekin muallif ko'rishi kerak) →
 
 from __future__ import annotations
 
+import ast
 from enum import Enum
 from typing import Literal
 
@@ -115,6 +116,24 @@ class DecisionOption(_Strict):
     flag: str | None = Field(default=None, pattern=_KEY)
 
 
+class Checks(_Strict):
+    """Yashirin avtomatik testlar (§19.3) — faqat runner va baholovchi ko'radi."""
+    tests: str = Field(min_length=1, max_length=50_000)
+    module: str = Field(default="solution", pattern=r"^[a-z_][a-z0-9_]{0,40}$")
+    weight: float = Field(default=0.5, gt=0, le=1)
+
+    @field_validator("tests")
+    @classmethod
+    def _has_tests(cls, v: str) -> str:
+        try:
+            tree = ast.parse(v)
+        except SyntaxError as exc:
+            raise ValueError(f"checks.tests: sintaksis xatosi ({exc.msg}, {exc.lineno}-qator)") from exc
+        if not any(isinstance(n, ast.FunctionDef) and n.name.startswith("test_") for n in tree.body):
+            raise ValueError("checks.tests: kamida bitta test_* funksiya kerak")
+        return v
+
+
 class After(_Strict):
     node: str
     event: Literal["delivered", "submitted"]
@@ -140,7 +159,7 @@ class Node(_Strict):
 
     # Faqat baholovchi / mentor ko'radi — RAG'ga hech qachon kirmaydi (§9.4)
     rubric: list[RubricCriterion] = []
-    checks: dict | None = None
+    checks: Checks | None = None
     hints: list[str] = []
     reference_answer: str | None = None
 
@@ -181,6 +200,8 @@ class Node(_Strict):
             raise ValueError(f"{self.id}: message — matn (brief) bor, dedlayn yo'q")
         if self.type == NodeType.DAY_END and self.after is not None:
             raise ValueError(f"{self.id}: day_end faqat `day`+`at` bilan")
+        if self.checks and (self.type not in ANSWER_TYPES or AnswerType.CODE not in self.answer_types):
+            raise ValueError(f"{self.id}: checks faqat `code` javobli task/incident uchun")
         if self.type not in GRADED_TYPES and (self.rubric or self.reference_answer or self.hints):
             raise ValueError(f"{self.id}: rubric/reference_answer/hints faqat baholanadigan node'da")
         if len({c.id for c in self.rubric}) != len(self.rubric):

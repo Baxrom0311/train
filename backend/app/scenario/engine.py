@@ -592,6 +592,7 @@ async def submit_answer(
         attempt=len(previous) + 1,
         late=late,
         content=content,
+        code=answer.code.rstrip() if answer.code else None,
         file_id=answer.file_id,
         link_url=answer.link_url,
         ai_eval_status=AIEvalStatus.PENDING,

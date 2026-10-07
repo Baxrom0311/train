@@ -982,5 +982,14 @@
       "days_one": "{{count}} kun oldin",
       "days_other": "{{count}} kun oldin"
     }
+  },
+  "checks": {
+    "title": "Avtomatik testlar",
+    "allPassed": "Hamma testlar o'tdi",
+    "status": {
+      "error": "Kod ishga tushmadi (sintaksis yoki import xatosi) — testlar bajarilmadi",
+      "timeout": "Kod vaqt chegarasida tugamadi",
+      "no_code": "Kod topshirilmagan — testlar o'tkazilmadi"
+    }
   }
 }
