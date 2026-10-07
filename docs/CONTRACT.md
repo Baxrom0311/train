@@ -162,7 +162,7 @@ schema / endpoint shakli) orqali gaplashadi.
 | 3 | **Billing & Admin approval** | `backend/app/models/billing.py`, `backend/app/api/billing.py`, `backend/app/api/admin.py` | (1)ga bog'liq |
 | 4 | **Talent Hunt** | `backend/app/models/talent.py`, `backend/app/api/talent_hunt.py`, `backend/app/talent/` | (1),(3),(9)ga bog'liq — ball Run natijalaridan (§10) |
 | 5 | **Case Cup** | `backend/app/api/case_cups.py` | (1),(2)ga bog'liq |
-| 6 | **University Portal** | `backend/app/api/university_portal.py` | (1),(2),(3)ga bog'liq |
+| 6 | **University Portal** | `backend/app/api/university_portal.py` | (1),(3),(9)ga bog'liq — natijalar Run'lardan (§12) |
 | 7 | **Frontend (React+shadcn)** | `frontend/` | Har modul backend API'si tayyor bo'lgach, mos ekranlar — vertical slice, lekin alohida agent/task |
 | 8 | **Deploy** | `deploy/` | Docker-compose, nginx, Dockerfile'lar — backend/frontend tuzilishi barqarorlashgach yangilanadi |
 | 9 | **Scenario Engine** | §9.10 ro'yxati (`backend/app/scenario/`, `models/scenario.py`, `api/scenarios.py`, `api/runs.py`, `api/files.py`, `backend/content/scenarios/`, `tools/import_scenario.py`) | (1),(2) interfeyslari — §9.10 |
@@ -217,6 +217,7 @@ GET    /api/v1/talents                    only is_verified company + only visibl
 POST   /api/v1/talents/offers             counts against subscription's "interview SLA" commitment
 
 # Talent Hunt to'liq ro'yxati (profil, takliflarga javob) — §10.4
+# Universitet portali (talabalar natijalari, bog'lanish) — §12.2
 ```
 
 ---
@@ -832,4 +833,67 @@ invoice'gacha bo'lgan oqimni brauzerda to'liq qiladi.
   tasdiqlangan tashkilotlar, invoice'lar (yaratish, to'landi, bekor qilish).
 - `/billing` (`view_org_invoices`): tashkilotning o'z invoice'lari.
 - Kirishdan keyingi sahifa va menyu ruxsatga qarab: admin → `/admin`,
-  kompaniya → `/talents`, universitet → `/billing`, talaba → `/simulations`.
+  kompaniya → `/talents`, universitet → `/university` (§12), talaba → `/simulations`.
+
+---
+
+## 12. Universitet portali (Modul 6)
+
+Universitet o'z talabalarining ssenariy dvigateli (§9) natijalarini ko'radi:
+kim qancha ish o'tdi, qanday ball oldi, qaysi kompetensiyalar kuchli. Eski
+`submissions` asosidagi `/students/{id}/progress` va `/stats` olib tashlanadi
+(`simulations` muzlatilgan, §9).
+
+### 12.1 Kirish va bog'lanish
+
+- Portal: `manage_universities` (`university_admin`) + `org_type=university`
+  + universitet `is_verified=true` (aks holda 403).
+- "Talaba" = `users.university_id = org_id` va `org_id IS NULL` (tashkilot
+  xodimi emas). Bog'lanishni talaba o'zi qiladi: ro'yxatdan o'tishda yoki
+  keyin `PATCH /users/me/university` orqali (**`join_university`** — yangi,
+  `student`). Faqat tasdiqlangan universitetni tanlash mumkin (aks holda 404).
+  Talaba bu yerda universiteti natijalarini ko'rishini ogohlantiriladi.
+- Universitet noto'g'ri bog'langan talabani ajratadi
+  (`DELETE /university/students/{id}` → `university_id=NULL`); akkaunt va
+  natijalar o'chmaydi.
+- `candidate_visibility` (§10) bu yerga ta'sir qilmaydi — u kompaniyalar
+  uchun. Universitet ham javoblar, chat va fayllarni **ko'rmaydi**: faqat
+  §10.1 profili (ssenariy, soha, sana, ball, kompetensiyalar, kuchli
+  tomonlar), hozir ketayotgan ishlar (ssenariy nomi, holat, tugash vaqti)
+  va kontakt (ism, email).
+- Modul 6 `runs`/`scenario_*` jadvallarini faqat o'qiydi va profilni
+  `app.talent.profile.build_profiles` orqali oladi (§10.1 bilan bir xil hisob).
+
+### 12.2 API
+
+```
+GET    /api/v1/university/list               ochiq → tasdiqlangan universitetlar
+GET    /api/v1/university/overview           manage_universities
+       → {university, students_total, students_with_results, runs_completed,
+          runs_in_progress, avg_score, sectors: [{sector, students, avg_score}],
+          competencies: {key: avg}, top_students: [StudentRow] (5 ta)}
+GET    /api/v1/university/students           manage_universities
+       ?q=&sector=&has_results=&sort=score|recent|name&limit=&offset=
+       → {items: [StudentRow], total}
+GET    /api/v1/university/students/{id}      manage_universities → StudentDetail | 404
+DELETE /api/v1/university/students/{id}      manage_universities → 204 | 404
+
+GET    /api/v1/users/me/university           join_university → {university: University | null}
+PATCH  /api/v1/users/me/university           join_university; {university_id: uuid | null}
+```
+
+`StudentRow`: `id, full_name, email, joined_at, overall_score,
+runs_completed, runs_in_progress, sectors, top_competencies,
+last_completed_at`. `StudentDetail`: qator + `competencies` (to'liq) +
+`runs` (§10.4 `RunSummary`) + `in_progress: [{scenario_title, sector,
+status, ends_at}]`. `avg_score` va `competencies` — natijasi bor talabalar
+profillari o'rtachasi; natija yo'q bo'lsa `null` / `{}`.
+
+### 12.3 Frontend
+
+- `/university` (`manage_universities`): statistika, sohalar va
+  kompetensiyalar kesimi, talabalar jadvali (qidiruv, soha, saralash),
+  talaba profili dialogi va ajratish.
+- Universitet xodimi kirgach `/university`ga tushadi; menyuda
+  "Talabalar" va "To'lovlar".
+- Talaba `/dashboard`da universitetini ko'radi va o'zgartiradi.

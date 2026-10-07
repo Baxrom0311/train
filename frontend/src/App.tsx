@@ -14,6 +14,7 @@ import SentOffersPage from './pages/SentOffersPage'
 import OffersPage from './pages/OffersPage'
 import AdminPage from './pages/AdminPage'
 import BillingPage from './pages/BillingPage'
+import UniversityPage from './pages/UniversityPage'
 
 export default function App() {
   return (
@@ -35,6 +36,7 @@ export default function App() {
               <Route path="/talents" element={<RequirePermission permission="view_candidates"><TalentsPage /></RequirePermission>} />
               <Route path="/talents/offers" element={<RequirePermission permission="view_candidates"><SentOffersPage /></RequirePermission>} />
               <Route path="/admin" element={<RequirePermission permission={['approve_companies', 'manage_billing']}><AdminPage /></RequirePermission>} />
+              <Route path="/university" element={<RequirePermission permission="manage_universities"><UniversityPage /></RequirePermission>} />
               <Route path="/billing" element={<RequirePermission permission="view_org_invoices"><BillingPage /></RequirePermission>} />
             </Routes>
           </div>

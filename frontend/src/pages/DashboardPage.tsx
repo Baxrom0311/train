@@ -8,6 +8,7 @@ import { Badge } from './Badge'
 import { homeFor, useAuth } from '@/context/AuthContext'
 import { api } from '@/lib/api'
 import { formatDateTime } from '@/lib/time'
+import MyUniversityCard from '@/components/university/MyUniversityCard'
 import type { RunSummary } from '@/lib/types'
 
 export default function DashboardPage() {
@@ -110,6 +111,8 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
+
+        {can('join_university') && <MyUniversityCard />}
       </div>
     </div>
   )

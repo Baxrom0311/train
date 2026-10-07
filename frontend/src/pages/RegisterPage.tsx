@@ -138,6 +138,7 @@ export default function RegisterPage() {
                   <option value="">{t('auth.register.noUniversity')}</option>
                   {universities.map((u) => <option key={u.id} value={u.id}>{u.name} — {u.city}</option>)}
                 </select>
+                {form.universityId && <p className="text-xs text-muted-foreground">{t('auth.register.universityHint')}</p>}
               </div>
             )}
             <div className="grid gap-4 sm:grid-cols-2">

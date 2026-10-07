@@ -278,3 +278,57 @@ export interface Invoice {
   notes: string | null
   created_at: string
 }
+
+// Universitet portali (backend/app/api/university_portal.py, CONTRACT.md §12)
+
+export interface UniversityRef {
+  id: string
+  name: string
+  city: string
+}
+
+export interface StudentRow extends CandidateCard {
+  email: string
+  joined_at: string | null
+  runs_in_progress: number
+}
+
+export interface InProgressRun {
+  scenario_title: string
+  sector: Sector
+  status: RunStatus
+  ends_at: string
+}
+
+export interface StudentDetail extends StudentRow {
+  competencies: Record<string, number>
+  runs: CandidateRun[]
+  in_progress: InProgressRun[]
+}
+
+export interface StudentPage {
+  items: StudentRow[]
+  total: number
+}
+
+export interface SectorStat {
+  sector: Sector
+  students: number
+  avg_score: number | null
+}
+
+export interface UniversityOverview {
+  university: UniversityRef
+  students_total: number
+  students_with_results: number
+  runs_completed: number
+  runs_in_progress: number
+  avg_score: number | null
+  sectors: SectorStat[]
+  competencies: Record<string, number>
+  top_students: StudentRow[]
+}
+
+export interface Affiliation {
+  university: UniversityRef | null
+}
