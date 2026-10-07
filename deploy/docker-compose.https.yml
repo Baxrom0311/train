@@ -1,0 +1,34 @@
+# HTTPS qatlami (CONTRACT.md §18.2) — asosiy fayl ustiga qo'shiladi:
+#
+#   docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.https.yml up -d --build
+#
+# DNS'da DOMAIN shu serverga qaragan va 80/443 portlar ochiq bo'lishi kerak.
+
+services:
+  frontend:
+    # tashqariga faqat Caddy chiqadi
+    ports: !reset []
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN kerak (masalan, tryjob.uz)}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL kerak (sertifikat xabarlari uchun)}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+    logging:
+      driver: json-file
+      options: { max-size: 10m, max-file: "5" }
+
+volumes:
+  caddy_data:
+  caddy_config:

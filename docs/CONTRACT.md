@@ -1299,3 +1299,50 @@ GET /api/v1/users/me/analytics          kirgan foydalanuvchi, faqat o'ziniki
 mini-chiziq), fokus va AI maslahatlari, tavsiya qilingan ssenariylar
 ("Boshlash" — `POST /runs`, ochiq Run bo'lsa 409 xabari), sohalar,
 oxirgi ishlar va universitet kartasi. Grafiklar SVG, kutubxonasiz.
+
+## 18. Ishga tushirish (Modul 8 + 1)
+
+Pilot uchun bitta server (Docker Compose). Maqsad: HTTPS, kunlik zaxira
+nusxa, holatni kuzatish va takrorlanadigan yangilash tartibi —
+qo'shimcha xizmat (Kubernetes, tashqi monitoring) talab qilinmaydi.
+
+### 18.1 Holat (`GET /api/v1/health`, ochiq)
+
+`{status: "ok" | "degraded", db, redis, worker}` — har biri `bool`.
+`db`: `SELECT 1`; `redis`: `PING`; `worker`: arq worker'ning health-check
+kaliti Redis'da bor (worker o'lsa real vaqtdagi hodisalar yetkazilmaydi,
+§9.2 — shuning uchun u ham majburiy). Hammasi `true` — 200, aks holda 503.
+Ichki tafsilot (xato matni, versiya) qaytarilmaydi. Compose healthcheck va
+tashqi uptime monitor shu manzilni tekshiradi.
+
+`DOCS_ENABLED` (default `true`): `false` bo'lsa `/docs`, `/redoc`,
+`/openapi.json` o'chiriladi (production `.env.example`da `false`).
+
+### 18.2 HTTPS
+
+`deploy/docker-compose.https.yml` (qo'shimcha fayl): Caddy `DOMAIN` uchun
+Let's Encrypt sertifikatini o'zi oladi va yangilaydi, `frontend` (nginx)ga
+proksilaydi; `frontend` tashqi portni ochmaydi. SSE uchun `flush_interval -1`.
+HSTS Caddy'da.
+
+### 18.3 Zaxira nusxa
+
+`backup` servisi (Postgres image, `deploy/backup.sh`): har kuni
+`BACKUP_HOUR` (Toshkent vaqti, default 03) da `pg_dump -Fc` va `uploads`
+volume'ining `tar.gz`i `deploy/backups/`ga; `BACKUP_KEEP_DAYS` (default 14)
+dan eskilari o'chiriladi. Fayl avval `.partial` bo'lib yoziladi — yarim
+qolgan nusxa hech qachon to'liqdek ko'rinmaydi. Qo'lda: `backup.sh now`.
+Tiklash tartibi `deploy/README.md`da. Serverdan tashqariga ko'chirish
+(off-site) — operator vazifasi, README'da tavsiya.
+
+### 18.4 Boshqa
+
+- Barcha servislarda log rotatsiya (`json-file`, 10 MB × 5).
+- `worker` healthcheck: `arq --check`.
+- Ssenariy kontenti birinchi ishga tushirishda `import_scenario.py --publish`
+  bilan yuklanadi; keyin ssenariylar muharrirda (§16) o'zgartiriladi —
+  qayta import muharrirdagi nashrni fayldagisi bilan almashtiradi, shuning
+  uchun avtomatik import yo'q.
+- `definition_for` keshi kaliti `(versiya id, created_at)`: bir nechta API
+  jarayoni va worker bo'lsa ham qoralama tahriridan keyin eski ta'rif
+  ishlatilmaydi (§16.1).

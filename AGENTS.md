@@ -27,6 +27,8 @@ Bildirishnomalar (`CONTRACT.md` §15): yangi vazifa, dedlayn, mentor izohi, hiso
 navbar qo'ng'iroqchasi, `/notifications` va email (SMTP `.env`dan; bo'sh bo'lsa faqat sayt ichida).
 Talaba analitikasi (`CONTRACT.md` §17, `/dashboard`): ball dinamikasi, kompetensiyalar o'zgarishi,
 fokus kompetensiyalar, AI maslahatlari va ularni mashq qildiradigan ssenariy tavsiyalari.
+Ishga tushirish (`CONTRACT.md` §18, `deploy/README.md`): `GET /api/v1/health`, HTTPS (Caddy,
+`docker-compose.https.yml`), kunlik zaxira nusxa va tiklash tartibi, log rotatsiya.
 
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da

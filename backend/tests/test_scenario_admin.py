@@ -1,5 +1,6 @@
 """Ssenariy muharriri API (CONTRACT.md §16): qoralama, tekshiruv, YAML, nashr."""
 import copy
+from datetime import datetime, timezone
 import uuid
 
 import pytest
@@ -158,3 +159,16 @@ async def test_toggle_active_hides_from_catalog(client, admin, data):
     assert r.status_code == 200 and r.json()["is_active"] is False
     assert (await client.get("/api/v1/scenarios", headers=admin)).json() == []
     assert (await client.get("/api/v1/showcase")).json()["scenarios"] == []
+
+
+async def test_cached_definition_follows_edit_from_other_process(client, db_session, admin, data):
+    """Boshqa jarayon (API worker yoki arq) qoralamani yangilasa — bu jarayon keshi eskisini bermaydi."""
+    v = (await client.post(BASE, json={"definition": data}, headers=admin)).json()
+    version = await db_session.get(ScenarioVersion, (await db_session.execute(
+        select(ScenarioVersion.id).where(ScenarioVersion.scenario_id == v["scenario_id"]))).scalar_one())
+    assert definition_for(version).title == data["title"]
+    # `forget_definition` chaqirilmaydi — boshqa jarayonda saqlangandek
+    version.definition = {**version.definition, "title": "Boshqa jarayondan"}
+    version.created_at = datetime.now(timezone.utc)
+    await db_session.commit()
+    assert definition_for(version).title == "Boshqa jarayondan"

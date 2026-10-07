@@ -9,7 +9,9 @@ Docker Compose bilan to'liq stek:
 | `migrate` | `tryjob-backend` | Bir martalik `alembic upgrade head` (rollar/ruxsatlar seed) |
 | `backend` | `tryjob-backend` | FastAPI (uvicorn), faqat ichki tarmoqda `:8000` |
 | `frontend` | `tryjob-frontend` | nginx: React build + `/api/`, `/docs` → backend proxy |
-| `worker` | `tryjob-backend` | arq AI-retry worker — standart profilda ishga tushadi |
+| `worker` | `tryjob-backend` | arq worker: baholash, hodisalar yetkazish cron'i, hisobotlar |
+| `backup` | `pgvector/pgvector:pg16` | Kunlik `pg_dump` + `uploads` arxivi `deploy/backups/`ga |
+| `caddy` | `caddy:2-alpine` | Faqat `docker-compose.https.yml` bilan: HTTPS (Let's Encrypt) |
 
 ## Ishga tushirish
 
@@ -20,13 +22,90 @@ cp deploy/.env.example deploy/.env
 docker compose -f deploy/docker-compose.yml up -d --build
 ```
 
-Ilova: `http://localhost` (yoki `HTTP_PORT`), Swagger: `http://localhost/docs`.
+Ilova: `http://localhost` (yoki `HTTP_PORT`). Swagger (`/docs`) faqat
+`DOCS_ENABLED=true` bo'lsa ochiq — `.env.example`da production uchun `false`.
+
+Ssenariylar (faqat birinchi marta — keyin muharrirda, `/admin/scenarios`;
+qayta import muharrirdagi nashrni fayldagisi bilan almashtiradi):
+
+```bash
+docker compose -f deploy/docker-compose.yml exec backend \
+  sh -c 'python ../tools/import_scenario.py --publish content/scenarios/*.yaml'
+```
 
 Birinchi admin (faqat bir marta):
 
 ```bash
 docker compose -f deploy/docker-compose.yml exec backend \
   python ../tools/bootstrap_admin.py --email admin@example.uz --password '...'
+```
+
+## HTTPS
+
+DNS'da `DOMAIN` serverga qaragan, 80 va 443 portlar ochiq bo'lsin;
+`deploy/.env`da `DOMAIN`, `ACME_EMAIL`, `CORS_ORIGINS=https://<domen>`,
+`PUBLIC_URL=https://<domen>`. Keyin har buyruqqa ikkinchi fayl qo'shiladi:
+
+```bash
+docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.https.yml up -d --build
+```
+
+Caddy sertifikatni o'zi oladi va yangilaydi (`caddy_data` volume'ida),
+HSTS qo'yadi; `frontend` tashqi portni ochmaydi.
+
+## Holat
+
+`GET /api/v1/health` → `{status, db, redis, worker}`; hammasi ishlasa 200,
+aks holda 503 (ichki xato matni qaytmaydi). Tashqi uptime monitorni
+(masalan, har daqiqada) shu manzilga ulang — worker o'lsa real vaqtdagi
+hodisalar yetkazilmaydi, buni faqat shu yerda ko'rasiz.
+Compose ichida: `backend` — DB va Redis, `worker` — `arq --check`.
+
+```bash
+docker compose -f deploy/docker-compose.yml ps        # healthy / unhealthy
+docker compose -f deploy/docker-compose.yml logs -f --tail=100 worker
+```
+
+Loglar `json-file`, har servisga 10 MB × 5 fayl.
+
+## Zaxira nusxa va tiklash
+
+`backup` servisi har kuni `BACKUP_HOUR`da (Toshkent) `deploy/backups/`ga
+`tryjob_<sana>.dump` va `uploads_<sana>.tar.gz` yozadi, `BACKUP_KEEP_DAYS`dan
+eskilarini o'chiradi. Yozilayotgan fayl `.partial` bilan tugaydi — u tayyor
+nusxa emas. Qo'lda (masalan, yangilashdan oldin):
+
+```bash
+docker compose -f deploy/docker-compose.yml exec backup sh /backup.sh now
+```
+
+Nusxalar shu serverda turadi — disk yo'qolsa ular ham yo'qoladi.
+`deploy/backups/`ni muntazam boshqa joyga ko'chiring (masalan, `rclone`
+yoki `rsync` bilan obyekt xotiraga).
+
+Tiklash (yangi yoki bo'sh serverda):
+
+```bash
+C="docker compose -f deploy/docker-compose.yml"
+$C up -d postgres
+$C stop backend worker                      # ishlayotgan bo'lsa
+$C exec -T postgres sh -c 'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists --no-owner' \
+  < deploy/backups/tryjob_<sana>.dump
+docker run --rm -v tryjob_uploads:/data/uploads -v "$PWD/deploy/backups:/b:ro" alpine \
+  sh -c 'rm -rf /data/uploads/* && tar -xzf /b/uploads_<sana>.tar.gz -C /data'
+$C up -d
+```
+
+`tryjob_uploads` — compose loyihasi (`name: tryjob`) yaratgan volume nomi
+(`docker volume ls`).
+
+## Yangilash
+
+```bash
+git pull
+docker compose -f deploy/docker-compose.yml exec backup sh /backup.sh now   # avval nusxa
+docker compose -f deploy/docker-compose.yml up -d --build                   # migrate o'zi yuradi
+docker compose -f deploy/docker-compose.yml ps
 ```
 
 ## Testlar (konteyner ichida)
@@ -62,5 +141,5 @@ birinchi marta yaratilganda paydo bo'ladi.
   Cloud AI zanjiri muvaffaqiyatsiz bo'lganda submission'larni qayta
   baholaydi; bu servis ishlamasa, "queued_retry" holatidagi topshiriqlar
   abadiy shu holatda qolib ketadi.
-- HTTPS: tashqi reverse proxy (Caddy/Traefik/Cloudflare) yoki `nginx.conf`ga
-  sertifikat qo'shing.
+- HTTPS: yuqoridagi "HTTPS" bo'limi (Caddy). Tashqi proxy (Cloudflare va
+  h.k.) ishlatilsa, `docker-compose.https.yml` shart emas.

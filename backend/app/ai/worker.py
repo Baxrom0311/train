@@ -147,6 +147,9 @@ async def shutdown(ctx: dict) -> None:  # noqa: ARG001
     pass
 
 
+HEALTH_CHECK_INTERVAL = 60   # soniya; kalit TTL'i shundan 1 soniya ko'p (arq)
+
+
 class WorkerSettings:
     """`arq app.ai.worker.WorkerSettings` bilan ishga tushiriladi (deploy/)."""
     functions = [
@@ -168,6 +171,8 @@ class WorkerSettings:
         cron(send_notification_emails_job, second=20, unique=True, timeout=50),
     ]
     redis_settings = RedisSettings.from_dsn(settings.REDIS_URL)
+    # §18.1: `/api/v1/health` shu kalitni tekshiradi — worker o'lsa ~1 daqiqada ko'rinadi
+    health_check_interval = HEALTH_CHECK_INTERVAL
     on_startup = startup
     on_shutdown = shutdown
     max_tries = MAX_ATTEMPTS
