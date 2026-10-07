@@ -2,7 +2,7 @@
 // Ranglar CSS o'zgaruvchilaridan: kunduz — yashil, tun — sariq; ish stolida kun qismiga qarab.
 export default function Backdrop() {
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden print:hidden">
       <div className="absolute -left-[10%] -top-[15%] h-[55vmax] w-[55vmax] rounded-full opacity-45 blur-3xl animate-drift-1 dark:opacity-25"
         style={{ background: 'radial-gradient(circle, hsl(var(--glow-1)) 0%, transparent 65%)' }} />
       <div className="absolute -right-[15%] top-[10%] h-[50vmax] w-[50vmax] rounded-full opacity-40 blur-3xl animate-drift-2 dark:opacity-20"

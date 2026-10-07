@@ -166,6 +166,7 @@ schema / endpoint shakli) orqali gaplashadi.
 | 7 | **Frontend (React+shadcn)** | `frontend/` | Har modul backend API'si tayyor bo'lgach, mos ekranlar — vertical slice, lekin alohida agent/task |
 | 8 | **Deploy** | `deploy/` | Docker-compose, nginx, Dockerfile'lar — backend/frontend tuzilishi barqarorlashgach yangilanadi |
 | 9 | **Scenario Engine** | §9.10 ro'yxati (`backend/app/scenario/`, `models/scenario.py`, `api/scenarios.py`, `api/runs.py`, `api/files.py`, `backend/content/scenarios/`, `tools/import_scenario.py`) | (1),(2) interfeyslari — §9.10 |
+| 10 | **Credentials** | `backend/app/models/credential.py`, `backend/app/api/credentials.py`, `backend/app/credentials/` | (1),(6),(9)ga bog'liq — sertifikat Run'dan, portfolio §10.1 profilidan (§13) |
 
 Qurish ketma-ketligi: **1 → (2,3 parallel) → (4,5,6 parallel) → 7 har
 bosqichda mos ravishda**. Modul 9: avval (1),(2),(8)dagi §9.10
@@ -685,6 +686,7 @@ fayliga **tegmaydi**):
 | 8 (Deploy) | `postgres` image → `pgvector/pgvector:pg16`; `UPLOAD_DIR` volume; nginx'da `/api/v1/runs/*/stream` uchun `proxy_buffering off` va uzun `proxy_read_timeout` |
 | 7 (Frontend) | "Ish stoli": inbox, personajlar chati, task board, kalendar, soat, hisobot sahifasi |
 | 4, 6 | `runs.competency_scores`ni nomzod profili va universitet statistikasiga qo'shish; Modul 6: `SubmissionSummary.task_id` → `Optional` (Run submission'ida `task_id` yo'q) |
+| 10 (Credentials) | `credentials/issue.py`: `issue_for_run(db, run)` — `write_final_report` uni yakuniy hisobot bilan bir tranzaksiyada chaqiradi (§13.1) |
 
 ### 9.11 v1 qamrovi va v2
 
@@ -792,7 +794,8 @@ ko'rinmaydi; yashirilgan kompaniya uchun "topilmadi" (404), "yashirilgan" emas.
 ### 10.1 Profil qanday hisoblanadi
 
 - Faqat `status=completed` va `final_report` yozilgan Run'lar kiradi
-  (sertifikatli ishlar). `expired`/`abandoned` profilga chiqmaydi — talaba
+  (sertifikatli ishlar; sertifikati bekor qilingani — yo'q, §13.1).
+  `expired`/`abandoned` profilga chiqmaydi — talaba
   ochgan narsa uning portfoliosi, xatolar jurnali emas.
 - Bir ssenariy bir necha marta o'tilgan bo'lsa — eng yuqori
   `overall_score`li Run olinadi.
@@ -970,3 +973,82 @@ profillari o'rtachasi; natija yo'q bo'lsa `null` / `{}`.
 - Universitet xodimi kirgach `/university`ga tushadi; menyuda
   "Talabalar" va "To'lovlar".
 - Talaba `/dashboard`da universitetini ko'radi va o'zgartiradi.
+
+---
+
+## 13. Sertifikat va portfolio (Modul 10)
+
+Talaba tugatgan ishini platformadan tashqarida ko'rsata olishi kerak:
+CV'ga, LinkedIn'ga yoki ish beruvchiga havola beradi, ular esa
+sertifikat haqiqiyligini login'siz tekshiradi.
+
+### 13.1 Sertifikat
+
+- Har `status=completed` va `final_report.certificate=true` bo'lgan Run
+  uchun **bitta** sertifikat (`certificates.run_id` UNIQUE). Dvigatel
+  (Modul 9) yakuniy hisobotni yozgan tranzaksiyada
+  `app.credentials.issue.issue_for_run(db, run)`ni chaqiradi; avval
+  tugagan Run'lar migratsiyada to'ldiriladi. `expired`/`abandoned` —
+  sertifikat yo'q.
+- Kod: `TJ-XXXX-XXXX`, 8 belgi `23456789ABCDEFGHJKMNPQRSTUVWXYZ`
+  alifbosidan (`secrets`, adashtiradigan 0/O/1/I/L yo'q), UNIQUE. Qidiruvda
+  katta-kichik harf va bo'shliq farq qilmaydi.
+- Sertifikat — **berilgan paytdagi surat** (snapshot): egasining ismi,
+  ssenariy nomi, kompaniya (fictional), soha, daraja, davomiyligi,
+  tugallangan sana, `overall_score`, `competency_scores`. Keyin ssenariy
+  yoki ism o'zgarsa ham sertifikat o'zgarmaydi.
+- Ochiq tekshiruv (`GET /certificates/{code}`) faqat shu suratni va holatni
+  qaytaradi: email, javoblar, chat, fayllar, hisobot matni **yo'q**.
+- Bekor qilish: admin (`manage_certificates` — yangi, `admin`) sabab bilan
+  bekor qiladi (masalan, ko'chirmachilik). Tekshiruvda "bekor qilingan" va
+  sabab ko'rinadi. Bunday Run §10.1 profiliga (kompaniya, universitet,
+  portfolio) kirmaydi. Qayta tiklash yo'q.
+
+### 13.2 Portfolio
+
+- Talabaning ochiq sahifasi `/p/{slug}` — **default yopiq (opt-in)**,
+  `candidate_visibility` (§10) dan alohida: portfolio ochiqligi kompaniyalar
+  ro'yxatiga ta'sir qilmaydi va aksincha.
+- `portfolios`: `user_id` (PK), `slug` (UNIQUE, `^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$`),
+  `is_public` (default false), `headline` (≤ 120), `about` (≤ 1000),
+  `links` (≤ 3 ta `{label ≤ 40, url}`; faqat `https://`), `updated_at`.
+  Band slug — 409.
+- Ochiq sahifada: ism, headline, about, havolalar, universitet (bog'langan va
+  tasdiqlangan bo'lsa), §10.1 profili (umumiy ball, kompetensiyalar,
+  sohalar) va bekor qilinmagan sertifikatlar (yangisi birinchi). Email va
+  javoblar **yo'q**. Yopiq yoki mavjud bo'lmagan slug — bir xil 404.
+- Ruxsat: `manage_portfolio` (**yangi**, `student`) — o'z sertifikatlari va
+  portfolio sozlamalari.
+
+### 13.3 API
+
+```
+GET  /api/v1/certificates/{code}                 ochiq → CertificatePublic | 404
+GET  /api/v1/portfolios/{slug}                   ochiq → PortfolioPublic | 404
+
+GET  /api/v1/users/me/certificates               manage_portfolio → [Certificate] (bekor qilinganlar ham)
+GET  /api/v1/users/me/portfolio                  manage_portfolio → PortfolioSettings
+     (yozuv yo'q bo'lsa: is_public=false va ismdan taklif qilingan slug)
+PUT  /api/v1/users/me/portfolio                  manage_portfolio; {slug, is_public, headline, about, links} → 409 band slug
+
+POST /api/v1/admin/certificates/{code}/revoke    manage_certificates; {reason ≤ 300} → Certificate | 404 | 409 allaqachon
+```
+
+`CertificatePublic`: `code, status (valid|revoked), holder_name,
+scenario_title, company_name, sector, difficulty, duration_days,
+completed_at, issued_at, overall_score, competency_scores, revoked_at,
+revoked_reason`. `Certificate` (talabaga): shu + `run_id`.
+`PortfolioPublic`: `slug, full_name, headline, about, links, university,
+overall_score, competencies, sectors, certificates: [CertificatePublic]`.
+
+### 13.4 Frontend
+
+- `/c/{code}` (ochiq): sertifikat varag'i — chop etish/PDF (`window.print`,
+  A4 albom), shu sahifaga olib boradigan QR, holat belgisi, havolani
+  nusxalash; kod bo'yicha qidirish formasi (topilmasa).
+- `/p/{slug}` (ochiq): portfolio sahifasi.
+- `/portfolio` (`manage_portfolio`): sertifikatlarim (ochish, havolani
+  nusxalash, LinkedIn'ga "Add to profile" — faqat egasiga, ochiq sahifada
+  emas) va portfolio sozlamalari; menyuda "Portfolio".
+- Run hisobotida (`/runs/{id}/report`) sertifikat bo'lsa — unga havola va
+  LinkedIn tugmasi.

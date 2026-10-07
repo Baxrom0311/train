@@ -6,7 +6,7 @@ Kunlik va yakuniy hisobotlar (CONTRACT.md §9.6).
   `run_events.result["report"]`.
 - **Yakuniy** — Run `completed` yoki `expired` bo'lganda: task natijalari,
   kompetensiya ballari (0–100) → `runs.final_report`, `runs.competency_scores`.
-  `expired` — `"incomplete": true`, sertifikat yo'q.
+  `expired` — `"incomplete": true`, sertifikat yo'q; `completed` — sertifikat (§13.1).
 
 Ballar faqat kodda hisoblanadi; AI faqat matn va `initiative` bahosini beradi
 (AI ishlamasa — hisobot matnsiz, `initiative` task'lardan). Baholash hali
@@ -26,6 +26,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.reports import final_report as ai_final_report, summarize_day
+from app.credentials.issue import issue_for_run
 from app.models.enums import (
     AIEvalStatus,
     ChatSender,
@@ -262,6 +263,7 @@ async def write_final_report(db: AsyncSession, run_id: uuid.UUID, now: datetime,
     if run.final_report is None:
         run.final_report = report
         run.competency_scores = scores
+        await issue_for_run(db, run)   # §13.1 — shu tranzaksiyada
     await db.commit()
     return True
 

@@ -337,3 +337,53 @@ export interface UniversityOverview {
 export interface Affiliation {
   university: UniversityRef | null
 }
+
+// Sertifikat va portfolio (backend/app/api/credentials.py, CONTRACT.md §13)
+
+export interface CertificatePublic {
+  code: string
+  status: 'valid' | 'revoked'
+  holder_name: string
+  scenario_title: string
+  company_name: string
+  sector: Sector
+  difficulty: string
+  duration_days: number
+  completed_at: string
+  issued_at: string
+  overall_score: number | null
+  competency_scores: Record<string, number>
+  revoked_at: string | null
+  revoked_reason: string | null
+}
+
+export interface Certificate extends CertificatePublic {
+  run_id: string
+}
+
+export interface PortfolioLink {
+  label: string
+  url: string
+}
+
+export interface PortfolioSettings {
+  slug: string
+  is_public: boolean
+  headline: string
+  about: string
+  links: PortfolioLink[]
+  exists: boolean
+}
+
+export interface PortfolioPublic {
+  slug: string
+  full_name: string
+  headline: string
+  about: string
+  links: PortfolioLink[]
+  university: { name: string; city: string } | null
+  overall_score: number | null
+  competencies: Record<string, number>
+  sectors: Sector[]
+  certificates: CertificatePublic[]
+}

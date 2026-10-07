@@ -41,3 +41,17 @@ export function daypart(at: Date): Daypart {
 export function workdayProgress(at: Date): number {
   return Math.min(1, Math.max(0, (tashkentHours(at) - 9) / 9))
 }
+
+// Brauzerlarning ko'pida `uz` uchun oy nomlari yo'q ("2026 M09 28") — o'zbekchani o'zimiz yozamiz
+const UZ_MONTHS = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr']
+const dayParts = new Intl.DateTimeFormat('en-US', { timeZone: TZ, day: 'numeric', month: 'numeric', year: 'numeric' })
+
+/** Sana so'z bilan, interfeys tilida: "7-oktabr, 2026" / "7 октября 2026 г." / "7 October 2026". */
+export function formatDate(iso: string | Date, lang: string): string {
+  const date = new Date(iso)
+  if (lang === 'uz') {
+    const part = (type: string) => Number(dayParts.formatToParts(date).find((p) => p.type === type)?.value)
+    return `${part('day')}-${UZ_MONTHS[part('month') - 1]}, ${part('year')}`
+  }
+  return new Intl.DateTimeFormat(lang, { timeZone: TZ, day: 'numeric', month: 'long', year: 'numeric' }).format(date)
+}

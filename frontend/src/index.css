@@ -210,3 +210,43 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/*
+ * Sertifikat varag'i (CONTRACT.md §13.4): har doim "qog'oz" — kunduzgi ranglar,
+ * tungi mavzuda ham; chop etishda A4 albom, faqat varaqning o'zi.
+ */
+.paper {
+  --background: 150 40% 98%;
+  --foreground: 160 30% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 160 30% 10%;
+  --primary: 158 72% 34%;
+  --primary-foreground: 0 0% 100%;
+  --primary-2: 172 66% 40%;
+  --muted: 150 25% 94%;
+  --muted-foreground: 160 10% 40%;
+  --success: 152 65% 36%;
+  --destructive: 0 72% 51%;
+  --border: 150 20% 88%;
+  color: hsl(var(--foreground));
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+@page certificate {
+  size: A4 landscape;
+  margin: 0;
+}
+
+@media print {
+  html, body { background: white !important; }
+  .print-sheet {
+    page: certificate;
+    width: 297mm;
+    height: 210mm;
+    max-width: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+}
