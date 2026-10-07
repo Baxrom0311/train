@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider, RequireAuth } from './context/AuthContext'
 import Navbar from './components/Navbar'
+import Backdrop from './components/layout/Backdrop'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
@@ -14,7 +15,8 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
-          <div className="min-h-screen bg-background text-foreground font-sans antialiased">
+          <div className="relative min-h-screen text-foreground">
+            <Backdrop />
             <Navbar />
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />

@@ -12,18 +12,24 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
     const stored = localStorage.getItem('theme') as Theme | null
-    return stored ?? 'light'
+    if (stored) return stored
+    // tanlov bo'lmasa — kunduzi yorug', kechqurun (19:00–07:00) tungi mavzu
+    const hour = new Date().getHours()
+    return hour >= 7 && hour < 19 ? 'light' : 'dark'
   })
 
   useEffect(() => {
     const root = window.document.documentElement
     root.classList.remove('light', 'dark')
     root.classList.add(theme)
-    localStorage.setItem('theme', theme)
   }, [theme])
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
+    setTheme((prev) => {
+      const next = prev === 'light' ? 'dark' : 'light'
+      localStorage.setItem('theme', next) // faqat foydalanuvchi tanlovi saqlanadi
+      return next
+    })
   }
 
   return (

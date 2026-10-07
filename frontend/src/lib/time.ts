@@ -21,3 +21,23 @@ export function remaining(dueIso: string, now: number): { minutes: number; label
   const m = minutes % 60
   return { minutes, label: h ? `${h}:${String(m).padStart(2, '0')}` : `${m}′` }
 }
+
+const hourFmt = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: 'numeric', minute: 'numeric', hourCycle: 'h23' })
+
+/** Toshkent bo'yicha soat (o'nli kasr: 13.5 = 13:30). */
+export function tashkentHours(at: Date): number {
+  const [h, m] = hourFmt.format(at).split(':').map(Number)
+  return h + m / 60
+}
+
+export type Daypart = 'morning' | 'afternoon' | 'evening'
+
+export function daypart(at: Date): Daypart {
+  const h = tashkentHours(at)
+  return h < 12 ? 'morning' : h < 16 ? 'afternoon' : 'evening'
+}
+
+/** Ish kunining (09:00–18:00) qancha qismi o'tgani, 0..1. */
+export function workdayProgress(at: Date): number {
+  return Math.min(1, Math.max(0, (tashkentHours(at) - 9) / 9))
+}

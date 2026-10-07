@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/context/AuthContext'
 import { ApiError } from '@/lib/api'
+import AuthShell from '@/components/layout/AuthShell'
 
 export default function RegisterPage() {
   const { t } = useTranslation()
@@ -38,11 +39,11 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
-      <Card className="w-full max-w-md">
+    <AuthShell>
+      <Card className="glass-strong w-full">
         <form onSubmit={onSubmit}>
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold">{t('auth.register.title')}</CardTitle>
+            <CardTitle className="text-2xl">{t('auth.register.title')}</CardTitle>
             <CardDescription>{t('auth.register.subtitle')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -82,6 +83,6 @@ export default function RegisterPage() {
           </CardFooter>
         </form>
       </Card>
-    </div>
+    </AuthShell>
   )
 }

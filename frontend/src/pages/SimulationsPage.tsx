@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
-import { Briefcase, CalendarDays, Search } from 'lucide-react'
+import { ArrowRight, Briefcase, CalendarDays, Code2, Landmark, Search, Users } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,6 +11,12 @@ import { formatDateTime } from '@/lib/time'
 import type { RunCreated, RunSummary, Scenario } from '@/lib/types'
 
 const OPEN = ['scheduled', 'active']
+
+// Soha bo'yicha karta "muqovasi": ikonka va rang
+const SECTOR_ART = {
+  IT: { Icon: Code2, glow: 'from-emerald-400/50 via-teal-300/30 to-transparent dark:from-amber-400/40 dark:via-orange-500/20' },
+  Banking: { Icon: Landmark, glow: 'from-sky-400/45 via-emerald-300/30 to-transparent dark:from-yellow-300/35 dark:via-amber-600/20' },
+} as const
 
 export default function SimulationsPage() {
   const { t } = useTranslation()
@@ -49,72 +55,87 @@ export default function SimulationsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t('simulations.title')}</h1>
-        <p className="text-muted-foreground mt-2">{t('catalog.subtitle')}</p>
+    <div className="mx-auto max-w-7xl space-y-8 px-4 py-8">
+      <div className="animate-rise space-y-2">
+        <h1 className="text-4xl font-extrabold tracking-tight">{t('simulations.title')}</h1>
+        <p className="max-w-2xl text-muted-foreground">{t('catalog.subtitle')}</p>
       </div>
 
       {openRun && (
-        <Card className="border-primary/40">
-          <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
+        <div className="glass glow-ring animate-rise flex flex-wrap items-center justify-between gap-4 rounded-2xl p-5">
+          <div className="flex items-center gap-4">
+            <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary/15 text-primary">
+              <span className="h-2.5 w-2.5 rounded-full bg-primary animate-glow" />
+            </span>
             <div>
-              <p className="font-medium">{openRun.scenario.title}</p>
+              <p className="font-bold">{openRun.scenario.title}</p>
               <p className="text-sm text-muted-foreground">
                 {t('catalog.openRun', { date: formatDateTime(openRun.ends_at) })}
               </p>
             </div>
-            <Button asChild>
-              <Link to={`/runs/${openRun.id}`}>{t('catalog.continue')}</Link>
-            </Button>
-          </CardContent>
-        </Card>
+          </div>
+          <Button asChild>
+            <Link to={`/runs/${openRun.id}`}>
+              {t('catalog.continue')} <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
       )}
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input className="pl-9" placeholder={t('simulations.search')} value={query}
+        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input className="pl-10" placeholder={t('simulations.search')} value={query}
           onChange={(e) => setQuery(e.target.value)} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {visible.map((s) => (
-          <Card key={s.id} className="flex flex-col">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base leading-snug">{s.title}</CardTitle>
-              <CardDescription className="flex items-center gap-1 text-xs font-medium">
-                <Briefcase className="h-3 w-3" /> {s.company_name}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 space-y-3">
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary">{t(`catalog.sector.${s.sector}`)}</Badge>
-                <Badge variant="outline">{s.difficulty}</Badge>
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {visible.map((s, i) => {
+          const art = SECTOR_ART[s.sector]
+          return (
+            <Card key={s.id} style={{ animationDelay: `${i * 60}ms` }}
+              className="group animate-rise flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-20px_hsl(var(--primary)/0.45)]">
+              <div className={`relative h-32 overflow-hidden bg-gradient-to-br ${art.glow}`}>
+                <art.Icon className="absolute -right-4 -bottom-6 h-36 w-36 text-foreground/10 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-6" />
+                <div className="absolute left-5 top-5 flex gap-2">
+                  <Badge variant="outline">{t(`catalog.sector.${s.sector}`)}</Badge>
+                  <Badge variant="outline">{s.difficulty}</Badge>
+                </div>
               </div>
-              <p className="flex items-center text-xs text-muted-foreground">
-                <CalendarDays className="h-3 w-3 mr-1" />
-                {t('catalog.days', { count: s.duration_days })}
-              </p>
-            </CardContent>
-            <CardFooter className="pt-3">
-              <Button size="sm" className="w-full" disabled={Boolean(openRun) || starting !== null}
-                onClick={() => start(s.id)}>
-                {t('simulations.startSim')}
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">{s.title}</CardTitle>
+                <CardDescription className="flex items-center gap-1.5 font-medium">
+                  <Briefcase className="h-3.5 w-3.5" /> {s.company_name}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1">
+                <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <CalendarDays className="h-3.5 w-3.5" /> {t('catalog.days', { count: s.duration_days })}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5" /> {t('catalog.realTime')}
+                  </span>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button className="w-full" disabled={Boolean(openRun) || starting !== null} onClick={() => start(s.id)}>
+                  {t('simulations.startSim')} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </Button>
+              </CardFooter>
+            </Card>
+          )
+        })}
         {!error && scenarios.length === 0 && <p className="text-muted-foreground">{t('catalog.empty')}</p>}
       </div>
 
       {runs.some((r) => !OPEN.includes(r.status)) && (
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold">{t('catalog.history')}</h2>
-          <div className="divide-y rounded-xl border">
+          <h2 className="text-xl font-bold">{t('catalog.history')}</h2>
+          <div className="glass divide-y divide-border/60 rounded-2xl">
             {runs.filter((r) => !OPEN.includes(r.status)).map((r) => (
-              <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
+              <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3.5 text-sm">
                 <div>
                   <p className="font-medium">{r.scenario.title}</p>
                   <p className="text-muted-foreground">{formatDateTime(r.start_at)}</p>

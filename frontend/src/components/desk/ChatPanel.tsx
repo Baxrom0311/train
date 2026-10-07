@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils'
 import { api, ApiError } from '@/lib/api'
 import { formatTime } from '@/lib/time'
 import type { ChatMessage, Persona } from '@/lib/types'
+import Avatar from './Avatar'
+import { reflow } from './RichText'
 
 export default function ChatPanel({
   runId,
@@ -64,24 +66,27 @@ export default function ChatPanel({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="border-b px-4 py-3">
-        <p className="font-semibold">{persona.name}</p>
-        <p className="text-xs text-muted-foreground">
+      <div className="flex items-center gap-3 border-y border-border/60 px-4 py-3">
+        <Avatar persona={persona} />
+        <div className="min-w-0">
+        <p className="font-bold">{persona.name}</p>
+        <p className="truncate text-xs text-muted-foreground">
           {persona.role}
           {persona.kind === 'mentor' && !/mentor/i.test(persona.role) && ` · ${t('desk.chat.mentor')}`}
         </p>
+        </div>
       </div>
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {messages.length === 0 && <p className="text-sm text-muted-foreground">{t('desk.chat.empty')}</p>}
         {messages.map((m) => {
           const mine = m.sender === 'student'
           return (
-            <div key={m.id} className={cn('flex flex-col', mine ? 'items-end' : 'items-start')}>
+            <div key={m.id} className={cn('flex flex-col animate-rise', mine ? 'items-end' : 'items-start')}>
               <div className={cn(
-                'max-w-[85%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm',
-                mine ? 'bg-primary text-primary-foreground' : 'bg-muted',
+                'max-w-[85%] whitespace-pre-wrap rounded-2xl px-3.5 py-2 text-sm leading-relaxed shadow-sm',
+                mine ? 'bg-brand rounded-br-md text-primary-foreground' : 'rounded-bl-md bg-background/85',
               )}>
-                {m.body}
+                {mine ? m.body : reflow(m.body)}
                 {m.link_url && (
                   <a href={m.link_url} target="_blank" rel="noreferrer noopener" className="block underline">
                     {m.link_url}
@@ -100,7 +105,7 @@ export default function ChatPanel({
         <div ref={bottom} />
       </div>
       {!readOnly && (
-        <div className="border-t p-3 space-y-2">
+        <div className="space-y-2 border-t border-border/60 p-3">
           {error && <p className="text-xs text-destructive">{error}</p>}
           <div className="flex gap-2">
             <Textarea
@@ -117,7 +122,7 @@ export default function ChatPanel({
                 }
               }}
             />
-            <Button size="icon" onClick={send} disabled={waiting || !draft.trim()} aria-label={t('desk.chat.send')}>
+            <Button size="icon" className="h-11 w-11 shrink-0" onClick={send} disabled={waiting || !draft.trim()} aria-label={t('desk.chat.send')}>
               <Send className="h-4 w-4" />
             </Button>
           </div>

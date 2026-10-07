@@ -22,11 +22,11 @@ export default function DocumentDialog({ runId, docKey, onClose }: { runId: stri
   }, [onClose])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm" onClick={onClose}>
       <div role="dialog" aria-modal="true"
-        className="flex max-h-[85vh] w-full max-w-3xl flex-col rounded-xl border bg-background shadow-lg"
+        className="glass-strong flex max-h-[85vh] w-full max-w-3xl animate-rise flex-col rounded-2xl"
         onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between border-b px-4 py-3">
+        <div className="flex items-center justify-between border-b border-border/60 px-5 py-3">
           <h2 className="flex items-center gap-2 font-semibold">
             <FileText className="h-4 w-4" /> {doc?.title ?? '…'}
           </h2>
@@ -34,7 +34,7 @@ export default function DocumentDialog({ runId, docKey, onClose }: { runId: stri
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <div className="overflow-y-auto p-4">
+        <div className="overflow-y-auto p-5">
           {error ? <p className="text-sm text-destructive">{t('common.error')}</p> : doc && <RichText text={doc.content} />}
         </div>
       </div>

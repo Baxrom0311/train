@@ -39,29 +39,36 @@ export default function Inbox({
   }
 
   return (
-    <ul className="divide-y">
+    <ul className="space-y-1">
       {ordered.map((e) => {
         const Icon = TYPE_ICON[e.type]
         const left = isActionable(e) && e.due_at ? remaining(e.due_at, now) : null
         return (
-          <li key={e.node_id}>
+          <li key={e.node_id} className="animate-rise">
             <button
               type="button"
               onClick={() => onSelect(e.node_id)}
               className={cn(
-                'flex w-full gap-3 px-3 py-3 text-left transition-colors hover:bg-accent',
-                selected === e.node_id && 'bg-accent',
+                'relative flex w-full gap-3 rounded-xl px-3 py-3 text-left transition-all hover:bg-background/60',
+                selected === e.node_id && 'bg-background/80 shadow-sm ring-1 ring-primary/25',
+                e.type === 'incident' && isActionable(e) && 'ring-1 ring-destructive/40',
               )}
             >
-              <Icon className={cn('mt-0.5 h-4 w-4 shrink-0', e.type === 'incident' ? 'text-destructive' : 'text-muted-foreground')} />
+              <span className={cn(
+                'grid h-8 w-8 shrink-0 place-items-center rounded-lg',
+                e.type === 'incident' ? 'bg-destructive/12 text-destructive' : isActionable(e) ? 'bg-primary/12 text-primary' : 'bg-muted text-muted-foreground',
+              )}>
+                <Icon className="h-4 w-4" />
+              </span>
+              {isActionable(e) && <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-primary animate-glow" />}
               <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center justify-between gap-2 pr-3 text-xs text-muted-foreground">
                   <span className="truncate">
                     {e.from_persona ? names[e.from_persona] : t(`desk.type.${e.type}`)}
                   </span>
                   <span>{e.delivered_at && formatTime(e.delivered_at)}</span>
                 </div>
-                <p className={cn('truncate text-sm', isActionable(e) && 'font-semibold')}>
+                <p className={cn('truncate text-sm', isActionable(e) ? 'font-bold' : 'text-foreground/80')}>
                   {e.brief.split('\n')[0] || t(`desk.type.${e.type}`)}
                 </p>
                 <div className="mt-1 flex items-center gap-2 text-xs">
@@ -86,7 +93,7 @@ export function StatusLabel({ event }: { event: RunEvent }) {
   if (event.type === 'message') return null
   const map = {
     delivered: { Icon: CircleDot, cls: 'text-primary' },
-    submitted: { Icon: CheckCircle2, cls: 'text-emerald-600' },
+    submitted: { Icon: CheckCircle2, cls: 'text-success' },
     missed: { Icon: XCircle, cls: 'text-destructive' },
     pending: { Icon: CircleDot, cls: 'text-muted-foreground' },
     skipped: { Icon: CircleDot, cls: 'text-muted-foreground' },

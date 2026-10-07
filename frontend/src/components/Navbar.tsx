@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router-dom'
-import { Moon, Sun, Globe } from 'lucide-react'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { Briefcase, Globe, LayoutGrid, LogOut, Moon, Sun } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -10,6 +10,20 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useTheme } from '@/context/ThemeContext'
 import { useAuth } from '@/context/AuthContext'
+import { cn } from '@/lib/utils'
+
+export function Logo({ className }: { className?: string }) {
+  return (
+    <span className={cn('flex items-center gap-2', className)}>
+      <span className="bg-brand grid h-8 w-8 place-items-center rounded-xl text-sm font-extrabold text-primary-foreground shadow-[0_6px_18px_-6px_hsl(var(--primary)/0.8)]">
+        T
+      </span>
+      <span className="text-lg font-extrabold tracking-tight">
+        Try<span className="text-brand">Job</span>
+      </span>
+    </span>
+  )
+}
 
 export default function Navbar() {
   const { t, i18n } = useTranslation()
@@ -23,34 +37,37 @@ export default function Navbar() {
     { code: 'en', label: t('languages.en') },
   ]
 
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng)
-  }
+  const links = [
+    { to: '/dashboard', label: t('nav.dashboard'), Icon: LayoutGrid },
+    { to: '/simulations', label: t('nav.simulations'), Icon: Briefcase },
+  ]
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link to="/" className="flex items-center space-x-2">
-          <span className="text-xl font-bold tracking-tight">{t('common.appName')}</span>
+    <header className="sticky top-0 z-40 px-3 pt-3">
+      <nav className="glass mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 rounded-2xl px-3 sm:px-4">
+        <Link to="/" aria-label="TryJob">
+          <Logo />
         </Link>
 
-        <div className="hidden md:flex items-center space-x-6">
-          <Link
-            to="/dashboard"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {t('nav.dashboard')}
-          </Link>
-          <Link
-            to="/simulations"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {t('nav.simulations')}
-          </Link>
+        <div className="flex items-center gap-1">
+          {links.map(({ to, label, Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                cn(
+                  'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors',
+                  isActive ? 'bg-primary/12 text-primary' : 'text-muted-foreground hover:text-foreground',
+                )
+              }
+            >
+              <Icon className="h-4 w-4" />
+              <span className="hidden md:inline">{label}</span>
+            </NavLink>
+          ))}
         </div>
 
-        <div className="flex items-center space-x-2">
-          {/* Language switcher */}
+        <div className="flex items-center gap-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" aria-label={t('nav.language')}>
@@ -61,8 +78,8 @@ export default function Navbar() {
               {languages.map((lang) => (
                 <DropdownMenuItem
                   key={lang.code}
-                  onClick={() => changeLanguage(lang.code)}
-                  className={i18n.language === lang.code ? 'bg-accent' : ''}
+                  onClick={() => i18n.changeLanguage(lang.code)}
+                  className={i18n.language === lang.code ? 'bg-accent font-semibold' : ''}
                 >
                   {lang.label}
                 </DropdownMenuItem>
@@ -70,37 +87,34 @@ export default function Navbar() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Theme toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            aria-label={t('theme.toggle')}
-          >
-            {theme === 'dark' ? (
-              <Sun className="h-4 w-4" />
-            ) : (
-              <Moon className="h-4 w-4" />
-            )}
+          <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label={t('theme.toggle')}>
+            {theme === 'dark' ? <Sun className="h-4 w-4 text-primary" /> : <Moon className="h-4 w-4" />}
           </Button>
 
           {user ? (
             <>
-              <span className="hidden text-sm text-muted-foreground sm:inline">{user.full_name}</span>
+              <span className="ml-1 hidden items-center gap-2 text-sm font-medium lg:flex">
+                <span className="bg-brand grid h-7 w-7 place-items-center rounded-full text-xs font-bold text-primary-foreground">
+                  {user.full_name.slice(0, 1).toUpperCase()}
+                </span>
+                {user.full_name}
+              </span>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
+                aria-label={t('nav.logout')}
+                title={t('nav.logout')}
                 onClick={() => {
                   logout()
                   navigate('/login')
                 }}
               >
-                {t('nav.logout')}
+                <LogOut className="h-4 w-4" />
               </Button>
             </>
           ) : (
             <>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>
+              <Button variant="ghost" size="sm" className="hidden sm:inline-flex" onClick={() => navigate('/login')}>
                 {t('nav.login')}
               </Button>
               <Button size="sm" onClick={() => navigate('/register')}>
@@ -109,7 +123,7 @@ export default function Navbar() {
             </>
           )}
         </div>
-      </div>
-    </nav>
+      </nav>
+    </header>
   )
 }

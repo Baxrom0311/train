@@ -44,6 +44,15 @@
       "inactive": "Hisob hali faollashtirilmagan",
       "mismatch": "Parollar mos emas",
       "exists": "Bu email bilan hisob allaqachon bor"
+    },
+    "hero": {
+      "badge": "Real vaqtdagi ish simulyatsiyasi",
+      "title1": "Birinchi ish kuningizni",
+      "title2": "bugun boshlang",
+      "subtitle": "Haqiqiy jamoa, dedlaynlar va kutilmagan incident'lar — ishga kirishdan oldin tajriba orttiring.",
+      "realTime": "Toshkent vaqti bilan haqiqiy ish kuni: 09:00–18:00",
+      "colleagues": "Team lead, mentor va hamkasblar bilan chat",
+      "feedback": "Har vazifaga AI baho va yakuniy kompetensiya hisoboti"
     }
   },
   "dashboard": {
@@ -122,7 +131,8 @@
     "days_other": "{{count}} kun",
     "empty": "Hozircha simulyatsiyalar yo'q",
     "history": "Oldingi simulyatsiyalar",
-    "report": "Hisobot"
+    "report": "Hisobot",
+    "realTime": "Real vaqtda"
   },
   "run": {
     "status": {

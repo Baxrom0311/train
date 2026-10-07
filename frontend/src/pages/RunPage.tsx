@@ -1,18 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useParams } from 'react-router-dom'
-import { Clock, MessageSquare } from 'lucide-react'
+import { ArrowLeft, Inbox as InboxIcon, Moon, Sun, Sunrise, Sunset } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from './Badge'
 import { cn } from '@/lib/utils'
 import { api, ApiError } from '@/lib/api'
 import { subscribeRun, type RunNote } from '@/lib/sse'
-import { formatDateTime, formatTime } from '@/lib/time'
-import type { RunDetail } from '@/lib/types'
+import { daypart, formatDateTime, formatTime, workdayProgress, type Daypart } from '@/lib/time'
+import type { Persona, RunDetail } from '@/lib/types'
 import Inbox, { isActionable } from '@/components/desk/Inbox'
 import EventDetail from '@/components/desk/EventDetail'
 import ChatPanel from '@/components/desk/ChatPanel'
 import DocumentDialog from '@/components/desk/DocumentDialog'
+import Avatar from '@/components/desk/Avatar'
 
 type Pane = 'inbox' | 'event' | 'chat'
 
@@ -110,23 +111,34 @@ export default function RunPage() {
     }
   }
 
-  if (error && !run) return <p className="container mx-auto p-8 text-destructive">{error}</p>
-  if (!run) return <p className="container mx-auto p-8 text-muted-foreground">{t('common.loading')}</p>
+  // fon yorug'ligi Toshkent vaqtiga ergashadi (index.css: [data-daypart])
+  const part = daypart(new Date(now))
+  useEffect(() => {
+    document.documentElement.dataset.daypart = part
+    return () => {
+      delete document.documentElement.dataset.daypart
+    }
+  }, [part])
+
+  if (error && !run) return <p className="mx-auto max-w-7xl p-8 text-destructive">{error}</p>
+  if (!run) return <p className="mx-auto max-w-7xl p-8 text-muted-foreground">{t('common.loading')}</p>
 
   const closed = !['active', 'scheduled'].includes(run.status)
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3">
-        <div className="min-w-0">
-          <h1 className="truncate font-semibold">{run.scenario.title}</h1>
-          <p className="text-xs text-muted-foreground">{run.scenario.company_name}</p>
+    <div className="mx-auto flex h-[calc(100dvh-4.25rem)] max-w-[1600px] flex-col gap-3 p-3">
+      <header className="glass flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3 animate-rise">
+        <div className="flex min-w-0 items-center gap-3">
+          <Button variant="ghost" size="icon" asChild aria-label={t('nav.simulations')}>
+            <Link to="/simulations"><ArrowLeft className="h-4 w-4" /></Link>
+          </Button>
+          <div className="min-w-0">
+            <h1 className="truncate font-bold">{run.scenario.title}</h1>
+            <p className="text-xs text-muted-foreground">{run.scenario.company_name}</p>
+          </div>
         </div>
-        <div className="flex items-center gap-3 text-sm">
-          <span className="flex items-center gap-1 font-mono" title={t('desk.tashkentTime')}>
-            <Clock className="h-4 w-4" /> {formatTime(new Date(now))}
-          </span>
-          {run.status === 'active' && !run.is_work_time && <Badge variant="outline">{t('desk.offHours')}</Badge>}
+        <div className="flex items-center gap-3">
+          <DeskClock now={now} part={part} off={run.status === 'active' && !run.is_work_time} />
           <Badge variant={closed ? 'secondary' : 'default'}>{t(`run.status.${run.status}`)}</Badge>
           {closed ? (
             <Button size="sm" asChild>
@@ -139,72 +151,63 @@ export default function RunPage() {
       </header>
 
       {warning && run.status !== 'completed' && (
-        <p className="border-b bg-amber-50 px-4 py-2 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-100">{warning}</p>
+        <p className="glass rounded-2xl border-amber-400/40 px-4 py-2.5 text-sm text-amber-800 dark:text-amber-200">{warning}</p>
       )}
       {run.status === 'scheduled' && (
-        <p className="border-b bg-muted px-4 py-2 text-sm">{t('desk.scheduled', { date: formatDateTime(run.start_at) })}</p>
+        <p className="glass rounded-2xl px-4 py-2.5 text-sm">{t('desk.scheduled', { date: formatDateTime(run.start_at) })}</p>
       )}
-      {error && <p className="border-b px-4 py-2 text-sm text-destructive">{error}</p>}
+      {error && <p className="glass rounded-2xl px-4 py-2.5 text-sm text-destructive">{error}</p>}
 
       {/* mobil: bo'limlar orasida almashish */}
-      <nav className="flex border-b lg:hidden">
+      <nav className="glass flex gap-1 rounded-2xl p-1 lg:hidden">
         {(['inbox', 'event', 'chat'] as Pane[]).map((p) => (
           <button key={p} type="button" onClick={() => setPane(p)}
-            className={cn('flex-1 py-2 text-sm', pane === p ? 'border-b-2 border-primary font-medium' : 'text-muted-foreground')}>
+            className={cn('flex-1 rounded-xl py-2 text-sm font-medium transition-colors',
+              pane === p ? 'bg-brand text-primary-foreground shadow' : 'text-muted-foreground')}>
             {t(`desk.pane.${p}`)}
             {p === 'inbox' && pendingCount > 0 && ` (${pendingCount})`}
           </button>
         ))}
       </nav>
 
-      <div className="grid min-h-0 flex-1 lg:grid-cols-[300px_1fr_340px]">
-        <aside className={cn('min-h-0 overflow-y-auto border-r', pane !== 'inbox' && 'hidden lg:block')}>
-          <div className="flex items-center justify-between border-b px-3 py-2 text-sm font-medium">
-            {t('desk.inbox')}
+      <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[320px_1fr_360px]">
+        <aside className={cn('glass flex min-h-0 flex-col overflow-hidden rounded-2xl', pane !== 'inbox' && 'hidden lg:flex')}>
+          <div className="flex items-center justify-between px-4 py-3 text-sm font-bold">
+            <span className="flex items-center gap-2"><InboxIcon className="h-4 w-4 text-primary" /> {t('desk.inbox')}</span>
             {pendingCount > 0 && <Badge>{pendingCount}</Badge>}
           </div>
-          <Inbox
-            events={run.events}
-            personas={run.personas}
-            selected={selected}
-            now={now}
-            onSelect={(nodeId) => {
-              setSelected(nodeId)
-              setPane('event')
-            }}
-          />
+          <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+            <Inbox
+              events={run.events}
+              personas={run.personas}
+              selected={selected}
+              now={now}
+              onSelect={(nodeId) => {
+                setSelected(nodeId)
+                setPane('event')
+              }}
+            />
+          </div>
         </aside>
 
-        <main className={cn('min-h-0 overflow-y-auto', pane !== 'event' && 'hidden lg:block')}>
+        <main className={cn('glass-strong min-h-0 overflow-y-auto rounded-2xl', pane !== 'event' && 'hidden lg:block')}>
           {event ? (
-            <EventDetail run={run} event={event} personas={run.personas} now={now} onRun={applyRun} onOpenDoc={setDoc} />
+            <div key={event.node_id} className="animate-rise">
+              <EventDetail run={run} event={event} personas={run.personas} now={now} onRun={applyRun} onOpenDoc={setDoc} />
+            </div>
           ) : (
             <p className="p-6 text-sm text-muted-foreground">{t('desk.selectEvent')}</p>
           )}
         </main>
 
-        <aside className={cn('flex min-h-0 flex-col border-l', pane !== 'chat' && 'hidden lg:flex')}>
-          <div className="flex flex-wrap gap-1 border-b p-2">
+        <aside className={cn('glass flex min-h-0 flex-col overflow-hidden rounded-2xl', pane !== 'chat' && 'hidden lg:flex')}>
+          <div className="flex gap-2 overflow-x-auto px-3 pt-3 pb-2">
             {run.personas.map((p) => (
-              <button
-                key={p.key}
-                type="button"
+              <PersonaChip key={p.key} persona={p} active={persona === p.key} unread={unread[p.key] ?? 0}
                 onClick={() => {
                   setPersona(p.key)
                   setUnread((u) => ({ ...u, [p.key]: 0 }))
-                }}
-                className={cn(
-                  'flex items-center gap-1 rounded-full border px-3 py-1 text-xs',
-                  persona === p.key ? 'border-primary bg-primary/10 font-medium' : 'hover:bg-accent',
-                )}
-              >
-                <MessageSquare className="h-3 w-3" /> {p.name.split(' ')[0]}
-                {(unread[p.key] ?? 0) > 0 && (
-                  <span className="rounded-full bg-destructive px-1.5 text-[10px] text-destructive-foreground">
-                    {unread[p.key]}
-                  </span>
-                )}
-              </button>
+                }} />
             ))}
           </div>
           {activePersona && (
@@ -217,5 +220,41 @@ export default function RunPage() {
 
       {doc && <DocumentDialog runId={run.id} docKey={doc} onClose={() => setDoc(null)} />}
     </div>
+  )
+}
+
+const PART_ICON = { morning: Sunrise, afternoon: Sun, evening: Sunset }
+
+function DeskClock({ now, part, off }: { now: number; part: Daypart; off: boolean }) {
+  const { t } = useTranslation()
+  const Icon = off ? Moon : PART_ICON[part]
+  const progress = workdayProgress(new Date(now))
+  return (
+    <div className="flex items-center gap-2.5 rounded-xl bg-background/50 px-3 py-1.5" title={t('desk.tashkentTime')}>
+      <Icon className="h-4 w-4 text-primary" />
+      <div className="leading-none">
+        <p className="font-mono text-base font-bold tabular-nums">{formatTime(new Date(now))}</p>
+        <div className="mt-1 h-1 w-20 overflow-hidden rounded-full bg-muted" aria-hidden>
+          <div className="bg-brand h-full rounded-full transition-[width] duration-1000" style={{ width: `${progress * 100}%` }} />
+        </div>
+      </div>
+      {off && <span className="text-xs text-muted-foreground">{t('desk.offHours')}</span>}
+    </div>
+  )
+}
+
+function PersonaChip({ persona, active, unread, onClick }: { persona: Persona; active: boolean; unread: number; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} title={`${persona.name} · ${persona.role}`}
+      className={cn('relative flex shrink-0 flex-col items-center gap-1 rounded-xl px-2 py-1.5 text-[11px] font-medium transition-colors',
+        active ? 'bg-primary/12 text-primary' : 'text-muted-foreground hover:bg-accent/60')}>
+      <Avatar persona={persona} active={active} />
+      {persona.name.split(' ')[0]}
+      {unread > 0 && (
+        <span className="absolute right-1 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground animate-glow">
+          {unread}
+        </span>
+      )}
+    </button>
   )
 }

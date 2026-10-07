@@ -1,9 +1,16 @@
 @import "tailwindcss";
+@import "@fontsource-variable/manrope";
 
-/* Tailwind v4: shadcn ranglari CSS o'zgaruvchilaridan (bg-primary, text-muted-foreground, ...) */
+/*
+ * TryJob dizayn tizimi: shadcn komponentlari + "liquid glass" qatlamlari.
+ * Kunduzgi mavzu — oq va yashil; tungi — to'q ko'k fon, sariq (amber) yorug'lik.
+ * Ish stolida fon yorug'ligi Toshkent vaqtiga qarab o'zgaradi (data-daypart).
+ */
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
+  --font-sans: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-card: hsl(var(--card));
@@ -20,67 +27,186 @@
   --color-accent-foreground: hsl(var(--accent-foreground));
   --color-destructive: hsl(var(--destructive));
   --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-success: hsl(var(--success));
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
   --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-sm: calc(var(--radius) - 8px);
+
+  --animate-drift-1: drift-1 28s ease-in-out infinite alternate;
+  --animate-drift-2: drift-2 34s ease-in-out infinite alternate;
+  --animate-drift-3: drift-3 40s ease-in-out infinite alternate;
+  --animate-rise: rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-glow: glow 2.4s ease-in-out infinite;
 }
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    /* Kunduz: oq + yashil */
+    --background: 150 40% 98%;
+    --foreground: 160 30% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 160 30% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 10% 3.9%;
-    --radius: 0.5rem;
+    --popover-foreground: 160 30% 10%;
+    --primary: 158 72% 34%;
+    --primary-foreground: 0 0% 100%;
+    --primary-2: 172 66% 40%;
+    --secondary: 150 35% 93%;
+    --secondary-foreground: 160 40% 18%;
+    --muted: 150 25% 94%;
+    --muted-foreground: 160 10% 40%;
+    --accent: 152 45% 92%;
+    --accent-foreground: 160 40% 16%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 65% 36%;
+    --border: 150 20% 88%;
+    --input: 150 20% 85%;
+    --ring: 158 72% 34%;
+    --radius: 1rem;
+
+    --glass-bg: 0 0% 100% / 0.62;
+    --glass-strong: 0 0% 100% / 0.86;
+    --glass-border: 0 0% 100% / 0.75;
+    --glass-shadow: 160 40% 20% / 0.08;
+
+    --glow-1: 152 75% 62%;
+    --glow-2: 175 70% 65%;
+    --glow-3: 95 70% 72%;
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-  }
-}
+    /* Tun: to'q ko'k + sariq yorug'lik */
+    --background: 225 40% 6%;
+    --foreground: 40 30% 94%;
+    --card: 225 32% 10%;
+    --card-foreground: 40 30% 94%;
+    --popover: 225 32% 10%;
+    --popover-foreground: 40 30% 94%;
+    --primary: 40 96% 56%;
+    --primary-foreground: 225 45% 8%;
+    --primary-2: 28 95% 58%;
+    --secondary: 225 25% 16%;
+    --secondary-foreground: 40 30% 92%;
+    --muted: 225 25% 14%;
+    --muted-foreground: 225 12% 66%;
+    --accent: 225 25% 18%;
+    --accent-foreground: 40 30% 94%;
+    --destructive: 0 75% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 60% 52%;
+    --border: 225 20% 20%;
+    --input: 225 20% 24%;
+    --ring: 40 96% 56%;
 
-@layer base {
+    --glass-bg: 225 35% 12% / 0.55;
+    --glass-strong: 225 35% 10% / 0.82;
+    --glass-border: 0 0% 100% / 0.08;
+    --glass-shadow: 0 0% 0% / 0.45;
+
+    --glow-1: 40 95% 55%;
+    --glow-2: 25 90% 52%;
+    --glow-3: 230 70% 45%;
+  }
+
+  /* Ish stoli: kun qismiga qarab yorug'lik (faqat kunduzgi mavzuda); RunPage <html>ga qo'yadi */
+  :root[data-daypart='morning']:not(.dark) {
+    --glow-1: 145 75% 62%;
+    --glow-2: 180 70% 70%;
+    --glow-3: 85 75% 72%;
+  }
+  :root[data-daypart='afternoon']:not(.dark) {
+    --glow-1: 160 70% 55%;
+    --glow-2: 190 70% 62%;
+    --glow-3: 60 85% 70%;
+  }
+  :root[data-daypart='evening']:not(.dark) {
+    --glow-1: 38 95% 62%;
+    --glow-2: 18 90% 66%;
+    --glow-3: 150 55% 62%;
+  }
+
   * {
     border-color: hsl(var(--border));
+  }
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
   }
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: hsl(var(--primary) / 0.25);
+  }
+}
+
+@layer components {
+  /* Suzuvchi shisha qatlam: navbar, panellar, kartalar */
+  .glass {
+    background: hsl(var(--glass-bg));
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow:
+      0 1px 0 0 hsl(0 0% 100% / 0.35) inset,
+      0 12px 40px -12px hsl(var(--glass-shadow));
+    backdrop-filter: blur(22px) saturate(160%);
+    -webkit-backdrop-filter: blur(22px) saturate(160%);
+  }
+  /* O'qiladigan matn uchun — deyarli qattiq yuza */
+  .glass-strong {
+    background: hsl(var(--glass-strong));
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: 0 12px 40px -16px hsl(var(--glass-shadow));
+    backdrop-filter: blur(28px) saturate(150%);
+    -webkit-backdrop-filter: blur(28px) saturate(150%);
+  }
+  .bg-brand {
+    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-2)));
+  }
+  .text-brand {
+    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-2)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .glow-ring {
+    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.35), 0 8px 30px -8px hsl(var(--primary) / 0.55);
+  }
+}
+
+@keyframes drift-1 {
+  from { transform: translate(-10%, -6%) scale(1); }
+  to { transform: translate(12%, 10%) scale(1.15); }
+}
+@keyframes drift-2 {
+  from { transform: translate(8%, 4%) scale(1.1); }
+  to { transform: translate(-14%, -8%) scale(0.95); }
+}
+@keyframes drift-3 {
+  from { transform: translate(0, 10%) scale(0.9); }
+  to { transform: translate(6%, -12%) scale(1.1); }
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.5); }
+  50% { box-shadow: 0 0 0 6px hsl(var(--primary) / 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -44,6 +44,15 @@
       "inactive": "Account is not active yet",
       "mismatch": "Passwords do not match",
       "exists": "An account with this email already exists"
+    },
+    "hero": {
+      "badge": "Real-time job simulation",
+      "title1": "Start your first",
+      "title2": "workday today",
+      "subtitle": "A real team, deadlines and surprise incidents — get experience before you get hired.",
+      "realTime": "A real workday on Tashkent time: 09:00–18:00",
+      "colleagues": "Chat with your team lead, mentor and colleagues",
+      "feedback": "AI feedback on every task and a final competency report"
     }
   },
   "dashboard": {
@@ -122,7 +131,8 @@
     "days_other": "{{count}} days",
     "empty": "No simulations yet",
     "history": "Past simulations",
-    "report": "Report"
+    "report": "Report",
+    "realTime": "Real time"
   },
   "run": {
     "status": {

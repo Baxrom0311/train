@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from './Badge'
 import { api } from '@/lib/api'
+import { ScoreRing } from '@/components/desk/EventDetail'
 import type { DayReport, RunReport, TaskResult } from '@/lib/types'
 
 const score = (v: number | null | undefined) => (v === null || v === undefined ? '—' : Math.round(v))
@@ -41,7 +42,7 @@ export default function RunReportPage() {
   return (
     <div className="container mx-auto max-w-4xl space-y-6 px-4 py-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">{t('report.title')}</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight">{t('report.title')}</h1>
         <div className="flex gap-2">
           <Badge variant="outline">{t(`run.status.${report.status}`)}</Badge>
           <Button size="sm" variant="outline" asChild>
@@ -71,7 +72,13 @@ export default function RunReportPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-              <Stat label={t('report.overall')} value={score(final.overall_score)} />
+              <div className="col-span-2 flex items-center gap-4 rounded-2xl border bg-background/60 p-4 sm:col-span-1">
+                <ScoreRing value={final.overall_score ?? 0} size={72} />
+                <div>
+                  <p className="text-xs text-muted-foreground">{t('report.overall')}</p>
+                  <p className="text-sm font-semibold">{final.certificate ? t('report.certificate') : t('report.incomplete')}</p>
+                </div>
+              </div>
               <Stat label={t('report.onTime')} value={final.on_time_rate === null ? '—' : `${Math.round(final.on_time_rate)}%`} />
               <Stat label={t('report.tasksDone')} value={final.tasks.filter((x) => x.status === 'submitted').length + '/' + final.tasks.length} />
             </div>
@@ -85,8 +92,8 @@ export default function RunReportPage() {
                       <span>{t(`competency.${key}`)}</span>
                       <span className="font-medium">{Math.round(value)}</span>
                     </div>
-                    <div className="h-2 rounded-full bg-muted">
-                      <div className="h-2 rounded-full bg-primary" style={{ width: `${Math.min(100, value)}%` }} />
+                    <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+                      <div className="bg-brand h-full rounded-full transition-[width] duration-700" style={{ width: `${Math.min(100, value)}%` }} />
                     </div>
                   </div>
                 ))}
@@ -114,9 +121,9 @@ export default function RunReportPage() {
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-lg border p-3">
+    <div className="rounded-2xl border bg-background/60 p-4">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-2xl font-semibold">{value}</p>
+      <p className="mt-1 text-3xl font-extrabold tabular-nums">{value}</p>
     </div>
   )
 }
@@ -154,7 +161,7 @@ function DayCard({ day }: { day: DayReport }) {
         {day.summary && (
           <>
             <Lists strengths={day.summary.strengths} improvements={day.summary.improvements} />
-            <p className="rounded-md bg-muted p-3">{day.summary.advice}</p>
+            <p className="rounded-xl border border-primary/20 bg-primary/8 p-3">💡 {day.summary.advice}</p>
           </>
         )}
         <TaskTable tasks={day.tasks} />

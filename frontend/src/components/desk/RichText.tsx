@@ -3,7 +3,7 @@
 const LIST_ITEM = /^\s*([-•*]|\d+[.)])\s/
 
 /** YAML `|` bloklaridagi qator uzilishlari — abzas ichida bo'sh joy; ro'yxat bandlari alohida qatorda qoladi. */
-function reflow(text: string): string {
+export function reflow(text: string): string {
   return text
     .split(/\n{2,}/)
     .map((para) =>
@@ -20,7 +20,7 @@ export default function RichText({ text, className = '' }: { text: string; class
     <div className={`space-y-2 text-sm leading-relaxed ${className}`}>
       {parts.map((part, i) =>
         i % 2 === 1 ? (
-          <pre key={i} className="overflow-x-auto rounded-md bg-muted p-3 font-mono text-xs">
+          <pre key={i} className="overflow-x-auto rounded-xl border border-border/60 bg-muted/70 p-4 font-mono text-xs leading-relaxed">
             {part.replace(/\n$/, '')}
           </pre>
         ) : (

@@ -40,10 +40,12 @@ export default function EventDetail({
   const evaluating = event.last_eval_status === 'pending' || event.last_eval_status === 'queued_retry'
 
   return (
-    <article className="space-y-6 p-6">
+    <article className="mx-auto max-w-3xl space-y-6 p-6 lg:p-8">
       <header className="space-y-1">
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-          <span className="font-medium text-foreground">{t(`desk.type.${event.type}`)}</span>
+          <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
+            event.type === 'incident' ? 'bg-destructive/12 text-destructive' : 'bg-primary/12 text-primary'
+          }`}>{t(`desk.type.${event.type}`)}</span>
           {sender && <span>· {sender.name}, {sender.role}</span>}
           {event.delivered_at && <span>· {formatDateTime(event.delivered_at)}</span>}
         </div>
@@ -60,7 +62,7 @@ export default function EventDetail({
         )}
       </header>
 
-      <RichText text={event.brief || t('desk.dayEndDefault')} />
+      <RichText className="text-[15px]" text={event.brief || t('desk.dayEndDefault')} />
 
       {event.attachments.length > 0 && (
         <div className="flex flex-wrap gap-2">
@@ -108,16 +110,19 @@ function Decision({ run, event, canDecide, onRun }: { run: RunDetail; event: Run
 
   return (
     <div className="space-y-2">
-      {event.options.map((o) => (
+      {event.options.map((o, i) => (
         <button
           key={o.key}
           type="button"
           disabled={!canDecide || busy}
           onClick={() => choose(o.key)}
-          className={`w-full rounded-lg border p-3 text-left text-sm transition-colors enabled:hover:bg-accent disabled:cursor-default ${
-            event.choice === o.key ? 'border-primary bg-primary/5 font-medium' : ''
+          className={`flex w-full items-start gap-3 rounded-xl border bg-background/60 p-4 text-left text-sm transition-all enabled:hover:-translate-y-0.5 enabled:hover:border-primary/50 enabled:hover:shadow-md disabled:cursor-default ${
+            event.choice === o.key ? 'border-primary bg-primary/8 font-semibold ring-2 ring-primary/20' : ''
           }`}
         >
+          <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-bold ${
+            event.choice === o.key ? 'bg-brand text-primary-foreground' : 'bg-muted text-muted-foreground'
+          }`}>{String.fromCharCode(65 + i)}</span>
           {o.label}
         </button>
       ))}
@@ -131,10 +136,10 @@ function Feedback({ event }: { event: RunEvent }) {
   if (event.attempts_used === 0) return null
   const evaluating = event.last_eval_status === 'pending' || event.last_eval_status === 'queued_retry'
   return (
-    <div className="rounded-lg border bg-muted/40 p-4 text-sm space-y-2">
-      <div className="flex items-center justify-between">
-        <span className="font-medium">{t('desk.attempts', { used: event.attempts_used, max: event.max_attempts })}</span>
-        {event.last_score !== null && <span className="text-lg font-semibold">{Math.round(event.last_score)}/100</span>}
+    <div className="space-y-3 rounded-2xl border bg-background/60 p-5 text-sm">
+      <div className="flex items-center justify-between gap-4">
+        <span className="font-semibold">{t('desk.attempts', { used: event.attempts_used, max: event.max_attempts })}</span>
+        {event.last_score !== null && <ScoreRing value={event.last_score} />}
       </div>
       {evaluating && (
         <p className="flex items-center gap-2 text-muted-foreground">
@@ -260,7 +265,7 @@ function Hints({ runId, nodeId }: { runId: string; nodeId: string }) {
   return (
     <div className="space-y-2 border-t pt-4">
       {hints.map((h, i) => (
-        <p key={i} className="rounded-md bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-100">
+        <p key={i} className="animate-rise rounded-xl border border-amber-300/50 bg-amber-50/80 p-3 text-sm text-amber-900 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-100">
           💡 {h}
         </p>
       ))}
@@ -270,6 +275,23 @@ function Hints({ runId, nodeId }: { runId: string; nodeId: string }) {
         </Button>
         {info && <span className="text-xs text-muted-foreground">{info}</span>}
       </div>
+    </div>
+  )
+}
+
+export function ScoreRing({ value, size = 56 }: { value: number; size?: number }) {
+  const r = (size - 6) / 2
+  const c = 2 * Math.PI * r
+  const tone = value >= 75 ? 'hsl(var(--success))' : value >= 50 ? 'hsl(var(--primary))' : 'hsl(var(--destructive))'
+  return (
+    <div className="relative grid place-items-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth={5} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={tone} strokeWidth={5} strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(100, value) / 100)}
+          style={{ transition: 'stroke-dashoffset 1s cubic-bezier(0.22, 1, 0.36, 1)' }} />
+      </svg>
+      <span className="absolute text-sm font-extrabold tabular-nums">{Math.round(value)}</span>
     </div>
   )
 }
