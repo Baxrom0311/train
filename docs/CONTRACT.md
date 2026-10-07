@@ -218,3 +218,66 @@ Ushbu fayl tasdiqlangandan so'ng: eski `app/`, `frontend/`, `docker*`,
 tarixida — `0e4be5e` — saqlanadi) va yangi `backend/`, `frontend/`, `deploy/`
 tuzilishi §2 bo'yicha yaratiladi. Shundan keyin §6 jadvaliga asoslanib
 har modul uchun alohida agent task yoziladi.
+
+---
+
+## 9. Ssenariy-asosidagi simulyatsiya dvigateli — REJALASHTIRILAYOTGAN
+
+> **Holat: §9 to'liq emas.** Simulyatsiyalarni "topshiriqlar ro'yxati"dan
+> "ishdagi bir kun/hafta" vaqt jadvaliga (scenario/events/runs modeli,
+> AI-personajlar, branching) o'tkazish ustida alohida sessiya ishlayapti
+> va shu bo'limni to'liq yozib chiqishni o'z zimmasiga oldi. Quyida —
+> shu dizaynga **qo'shimcha, oldindan kelishilgan talab** — chat/xabar
+> tizimining content-type qamrovi. Ssenariy modelining asosiy qismi
+> (scenarios/scenario_events/runs/run_events jadvallari, vaqt siqish
+> mexanizmi, branching) hali bu faylda yozilmagan — uni to'liq yozib
+> chiquvchi sessiya shu bo'limni ustiga qurib, almashtiradi/to'ldiradi.
+
+### 9.1 Vaqt rejimi — printsip (kelgusi to'liq yozuv uchun eslatma)
+
+- Virtual soat, real vaqt emas — talaba sahifadan chiqsa pauza bo'ladi.
+- Davomiylik **ssenariy darajasida sozlanadigan parametr**, qattiq "bir
+  kun"ga bog'lanmaydi: `total_duration_hours` (masalan 9 — bir ish kuni,
+  40 — bir hafta) + `compression_ratio` (real vaqtga nisbatan siqish
+  koeffitsienti). Bir xil event formati (`at_minute` — shu
+  `total_duration_hours` ichida nisbiy pozitsiya) ham kunlik, ham
+  haftalik ssenariyda ishlaydi.
+
+### 9.2 `runs` ichidagi chat/xabar tizimi — content-type qamrovi
+
+Bu tizim **faqat `runs` (faol simulyatsiya sessiyasi) ichida** ishlaydi —
+har bir xabar `run_id`ga va shu Run'ning ssenariy vaqt jadvalidagi
+personajiga (rahbar, hamkasb, mijoz — ssenariy ichidagi "o'ylab
+topilgan" shaxslar) bog'langan. **`TalentOffer` xabarlashuvidan
+(kompaniya ↔ real talaba, simulyatsiyadan tashqari, doimiy) butunlay
+alohida** — ikkisini aralashtirib bo'lmaydi.
+
+`chat_messages.content_type`: `text | file | voice | image | video | link`
+
+- **`text`** — oddiy matn.
+- **`file`** — `backend/app/core/file_validator.py` orqali (allaqachon
+  yozilgan va test qilingan — magic bytes, UUID prefiks, hajm cheklovi —
+  lekin hozircha HECH QANDAY endpoint uni chaqirmaydi, shu bilan birga
+  ulansin).
+- **`voice`** — audio fayl (`file` kabi validatsiya, audio MIME turlari:
+  mp3/wav/m4a) + **transkripsiya qadami**: matn-asosida ishlaydigan AI
+  personaj/mentor uchun ovoz avval Speech-to-Text orqali matnga
+  o'giriladi (Whisper API yoki Gemini native audio input), keyin oddiy
+  `text` kabi AI zanjiriga beriladi. Original audio fayl frontend
+  playback uchun ham saqlanadi.
+- **`image`** — rasm (screenshot, design mokap). Ikki yo'nalishli:
+  ssenariy o'zi task brief'ida bera oladi ("mana bu designga o'xshat"),
+  talaba natijasini (screenshot) yuklaydi. Baholash **vision-qobiliyatli
+  modelga muhtoj** (Gemini/GPT-4o) — rasm bo'lgan submission'da DeepSeek
+  (matn-only) avtomatik skip qilinadi, to'g'ridan-to'g'ri Gemini/OpenAI'ga
+  o'tiladi.
+- **`video`** — qisqa klip (masalan frontend demo). Vision modelga
+  yuborishdan oldin kadrlarga bo'linadi (frame extraction, masalan har 2
+  soniyada 1 kadr — ffmpeg). `MAX_FILE_SIZE_MB` video uchun alohida,
+  kattaroq limit bilan (masalan 50-100MB) ko'rib chiqilsin.
+- **`link`** — URL (GitHub repo/PR, Figma, deploy qilingan sayt, Google
+  Docs). Fayl sifatida yuklanmaydi — validatsiya qilingan URL string
+  sifatida saqlanadi (faqat `http(s)://`). Agar kelajakda backend linkni
+  o'zi fetch qilib tahlil qilsa — SSRF himoyasi (ichki IP/localhost
+  bloklash) albatta qo'shilsin; hozircha link shunchaki saqlanadi, odam/
+  mentor tomonidan ochilishi kifoya.
