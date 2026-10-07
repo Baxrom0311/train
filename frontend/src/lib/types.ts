@@ -1,6 +1,8 @@
 // Backend API sxemalari (backend/app/api/runs.py, scenarios.py, files.py).
 
-export type Sector = 'IT' | 'Banking'
+// backend/app/models/enums.py Sector bilan bir xil tartibda
+export const SECTORS = ['IT', 'Banking', 'Marketing', 'Data', 'HR'] as const
+export type Sector = (typeof SECTORS)[number]
 export type RunStatus = 'scheduled' | 'active' | 'completed' | 'expired' | 'abandoned'
 export type NodeType = 'message' | 'task' | 'incident' | 'decision' | 'day_end'
 export type EventStatus = 'pending' | 'delivered' | 'submitted' | 'missed' | 'skipped'

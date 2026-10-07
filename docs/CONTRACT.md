@@ -698,6 +698,30 @@ incident va postmortem → demo va retro; 4-kun incident'i 3-kun kodi baliga bog
 Barcha kompaniya, mijoz va raqamlar o'ylab topilgan; bank chegaralari
 (DSCR, ta'minot, AML) o'quv maqsadidagi ichki siyosat, real normativ emas.
 
+**Sohalar (v1.1):** `Sector` = `IT | Banking | Marketing | Data | HR`
+(`scenarios.sector`, 20 belgigacha — yangi soha migratsiyasiz qo'shilmaydi:
+enum + baholovchi persona + frontend `SECTORS`). Har sohada kamida bitta
+1 kunlik ssenariy, hammasi bir xil kun skeleti bo'yicha (09:00 standup →
+09:30 asosiy task → 11:30 axloqiy/kasbiy tuzoqli decision → 14:00 mentor
+eslatmasi va ikkinchi task → 15:00/15:30 30 daqiqalik incident → 17:30 day_end):
+
+- `oydinbarg-marketing-day1` (Marketing, Junior digital marketolog):
+  kampaniya metrikalari va budjet taqsimoti, tasdiqlanmagan tibbiy da'vo
+  bosimi, brendbukka mos aksiya matni va A/B sarlavhalar, xato narxli post.
+- `sabzazor-data-day1` (Data, Junior data analyst): SQL haftalik hisobot
+  (dublikat, refund, UTC → Toshkent hafta chegarasi), kengash grafigini
+  "chiroyli" qilish bosimi, Simpson paradoksli A/B test, JOIN'dan 3× oshgan dashboard.
+- `qaldirgoch-qadoq-hr-day1` (HR, Junior HR/rekruter): profil va ball
+  jadvali bo'yicha CV saralash, kamsituvchi filtr va tanish nomzod bosimi,
+  ta'til kunlari va ta'til puli hisobi, noto'g'ri adresatga ketgan taklif xati.
+
+Marketing/HR qoidalari ham o'quv maqsadidagi ichki siyosat, real qonunchilik
+emas. Baholovchi soha bo'yicha tanlanadi (`app/ai/personas.for_sector`);
+noma'lum soha — IT. Hujjat va brief matnida ketma-ket `a | b | c` qatorlar
+jadval, ``` bloklari kod sifatida, chekinishli qatorlar alohida qator bo'lib ko'rsatiladi;
+`A) Sarlavha. Izoh` bilan boshlanib, qolgan qatorlari chekinishli abzas — kartochka
+(CV, profil: `YYYY-MM – YYYY-MM|hozir: ...` qatorlari vaqt chizig'i, `Kalit: qiymat` — maydon).
+
 **v2:** `voice`/`image`/`video`; email/push bildirishnoma; murakkab
 shartlar va ko'p yakunli ssenariylar; `meeting` (jonli savol-javob) node
 turi; ssenariy muharriri (admin UI).

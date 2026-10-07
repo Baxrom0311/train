@@ -17,7 +17,7 @@ from typing import Protocol
 from pydantic import BaseModel, Field, model_validator
 
 from app.ai.llm import LLMResult, chat
-from app.ai.personas import FINANCE_MENTOR, IT_MENTOR
+from app.ai.personas import for_sector
 from app.models.enums import Sector
 
 DEFAULT_CRITERION_ID = "overall"
@@ -106,7 +106,7 @@ def build_messages(
     reference_answer: str | None,
     sector: Sector | str | None,
 ) -> list[dict[str, str]]:
-    mentor = FINANCE_MENTOR if sector == Sector.BANKING else IT_MENTOR
+    mentor = for_sector(sector)
     parts = [
         f"TASK BRIEF:\n{brief}",
         "RUBRIC (id — description, weight):\n"

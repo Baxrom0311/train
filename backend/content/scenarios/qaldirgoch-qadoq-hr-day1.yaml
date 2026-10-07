@@ -1,0 +1,403 @@
+# CONTRACT.md §9.11 — HR kontenti. Kompaniya, nomzodlar, xodimlar va raqamlar o'ylab topilgan;
+# tanlov, ta'til va shaxsiy ma'lumotlar qoidalari o'quv maqsadidagi ichki siyosat, real mehnat qonunchiligi emas.
+slug: qaldirgoch-qadoq-hr-day1
+title: "Qaldirg'och Qadoq — Junior HR mutaxassisi (rekruter), 1 kun"
+sector: HR
+company_name: "Qaldirg'och Qadoq"     # fictional: gofrokarton qadoq ishlab chiqaruvchi, ~320 xodim
+difficulty: junior
+duration_days: 1
+
+personas:
+  - key: dilnoza
+    name: "Dilnoza Rahimova"
+    role: "HR bo'limi boshlig'i"
+    tone: "xotirjam, talabchan, siyosatga tayanadi; xatoni ochiq aytadi, lekin xodimni himoya qiladi"
+    knows: [doc_onboarding, doc_vacancy, doc_candidates, doc_hiring_policy, doc_data_policy, doc_leak_details]
+    secrets:
+      - "2025-yilda smena ustasi tanlovida yosh bo'yicha saralash bo'lgan; ichki tekshiruvdan keyin tanlov siyosati qayta yozilgan."
+    busy_reply: "Direktor bilan yig'ilishdaman, chiqqach javob beraman."
+    deflect_reply: "Qarorni siz chiqarasiz. Har nomzodni avval majburiy talablar, keyin ball jadvali bo'yicha birma-bir tekshiring."
+  - key: shahlo
+    name: "Shahlo Yusupova"
+    role: "Katta HR mutaxassisi, mentor"
+    kind: mentor
+    tone: "iliq, sabrli, savol bilan yo'naltiradi; hisobni yoki ro'yxatni o'zi tuzib bermaydi"
+    knows: [doc_onboarding, doc_vacancy, doc_hiring_policy, doc_leave_policy]
+    busy_reply: "Intervyudaman, 40 daqiqadan keyin yozaman."
+    deflect_reply: "Javobni o'zingiz topasiz — profildagi mezonni nomzod CV'sidagi sanalar bilan solishtiring. Qaysi nomzodda ikkilanayotganingizni yozing."
+    nudge_reply: "«{task}» dedlayni {time}da. Qaysi qadamda to'xtadingiz? Bitta nomzod yoki bitta hisob misolida birga ko'rib chiqamiz."
+  - key: rustam
+    name: "Rustam Nazarov"
+    role: "2-sex (gofroliniya) boshlig'i, vakansiya buyurtmachisi"
+    tone: "to'g'ridan-to'g'ri, shoshqaloq, ishlab chiqarish rejasidan xavotirda; o'z tajribasiga ko'p tayanadi"
+    knows: [doc_vacancy, doc_candidates]
+    secrets:
+      - "Sherzod Aliyev — qo'shnisining o'g'li; ilgari ombor va savdoda ishlagan, ishlab chiqarishda ishlamagan."
+    busy_reply: "Liniyadaman, smena almashinuvi. Keyinroq yozaman."
+    deflect_reply: "Men HR emasman, kimni chaqirishni siz bilasiz. Menga faqat tezroq usta kerak."
+  - key: botir
+    name: "Botir Xolmatov"
+    role: "Bosh hisobchi o'rinbosari (ish haqi)"
+    tone: "aniq, raqamga tayanadi, qisqa yozadi; hujjatsiz hech narsani qabul qilmaydi"
+    knows: [doc_leave_policy, doc_employee_leave]
+    secrets:
+      - "Ulug'bek Sobirov boshqa korxonalarda 6 yil ishlagan, lekin Qaldirg'och Qadoq'dagi uzluksiz staji 1 yil."
+    busy_reply: "Oylik vedomosti yopilyapti, bir soatdan keyin yozaman."
+    deflect_reply: "Hisobni men qilib bersam, sizni tekshirish ma'nosi qolmaydi. Formulasi ta'til tartibining 3-bandida."
+
+documents:
+  - key: doc_onboarding
+    title: "HR bo'limi: onboarding"
+    content: |
+      Qaldirg'och Qadoq — Toshkent viloyatidagi gofrokarton va qadoq ishlab chiqaruvchi korxona, ~320 xodim,
+      3 ta sex, ikkitasi 3 smenada ishlaydi. HR bo'limi: Dilnoza (boshliq), Shahlo (katta mutaxassis,
+      yangi xodimlar mentori), 2 mutaxassis. Ish haqi va ta'til puli — buxgalteriya, Botir aka.
+
+      Ish kuni 09:00–18:00, tushlik 13:00–14:00. Har kuni 09:00 da qisqa yig'ilish (standup):
+      bugun qaysi ishlar / qaysi muddatlar / nima to'sib turibdi.
+
+      Asosiy qoidalar:
+      - Nomzod faqat vakansiya profilidagi mezonlar bo'yicha baholanadi; har qaror yozma asoslanadi.
+      - Ishga qabul qarori — buyurtmachi rahbar + HR; HR nomzodga natijani oldindan va'da qilmaydi.
+      - Nomzod va xodim ma'lumotlari faqat HR tizimi va korporativ pochtada; shaxsiy messenjerga yuborilmaydi.
+      - Rahbar siyosatga zid narsa so'rasa — muloyim rad, siyosatni tushuntirish va HR boshlig'iga yozma xabar.
+
+  - key: doc_vacancy
+    title: "Vakansiya profili: Smena ustasi, 2-sex (gofroliniya)"
+    content: |
+      Buyurtmachi: Rustam Nazarov, 2-sex boshlig'i. Smenada 10–12 operator. 3 smenali jadval (shu jumladan tungi).
+
+      Majburiy talablar (bittasi bajarilmasa — nomzod intervyuga chaqirilmaydi):
+      M1. Ishlab chiqarish tajribasi kamida 3 yil, shundan kamida 1 yil 5 va undan ortiq kishilik jamoani boshqargan.
+          Ishlab chiqarish tajribasi — ishlab chiqarish korxonasida (sex, liniya, texnologik jarayon) ishlagan davr;
+          ombor, logistika va savdo hisobga kirmaydi.
+      M2. O'rta maxsus yoki oliy texnik ma'lumot (muhandislik, texnologiya, mexanika, elektr, kimyo, payvandlash va h.k.).
+      M3. 3 smenali, shu jumladan tungi smena jadvalida ishlashga tayyorlik.
+
+      Ball jadvali (faqat M1–M3 bajarilganlar uchun, maksimum 9):
+      - Ishlab chiqarish tajribasi (barcha davrlar yig'indisi): 3–4 yil = 1, 5–7 yil = 2, 8 yil va ko'p = 3
+      - Jamoa boshqaruvi: 1–2 yil = 1, 3 yil va ko'p = 2
+      - Qadoqlash, gofrokarton yoki poligrafiya ishlab chiqarishi tajribasi: bor = 2
+      - Lean, 5S yoki sifat menejmenti tizimi bilan amaliy ish (sertifikat yoki aniq misol): bor = 1
+      - 1C yoki ERP'da ishlab chiqarish/smena hisobotlari: bor = 1
+      Intervyuga chegara: 5 ball va undan yuqori. Yillar to'liq yillarda hisoblanadi (oylar pastga yaxlitlanadi).
+
+  - key: doc_candidates
+    title: "Nomzodlar CV'lari: Smena ustasi (2026-10-07 holatiga)"
+    content: |
+      A) Akmal Tursunov, 41 yosh. O'rta maxsus: sanoat kolleji, "Qadoqlash uskunalari texnologiyasi".
+         2016-03 – 2019-02: liniya operatori, «Tegirmon Plast» MChJ (plastik qadoq ishlab chiqarish).
+         2019-03 – hozir: smena ustasi, «Kamalak Qadoq» MChJ (gofrokarton), smenada 8 kishi.
+         5S/Lean bo'yicha ichki trening sertifikati (2023), smenada 5S joriy qilgan. 1C bilan ishlamagan.
+         Jadval: 3 smenaga tayyor.
+
+      B) Dilshod Mirzayev, 29 yosh. Oliy: mexanika muhandisi. Lean Six Sigma "Yellow Belt" sertifikati.
+         2021-08 – 2024-12: usta yordamchisi, «Shabada Tekstil» MChJ (ip-gazlama ishlab chiqarish).
+         2025-01 – hozir: smena ustasi, o'sha korxona, 11 kishi. 1C: smena hisobotlarini yuritadi.
+         Izoh: "Kechki magistraturada o'qiyman, faqat kunduzgi smenada ishlay olaman."
+
+      C) Nargiza Qosimova, 36 yosh. Turmushga chiqqan, 2 farzand. O'rta maxsus: kimyo-texnologiya kolleji.
+         2014-09 – 2020-12: operator, 2019-01 dan brigadir (6 kishi), «Kamalak Qadoq» MChJ (gofrokarton).
+         2021-01 – 2023-02: bola parvarishi ta'tili.
+         2023-03 – hozir: texnolog yordamchisi, «Tegirmon Plast» MChJ. 1C "Ishlab chiqarish" modulida smena hisobotlari.
+         Jadval: 3 smenaga tayyor.
+
+      D) Sherzod Aliyev, 33 yosh. Oliy: iqtisodchi.
+         Xulosa (CV boshida): "8 yillik ishlab chiqarish va jamoa boshqaruvi tajribasi, gofrokarton bilan ishlaganman."
+         2018-05 – 2021-04: omborchi, «Oqqush Savdo» MChJ (ulgurji savdo, karton qutilarni qabul qilish).
+         2021-05 – 2024-06: smena boshlig'i, «Karvon Ombor» logistika markazi, 15 kishi.
+         2024-07 – hozir: sotuv menejeri, «Chinor Mebel Savdo» MChJ.
+         Jadval: 3 smenaga tayyor. Tavsiya: R. Nazarov (og'zaki).
+
+      E) Javohir Ergashev, 47 yosh. O'rta maxsus: kasb-hunar kolleji, "Payvandlash texnologiyasi".
+         2009-02 – 2019-05: payvandchi, «Temir Qal'a» MChJ (metall konstruksiya zavodi).
+         2019-06 – 2025-12: smena ustasi, o'sha zavod, 9 kishi.
+         2026-01 – hozir: CV'da ma'lumot yo'q.
+         Jadval: 3 smenaga tayyor. Mehnat xavfsizligi guvohnomasi amalda.
+
+  - key: doc_hiring_policy
+    title: "Xodim tanlash va teng imkoniyatlar siyosati (ichki, o'quv versiyasi)"
+    content: |
+      1. Nomzod faqat vakansiya profilidagi mezonlar bo'yicha baholanadi. Jins, yosh, millat, din, oilaviy holat,
+         homiladorlik yoki farzandlar, yashash hududi bo'yicha saralash va bu haqda savol berish TAQIQLANADI.
+      2. Ta'til (bola parvarishi, davolanish) davrlari tajribaga qo'shilmaydi, lekin salbiy baholanmaydi va
+         bu haqda intervyuda savol berilmaydi.
+      3. 6 oydan ortiq izohlanmagan bo'shliq — rad etish sababi emas; intervyuda neytral savol bilan aniqlashtiriladi.
+      4. CV'dagi xulosa sanalar bilan mos kelmasa — "nomuvofiqlik" deb yoziladi, hisob sanalar bo'yicha qilinadi.
+      5. Manfaatlar to'qnashuvi: rahbar nomzodning qarindoshi yoki tanishi bo'lsa, buni HR'ga yozma bildiradi,
+         o'sha nomzodni baholashda qatnashmaydi; nomzod umumiy tartibda, mezonlar bo'yicha ko'riladi.
+      6. Rahbar 1-banddagi yoki 5-banddagi qoidaga zid so'rov qilsa: HR muloyim rad etadi, mezonlarni eslatadi,
+         shortlistni o'zgartirmaydi va o'sha kuni HR boshlig'iga yozma xabar beradi.
+      7. Intervyuga chaqirilmaganlarga 3 ish kuni ichida xushmuomala javob; mos keladiganlar zaxira bazasiga.
+
+  - key: doc_leave_policy
+    title: "Mehnat ta'tili va ta'til puli tartibi (ichki, o'quv versiyasi)"
+    content: |
+      1. Ish yili — ishga kirgan sanadan 12 oy. Yillik asosiy ta'til: 21 kalendar kun.
+         Qo'shimcha: 3 smenali sex xodimlariga +4 kun; korxonadagi uzluksiz staj 5 yildan ortiq bo'lsa +2 kun.
+         Boshqa korxonalardagi staj hisobga olinmaydi.
+      2. Yangi ish yilida har to'liq ishlangan oy uchun yillik huquqning 1/12 qismi to'planadi.
+         Ta'til faqat to'plangan va o'tgan yildan qolgan kunlar doirasida beriladi (avansga ta'til yo'q).
+      3. O'rtacha kunlik ish haqi = hisobga olinadigan daromad / (12 × 29.4 − hisob davridagi ta'til kunlari).
+         Hisob davri — ta'til boshlanishidan oldingi 12 to'liq kalendar oy.
+         Hisobga kiradi: asosiy ish haqi, tungi smena ustamasi, ortiqcha ish to'lovi.
+         Kirmaydi: ta'til puli, bir martalik mukofotlar, moddiy yordam.
+         Ta'til puli = o'rtacha kunlik ish haqi × ta'til kunlari (soliqlargacha; soliqni buxgalteriya ushlaydi).
+      4. Xodim arizasi ta'tildan kamida 10 kalendar kun oldin. Ta'til puli ta'til boshlanishidan oldingi
+         3-ish kunidan kechiktirmay to'lanadi (shanba, yakshanba ish kuni emas).
+
+  - key: doc_employee_leave
+    title: "Ta'til arizasi va daromad ko'chirmasi: Ulug'bek Sobirov"
+    content: |
+      Xodim: Ulug'bek Sobirov, gofroliniya operatori, 2-sex (3 smenali). Ishga kirgan: 2025-10-01.
+      Avvalgi ish joylari (boshqa korxonalar): jami 6 yil.
+      Ariza (2026-10-07): 2026-10-19 dan 14 kalendar kun mehnat ta'tili.
+      Foydalanilgan ta'til: 2026-05-11 – 2026-05-17, 7 kun (1-ish yili hisobidan).
+
+      Daromad, 2025-10 – 2026-09 (12 oy):
+      - Asosiy ish haqi (may oyi ta'til kunlarisiz): 48 270 000 so'm
+      - Tungi smena ustamasi: 2 400 000 so'm
+      - Ortiqcha ish to'lovi: 1 200 000 so'm
+      - Ta'til puli (may, 7 kun): 1 015 000 so'm
+      - Navro'z bayrami mukofoti (bir martalik): 1 000 000 so'm
+      - Moddiy yordam: 800 000 so'm
+
+  - key: doc_data_policy
+    title: "Shaxsiy ma'lumotlar: sizib chiqish tartibi (ichki, o'quv versiyasi)"
+    content: |
+      Shaxsiy ma'lumot: F.I.Sh., pasport ma'lumotlari, manzil, telefon, ish haqi va taklif shartlari.
+      Ma'lumot noto'g'ri adresatga ketsa:
+      1. 1 soat ichida HR boshlig'i va ma'lumotlar himoyasi mas'uliga (IT xavfsizlik) xabar; incident reyestriga yozuv.
+      2. Qabul qiluvchidan xatni o'chirishni va hech kimga yubormaganini yozma tasdiqlashni so'rash.
+      3. Ma'lumoti oshkor bo'lgan shaxsga 24 soat ichida xabar: nima oshkor bo'ldi, kimga, nima qilindi, aloqa.
+      4. 3 ish kuni ichida sabab tahlili va jarayonni tuzatish (masalan, yuborishdan oldin ikkinchi tekshiruv).
+      Tashqi xatlarda TAQIQLANADI: boshqa shaxsning ma'lumotini muhokama qilish yoki tasdiqlash, aybni aniq
+      xodimga yuklash, hodisani "hech narsa bo'lmadi" deb kichraytirish, kompensatsiya yoki maosh oshirishni va'da qilish.
+
+  - key: doc_leak_details
+    title: "Hodisa: noto'g'ri yuborilgan taklif xati"
+    content: |
+      Bugun 15:05 da HR umumiy pochtasidan ommaviy yuborishda shablon adresati noto'g'ri tanlangan.
+      Laboratoriya laboranti lavozimiga nomzod Madina Xo'jayevaga tayyorlangan taklif xati (F.I.Sh., telefon,
+      yashash manzili, pasport seriyasi, taklif qilingan oylik 5 800 000 so'm) Laylo Karimovaga ketgan.
+      Laylo — ombor hisobchisi lavozimiga nomzod (boshqa lavozim va daraja), unga 5 200 000 so'm taklif qilingan.
+      15:20 da Laylo javob yozgan: "Bu xat menga emas shekilli. Lekin nega unga 5.8 mln, menga 5.2 mln?"
+      Madina hali hech narsa bilmaydi.
+
+nodes:
+  - id: welcome
+    type: message
+    day: 1
+    at: "09:00"
+    from: dilnoza
+    brief: |
+      Qaldirg'och Qadoq'ga xush kelibsiz! Bugun HR bo'limidagi birinchi kuningiz. Onboarding hujjatini o'qing —
+      ayniqsa "nomzod faqat profil mezonlari bo'yicha baholanadi" qoidasini.
+
+  - id: standup
+    type: task
+    day: 1
+    at: "09:00"
+    from: dilnoza
+    brief: |
+      Ertalabki yig'ilish. Onboarding'dagi formatda bugungi rejangizni yozing: qaysi ishlar,
+      qaysi muddatlar, nima to'sib turishi mumkin. 3–5 qator.
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Formatga mos: ishlar / muddatlar / to'siqlar"}
+      - {id: concrete, description: "Reja aniq: qaysi vakansiya yoki vazifa, qanday natija", weight: 2}
+      - {id: blockers, description: "To'siq yoki savol ochiq aytilgan (HR tizimiga kirish, siyosat bilan tanishish)"}
+    hints:
+      - "Birinchi kunda ham reja bo'ladi: siyosat bilan tanishish, birinchi vakansiya bo'yicha ish, muddat."
+    reference_answer: |
+      Bugun: tanlov siyosati va smena ustasi vakansiyasi profili bilan tanishaman, 5 ta CV'ni saralab shortlist tuzaman.
+      Muddat: shortlist tushlikkacha. To'siq: HR tizimiga kirish huquqim hali yo'q — Shahlo opadan so'rayman.
+
+  - id: mentor_intro
+    type: message
+    day: 1
+    at: "09:20"
+    from: shahlo
+    brief: |
+      Salom! Men Shahlo, mentoringizman. Ro'yxatni siz uchun tuzmayman, lekin qaysi mezonga qarash kerakligini
+      birga topamiz. Qiyin bo'lsa hint so'rang — faqat har hint task balini biroz kamaytiradi.
+
+  - id: cv_screening
+    type: task
+    day: 1
+    at: "09:30"
+    from: dilnoza
+    brief: |
+      Smena ustasi (2-sex) vakansiyasiga 5 ta CV keldi. Profil bo'yicha saralang: har nomzod uchun M1–M3,
+      ball jadvali (kim uchun qo'llanadi), qaror — intervyuga / rad — va qisqa asos. Oxirida intervyuga
+      chaqiriladiganlar ro'yxati (shortlist) ball bo'yicha tartibda. Jadval matn yoki Excel fayl ko'rinishida.
+    attachments: [doc_vacancy, doc_candidates, doc_hiring_policy]
+    answer_types: [text, file]
+    due_in_minutes: 150
+    weight: 2
+    competencies: [technical, prioritization]
+    rubric:
+      - {id: must_haves, description: "Ikki nomzod majburiy talabdan o'tmasligini aniqlagan: Dilshod (B) — M3, faqat kunduzgi smena; Sherzod (D) — M1 (ombor, logistika, savdo ishlab chiqarish emas) va M2 (iqtisodchi)", weight: 2}
+      - {id: red_flag, description: "Sherzod CV'sidagi '8 yillik ishlab chiqarish, gofrokarton' xulosasi sanalarga mos emasligini (jami ~8 yil, lekin ishlab chiqarishda 0; gofrokarton — faqat omborda quti qabul qilish) nomuvofiqlik deb qayd etgan", weight: 1.5}
+      - {id: scores, description: "Ball to'g'ri: Akmal 8 (3+2+2+1+0), Nargiza 7 (3+1+2+0+1), Javohir 5 (3+2+0+0+0); ±0", weight: 2}
+      - {id: shortlist, description: "Shortlist: Akmal (8), Nargiza (7), Javohir (5 — chegarada, o'tadi); Dilshod ball jadvali kuchli bo'lsa ham chaqirilmaydi", weight: 2}
+      - {id: fairness, description: "Nargizaning 2021–2023 ta'tili salbiy baholanmagan, yosh/jins/oilaviy holat ishlatilmagan; Javohirning 2026-yildagi 10 oylik bo'shlig'i rad sababi emas, intervyuda neytral savol", weight: 1.5}
+      - {id: structure, description: "Tartibli jadval: nomzod → M1–M3 → ball → qaror → asos; rad etilganlarga javob yoki zaxira bazasi eslatilgan"}
+    hints:
+      - "Avval faqat M1–M3 ni tekshiring; ball jadvali majburiy talablardan o'tganlar uchungina qo'llanadi."
+      - "Tajribani CV boshidagi xulosadan emas, sanalardan hisoblang. Profil qaysi ishni 'ishlab chiqarish' deb hisoblaydi?"
+      - "Tanlov siyosatining 2- va 3-bandlarini ta'til va bo'shliq bor nomzodlarga qo'llang."
+    reference_answer: |
+      A Akmal: M1 ✓ (ishlab chiqarish 10 yil 7 oy, boshqaruv 7 yil 7 oy, 8 kishi), M2 ✓, M3 ✓. Ball 3+2+2(gofrokarton)+1(5S)+0 = 8 → intervyu.
+      B Dilshod: M1 ✓, M2 ✓, M3 ✗ (faqat kunduzgi smena) → intervyuga chaqirilmaydi; zaxira bazasiga, kunduzgi vakansiya bo'lsa taklif.
+      C Nargiza: M1 ✓ (2014–2020 va 2023–hozir ≈ 9 yil 10 oy, ta'tilsiz; brigadir 2 yil, 6 kishi), M2 ✓, M3 ✓. Ball 3+1+2+0+1(1C) = 7 → intervyu.
+         2021–2023 bola parvarishi ta'tili tajribaga qo'shilmaydi, salbiy baholanmaydi, intervyuda so'ralmaydi.
+      D Sherzod: M1 ✗ (ombor, logistika, savdo — ishlab chiqarish emas), M2 ✗ (iqtisodchi). CV xulosasi "8 yil" — sanalar bo'yicha
+         jami ~8 yil, lekin ishlab chiqarishda 0, "gofrokarton" — omborda quti qabul qilish: nomuvofiqlik. Og'zaki tavsiya qarorga ta'sir qilmaydi → rad, xushmuomala javob.
+      E Javohir: M1 ✓ (16 yil 10 oy, boshqaruv 6 yil 6 oy, 9 kishi), M2 ✓ (payvandlash — texnik), M3 ✓. Ball 3+2+0+0+0 = 5 → intervyu (chegara 5).
+         2026-01 dan bo'shliq — intervyuda neytral savol ("2026-yil davomida nima bilan band bo'ldingiz?").
+      Shortlist: 1) Akmal 8, 2) Nargiza 7, 3) Javohir 5. Dilshod va Sherzodga 3 ish kuni ichida javob.
+
+  - id: lead_ack
+    type: message
+    after: {node: cv_screening, event: submitted, minutes: 15}
+    from: dilnoza
+    brief: "Shortlistni oldim, tushlikdan keyin ko'rib chiqib Rustam akaga yuboraman."
+
+  - id: manager_filter
+    type: decision
+    day: 1
+    at: "11:30"
+    from: rustam
+    brief: |
+      Salom! Smena ustasi bo'yicha CV'larni ko'rdim. Iltimos, ayollarni yubormang, ayniqsa 25–40 yoshdagilarni —
+      bir yilda dekretga ketadi, smena bo'sh qoladi. 45 dan oshganlar ham kerak emas, tungi smenaga chidamaydi.
+      Yana: Sherzod Aliyev tanishimning o'g'li, yaxshi yigit, uni albatta intervyuga qo'shing. Kelishdikmi?
+    competencies: [communication, stress_handling]
+    options:
+      - key: refuse_and_escalate
+        label: "Muloyimlik bilan tushuntiraman: tanlov faqat profil mezonlari bo'yicha, yosh va jins bo'yicha saralamaymiz, Sherzod umumiy tartibda ko'riladi; shortlistni o'zgartirmayman va Dilnoza opaga yozma xabar beraman"
+        grade: correct
+      - key: escalate_only
+        label: "Rustam akaga javob bermay, xabarni darhol Dilnoza opaga uzataman"
+        grade: acceptable
+      - key: follow_manager
+        label: "Buyurtmachi rahbar so'radi — Nargiza va Javohirni ro'yxatdan chiqarib, Sherzodni qo'shaman"
+        grade: wrong
+        flag: discriminatory_filter
+
+  - id: lead_on_filter
+    type: message
+    day: 1
+    at: "12:00"
+    when: {flag: discriminatory_filter}
+    from: dilnoza
+    brief: |
+      Rustam aka "shortlistni kelishdik" deb, ayollar va 45 dan oshganlarsiz ro'yxat yubordi. Bu tanlov siyosatining
+      1- va 5-bandlariga zid: yosh va jins bo'yicha saralash taqiqlangan, tanish nomzod mezonlardan o'tmagan.
+      Bu korxona uchun ham, nomzodlar uchun ham jiddiy xavf. Ro'yxatni mezonlar bo'yicha tiklaymiz; keyingi safar avval menga yozing.
+
+  - id: mentor_review
+    type: message
+    day: 1
+    at: "14:00"
+    when: {any: [{missed: cv_screening}, {score_lt: {node: cv_screening, value: 60}}]}
+    from: shahlo
+    brief: |
+      Saralash jadvalingizni ko'rdim — majburiy talablar hamma nomzodda sanalar bo'yicha tekshirilmagan ko'rinadi.
+      Urinishlar qolgan bo'lsa, qayta ko'rib chiqing; qaysi nomzodda ikkilansangiz menga yozing.
+
+  - id: leave_calc
+    type: task
+    day: 1
+    at: "14:00"
+    from: botir
+    brief: |
+      Ulug'bek Sobirov 19-oktabrdan 14 kunlik ta'til so'radi. Buyruq loyihasidan oldin HR tasdiqlashi kerak:
+      1) 19-oktabr holatiga nechta ta'til kuni bor va 14 kun berish mumkinmi; 2) ta'til tugash sanasi va ishga
+      chiqish kuni; 3) ta'til puli summasi; 4) pul kechi bilan qachon to'lanishi kerak. Hisobni ko'rsating.
+    attachments: [doc_leave_policy, doc_employee_leave]
+    answer_types: [text, file]
+    due_in_minutes: 90
+    weight: 1.5
+    competencies: [technical, time_management]
+    rubric:
+      - {id: entitlement, description: "1-ish yili huquqi 21 + 4 = 25 kun; staj qo'shimchasi yo'q (korxonadagi staj 1 yil, boshqa korxonalar hisobga olinmaydi)", weight: 2}
+      - {id: balance, description: "Qoldiq 25 − 7 = 18 kun; yangi ish yilida (01.10 dan) to'liq oy yo'q — 0 kun; 14 kun berish mumkin, keyin 4 kun qoladi", weight: 1.5}
+      - {id: dates, description: "Ta'til 19.10–01.11.2026, ishga chiqish 02.11.2026 (dushanba)"}
+      - {id: average_pay, description: "Daromad 48 270 000 + 2 400 000 + 1 200 000 = 51 870 000; ta'til puli, mukofot, moddiy yordam chiqarilgan; maxraj 12 × 29.4 − 7 = 345.8; kunlik 150 000 so'm", weight: 2}
+      - {id: vacation_pay, description: "Ta'til puli 150 000 × 14 = 2 100 000 so'm (soliqlargacha)", weight: 1.5}
+      - {id: pay_deadline, description: "To'lov kechi bilan 14.10.2026 (19.10 dan oldingi 3-ish kuni); ariza 12 kun oldin berilgan — muddat bajarilgan"}
+    hints:
+      - "Avval kunlar: 1-ish yili huquqi qancha, undan qancha ishlatilgan? Qaysi qo'shimchalar Ulug'bekka tegishli?"
+      - "Daromad ko'chirmasidagi har qatorni tartibning 3-bandidagi 'kiradi / kirmaydi' ro'yxati bilan solishtiring. Maxrajda may oyi nima uchun kerak?"
+      - "3-ish kunini sanayotganda 19-oktabr qaysi kun ekaniga va dam olish kunlariga qarang."
+    reference_answer: |
+      Kunlar: 1-ish yili (01.10.2025–30.09.2026) huquqi 21 + 4 (3 smenali sex) = 25 kun; staj +2 yo'q — korxonada 1 yil.
+      Ishlatilgan 7 → qoldiq 18. 2-ish yili 01.10.2026 dan, 19.10 gacha to'liq oy yo'q → 0. Jami 18 ≥ 14 — beriladi, 4 kun qoladi.
+      Sanalar: 19.10.2026 (dushanba) – 01.11.2026 (yakshanba), ishga 02.11.2026.
+      Daromad: 48 270 000 + 2 400 000 + 1 200 000 = 51 870 000 (ta'til puli 1 015 000, mukofot 1 000 000, moddiy yordam 800 000 kirmaydi).
+      Maxraj: 12 × 29.4 − 7 = 345.8. Kunlik: 51 870 000 / 345.8 = 150 000 so'm. Ta'til puli: 150 000 × 14 = 2 100 000 so'm (soliqlargacha).
+      To'lov: 19.10 dan oldingi ish kunlari 16.10, 15.10, 14.10 → kechi bilan 14.10.2026 (chorshanba). Ariza 07.10 — 12 kun oldin, talab bajarilgan.
+
+  - id: botir_ack
+    type: message
+    after: {node: leave_calc, event: submitted, minutes: 20}
+    from: botir
+    brief: "Hisobingizni oldim, vedomost bilan solishtirib buyruq loyihasiga qo'yaman."
+
+  - id: leak_incident
+    type: incident
+    day: 1
+    at: "15:30"
+    from: dilnoza
+    brief: |
+      Shoshilinch: Madina Xo'jayevaning taklif xati (manzil, pasport seriyasi, oylik) Laylo Karimovaga ketib qolgan,
+      Laylo esa "nega unga 5.8 mln, menga 5.2 mln?" deb yozdi. Men direktordaman — 30 daqiqa ichida tayyorlang:
+      1) Laylo uchun javob, 2) Madina uchun xabar, 3) ichki qadamlar ro'yxati.
+    attachments: [doc_data_policy, doc_leak_details]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 1.5
+    competencies: [stress_handling, communication, initiative]
+    rubric:
+      - {id: laylo_reply, description: "Laylo'ga: uzr, xatni o'chirish va hech kimga yubormaganini yozma tasdiqlash so'rovi; o'z taklifi bo'yicha alohida suhbat taklifi", weight: 2}
+      - {id: no_disclosure, description: "Madinaning oyligi yoki boshqa ma'lumoti muhokama qilinmagan va tasdiqlanmagan; maosh oshirish yoki kompensatsiya va'da qilinmagan; aybni aniq xodimga yuklamagan", weight: 2}
+      - {id: madina_notice, description: "Madinaga: nima oshkor bo'lgan (manzil, pasport seriyasi, oylik), bitta nomzodga, qanday choralar ko'rildi, aloqa uchun shaxs; hodisa kichraytirilmagan", weight: 1.5}
+      - {id: internal_steps, description: "Ichki: 1 soat ichida HR boshlig'i va ma'lumotlar himoyasi mas'uliga, incident reyestri, 3 ish kunida sabab tahlili va yuborishdan oldin ikkinchi tekshiruv"}
+      - {id: tone, description: "Xotirjam, hurmatli, qisqa; Laylo'ning savoliga himoyaviy yoki bahsli ohang yo'q"}
+    hints:
+      - "Sizib chiqish tartibidagi 4 qadamni sanab chiqing va har biriga kim mas'ulligini yozing."
+      - "Laylo'ning maosh haqidagi savoliga nima deyish mumkin, nima mumkin emas — tartibning oxirgi bandini o'qing."
+    reference_answer: |
+      Laylo'ga: Laylo opa, xatimiz xato bilan sizga yuborilgani uchun uzr so'raymiz. Iltimos, uni va ilovalarini o'chirib,
+      hech kimga yubormaganingizni javob xatida tasdiqlang. Boshqa nomzod shartlarini muhokama qila olmaymiz; taklifingiz
+      ombor hisobchisi lavozimi bo'yicha — savollaringiz bo'lsa, ertaga qulay vaqtda alohida gaplashamiz.
+      Madinaga: Madina opa, bugun 15:05 da sizga tayyorlangan taklif xati (F.I.Sh., telefon, manzil, pasport seriyasi, oylik)
+      xato bilan bitta boshqa nomzodga yuborildi. Qabul qiluvchidan o'chirish va tasdiqlashni so'radik, holatni ma'lumotlar
+      himoyasi mas'uli bilan tekshiryapmiz. Uzr so'raymiz; savollar uchun — Dilnoza Rahimova, HR boshlig'i.
+      Ichki: 16:05 gacha Dilnoza opa va IT xavfsizlikka, incident reyestri; Laylo tasdig'ini kuzatish; 3 ish kunida
+      sabab tahlili, ommaviy yuborishdan oldin ikkinchi tekshiruv. Aytilmaydi: Madinaning oyligi, kim aybdor, kompensatsiya.
+
+  - id: leak_thanks
+    type: message
+    after: {node: leak_incident, event: submitted, minutes: 20}
+    from: dilnoza
+    brief: "Rahmat, matnlarni ko'rib chiqib yubordim. Ertaga sabab tahlilini birga qilamiz."
+
+  - id: day1_end
+    type: day_end
+    day: 1
+    at: "17:30"
+    brief: |
+      Kun yakuni. Dilnoza opaga qisqa hisobot yozing: bugun nima qildingiz, nima ochiq qoldi,
+      ertangi reja va bugungi kundan bitta xulosa.
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Bugungi natijalar aniq: shortlist, ta'til hisobi, ma'lumot sizishi bo'yicha javoblar", weight: 1.5}
+      - {id: open_items, description: "Ochiq qolgan ishlar va ertangi reja aytilgan (rad javoblari, Laylo tasdig'i, sabab tahlili)"}
+      - {id: reflection, description: "Kundan aniq xulosa (masalan, faqat mezon bo'yicha baholash, sanalarni tekshirish, yuborishdan oldin tekshirish)"}

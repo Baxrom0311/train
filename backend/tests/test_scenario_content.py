@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from app.models.enums import AIEvalStatus, NodeType, RunEventStatus, RunStatus
+from app.models.enums import AIEvalStatus, NodeType, RunEventStatus, RunStatus, Sector
 from app.scenario.engine import Answer, create_run, decide, submit_answer
 from app.scenario.importer import import_scenario, publish_version
 from app.scenario.schema import ANSWER_TYPES, PersonaKind, ScenarioDefinition, scenario_warnings
@@ -18,10 +18,13 @@ def _load(path: Path) -> ScenarioDefinition:
     return ScenarioDefinition.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")))
 
 
-def test_v1_content_present():
-    """§9.11: 1 ta IT (1 kun) + 1 ta Bank (1 kun) + 1 ta haftalik."""
+def test_content_covers_every_sector():
+    """§9.11: har sohada kamida bitta 1 kunlik ssenariy + IT haftaligi; har 1 kunlik `test_full_day`da."""
     defs = [_load(p) for p in FILES]
-    assert sorted((d.sector.value, d.duration_days) for d in defs) == [("Banking", 1), ("IT", 1), ("IT", 5)]
+    assert sorted((d.sector.value, d.duration_days) for d in defs) == [
+        ("Banking", 1), ("Data", 1), ("HR", 1), ("IT", 1), ("IT", 5), ("Marketing", 1)]
+    assert {d.sector for d in defs} == set(Sector)
+    assert {d.slug for d in defs if d.duration_days == 1} == set(PATHS)
 
 
 @pytest.mark.parametrize("path", FILES, ids=lambda p: p.stem)
@@ -71,6 +74,18 @@ PATHS = {
     "oqsaroy-bank-credit-day1": (
         "credit_analysis", "client_pressure", "explain_process", "promise", "lead_on_promise", "mentor_review",
         "aml_review", "complaint_incident", "15:00",
+    ),
+    "oydinbarg-marketing-day1": (
+        "campaign_analysis", "director_claim", "compliant_alternative", "publish_claim", "lead_on_claim", "mentor_review",
+        "launch_copy", "price_incident", "15:00",
+    ),
+    "sabzazor-data-day1": (
+        "weekly_report", "board_chart", "honest_note", "hide_store", "lead_on_hidden_data", "mentor_review",
+        "ab_analysis", "dashboard_incident", "15:30",
+    ),
+    "qaldirgoch-qadoq-hr-day1": (
+        "cv_screening", "manager_filter", "refuse_and_escalate", "follow_manager", "lead_on_filter", "mentor_review",
+        "leave_calc", "leak_incident", "15:30",
     ),
 }
 

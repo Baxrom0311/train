@@ -165,14 +165,18 @@
     "continue": "Continue",
     "sector": {
       "IT": "IT",
-      "Banking": "Banking"
+      "Banking": "Banking",
+      "Marketing": "Marketing",
+      "Data": "Data analytics",
+      "HR": "HR"
     },
     "days_one": "{{count}} day",
     "days_other": "{{count}} days",
     "empty": "No simulations yet",
     "history": "Past simulations",
     "report": "Report",
-    "realTime": "Real time"
+    "realTime": "Real time",
+    "noMatch": "No scenarios match this filter."
   },
   "run": {
     "status": {

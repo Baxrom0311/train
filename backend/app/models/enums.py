@@ -22,6 +22,9 @@ class OrgType(str, enum.Enum):
 class Sector(str, enum.Enum):
     IT = "IT"
     BANKING = "Banking"
+    MARKETING = "Marketing"
+    DATA = "Data"
+    HR = "HR"
 
 
 class InvoiceStatus(str, enum.Enum):
