@@ -7,12 +7,21 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.models.simulation import Simulation, SimulationTask
+from app.models.simulation import Simulation
 from app.models.enums import Sector
 from app.core.deps import get_current_active_user, require_permission
 from app.models.user import User
 
 router = APIRouter(tags=["simulations"])
+
+# FROZEN (CONTRACT.md §9.0 Q2): eski "topshiriqlar ro'yxati" simulyatsiyalariga
+# yangi kontent qo'shilmaydi — o'qish ishlaydi, yozish 410. Yangi kontent:
+# ssenariylar (`tools/import_scenario.py`, §9.3). Ruxsat tekshiruvi saqlanadi,
+# shunda ruxsatsiz foydalanuvchi baribir 403 oladi.
+_FROZEN = HTTPException(
+    status_code=status.HTTP_410_GONE,
+    detail="Legacy simulations are frozen; new content is published as scenarios (CONTRACT.md §9).",
+)
 
 # Schemas
 class TaskCreate(BaseModel):
@@ -70,83 +79,24 @@ async def get_simulation(
         raise HTTPException(status_code=404, detail="Simulation not found")
     return sim
 
-@router.post("/simulations", response_model=SimulationOut, status_code=status.HTTP_201_CREATED)
+@router.post("/simulations", status_code=status.HTTP_410_GONE)
 async def create_simulation(
     sim_in: SimulationCreate,
-    db: AsyncSession = Depends(get_db),
     user: User = Depends(require_permission("manage_simulations"))
 ):
-    sim = Simulation(
-        title=sim_in.title,
-        description=sim_in.description,
-        sector=sim_in.sector,
-        difficulty=sim_in.difficulty,
-        company_name=sim_in.company_name,
-        created_by_admin_id=user.id
-    )
-    for i, t in enumerate(sim_in.tasks):
-        task = SimulationTask(
-            order_index=i,
-            title=t.title,
-            description=t.description,
-            expected_skills=t.expected_skills
-        )
-        sim.tasks.append(task)
+    raise _FROZEN
 
-    db.add(sim)
-    await db.commit()
-    await db.refresh(sim)
-    return sim
-
-@router.put("/simulations/{id}", response_model=SimulationOut)
+@router.put("/simulations/{id}", status_code=status.HTTP_410_GONE)
 async def update_simulation(
     id: uuid.UUID,
     sim_in: SimulationCreate,
-    db: AsyncSession = Depends(get_db),
     user: User = Depends(require_permission("manage_simulations"))
 ):
-    result = await db.execute(select(Simulation).where(Simulation.id == id))
-    sim = result.scalars().first()
-    if not sim:
-        raise HTTPException(status_code=404, detail="Simulation not found")
+    raise _FROZEN
 
-    sim.title = sim_in.title
-    sim.description = sim_in.description
-    sim.sector = sim_in.sector
-    sim.difficulty = sim_in.difficulty
-    sim.company_name = sim_in.company_name
-
-    # Remove old tasks
-    for task in sim.tasks:
-        await db.delete(task)
-    
-    # Needs a flush to avoid duplicate unique order_index if any, but let's just clear
-    sim.tasks = []
-    
-    for i, t in enumerate(sim_in.tasks):
-        task = SimulationTask(
-            order_index=i,
-            title=t.title,
-            description=t.description,
-            expected_skills=t.expected_skills
-        )
-        sim.tasks.append(task)
-
-    await db.commit()
-    await db.refresh(sim)
-    return sim
-
-@router.delete("/simulations/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/simulations/{id}", status_code=status.HTTP_410_GONE)
 async def delete_simulation(
     id: uuid.UUID,
-    db: AsyncSession = Depends(get_db),
     user: User = Depends(require_permission("manage_simulations"))
 ):
-    result = await db.execute(select(Simulation).where(Simulation.id == id))
-    sim = result.scalars().first()
-    if not sim:
-        raise HTTPException(status_code=404, detail="Simulation not found")
-    
-    await db.delete(sim)
-    await db.commit()
-    return None
+    raise _FROZEN

@@ -1,6 +1,10 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, Boolean, DateTime, ForeignKey, Text, Float, Integer, JSON, Enum as SAEnum
+from sqlalchemy import (
+    String, Boolean, DateTime, ForeignKey, Text, Float, Integer, SmallInteger, JSON,
+    CheckConstraint, Index, Enum as SAEnum, text,
+)
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 
@@ -44,10 +48,34 @@ class SimulationTask(Base):
     submissions = relationship("Submission", back_populates="task", cascade="all, delete-orphan")
 
 class Submission(Base):
+    """
+    Umumiy javob jadvali (CONTRACT.md §9.7): eski simulyatsiya task'i
+    (`task_id`, LEGACY) YOKI Run hodisasi (`run_event_id`) — aynan bittasi.
+    """
     __tablename__ = "submissions"
-    
+    __table_args__ = (
+        CheckConstraint("(task_id IS NULL) <> (run_event_id IS NULL)", name="ck_submissions_target"),
+        Index(
+            "uq_submissions_run_event_attempt",
+            "run_event_id",
+            "attempt",
+            unique=True,
+            postgresql_where=text("run_event_id IS NOT NULL"),
+        ),
+        Index("ix_submissions_run_id", "run_id"),
+    )
+
     id: Mapped[uuid.UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    task_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("simulation_tasks.id"), nullable=False)
+    task_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("simulation_tasks.id"), nullable=True)
+    run_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("runs.id", ondelete="CASCADE"), nullable=True)
+    run_event_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("run_events.id", ondelete="CASCADE"), nullable=True
+    )
+    attempt: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=1, server_default=text("1"))
+    late: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=text("false"))
+    rubric_scores: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    file_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("uploaded_files.id"), nullable=True)
+    link_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     ai_score: Mapped[float | None] = mapped_column(Float, nullable=True)

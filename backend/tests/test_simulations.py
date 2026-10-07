@@ -35,6 +35,17 @@ async def test_create_simulation_forbidden(client: AsyncClient, test_user_factor
     res = await client.post("/api/v1/simulations", json=payload, headers=headers)
     assert res.status_code == 403
 
+async def _legacy_simulation(db_session: AsyncSession, title: str, company: str, n_tasks: int = 1):
+    """Eski simulyatsiyalar muzlatilgan (§9.0 Q2) — test ma'lumoti to'g'ridan-to'g'ri DB'ga yoziladi."""
+    from app.models.simulation import Simulation, SimulationTask
+    sim = Simulation(title=title, description="Desc", sector="IT", difficulty="beginner", company_name=company)
+    for i in range(n_tasks):
+        sim.tasks.append(SimulationTask(order_index=i, title="Task", description="D", expected_skills=["S"]))
+    db_session.add(sim)
+    await db_session.commit()
+    await db_session.refresh(sim)
+    return sim
+
 @pytest.mark.asyncio
 async def test_create_simulation_admin(client: AsyncClient, test_user_factory, setup_simulation_permissions):
     user = await test_user_factory("admin_c@example.com", "pass", "admin")
@@ -52,52 +63,34 @@ async def test_create_simulation_admin(client: AsyncClient, test_user_factory, s
         "tasks": [{"title": "Task 1", "description": "Do this", "expected_skills": ["Python"]}]
     }
     res = await client.post("/api/v1/simulations", json=payload, headers=headers)
-    assert res.status_code == 201
-    data = res.json()
-    assert data["title"] == "Test Sim Admin"
+    # FROZEN: yangi kontent faqat ssenariy sifatida (CONTRACT.md §9.0 Q2)
+    assert res.status_code == 410
+
+    sim_id = str(uuid.uuid4())
+    assert (await client.put(f"/api/v1/simulations/{sim_id}", json=payload, headers=headers)).status_code == 410
+    assert (await client.delete(f"/api/v1/simulations/{sim_id}", headers=headers)).status_code == 410
 
 @pytest.mark.asyncio
-async def test_list_simulations(client: AsyncClient, test_user_factory, setup_simulation_permissions):
+async def test_list_simulations(client: AsyncClient, test_user_factory, setup_simulation_permissions, db_session: AsyncSession):
     user = await test_user_factory("admin_l@example.com", "pass", "admin")
     response = await client.post("/api/v1/auth/login", data={"username": "admin_l@example.com", "password": "pass"})
     token = response.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
     
-    payload = {
-        "title": "Sim 1",
-        "description": "Desc",
-        "sector": "IT",
-        "difficulty": "beginner",
-        "company_name": "Atlas Global Finance",
-        "tasks": []
-    }
-    await client.post("/api/v1/simulations", json=payload, headers=headers)
+    await _legacy_simulation(db_session, "Sim 1", "Atlas Global Finance", n_tasks=0)
     
     res = await client.get("/api/v1/simulations", headers=headers)
     assert res.status_code == 200
     assert len(res.json()) >= 1
 
 @pytest.mark.asyncio
-async def test_submit_and_eval(client: AsyncClient, test_user_factory, setup_simulation_permissions):
+async def test_submit_and_eval(client: AsyncClient, test_user_factory, setup_simulation_permissions, db_session: AsyncSession):
     """
     AI zanjiri mocked: httpx.AsyncClient.post → DeepSeek javob qaytaradi.
     'completed' status va haqiqiy (mock) AI ball tekshiriladi.
     """
-    admin = await test_user_factory("admin_s@example.com", "pass", "admin")
-    response = await client.post("/api/v1/auth/login", data={"username": "admin_s@example.com", "password": "pass"})
-    admin_token = response.json()["access_token"]
-    admin_headers = {"Authorization": f"Bearer {admin_token}"}
-    
-    payload = {
-        "title": "Eval Sim",
-        "description": "Desc",
-        "sector": "IT",
-        "difficulty": "beginner",
-        "company_name": "NorthBank UZ",
-        "tasks": [{"title": "Task", "description": "D", "expected_skills": ["S"]}]
-    }
-    sim_res = await client.post("/api/v1/simulations", json=payload, headers=admin_headers)
-    task_id = sim_res.json()["tasks"][0]["id"]
+    sim = await _legacy_simulation(db_session, "Eval Sim", "NorthBank UZ")
+    task_id = str(sim.tasks[0].id)
     
     student = await test_user_factory("student_s@example.com", "pass", "student")
     response = await client.post("/api/v1/auth/login", data={"username": "student_s@example.com", "password": "pass"})
