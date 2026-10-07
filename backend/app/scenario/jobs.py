@@ -21,6 +21,7 @@ from sqlalchemy import select
 
 from app.models.enums import AIEvalStatus
 from app.models.simulation import Submission
+from app.notifications.run_events import from_notes
 from app.scenario import notify
 from app.scenario.engine import Note, advance
 from app.scenario.evaluation import evaluate_run_submission
@@ -65,6 +66,7 @@ async def deliver_due_events(ctx: dict) -> int:
     now = datetime.now(timezone.utc)
     async with _sessions(ctx)() as db:
         notes = await advance(db, now)
+        await from_notes(db, notes, now)   # §15.2: yangi vazifa — bildirishnoma
         await db.commit()
         stale = (await db.execute(
             select(Submission.id).where(

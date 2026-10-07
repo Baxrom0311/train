@@ -167,6 +167,7 @@ schema / endpoint shakli) orqali gaplashadi.
 | 8 | **Deploy** | `deploy/` | Docker-compose, nginx, Dockerfile'lar — backend/frontend tuzilishi barqarorlashgach yangilanadi |
 | 9 | **Scenario Engine** | §9.10 ro'yxati (`backend/app/scenario/`, `models/scenario.py`, `api/scenarios.py`, `api/runs.py`, `api/files.py`, `backend/content/scenarios/`, `tools/import_scenario.py`) | (1),(2) interfeyslari — §9.10 |
 | 10 | **Credentials** | `backend/app/models/credential.py`, `backend/app/api/credentials.py`, `backend/app/credentials/` | (1),(6),(9)ga bog'liq — sertifikat Run'dan, portfolio §10.1 profilidan (§13) |
+| 11 | **Notifications** | `backend/app/models/notification.py`, `backend/app/api/notifications.py`, `backend/app/notifications/` | (1),(4),(9),(10)ga bog'liq — manbalar §15.2 |
 
 Qurish ketma-ketligi: **1 → (2,3 parallel) → (4,5,6 parallel) → 7 har
 bosqichda mos ravishda**. Modul 9: avval (1),(2),(8)dagi §9.10
@@ -1101,6 +1102,81 @@ namunaviy javob, hujjat va personaj `knows`/`secrets` hech qachon chiqmaydi.
 7. **Savol-javob** va footer.
 
 Barcha matn uz/ru/en; kompaniya nomlari faqat ssenariylardagi fictional nomlar.
+
+---
+
+## 15. Bildirishnomalar (Modul 11)
+
+Run'lar real vaqtda ketadi va pauza yo'q (§9.2) — talaba saytda bo'lmasa
+ham muhim narsadan xabar topishi kerak. Ikki kanal: ilova ichida
+(qo'ng'iroqcha) va email. SSE (§9.8) o'zgarmaydi — u faqat ochiq Run
+sahifasi uchun.
+
+### 15.1 Ma'lumot
+
+`notifications`: `id, user_id (FK, index), kind, params JSONB, link,
+dedupe_key, created_at, read_at, email_status (null | sent | skipped |
+failed), emailed_at`; `UNIQUE(user_id, dedupe_key)` — bitta hodisa uchun
+bitta bildirishnoma (job qayta ishlasa ham). Matn saqlanmaydi: frontend
+`kind` + `params`dan interfeys tilida yozadi, email o'zbekcha.
+
+`notification_settings`: `user_id (PK), email_enabled (default true),
+email_kinds JSONB` — qator yo'q bo'lsa default'lar.
+
+### 15.2 Turlar va manbalar
+
+| kind | Kimga | Qachon | params | Email default |
+|---|---|---|---|---|
+| `task_delivered` | talaba | task/incident/decision yetkazildi (`event_delivered`) | run_id, node_id, type, title, due_at | yo'q |
+| `deadline_soon` | talaba | yetkazilgan, topshirilmagan hodisa dedlayniga ≤ 30 daqiqa qoldi (cron) | run_id, node_id, title, due_at | ha |
+| `mentor_review` | talaba | mentor baholangan urinishga izoh yozdi (§9.13) | run_id, node_id, title, mentor | yo'q |
+| `report_ready` | talaba | yakuniy hisobot yozildi | run_id, scenario_title, certificate, code | ha |
+| `offer_received` | talaba | kompaniya taklif yubordi (§10.2) | offer_id, company, position | ha |
+| `offer_responded` | kompaniyaning faol xodimlari (taklifni kim yuborgani saqlanmaydi) | talaba javob berdi | offer_id, candidate, position, accepted | ha |
+
+`dedupe_key`: `event:{run_id}:{node_id}:delivered`, `event:{run_id}:{node_id}:deadline`,
+`review:{submission_id}`, `final:{run_id}`, `offer:{id}`, `offer:{id}:response`.
+`title` — `short_title(brief)`; incident/decision nomi bildirishnomada
+ko'rsatiladi (u allaqachon yetkazilgan). `task_delivered` faqat cron yetkazgan
+hodisalar uchun: talaba Run sahifasida turganda (API `advance`) yetkazilgani
+uning ko'z oldida — bildirishnoma yozilmaydi.
+
+Yozish: `app/notifications/service.py: notify(db, user_id, kind, params,
+link, key)` — `INSERT … ON CONFLICT DO NOTHING`, chaqiruvchining
+tranzaksiyasida. Chaqiruvchilar: `scenario/jobs.py` (yetkazish cron'i,
+mentor izohi, yakuniy hisobot), `api/talent_hunt.py` (taklif, javob),
+`notifications/jobs.py: deadline_reminders` (har daqiqa).
+
+### 15.3 Email
+
+SMTP `.env`dan: `SMTP_HOST, SMTP_PORT (587), SMTP_USER, SMTP_PASSWORD,
+SMTP_FROM, SMTP_STARTTLS (true)`, havolalar uchun `PUBLIC_URL`. `SMTP_HOST`
+bo'sh — email o'chirilgan (faqat ilova ichida). Cron `send_notification_emails`
+(har daqiqa): `email_status IS NULL` va 1 soatdan yangi bildirishnomalar,
+50 tadan; foydalanuvchi email'ni o'chirgan yoki tur yoqilmagan — `skipped`,
+yuborildi — `sent`, xato — `failed` (qayta urinilmaydi, log). Stdlib
+`smtplib` (`asyncio.to_thread`), yangi kutubxona yo'q.
+Modul 8: `deploy/docker-compose.yml` va `.env.example`ga `SMTP_*`, `PUBLIC_URL`.
+
+### 15.4 API (kirgan foydalanuvchi, faqat o'ziniki)
+
+```
+GET  /api/v1/users/me/notifications?limit=20&before={iso}  → {items, unread}
+GET  /api/v1/users/me/notifications/unread                 → {unread}
+POST /api/v1/users/me/notifications/read   {ids: [uuid]} | {all: true} → {unread}
+GET  /api/v1/users/me/notification-settings               → {email_enabled, email_kinds, available}
+PUT  /api/v1/users/me/notification-settings               {email_enabled, email_kinds} → shu
+```
+
+`available` — foydalanuvchiga tegishli turlar (talaba: birinchi 5 ta,
+`view_candidates`: `offer_responded`); boshqa tur yuborilsa 422.
+
+### 15.5 Frontend
+
+Navbar'da qo'ng'iroqcha (kirganlar uchun): o'qilmaganlar soni, ochilganda
+oxirgi 10 ta; bosilsa `link`ga o'tadi va o'qilgan bo'ladi; "Hammasini
+o'qildi". Soni har 60 soniyada va oyna fokusga qaytganda yangilanadi.
+`/notifications`: to'liq ro'yxat va email sozlamalari.
 
 ---
 

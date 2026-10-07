@@ -920,5 +920,69 @@
     "errors_few": "{{count}} ошибки",
     "errors_many": "{{count}} ошибок",
     "hasErrors": "Есть ошибки"
+  },
+  "notifications": {
+    "title": "Уведомления",
+    "bellUnread_one": "Уведомления: {{count}} новое",
+    "bellUnread_few": "Уведомления: {{count}} новых",
+    "bellUnread_many": "Уведомления: {{count}} новых",
+    "bellUnread_other": "Уведомления: {{count}} новых",
+    "readAll": "Прочитать все",
+    "empty": "Уведомлений пока нет",
+    "emptyLong": "Уведомлений пока нет. Здесь появятся новые задачи, дедлайны, комментарии ментора и предложения о работе.",
+    "all": "Все уведомления",
+    "unreadMark": "Не прочитано",
+    "unreadCount_one": "{{count}} непрочитанное",
+    "unreadCount_few": "{{count}} непрочитанных",
+    "unreadCount_many": "{{count}} непрочитанных",
+    "unreadCount_other": "{{count}} непрочитанных",
+    "allRead": "Все прочитаны",
+    "more": "Показать ещё",
+    "due": "дедлайн {{time}}",
+    "certificate": "сертификат {{code}}",
+    "kind": {
+      "task_delivered": {
+        "task": "Новая задача",
+        "incident": "Инцидент",
+        "decision": "Нужно решение"
+      },
+      "deadline_soon": "Скоро дедлайн",
+      "mentor_review": "{{mentor}} оставил комментарий",
+      "report_ready": "Итоговый отчёт готов",
+      "offer_received": "Новое предложение о работе",
+      "offer_accepted": "Предложение принято",
+      "offer_declined": "Предложение отклонено"
+    },
+    "setting": {
+      "task_delivered": "Новые задачи и инциденты",
+      "deadline_soon": "За 30 минут до дедлайна",
+      "mentor_review": "Комментарии ментора",
+      "report_ready": "Итоговый отчёт и сертификат",
+      "offer_received": "Предложения о работе",
+      "offer_responded": "Ответ кандидата на предложение"
+    },
+    "email": {
+      "title": "По email",
+      "hint": "Прочитанные на сайте уведомления на email не отправляются.",
+      "enabled": "Email-уведомления",
+      "kinds": "Какие",
+      "saved": "Сохранено"
+    },
+    "settingsError": "Не удалось загрузить настройки",
+    "ago": {
+      "now": "только что",
+      "minutes_one": "{{count}} минуту назад",
+      "minutes_few": "{{count}} минуты назад",
+      "minutes_many": "{{count}} минут назад",
+      "minutes_other": "{{count}} минуты назад",
+      "hours_one": "{{count}} час назад",
+      "hours_few": "{{count}} часа назад",
+      "hours_many": "{{count}} часов назад",
+      "hours_other": "{{count}} часа назад",
+      "days_one": "{{count}} день назад",
+      "days_few": "{{count}} дня назад",
+      "days_many": "{{count}} дней назад",
+      "days_other": "{{count}} дня назад"
+    }
   }
 }

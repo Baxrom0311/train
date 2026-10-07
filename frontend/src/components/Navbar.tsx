@@ -10,15 +10,17 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useTheme } from '@/context/ThemeContext'
 import { useAuth } from '@/context/AuthContext'
+import NotificationBell from '@/components/notifications/NotificationBell'
 import { cn } from '@/lib/utils'
 
-export function Logo({ className }: { className?: string }) {
+/** `compact` — telefonda faqat belgi (navbar'da joy tejash). */
+export function Logo({ className, compact = false }: { className?: string; compact?: boolean }) {
   return (
     <span className={cn('flex items-center gap-2', className)}>
       <span className="bg-brand grid h-8 w-8 place-items-center rounded-xl text-sm font-extrabold text-primary-foreground shadow-[0_6px_18px_-6px_hsl(var(--primary)/0.8)]">
         T
       </span>
-      <span className="text-lg font-extrabold tracking-tight">
+      <span className={cn('text-lg font-extrabold tracking-tight', compact && 'hidden sm:inline')}>
         Try<span className="text-brand">Job</span>
       </span>
     </span>
@@ -60,10 +62,11 @@ export default function Navbar() {
     <header className="sticky top-0 z-40 px-3 pt-3 print:hidden">
       <nav className="glass mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 rounded-2xl px-3 sm:px-4">
         <Link to="/" aria-label="TryJob">
-          <Logo />
+          <Logo compact />
         </Link>
 
-        <div className="flex items-center gap-1">
+        {/* telefonda havolalar sig'masa — o'z qatorida suriladi, sahifa emas */}
+        <div className="flex min-w-0 items-center gap-0.5 overflow-x-auto [scrollbar-width:none] sm:gap-1">
           {links.map(({ to, label, Icon }) => (
             <NavLink
               key={to}
@@ -71,7 +74,7 @@ export default function Navbar() {
               end
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors',
+                  'flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm font-medium transition-colors sm:px-3',
                   isActive ? 'bg-primary/12 text-primary' : 'text-muted-foreground hover:text-foreground',
                 )
               }
@@ -82,7 +85,7 @@ export default function Navbar() {
           ))}
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" aria-label={t('nav.language')}>
@@ -108,6 +111,7 @@ export default function Navbar() {
 
           {user ? (
             <>
+              <NotificationBell />
               <span className="ml-1 hidden items-center gap-2 text-sm font-medium lg:flex">
                 <span className="bg-brand grid h-7 w-7 place-items-center rounded-full text-xs font-bold text-primary-foreground">
                   {user.full_name.slice(0, 1).toUpperCase()}

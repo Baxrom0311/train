@@ -888,5 +888,59 @@
     "errors_one": "{{count}} ta xato",
     "errors_other": "{{count}} ta xato",
     "hasErrors": "Xato bor"
+  },
+  "notifications": {
+    "title": "Bildirishnomalar",
+    "bellUnread_one": "Bildirishnomalar: {{count}} ta yangi",
+    "bellUnread_other": "Bildirishnomalar: {{count}} ta yangi",
+    "readAll": "Hammasini o'qildi",
+    "empty": "Hozircha bildirishnoma yo'q",
+    "emptyLong": "Hozircha bildirishnoma yo'q. Yangi vazifa, dedlayn, mentor izohi yoki ish taklifi bo'lsa shu yerda ko'rinadi.",
+    "all": "Barcha bildirishnomalar",
+    "unreadMark": "O'qilmagan",
+    "unreadCount_one": "{{count}} ta o'qilmagan",
+    "unreadCount_other": "{{count}} ta o'qilmagan",
+    "allRead": "Hammasi o'qilgan",
+    "more": "Ko'proq ko'rsatish",
+    "due": "dedlayn {{time}}",
+    "certificate": "sertifikat {{code}}",
+    "kind": {
+      "task_delivered": {
+        "task": "Yangi vazifa",
+        "incident": "Kutilmagan vaziyat",
+        "decision": "Qaror kerak"
+      },
+      "deadline_soon": "Dedlayn yaqinlashdi",
+      "mentor_review": "{{mentor}} izoh yozdi",
+      "report_ready": "Yakuniy hisobot tayyor",
+      "offer_received": "Yangi ish taklifi",
+      "offer_accepted": "Taklif qabul qilindi",
+      "offer_declined": "Taklif rad etildi"
+    },
+    "setting": {
+      "task_delivered": "Yangi vazifa va vaziyatlar",
+      "deadline_soon": "Dedlaynga 30 daqiqa qolganda",
+      "mentor_review": "Mentor izohlari",
+      "report_ready": "Yakuniy hisobot va sertifikat",
+      "offer_received": "Ish takliflari",
+      "offer_responded": "Nomzod taklifga javob berganda"
+    },
+    "email": {
+      "title": "Email orqali",
+      "hint": "Saytda o'qilgan bildirishnoma emailga yuborilmaydi.",
+      "enabled": "Email bildirishnomalar",
+      "kinds": "Qaysilari",
+      "saved": "Saqlandi"
+    },
+    "settingsError": "Sozlamalarni yuklab bo'lmadi",
+    "ago": {
+      "now": "hozirgina",
+      "minutes_one": "{{count}} daqiqa oldin",
+      "minutes_other": "{{count}} daqiqa oldin",
+      "hours_one": "{{count}} soat oldin",
+      "hours_other": "{{count}} soat oldin",
+      "days_one": "{{count}} kun oldin",
+      "days_other": "{{count}} kun oldin"
+    }
   }
 }

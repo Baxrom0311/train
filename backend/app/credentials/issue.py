@@ -51,10 +51,10 @@ async def _unused_code(db: AsyncSession) -> str:
     raise RuntimeError("sertifikat kodi topilmadi")   # 31^8 ≈ 8.5·10^11 — amalda bo'lmaydi
 
 
-async def issue_for_run(db: AsyncSession, run: Run) -> None:
-    """Sertifikat suratini qo'shadi (commit — chaqiruvchida). Shart bajarilmasa — hech narsa."""
+async def issue_for_run(db: AsyncSession, run: Run) -> str | None:
+    """Sertifikat suratini qo'shadi va kodini qaytaradi (commit — chaqiruvchida). Shart bajarilmasa — None."""
     if not eligible(run):
-        return
+        return None
     scenario = (await db.execute(
         select(Scenario).join(ScenarioVersion, ScenarioVersion.scenario_id == Scenario.id)
         .where(ScenarioVersion.id == run.scenario_version_id)
@@ -77,3 +77,4 @@ async def issue_for_run(db: AsyncSession, run: Run) -> None:
             competency_scores=run.competency_scores or report.get("competency_scores") or {},
         ).on_conflict_do_nothing(index_elements=[Certificate.run_id])
     )
+    return await db.scalar(select(Certificate.code).where(Certificate.run_id == run.id))

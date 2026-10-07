@@ -20,6 +20,7 @@ from app.models.simulation import Submission, SimulationTask, Simulation
 from app.models.enums import AIEvalStatus
 from app.ai.guardrail import validate_submission_content
 from app.ai.router import run_ai_chain, _pick_persona, _build_user_prompt
+from app.notifications.jobs import deadline_reminders_job, send_notification_emails_job
 from app.scenario.jobs import (
     DAY_REPORT_JOB,
     EVAL_JOB,
@@ -162,6 +163,9 @@ class WorkerSettings:
         cron(sync_work_holidays_job, weekday="mon", hour=3, minute=0, run_at_startup=True),
         # §9.4: yangi import qilingan hujjatlar uchun embedding (kalit bo'lmasa — no-op)
         cron(embed_document_chunks_job, minute=set(range(0, 60, 5)), second=30, unique=True),
+        # §15: dedlayn eslatmasi va email bildirishnomalar (SMTP sozlanmagan bo'lsa — no-op)
+        cron(deadline_reminders_job, second=10, unique=True, timeout=50),
+        cron(send_notification_emails_job, second=20, unique=True, timeout=50),
     ]
     redis_settings = RedisSettings.from_dsn(settings.REDIS_URL)
     on_startup = startup

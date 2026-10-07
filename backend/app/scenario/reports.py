@@ -27,6 +27,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.reports import final_report as ai_final_report, summarize_day
 from app.credentials.issue import issue_for_run
+from app.notifications.run_events import report_ready
 from app.models.enums import (
     AIEvalStatus,
     ChatSender,
@@ -263,7 +264,8 @@ async def write_final_report(db: AsyncSession, run_id: uuid.UUID, now: datetime,
     if run.final_report is None:
         run.final_report = report
         run.competency_scores = scores
-        await issue_for_run(db, run)   # §13.1 — shu tranzaksiyada
+        code = await issue_for_run(db, run)   # §13.1 — shu tranzaksiyada
+        await report_ready(db, run, code, now)   # §15.2
     await db.commit()
     return True
 

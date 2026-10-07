@@ -432,4 +432,6 @@ def test_worker_settings_register_scenario_jobs():
     assert "evaluate_run_submission_job" in names
     assert {c.name for c in WorkerSettings.cron_jobs} == {
         "cron:deliver_due_events", "cron:sync_work_holidays_job", "cron:embed_document_chunks_job",
+        # §15: bildirishnomalar
+        "cron:deadline_reminders_job", "cron:send_notification_emails_job",
     }

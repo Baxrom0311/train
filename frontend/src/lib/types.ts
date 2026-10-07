@@ -410,3 +410,28 @@ export interface Showcase {
   stats: { scenarios: number; sectors: number; completed_runs: number }
   scenarios: ShowcaseScenario[]
 }
+
+// Bildirishnomalar (backend/app/api/notifications.py, CONTRACT.md §15)
+
+export type NotificationKind =
+  | 'task_delivered' | 'deadline_soon' | 'mentor_review' | 'report_ready' | 'offer_received' | 'offer_responded'
+
+export interface AppNotification {
+  id: string
+  kind: NotificationKind
+  params: Record<string, string | number | boolean | null>
+  link: string
+  created_at: string
+  read_at: string | null
+}
+
+export interface NotificationPage {
+  items: AppNotification[]
+  unread: number
+}
+
+export interface NotificationSettings {
+  email_enabled: boolean
+  email_kinds: NotificationKind[]
+  available: NotificationKind[]
+}

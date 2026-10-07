@@ -20,6 +20,7 @@ import CertificatePage from './pages/CertificatePage'
 import PortfolioPublicPage from './pages/PortfolioPublicPage'
 import PortfolioPage from './pages/PortfolioPage'
 import ScenarioListPage from './pages/ScenarioListPage'
+import NotificationsPage from './pages/NotificationsPage'
 import ScenarioEditorPage from './pages/ScenarioEditorPage'
 
 /** `/`: mehmon — landing (CONTRACT.md §14), kirgan — o'z bosh sahifasi (talaba — dashboard). */
@@ -46,6 +47,7 @@ export default function App() {
               <Route path="/simulations" element={<RequireAuth><SimulationsPage /></RequireAuth>} />
               <Route path="/runs/:id" element={<RequireAuth><RunPage /></RequireAuth>} />
               <Route path="/runs/:id/report" element={<RequireAuth><RunReportPage /></RequireAuth>} />
+              <Route path="/notifications" element={<RequireAuth><NotificationsPage /></RequireAuth>} />
               <Route path="/offers" element={<RequirePermission permission="receive_offers"><OffersPage /></RequirePermission>} />
               <Route path="/talents" element={<RequirePermission permission="view_candidates"><TalentsPage /></RequirePermission>} />
               <Route path="/talents/offers" element={<RequirePermission permission="view_candidates"><SentOffersPage /></RequirePermission>} />

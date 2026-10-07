@@ -9,6 +9,7 @@ from .scenario import (
     Run, RunEvent, UploadedFile, ChatMessage, WorkHoliday,
 )
 from .credential import Certificate, Portfolio
+from .notification import Notification, NotificationSettings
 from app.database import Base
 
 __all__ = [
@@ -37,5 +38,7 @@ __all__ = [
     "WorkHoliday",
     "Certificate",
     "Portfolio",
+    "Notification",
+    "NotificationSettings",
     "Base",
 ]

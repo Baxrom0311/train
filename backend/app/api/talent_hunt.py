@@ -24,6 +24,7 @@ from app.models.billing import Company
 from app.models.enums import Competency, OfferResponse, OrgType, Sector, TalentOfferStatus
 from app.models.talent import CandidateVisibility, TalentOffer
 from app.models.user import User
+from app.notifications.offers import offer_received, offer_responded
 from app.scenario.clock import WorkCalendar
 from app.talent.profile import Profile, build_profiles
 
@@ -361,6 +362,8 @@ async def create_talent_offer(offer_in: TalentOfferCreate, company: VerifiedComp
     )
     db.add(offer)
     try:
+        await db.flush()
+        await offer_received(db, offer, company.name, now)   # §15.2
         await db.commit()
     except IntegrityError:
         await db.rollback()
@@ -393,6 +396,7 @@ async def respond_offer(offer_id: uuid.UUID, body: OfferRespond, current_user: C
     offer.responded_at = _now()
     if body.hide_company:
         await _hide_company(db, current_user.id, offer.company_id)
+    await offer_responded(db, offer, current_user.full_name, offer.responded_at)   # §15.2
     await db.commit()
     await db.refresh(offer)
     return offer
