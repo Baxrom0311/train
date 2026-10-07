@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import InvoiceList from '@/components/billing/InvoiceList'
+import { Stat } from '@/components/ui/stat'
 import { useAuth } from '@/context/AuthContext'
 import { api, ApiError } from '@/lib/api'
 import { cn } from '@/lib/utils'
@@ -69,20 +70,6 @@ export default function AdminPage() {
       {tab === 'verified' && <VerifiedOrgs />}
       {tab === 'invoices' && <Invoices onChange={loadStats} />}
     </div>
-  )
-}
-
-function Stat({ Icon, label, value, accent = false }: { Icon: typeof Building2; label: string; value: number; accent?: boolean }) {
-  return (
-    <Card className={cn(accent && value > 0 && 'glow-ring')}>
-      <CardContent className="flex items-center gap-3 p-4">
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/12 text-primary"><Icon className="h-5 w-5" /></span>
-        <div>
-          <p className="text-2xl font-extrabold tabular-nums">{value}</p>
-          <p className="text-xs text-muted-foreground">{label}</p>
-        </div>
-      </CardContent>
-    </Card>
   )
 }
 

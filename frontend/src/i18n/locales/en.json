@@ -11,7 +11,8 @@
     "sentOffers": "My offers",
     "offers": "Job offers",
     "billing": "Billing",
-    "admin": "Admin"
+    "admin": "Admin",
+    "students": "Students"
   },
   "auth": {
     "login": {
@@ -63,7 +64,8 @@
       "university": "Your university (optional)",
       "noUniversity": "Don't specify",
       "orgNote": "An admin reviews the application. Once approved, sign in with this email and password.",
-      "submitOrg": "Submit application"
+      "submitOrg": "Submit application",
+      "universityHint": "Your university will see your simulation results (scores and competencies). Answers and chat stay private."
     },
     "errors": {
       "invalid": "Wrong email or password",
@@ -102,7 +104,14 @@
     "quickActions": "Quick Actions",
     "browseSimulations": "Browse Simulations",
     "viewProfile": "View Profile",
-    "welcomeName": "Welcome, {{name}}!"
+    "welcomeName": "Welcome, {{name}}!",
+    "university": {
+      "title": "My university",
+      "none": "No university selected",
+      "hint": "Your university sees your simulation results (scores and competencies). Answers and chat stay private.",
+      "save": "Save",
+      "saved": "Saved"
+    }
   },
   "simulations": {
     "title": "Simulations",
@@ -384,5 +393,41 @@
     "notes": "Note",
     "notesPlaceholder": "e.g. October subscription",
     "issue": "Issue invoice"
+  },
+  "university": {
+    "subtitle": "How your students perform in real work simulations",
+    "notVerified": "Your university isn't verified yet. Student results open once an admin approves it.",
+    "stats": {
+      "students": "Students",
+      "withResults": "With results",
+      "avgScore": "Average score",
+      "inProgress": "Working now"
+    },
+    "top": "Top students",
+    "sectors": "Sectors",
+    "competencies": "Competencies (average)",
+    "studentsCount_one": "{{count}} student",
+    "studentsCount_other": "{{count}} students",
+    "students": "Students",
+    "student": "Student",
+    "search": "Search by name or email",
+    "filters": {
+      "results": "Results",
+      "all": "All",
+      "withResults": "With results",
+      "noResults": "No results"
+    },
+    "sortName": "By name",
+    "noMatch": "No matching students",
+    "noStudents": "No students linked yet",
+    "noStudentsHint": "Students appear here once they pick your university at sign-up or on their home page.",
+    "noResultsYet": "No completed simulations yet",
+    "inProgressCount_one": "{{count}} in progress",
+    "inProgressCount_other": "{{count}} in progress",
+    "inProgress": "In progress",
+    "endsAt": "ends {{at}}",
+    "detach": "Remove from university",
+    "detachConfirm": "Remove {{name}} from your university? Their account and results stay.",
+    "privacyNote": "Answers, chat and files are never shown, only scores, competencies and the AI summary."
   }
 }

@@ -89,6 +89,7 @@ export function homeFor(user: Me | null): string {
   const has = (p: string) => Boolean(user?.permissions.includes(p))
   if (has('approve_companies') || has('manage_billing')) return '/admin'
   if (has('view_candidates')) return '/talents'
+  if (has('manage_universities')) return '/university'
   if (has('view_org_invoices')) return '/billing'
   return '/simulations'
 }

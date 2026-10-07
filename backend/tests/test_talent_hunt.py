@@ -118,7 +118,7 @@ def _ids(res):
 
 async def test_me_lists_permissions(client, world):
     me = (await client.get("/api/v1/users/me", headers=world["cand_h"])).json()
-    assert me["permissions"] == ["receive_offers"]
+    assert me["permissions"] == ["join_university", "receive_offers"]
     me = (await client.get("/api/v1/users/me", headers=world["alpha_h"])).json()
     assert me["permissions"] == ["view_candidates", "view_org_invoices"]
 

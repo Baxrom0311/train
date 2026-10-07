@@ -80,12 +80,17 @@ async def setup_db(create_tables):
         view_candidates = Permission(id=uuid.uuid4(), key="view_candidates")
         receive_offers = Permission(id=uuid.uuid4(), key="receive_offers")
         view_org_invoices = Permission(id=uuid.uuid4(), key="view_org_invoices")
+        manage_universities = Permission(id=uuid.uuid4(), key="manage_universities")
+        join_university = Permission(id=uuid.uuid4(), key="join_university")
 
-        session.add_all([manage_billing, approve_companies, view_candidates, receive_offers, view_org_invoices])
+        session.add_all([
+            manage_billing, approve_companies, view_candidates, receive_offers, view_org_invoices,
+            manage_universities, join_university,
+        ])
         admin_role.permissions.extend([manage_billing, approve_companies])
         hr_role.permissions.extend([view_candidates, view_org_invoices])
-        uni_role.permissions.append(view_org_invoices)
-        student_role.permissions.append(receive_offers)
+        uni_role.permissions.extend([manage_universities, view_org_invoices])
+        student_role.permissions.extend([receive_offers, join_university])
         await session.commit()
 
     yield

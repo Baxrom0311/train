@@ -11,7 +11,8 @@
     "sentOffers": "Takliflarim",
     "offers": "Ish takliflari",
     "billing": "Hisob-kitob",
-    "admin": "Admin"
+    "admin": "Admin",
+    "students": "Talabalar"
   },
   "auth": {
     "login": {
@@ -63,7 +64,8 @@
       "university": "Universitetingiz (ixtiyoriy)",
       "noUniversity": "Ko'rsatmayman",
       "orgNote": "Ariza admin tomonidan tekshiriladi. Tasdiqlangach shu email va parol bilan kirasiz.",
-      "submitOrg": "Ariza yuborish"
+      "submitOrg": "Ariza yuborish",
+      "universityHint": "Universitetingiz simulyatsiya natijalaringizni (ball va kompetensiyalar) ko'radi. Javoblar va chat ko'rinmaydi."
     },
     "errors": {
       "invalid": "Email yoki parol noto'g'ri",
@@ -102,7 +104,14 @@
     "quickActions": "Tezkor harakatlar",
     "browseSimulations": "Simulyatsiyalarni ko'rish",
     "viewProfile": "Profilni ko'rish",
-    "welcomeName": "Xush kelibsiz, {{name}}!"
+    "welcomeName": "Xush kelibsiz, {{name}}!",
+    "university": {
+      "title": "Universitetim",
+      "none": "Universitet tanlanmagan",
+      "hint": "Universitetingiz simulyatsiya natijalaringizni (ball va kompetensiyalar) ko'radi. Javoblar va chat ko'rinmaydi.",
+      "save": "Saqlash",
+      "saved": "Saqlandi"
+    }
   },
   "simulations": {
     "title": "Simulyatsiyalar",
@@ -384,5 +393,41 @@
     "notes": "Izoh",
     "notesPlaceholder": "Masalan: Oktabr oyi obunasi",
     "issue": "Invoice yozish"
+  },
+  "university": {
+    "subtitle": "Talabalarning real ish simulyatsiyalaridagi natijalari",
+    "notVerified": "Universitetingiz hali tasdiqlanmagan. Admin tasdiqlagach talabalar natijalari ochiladi.",
+    "stats": {
+      "students": "Talabalar",
+      "withResults": "Natijasi bor",
+      "avgScore": "O'rtacha ball",
+      "inProgress": "Hozir ishlayapti"
+    },
+    "top": "Eng yaxshi talabalar",
+    "sectors": "Sohalar",
+    "competencies": "Kompetensiyalar (o'rtacha)",
+    "studentsCount_one": "{{count}} ta talaba",
+    "studentsCount_other": "{{count}} ta talaba",
+    "students": "Talabalar",
+    "student": "Talaba",
+    "search": "Ism yoki email bo'yicha qidirish",
+    "filters": {
+      "results": "Natija",
+      "all": "Hammasi",
+      "withResults": "Natijasi bor",
+      "noResults": "Natijasi yo'q"
+    },
+    "sortName": "Ism bo'yicha",
+    "noMatch": "Mos talaba topilmadi",
+    "noStudents": "Hali talaba bog'lanmagan",
+    "noStudentsHint": "Talabalar ro'yxatdan o'tishda yoki bosh sahifasida universitetingizni tanlaganda shu yerda paydo bo'ladi.",
+    "noResultsYet": "Hali tugatilgan simulyatsiya yo'q",
+    "inProgressCount_one": "{{count}} ta jarayonda",
+    "inProgressCount_other": "{{count}} ta jarayonda",
+    "inProgress": "Hozir bajarilayotgan",
+    "endsAt": "tugaydi: {{at}}",
+    "detach": "Universitetdan ajratish",
+    "detachConfirm": "{{name}} universitetingizdan ajratilsinmi? Akkaunti va natijalari o'chmaydi.",
+    "privacyNote": "Talabaning javoblari, chat va fayllari ko'rsatilmaydi — faqat ball, kompetensiyalar va AI xulosasi."
   }
 }

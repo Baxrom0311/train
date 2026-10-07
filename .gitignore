@@ -16,3 +16,4 @@ backend/uploads/
 # TypeScript incremental build cache
 *.tsbuildinfo
 venv/
+dump.rdb
