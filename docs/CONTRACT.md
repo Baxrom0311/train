@@ -429,7 +429,8 @@ nodes:
 
 ### 9.4 Personajlar, AI chat va RAG
 
-- **Skript xabarlar** (`message` node) — o'zgarmas, `generated=false`.
+- **Skript xabarlar** — `from` va `brief`i bor har bir node yetkazilganda
+  shu personaj chatiga ham yoziladi (o'zgarmas, `generated=false`).
 - **AI javoblar** — talaba personajga yozganda. Kontekst: personaj
   tavsifi + chat tarixi + **RAG** natijalari + Run holati (qaysi task'lar
   kelgan, dedlaynlar).
@@ -450,10 +451,11 @@ nodes:
   1. **Ma'lumot izolyatsiyasi:** rubrika, namunaviy javob, `checks` testlari
      va `hints` RAG indeksiga **hech qachon** kirmaydi — faqat baholovchi/mentor oladi.
   2. `secrets` faqat talaba aniq so'raganda aytiladi (system prompt qoidasi).
+     Namunaviy javoblar tekshiruvga ssenariyning **barcha** node'laridan olinadi.
   3. **Chiqish tekshiruvi** (`ai/spoiler.py`): namunaviy javobning so'z
      5-gramlaridan ≥30% i AI javobida bo'lsa **yoki** embedding cosine ≥ 0.85
-     bo'lsa → javob tashlanadi, ssenariyda yozilgan zaxira javob ("Buni
-     o'zingiz hal qiling, lekin ... ga qarang") yuboriladi. n-gram tekshiruvi
+     bo'lsa → javob tashlanadi, ssenariyda yozilgan zaxira javob
+     (personajning `deflect_reply` maydoni) yuboriladi. n-gram tekshiruvi
      embedding'siz ham ishlaydi.
   4. Talaba matni mavjud `ai/guardrail.py`dan o'tadi.
 - **AI chat Run holatini o'zgartirmaydi.** Branching faqat strukturaviy
@@ -464,7 +466,12 @@ nodes:
   (standart −10%, node'da sozlanadi).
 - **Limitlar:** Redis rate-limit (personaj chatiga daqiqasiga 10 xabar),
   har Run uchun kunlik AI xabar limiti (standart 60) va token byudjeti
-  (`runs.ai_tokens_used`). Limit tugasa — personaj "band" skript javobini beradi.
+  (`runs.ai_tokens_used`, standart 200 000). Limit tugasa yoki AI ishlamasa —
+  personajning `busy_reply` skript javobi. LLM chaqiruvi Run qulfidan
+  tashqarida: talaba xabari yozilib commit qilinadi, keyin javob yaratiladi.
+- **Hint:** `POST .../hint` navbatdagi `hints[i]`ni qaytaradi, `hints_used`
+  oshadi (keyingi baholashlarda `hint_penalty` qo'llanadi); ssenariyda
+  `kind: mentor` personaj bo'lsa, hint uning chatiga ham yoziladi.
 
 ### 9.5 Chat va fayllar
 
@@ -490,6 +497,8 @@ v2 turlari uchun oldindan kelishilgan tafsilotlar:
 - `link` — agar kelajakda backend linkni o'zi fetch qilsa, SSRF himoyasi
   (ichki IP/localhost bloklash) shart.
 
+- **Kirish:** fayl egasi yoki `manage_simulations` ruxsati (admin); boshqalarga 404.
+  Fayl Run'ga bog'lansa (`run_id`), faqat shu Run javobi/chatida ishlatiladi.
 - **Saqlash joyi:** `UPLOAD_DIR` — doimiy Docker volume (backend konteyneri
   `read_only`, shuning uchun alohida yoziladigan mount; Modul 8). Fayllar
   nginx orqali to'g'ridan-to'g'ri **berilmaydi** — faqat egasi/baholovchi/
@@ -596,7 +605,9 @@ submission'i har doim arq job orqali baholanadi. Talent Hunt/Universitet portali
   `abandon`); `now` parametr, testlar aniq vaqtlar bilan yoziladi.
 - **Bildirishnoma:** frontend'ga SSE oqimi. Worker va API alohida
   jarayonlar, shuning uchun hodisalar **Redis pub/sub** (`run:{id}` kanali)
-  orqali uzatiladi; SSE endpoint shu kanalga obuna bo'ladi. Talaba sahifada
+  orqali uzatiladi; SSE endpoint shu kanalga obuna bo'ladi (`event: <type>`,
+  har 15 soniyada `: ping`). Auth — `Authorization` header, shuning uchun
+  frontend `EventSource` emas, `fetch` asosidagi SSE mijozini ishlatadi. Talaba sahifada
   bo'lmasa — keyingi kirishda inbox'da ko'radi (v1). Email/push — v2.
 - **Bayram sinxronizatsiyasi:** haftalik arq cron `sync_work_holidays` (§9.2).
 
