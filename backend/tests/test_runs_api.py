@@ -90,7 +90,7 @@ async def test_run_flow(client, test_user_factory, scenario, clock, queue):
     body = r.json()
     run_id = body["run"]["id"]
     assert body["warning"] is None and body["run"]["status"] == "active"
-    assert [e["node_id"] for e in body["run"]["events"]] == ["standup", "welcome"]
+    assert [e["node_id"] for e in body["run"]["events"]] == ["welcome", "standup"]   # ssenariy tartibi
 
     # bitta ochiq Run
     r = await client.post("/api/v1/runs", json={"scenario_id": str(scenario)}, headers=h)

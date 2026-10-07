@@ -27,8 +27,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.ai.guardrail import MAX_CONTENT_LENGTH
-from app.models.enums import AIEvalStatus, NodeType, RunEventStatus, RunStatus
-from app.models.scenario import Run, RunEvent, ScenarioVersion, UploadedFile
+from app.models.enums import AIEvalStatus, ChatSender, NodeType, RunEventStatus, RunStatus
+from app.models.scenario import ChatMessage, Run, RunEvent, ScenarioVersion, UploadedFile
 from app.models.simulation import Submission
 from app.scenario.clock import WorkCalendar
 from app.scenario.conditions import ConditionContext, evaluate, pending_scores
@@ -305,6 +305,8 @@ class RunState:
         self.run = run
         self.cal = cal
         self.defn = defn
+        self.order = {n.id: i for i, n in enumerate(defn.nodes)}
+        self._chat_seq = 0
         self.events = events
         self.submissions = submissions
 
@@ -366,10 +368,12 @@ class RunState:
             for e in self.events:
                 if e.id in deferred:
                     continue
+                # bir vaqtdagi hodisalar — ssenariydagi tartibda
+                order = self.order[e.node_id]
                 if e.status == RunEventStatus.PENDING and e.scheduled_at <= horizon:
-                    candidates.append((e.scheduled_at, 0, e.node_id, e))
+                    candidates.append((e.scheduled_at, 0, order, e))
                 elif e.status == RunEventStatus.DELIVERED and e.due_at is not None and e.due_at <= horizon:
-                    candidates.append((e.due_at, 1, e.node_id, e))
+                    candidates.append((e.due_at, 1, order, e))
             if not candidates:
                 return notes
             _, kind, _, e = min(candidates, key=lambda c: c[:3])
@@ -395,6 +399,14 @@ class RunState:
         notes = [Note(self.run.id, "event_delivered", {
             "node_id": node.id, "type": node.type.value, "due_at": _iso(e.due_at),
         })]
+        if node.from_ and node.brief:
+            # §9.4: skript xabar personaj chatida ham ko'rinadi (generated=false)
+            # bir paytda yetkazilgan xabarlar tartibi saqlansin (created_at bo'yicha saralanadi)
+            self._chat_seq += 1
+            self.db.add(ChatMessage(
+                run_id=self.run.id, persona_key=node.from_, sender=ChatSender.PERSONA,
+                body=node.brief, generated=False, created_at=now + timedelta(microseconds=self._chat_seq),
+            ))
         self.spawn_children(node.id, "delivered", now)
         return notes
 
@@ -562,6 +574,43 @@ async def decide(
     notes += state.complete_if_done()
     await db.flush()
     return sub, notes
+
+
+@dataclass(frozen=True)
+class HintInfo:
+    hint: str
+    hints_used: int
+    hints_left: int
+    penalty: float          # shu task'ning maksimal balidan jami ayirma (0..1)
+
+
+async def take_hint(db: AsyncSession, run: Run, node_id: str, now: datetime) -> tuple[HintInfo, list[Note]]:
+    """
+    §9.4: navbatdagi hint; har biri task maksimal balini `hint_penalty`ga
+    kamaytiradi. Mentor bo'lsa hint uning chatiga ham yoziladi.
+    """
+    state = await RunState.load(db, run, await load_calendar(db))
+    e, node = state.open_event(node_id)
+    if not node.hints:
+        raise NotFound("Bu task uchun hint yo'q")
+    if e.hints_used >= len(node.hints):
+        raise Conflict("Hintlar tugadi")
+    hint = node.hints[e.hints_used]
+    e.hints_used += 1
+    mentor = next((p for p in state.defn.personas if p.kind.value == "mentor"), None)
+    if mentor is not None:
+        db.add(ChatMessage(
+            run_id=run.id, persona_key=mentor.key, sender=ChatSender.PERSONA,
+            body=hint, generated=False, created_at=now,
+        ))
+    await db.flush()
+    info = HintInfo(
+        hint=hint,
+        hints_used=e.hints_used,
+        hints_left=len(node.hints) - e.hints_used,
+        penalty=round(min(1.0, node.hint_penalty * e.hints_used), 3),
+    )
+    return info, [Note(run.id, "hint", {"node_id": node_id, "hints_used": e.hints_used})]
 
 
 async def abandon(db: AsyncSession, run: Run, now: datetime) -> list[Note]:
