@@ -16,6 +16,8 @@ from app.models import (
     Company, University, Invoice,
     Simulation, SimulationTask, Submission,
     CaseCup, CaseCupSubmission,
+    Scenario, ScenarioVersion, ScenarioDocument, DocumentChunk,
+    Run, RunEvent, UploadedFile, ChatMessage, WorkHoliday,
 )
 
 config = context.config

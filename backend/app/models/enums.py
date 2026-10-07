@@ -102,3 +102,16 @@ class HolidaySource(str, enum.Enum):
     """§9.2 — `manual` (admin) yozuvi `auto` sinxronizatsiyadan ustun."""
     AUTO = "auto"
     MANUAL = "manual"
+
+
+class ScenarioVersionStatus(str, enum.Enum):
+    """§9.3.1 — `published` versiya o'zgarmas; tahrir = yangi versiya."""
+    DRAFT = "draft"
+    PUBLISHED = "published"
+    ARCHIVED = "archived"
+
+
+class ChatSender(str, enum.Enum):
+    STUDENT = "student"
+    PERSONA = "persona"
+    SYSTEM = "system"

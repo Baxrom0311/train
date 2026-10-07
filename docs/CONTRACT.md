@@ -522,7 +522,7 @@ document_chunks    (id, document_id, chunk_index, text, embedding vector(768),
                     embedding_model, tsv tsvector)  -- HNSW + GIN indeks
 runs               (id, user_id, scenario_version_id,
                     status scheduled|active|completed|expired|abandoned,
-                    start_at, ends_at, last_activity_at, flags JSONB,  -- INDEX(status, ends_at)
+                    start_at, ends_at, last_activity_at, flags JSONB (ro'yxat),  -- INDEX(status, ends_at)
                     ai_tokens_used, competency_scores JSONB, final_report JSONB)
 run_events         (id, run_id, node_id, scheduled_at, delivered_at, due_at,
                     status pending|delivered|submitted|missed|skipped,
@@ -531,7 +531,7 @@ run_events         (id, run_id, node_id, scheduled_at, delivered_at, due_at,
 chat_messages      (id, run_id, persona_key, sender student|persona|system,
                     content_type, body, file_id NULL, link_url NULL,
                     generated bool, created_at)
-uploaded_files     (id, owner_user_id, run_id NULL, stored_path, mime,
+uploaded_files     (id, owner_user_id, run_id NULL, stored_path, original_name, mime,
                     size_bytes, sha256, created_at)
 work_holidays      (date PK, name, source auto|manual)
 ```
@@ -611,7 +611,7 @@ fayliga **tegmaydi**):
 | Modul | Nima qo'shadi |
 |---|---|
 | 2 (AI) | `ai/llm.py`: umumiy `chat(messages, schema?) -> LLMResult` (JSON-rejim, Pydantic tekshiruv, token hisobi, model nomlari `.env`dan); `ai/` ichida: `persona_reply(ctx, history) -> str`, `evaluate_rubric(task, answer, rubric) -> RubricResult`, `embed(texts) -> list[list[float]]`, `summarize_day(...)`, `final_report(...)`; `submissions` migratsiyasi (§9.7); arq cron `deliver_due_events`ni `WorkerSettings`ga ulash (funksiyaning o'zi Modul 9'da) |
-| 1 (Core) | `models/enums.py`ga `Competency`, `RunStatus`, `RunEventStatus`, `NodeType`, `ChatContentType`, `AIEvalStatus.PENDING`; `requirements.txt`ga `tzdata`, `holidays`, `pgvector`; `conftest.py`da `create_all`dan oldin `CREATE EXTENSION IF NOT EXISTS vector`; `file_validator`ga yangi turlar (v2) |
+| 1 (Core) | `models/enums.py`ga `Competency`, `RunStatus`, `RunEventStatus`, `NodeType`, `ChatContentType`, `ChatSender`, `ScenarioVersionStatus`, `HolidaySource`, `AIEvalStatus.PENDING`; `requirements.txt`ga `tzdata`, `holidays`, `pgvector`; `conftest.py`da `create_all`dan oldin `CREATE EXTENSION IF NOT EXISTS vector`; `file_validator`ga yangi turlar (v2) |
 | 8 (Deploy) | `postgres` image → `pgvector/pgvector:pg16`; `UPLOAD_DIR` volume; nginx'da `/api/v1/runs/*/stream` uchun `proxy_buffering off` va uzun `proxy_read_timeout` |
 | 7 (Frontend) | "Ish stoli": inbox, personajlar chati, task board, kalendar, soat, hisobot sahifasi |
 | 4, 6 | `runs.competency_scores`ni nomzod profili va universitet statistikasiga qo'shish; Modul 6: `SubmissionSummary.task_id` → `Optional` (Run submission'ida `task_id` yo'q) |

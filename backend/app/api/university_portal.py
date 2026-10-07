@@ -32,7 +32,8 @@ class StudentOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class SubmissionSummary(BaseModel):
-    task_id: uuid.UUID
+    task_id: Optional[uuid.UUID] = None   # Run submission'ida None (CONTRACT.md §9.7)
+    run_id: Optional[uuid.UUID] = None
     ai_score: Optional[float]
     submitted_at: datetime
 
@@ -121,6 +122,7 @@ async def get_student_progress(
         submissions=[
             SubmissionSummary(
                 task_id=sub.task_id,
+                run_id=sub.run_id,
                 ai_score=sub.ai_score,
                 submitted_at=sub.submitted_at
             ) for sub in submissions

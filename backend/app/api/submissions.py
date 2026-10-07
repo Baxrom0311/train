@@ -22,7 +22,10 @@ class SubmissionCreate(BaseModel):
 
 class SubmissionOut(BaseModel):
     id: uuid.UUID
-    task_id: uuid.UUID
+    task_id: uuid.UUID | None = None   # Run submission'ida None (§9.7)
+    run_id: uuid.UUID | None = None
+    attempt: int = 1
+    late: bool = False
     user_id: uuid.UUID
     content: str
     ai_score: float | None = None
