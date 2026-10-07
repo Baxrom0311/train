@@ -19,8 +19,9 @@ def _load(path: Path) -> ScenarioDefinition:
 
 
 def test_v1_content_present():
-    sectors = sorted(_load(p).sector.value for p in FILES)
-    assert sectors == ["Banking", "IT"]
+    """§9.11: 1 ta IT (1 kun) + 1 ta Bank (1 kun) + 1 ta haftalik."""
+    defs = [_load(p) for p in FILES]
+    assert sorted((d.sector.value, d.duration_days) for d in defs) == [("Banking", 1), ("IT", 1), ("IT", 5)]
 
 
 @pytest.mark.parametrize("path", FILES, ids=lambda p: p.stem)
@@ -107,3 +108,42 @@ async def test_full_day(db_session, test_user_factory, slug, good):
     await _answer(db_session, run, "day1_end", T("17:40"), 80)
     await db_session.refresh(run)
     assert run.status == RunStatus.COMPLETED
+
+
+WEEK = "lazurit-go-backend-week1"
+WEEK_DAYS = {1: 7, 2: 8, 3: 9, 4: 12, 5: 13}   # chorshanba → keyingi seshanba (dam olish kunlari o'tkaziladi)
+
+
+@pytest.mark.parametrize("good", [True, False], ids=["strong", "weak"])
+async def test_full_week(db_session, test_user_factory, good):
+    """Har baholanadigan node o'z vaqtida topshiriladi; 4-kun incident'i 3-kun kodi baliga bog'liq."""
+    defn = _load(CONTENT / f"{WEEK}.yaml")
+    run = await _start(db_session, test_user_factory, CONTENT / f"{WEEK}.yaml", f"week-{good}@example.com")
+    fixed = sorted(
+        (n for n in defn.nodes if n.day is not None and n.is_graded),
+        key=lambda n: (n.day, n.at),
+    )
+    for n in fixed:
+        at = T(n.at, WEEK_DAYS[n.day])
+        await _step(db_session, run, at)
+        event = (await _events(db_session, run))[n.id]
+        if event.status == RunEventStatus.SKIPPED:
+            continue
+        assert event.status == RunEventStatus.DELIVERED, n.id
+        reply_at = at + (T("09:05") - T("09:00"))
+        if n.type == NodeType.DECISION:
+            grade = "correct" if good else "wrong"
+            await decide(db_session, run, n.id, next(o.key for o in n.options if o.grade == grade), reply_at)
+            await db_session.commit()
+        else:
+            await _answer(db_session, run, n.id, reply_at, 40 if (n.id == "implement_cancel" and not good) else 80)
+
+    await db_session.refresh(run)
+    events = await _events(db_session, run)
+    assert run.status == RunStatus.COMPLETED
+    assert events["incident_refund_timeout"].status == (RunEventStatus.SUBMITTED if good else RunEventStatus.SKIPPED)
+    assert events["incident_double_refund"].status == (RunEventStatus.SKIPPED if good else RunEventStatus.SUBMITTED)
+    flagged = RunEventStatus.SKIPPED if good else RunEventStatus.DELIVERED
+    assert {events[m].status for m in ("lead_on_scope", "lead_on_friday")} == {flagged}
+    assert sorted(run.flags) == ([] if good else ["friday_deploy", "scope_creep"])
+    assert events["mentor_code_note"].status == RunEventStatus.DELIVERED
