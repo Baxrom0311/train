@@ -15,10 +15,12 @@ x-backend-env: &backend-env
   DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
   GEMINI_API_KEY: ${GEMINI_API_KEY:-}
   OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  UPLOAD_DIR: /data/uploads
 
 services:
   postgres:
-    image: postgres:16-alpine
+    # pgvector — §9.4 RAG embedding'lari (alohida vektor DB yo'q, §3)
+    image: pgvector/pgvector:pg16
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -71,6 +73,10 @@ services:
     read_only: true
     tmpfs:
       - /tmp
+    # Run chat fayllari (§9.5): konteyner read_only, shuning uchun alohida
+    # yoziladigan volume. nginx bu fayllarni to'g'ridan-to'g'ri bermaydi.
+    volumes:
+      - uploads:/data/uploads
     cap_drop: [ALL]
     security_opt:
       - no-new-privileges:true
@@ -102,6 +108,10 @@ services:
     read_only: true
     tmpfs:
       - /tmp
+    # Run chat fayllari (§9.5): konteyner read_only, shuning uchun alohida
+    # yoziladigan volume. nginx bu fayllarni to'g'ridan-to'g'ri bermaydi.
+    volumes:
+      - uploads:/data/uploads
     cap_drop: [ALL]
     security_opt:
       - no-new-privileges:true
@@ -121,3 +131,4 @@ services:
 volumes:
   pgdata:
   redisdata:
+  uploads:

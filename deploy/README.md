@@ -4,7 +4,7 @@ Docker Compose bilan to'liq stek:
 
 | Servis | Image | Vazifasi |
 |---|---|---|
-| `postgres` | `postgres:16-alpine` | `tryjob_dev` + testlar uchun `tryjob_test` (CONTRACT.md §3.1) |
+| `postgres` | `pgvector/pgvector:pg16` | `tryjob_dev` + testlar uchun `tryjob_test` (CONTRACT.md §3.1), `vector` extension (§9.4) |
 | `redis` | `redis:7-alpine` | Rate-limit (sandbox) va arq navbati |
 | `migrate` | `tryjob-backend` | Bir martalik `alembic upgrade head` (rollar/ruxsatlar seed) |
 | `backend` | `tryjob-backend` | FastAPI (uvicorn), faqat ichki tarmoqda `:8000` |
@@ -41,6 +41,15 @@ docker compose -f deploy/docker-compose.yml exec \
 birinchi marta yaratilganda paydo bo'ladi.
 
 ## Eslatmalar
+
+- `postgres` image `postgres:16-alpine`dan `pgvector/pgvector:pg16`ga
+  almashgan (bir xil Postgres 16, lekin Alpine/musl emas, Debian/glibc).
+  Collation farqi sababli eski `pgdata` volume'ni to'g'ridan-to'g'ri
+  ishlatmang: ma'lumot bo'lsa `pg_dump` → yangi volume → `pg_restore`.
+  Yangi volume'da `vector` extension'ni `postgres-init/` yoqadi; managed
+  Postgres'da extension oldindan yoqilishi kerak.
+- Run chat fayllari `uploads` volume'ida (`/data/uploads`), faqat auth'li
+  `/api/v1/files/{id}` orqali beriladi.
 
 - Secretlar faqat `deploy/.env`da (`.gitignore`da) — compose majburiy
   qiymatlarsiz (`SECRET_KEY`, `POSTGRES_*`) ishga tushmaydi.

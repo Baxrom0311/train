@@ -43,6 +43,8 @@ app.dependency_overrides[get_db] = override_get_db
 async def create_tables():
     """Session boshida bir marta jadvallarni yaratadi."""
     async with engine.begin() as conn:
+        # §9.7: document_chunks.embedding — pgvector `vector` tipi
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
     yield

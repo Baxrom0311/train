@@ -17,3 +17,6 @@ python-multipart>=0.0.9
 bcrypt==3.2.2
 aiofiles
 email-validator>=2.0
+tzdata>=2024.1
+holidays>=0.57
+pgvector>=0.3
