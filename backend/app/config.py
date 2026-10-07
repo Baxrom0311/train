@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     # §9.0 Q12 — o'lcham `models/scenario.py: EMBEDDING_DIM` bilan bir xil
     EMBEDDING_MODEL: str = "gemini-embedding-001"
 
+    # §18.1: production'da false — /docs, /redoc, /openapi.json yopiladi
+    DOCS_ENABLED: bool = True
+
     # Email bildirishnomalar (CONTRACT.md §15.3). SMTP_HOST bo'sh — email
     # o'chirilgan, faqat ilova ichidagi bildirishnoma ishlaydi.
     SMTP_HOST: str = ""

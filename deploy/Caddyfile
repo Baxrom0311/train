@@ -1,0 +1,13 @@
+# HTTPS (CONTRACT.md §18.2): Caddy DOMAIN uchun Let's Encrypt sertifikatini
+# o'zi oladi va yangilaydi; hammasi frontend (nginx) orqali.
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	reverse_proxy frontend:80 {
+		# SSE (§9.8): hodisalar buferlanmasdan darhol o'tadi
+		flush_interval -1
+	}
+}

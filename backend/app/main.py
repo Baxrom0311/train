@@ -5,7 +5,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import api
 from app.config import settings
 
-app = FastAPI(title="TryJob API")
+# §18.1: DOCS_ENABLED=false — API sxemasi tashqariga ochilmaydi
+_docs = settings.DOCS_ENABLED
+app = FastAPI(
+    title="TryJob API",
+    docs_url="/docs" if _docs else None,
+    redoc_url="/redoc" if _docs else None,
+    openapi_url="/openapi.json" if _docs else None,
+)
 
 # Aniq ro'yxatdagi originlar + credentials (cookie/Authorization header).
 # "*" bilan allow_credentials=True birga ISHLATILMAYDI (xavfsizlik).

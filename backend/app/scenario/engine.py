@@ -119,20 +119,25 @@ class StartInfo:
 # ── Ssenariy ta'rifi ──────────────────────────────────────────────────
 
 # Versiya ta'rifi yaratilgandan keyin o'zgarmaydi (tahrir = yangi versiya).
-_DEFINITIONS: dict[uuid.UUID, ScenarioDefinition] = {}
+# Kalit — (versiya, oxirgi yozilgan vaqt): qoralama joyida yangilansa (§16.1)
+# `created_at` o'zgaradi, shuning uchun boshqa jarayonlar (API worker'lari,
+# arq) ham eski ta'rifni ishlatmaydi — keshni tozalash xabari kerak emas.
+_DEFINITIONS: dict[tuple[uuid.UUID, datetime], ScenarioDefinition] = {}
 
 
 def definition_for(version: ScenarioVersion) -> ScenarioDefinition:
-    defn = _DEFINITIONS.get(version.id)
+    key = (version.id, version.created_at)
+    defn = _DEFINITIONS.get(key)
     if defn is None:
         defn = ScenarioDefinition.model_validate(version.definition)
-        _DEFINITIONS[version.id] = defn
+        _DEFINITIONS[key] = defn
     return defn
 
 
 def forget_definition(version_id: uuid.UUID) -> None:
-    """Qoralama joyida yangilanganda (§16.1) — keshdagi eski ta'rif tashlanadi."""
-    _DEFINITIONS.pop(version_id, None)
+    """Qoralama joyida yangilanganda (§16.1) — shu jarayondagi eski yozuvlar xotiradan tashlanadi."""
+    for key in [k for k in _DEFINITIONS if k[0] == version_id]:
+        del _DEFINITIONS[key]
 
 
 def effective_due(node: Node) -> int | None:
