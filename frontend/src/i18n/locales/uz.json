@@ -12,7 +12,8 @@
     "offers": "Ish takliflari",
     "billing": "Hisob-kitob",
     "admin": "Admin",
-    "students": "Talabalar"
+    "students": "Talabalar",
+    "portfolio": "Portfolio"
   },
   "auth": {
     "login": {
@@ -267,7 +268,9 @@
     "status": "Holat",
     "score": "Ball",
     "late": "kechikkan",
-    "abandoned": "Simulyatsiya to'xtatilgan — hisobot tuzilmaydi"
+    "abandoned": "Simulyatsiya to'xtatilgan — hisobot tuzilmaydi",
+    "certificateReady": "Sertifikatingiz tayyor",
+    "openCertificate": "Sertifikatni ochish"
   },
   "competency": {
     "technical": "Texnik ko'nikma",
@@ -438,5 +441,60 @@
     "detach": "Universitetdan ajratish",
     "detachConfirm": "{{name}} universitetingizdan ajratilsinmi? Akkaunti va natijalari o'chmaydi.",
     "privacyNote": "Talabaning javoblari, chat va fayllari ko'rsatilmaydi — faqat ball, kompetensiyalar va AI xulosasi."
+  },
+  "cert": {
+    "title": "Sertifikat",
+    "codeLabel": "Sertifikat kodi",
+    "awardedTo": "Ushbu sertifikat beriladi",
+    "completed": "{{company}} kompaniyasidagi virtual ish ssenariysini muvaffaqiyatli yakunlagani uchun",
+    "valid": "Haqiqiy",
+    "revoked": "Bekor qilingan",
+    "scanToVerify": "Tekshirish uchun QR kodni skanerlang",
+    "qr": "Sertifikat sahifasiga QR havola",
+    "copyLink": "Havolani nusxalash",
+    "copied": "Nusxalandi",
+    "copyPrompt": "Havolani nusxalang:",
+    "notFound": "Sertifikat topilmadi",
+    "notFoundHint": "\"{{code}}\" kodli sertifikat yo'q. Kodni tekshirib, qayta kiriting.",
+    "validBanner": "Sertifikat haqiqiy — TryJob tomonidan berilgan",
+    "revokedBanner": "Bu sertifikat bekor qilingan",
+    "revokedReason": "Sabab: {{reason}} ({{date}})",
+    "issuedOn": "Berilgan sana: {{date}}",
+    "print": "Chop etish / PDF",
+    "disclaimer": "TryJob — virtual ish simulyatsiyalari platformasi. Ssenariydagi kompaniyalar to'qima; sertifikat ish tajribasini emas, ssenariy natijasini tasdiqlaydi.",
+    "verify": "Tekshirish",
+    "linkedin": "LinkedIn'ga qo'shish"
+  },
+  "portfolio": {
+    "title": "Portfolio",
+    "subtitle": "Sertifikatlaringiz va ish beruvchilar ko'radigan ochiq sahifa",
+    "myCertificates": "Sertifikatlarim ({{count}})",
+    "empty": "Hali sertifikat yo'q. Ssenariyni oxirigacha yakunlang — sertifikat avtomatik beriladi.",
+    "startScenario": "Ssenariy tanlash",
+    "open": "Ochish",
+    "settings": "Ochiq sahifa sozlamalari",
+    "public": "Portfolio ochiq",
+    "publicHint": "Yoqilsa, havolani bilgan har kim ismingiz, sertifikatlaringiz va ballaringizni ko'radi. Email ko'rsatilmaydi.",
+    "slug": "Sahifa manzili",
+    "slugHint": "3–40 ta belgi: kichik lotin harflari, raqamlar va \"-\"",
+    "headline": "Qisqa sarlavha",
+    "headlinePlaceholder": "Masalan: Junior ma'lumotlar tahlilchisi",
+    "about": "O'zim haqimda",
+    "aboutPlaceholder": "Nimalarni o'rgandingiz, qaysi yo'nalishda ishlamoqchisiz?",
+    "links": "Havolalar (3 tagacha)",
+    "linkLabel": "Havola nomi",
+    "linkUrl": "Havola manzili",
+    "addLink": "Havola qo'shish",
+    "removeLink": "Havolani o'chirish",
+    "linkHint": "Har bir havolaga nom va https:// bilan boshlanadigan manzil kerak",
+    "saved": "Saqlandi",
+    "slugTaken": "Bu manzil band — boshqasini tanlang",
+    "invalid": "Maydonlarni tekshiring",
+    "viewPublic": "Ochiq sahifani ko'rish",
+    "notFound": "Portfolio topilmadi",
+    "notFoundHint": "Sahifa yopiq yoki bunday manzil yo'q.",
+    "certificates": "Sertifikatlar ({{count}})",
+    "noCertificates": "Hozircha sertifikat yo'q.",
+    "footer": "Natijalar TryJob virtual ish ssenariylarida AI va mentor baholashi asosida."
   }
 }

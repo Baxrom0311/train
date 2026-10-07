@@ -8,6 +8,7 @@ from .scenario import (
     Scenario, ScenarioVersion, ScenarioDocument, DocumentChunk,
     Run, RunEvent, UploadedFile, ChatMessage, WorkHoliday,
 )
+from .credential import Certificate, Portfolio
 from app.database import Base
 
 __all__ = [
@@ -34,5 +35,7 @@ __all__ = [
     "UploadedFile",
     "ChatMessage",
     "WorkHoliday",
+    "Certificate",
+    "Portfolio",
     "Base",
 ]

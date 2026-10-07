@@ -15,6 +15,9 @@ import OffersPage from './pages/OffersPage'
 import AdminPage from './pages/AdminPage'
 import BillingPage from './pages/BillingPage'
 import UniversityPage from './pages/UniversityPage'
+import CertificatePage from './pages/CertificatePage'
+import PortfolioPublicPage from './pages/PortfolioPublicPage'
+import PortfolioPage from './pages/PortfolioPage'
 
 export default function App() {
   return (
@@ -37,6 +40,9 @@ export default function App() {
               <Route path="/talents/offers" element={<RequirePermission permission="view_candidates"><SentOffersPage /></RequirePermission>} />
               <Route path="/admin" element={<RequirePermission permission={['approve_companies', 'manage_billing']}><AdminPage /></RequirePermission>} />
               <Route path="/university" element={<RequirePermission permission="manage_universities"><UniversityPage /></RequirePermission>} />
+              <Route path="/portfolio" element={<RequirePermission permission="manage_portfolio"><PortfolioPage /></RequirePermission>} />
+              <Route path="/c/:code" element={<CertificatePage />} />
+              <Route path="/p/:slug" element={<PortfolioPublicPage />} />
               <Route path="/billing" element={<RequirePermission permission="view_org_invoices"><BillingPage /></RequirePermission>} />
             </Routes>
           </div>

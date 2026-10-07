@@ -12,7 +12,8 @@
     "offers": "Job offers",
     "billing": "Billing",
     "admin": "Admin",
-    "students": "Students"
+    "students": "Students",
+    "portfolio": "Portfolio"
   },
   "auth": {
     "login": {
@@ -267,7 +268,9 @@
     "status": "Status",
     "score": "Score",
     "late": "late",
-    "abandoned": "The simulation was abandoned — no report is generated"
+    "abandoned": "The simulation was abandoned — no report is generated",
+    "certificateReady": "Your certificate is ready",
+    "openCertificate": "Open certificate"
   },
   "competency": {
     "technical": "Technical skills",
@@ -438,5 +441,60 @@
     "detach": "Remove from university",
     "detachConfirm": "Remove {{name}} from your university? Their account and results stay.",
     "privacyNote": "Answers, chat and files are never shown, only scores, competencies and the AI summary."
+  },
+  "cert": {
+    "title": "Certificate",
+    "codeLabel": "Certificate code",
+    "awardedTo": "This certificate is awarded to",
+    "completed": "for successfully completing a virtual work scenario at {{company}}",
+    "valid": "Valid",
+    "revoked": "Revoked",
+    "scanToVerify": "Scan the QR code to verify",
+    "qr": "QR link to the certificate page",
+    "copyLink": "Copy link",
+    "copied": "Copied",
+    "copyPrompt": "Copy the link:",
+    "notFound": "Certificate not found",
+    "notFoundHint": "There is no certificate with code \"{{code}}\". Check the code and try again.",
+    "validBanner": "Valid certificate — issued by TryJob",
+    "revokedBanner": "This certificate has been revoked",
+    "revokedReason": "Reason: {{reason}} ({{date}})",
+    "issuedOn": "Issued on {{date}}",
+    "print": "Print / PDF",
+    "disclaimer": "TryJob is a virtual job simulation platform. Companies in scenarios are fictional; the certificate confirms a scenario result, not work experience.",
+    "verify": "Verify",
+    "linkedin": "Add to LinkedIn"
+  },
+  "portfolio": {
+    "title": "Portfolio",
+    "subtitle": "Your certificates and the public page employers see",
+    "myCertificates": "My certificates ({{count}})",
+    "empty": "No certificates yet. Finish a scenario and one is issued automatically.",
+    "startScenario": "Choose a scenario",
+    "open": "Open",
+    "settings": "Public page settings",
+    "public": "Portfolio is public",
+    "publicHint": "When on, anyone with the link sees your name, certificates and scores. Your email is never shown.",
+    "slug": "Page address",
+    "slugHint": "3–40 characters: lowercase latin letters, digits and \"-\"",
+    "headline": "Headline",
+    "headlinePlaceholder": "e.g. Junior data analyst",
+    "about": "About me",
+    "aboutPlaceholder": "What have you learned, where do you want to work?",
+    "links": "Links (up to 3)",
+    "linkLabel": "Link name",
+    "linkUrl": "Link address",
+    "addLink": "Add link",
+    "removeLink": "Remove link",
+    "linkHint": "Each link needs a name and an address starting with https://",
+    "saved": "Saved",
+    "slugTaken": "This address is taken, choose another",
+    "invalid": "Check the fields",
+    "viewPublic": "View public page",
+    "notFound": "Portfolio not found",
+    "notFoundHint": "The page is private or the address does not exist.",
+    "certificates": "Certificates ({{count}})",
+    "noCertificates": "No certificates yet.",
+    "footer": "Results are based on AI and mentor assessment in TryJob virtual work scenarios."
   }
 }

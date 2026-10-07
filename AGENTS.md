@@ -18,6 +18,8 @@ Tashkilot arizasi → admin tasdiqlashi → invoice oqimi brauzerda (`CONTRACT.m
 Universitet portali (`CONTRACT.md` §12, `/university`): o'z talabalarining Run natijalari.
 Mentor (`CONTRACT.md` §9.13): talaba ishini ko'radi, har baholangan urinishdan keyin
 chatda izoh yozadi, dedlayn yaqinlashsa eslatadi.
+Sertifikat va portfolio (`CONTRACT.md` §13): tugagan Run'ga `TJ-XXXX-XXXX` kodli
+sertifikat (ochiq tekshiruv `/c/{code}`, QR, A4 PDF), talabaning ochiq portfoliosi `/p/{slug}`.
 
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da

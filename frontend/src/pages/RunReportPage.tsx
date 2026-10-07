@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
-import { Award, Loader2 } from 'lucide-react'
+import { Award, ExternalLink, Linkedin, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from './Badge'
 import { api } from '@/lib/api'
 import { CompetencyBars, ScoreRing } from '@/components/score'
-import type { DayReport, RunReport, TaskResult } from '@/lib/types'
+import { linkedInUrl } from '@/components/credentials/share'
+import type { Certificate, DayReport, RunReport, TaskResult } from '@/lib/types'
 
 const score = (v: number | null | undefined) => (v === null || v === undefined ? '—' : Math.round(v))
 
@@ -16,6 +17,7 @@ export default function RunReportPage() {
   const { t } = useTranslation()
   const [report, setReport] = useState<RunReport | null>(null)
   const [error, setError] = useState(false)
+  const [cert, setCert] = useState<Certificate | null>(null)
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined
@@ -32,6 +34,15 @@ export default function RunReportPage() {
     load()
     return () => clearTimeout(timer)
   }, [id])
+
+  // sertifikat yakuniy hisobot bilan bir tranzaksiyada beriladi (CONTRACT.md §13.1)
+  const certified = report?.final?.certificate ?? false
+  useEffect(() => {
+    if (!certified) return
+    api<Certificate[]>('/users/me/certificates')
+      .then((list) => setCert(list.find((c) => c.run_id === id) ?? null))
+      .catch(() => setCert(null))
+  }, [certified, id])
 
   if (error) return <p className="container mx-auto p-8 text-destructive">{t('common.error')}</p>
   if (!report) return <p className="container mx-auto p-8 text-muted-foreground">{t('common.loading')}</p>
@@ -94,6 +105,28 @@ export default function RunReportPage() {
               <div className="space-y-3 text-sm">
                 <p className="whitespace-pre-wrap">{final.summary.summary}</p>
                 <Lists strengths={final.summary.strengths} improvements={final.summary.improvements} />
+              </div>
+            )}
+
+            {cert && (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4">
+                <div className="flex items-center gap-3">
+                  <span className="bg-brand grid h-10 w-10 place-items-center rounded-xl text-primary-foreground"><Award className="h-5 w-5" /></span>
+                  <div>
+                    <p className="font-semibold">{t('report.certificateReady')}</p>
+                    <p className="font-mono text-xs text-muted-foreground">{cert.code}</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {cert.status === 'valid' && (
+                    <Button size="sm" variant="outline" asChild>
+                      <a href={linkedInUrl(cert)} target="_blank" rel="noopener noreferrer"><Linkedin className="h-4 w-4" /> {t('cert.linkedin')}</a>
+                    </Button>
+                  )}
+                  <Button size="sm" asChild>
+                    <Link to={`/c/${cert.code}`}><ExternalLink className="h-4 w-4" /> {t('report.openCertificate')}</Link>
+                  </Button>
+                </div>
               </div>
             )}
 

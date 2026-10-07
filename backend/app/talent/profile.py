@@ -13,9 +13,10 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from statistics import fmean
 
-from sqlalchemy import Select, select
+from sqlalchemy import Select, exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.credential import Certificate
 from app.models.enums import RunStatus
 from app.models.scenario import Run, Scenario, ScenarioVersion
 
@@ -76,6 +77,8 @@ def _completed_runs(user_ids: Select | list[uuid.UUID]) -> Select:
             Run.user_id.in_(user_ids),
             Run.status == RunStatus.COMPLETED,
             Run.final_report.is_not(None),
+            # bekor qilingan sertifikatli ish profilga kirmaydi (§13.1)
+            ~exists().where(Certificate.run_id == Run.id, Certificate.revoked_at.is_not(None)),
         )
     )
 
