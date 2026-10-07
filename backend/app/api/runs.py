@@ -486,3 +486,37 @@ async def stream(
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+# ── Hisobotlar (§9.6) ─────────────────────────────────────────────────
+
+
+class ReportOut(BaseModel):
+    run_id: uuid.UUID
+    status: RunStatus
+    days: list[dict]
+    final: dict | None
+    competency_scores: dict | None
+    # Run yopilgan, lekin yakuniy hisobot hali yozilmoqda (baholash kutilmoqda)
+    final_pending: bool
+
+
+@router.get("/runs/{run_id}/report", response_model=ReportOut)
+async def get_report(
+    run_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_active_user),
+):
+    run = (await db.execute(select(Run).where(Run.id == run_id, Run.user_id == user.id))).scalars().first()
+    if run is None:
+        raise HTTPException(status_code=404, detail="Run topilmadi")
+    results = (await db.execute(select(RunEvent.result).where(RunEvent.run_id == run.id))).scalars().all()
+    days = sorted((r["report"] for r in results if r and r.get("report")), key=lambda d: d["day"])
+    return ReportOut(
+        run_id=run.id,
+        status=run.status,
+        days=days,
+        final=run.final_report,
+        competency_scores=run.competency_scores,
+        final_pending=run.status in (RunStatus.COMPLETED, RunStatus.EXPIRED) and run.final_report is None,
+    )

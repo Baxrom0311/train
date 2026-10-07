@@ -45,6 +45,8 @@ DEFAULT_DUE_MINUTES = {NodeType.DECISION: 60, NodeType.DAY_END: 30}
 DECISION_SCORES = {"correct": 100.0, "acceptable": 60.0, "wrong": 0.0}
 
 OPEN_STATUSES = (RunStatus.SCHEDULED, RunStatus.ACTIVE)
+# `day_end` yopilganda `run_events.result`ga — kunlik hisobot yozilishi kerak (§9.6)
+REPORT_DUE = "report_due"
 AWAITING_EVAL = (AIEvalStatus.PENDING, AIEvalStatus.QUEUED_RETRY)
 
 
@@ -138,6 +140,11 @@ def allowed_answer_types(node: Node) -> set[AnswerType]:
 
 def _iso(t: datetime | None) -> str | None:
     return t.isoformat() if t else None
+
+
+def mark_report_due(e: RunEvent, node: Node) -> None:
+    if node.type == NodeType.DAY_END and not (e.result or {}).get("report"):
+        e.result = {**(e.result or {}), REPORT_DUE: True}
 
 
 # ── Run yaratish ──────────────────────────────────────────────────────
@@ -413,6 +420,7 @@ class RunState:
     def _miss(self, e: RunEvent, at: datetime) -> Note:
         e.status = RunEventStatus.MISSED
         e.result = {**(e.result or {}), "missed_at": _iso(at)}
+        mark_report_due(e, self.defn.node(e.node_id))
         return Note(self.run.id, "event_missed", {"node_id": e.node_id})
 
     def spawn_children(self, node_id: str, trigger: str, at: datetime) -> None:
@@ -526,6 +534,7 @@ async def submit_answer(
     db.add(sub)
     state.submissions.append(sub)
     e.status = RunEventStatus.SUBMITTED
+    mark_report_due(e, node)
     if not previous:
         state.spawn_children(node_id, "submitted", now)
     notes = [Note(run.id, "event_submitted", {"node_id": node_id, "attempt": sub.attempt, "late": late})]

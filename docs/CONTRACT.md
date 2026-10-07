@@ -530,11 +530,27 @@ Kompetensiyalar (sobit ro'yxat, `enums.py`):
 2. **Jarayon signallari:** dedlaynga ulgurish, incident'ga birinchi
    reaksiya vaqti, personajga aniqlashtiruvchi savol berganmi (kun oxirida
    chat transkriptidan baholovchi aniqlaydi).
-3. **Kunlik hisobot** (`day_end`): kun bo'yicha kuchli va zaif tomonlar,
-   ertangi kun uchun maslahat.
-4. **Yakuniy hisobot** (Run `completed`): kompetensiyalar bo'yicha 0–100
-   ballar → `runs.competency_scores`. Bu **Talent Hunt** (kandidat profili) va
-   **Universitet portali** statistikasiga beriladi.
+3. **Kunlik hisobot** (`day_end` topshirilganda yoki o'tkazib yuborilganda):
+   shu kun task'lari natijasi, o'rtacha ball, o'z vaqtida topshirish ulushi +
+   AI xulosasi (kuchli/zaif tomonlar, ertangi kun uchun maslahat) →
+   `run_events.result.report`.
+4. **Yakuniy hisobot** (Run `completed` yoki `expired`): kompetensiyalar
+   bo'yicha 0–100 ballar → `runs.competency_scores`, to'liq hisobot →
+   `runs.final_report` (`expired` — `incomplete: true`, `certificate: false`).
+   Bu **Talent Hunt** (kandidat profili) va **Universitet portali**
+   statistikasiga beriladi.
+   - Task balli = oxirgi baholangan urinish (jarimalar bilan); topshirilmay
+     o'tkazib yuborilgan — 0; baholanmagan (AI ishlamagan) — hisobga kirmaydi.
+   - Kompetensiya = shu kompetensiya belgilangan task'lar ballining
+     og'irlikli o'rtachasi; `day_end` → `communication`; `time_management`
+     — o'z vaqtida topshirish ulushi bilan o'rtacha; `initiative` — AI'ning
+     chat transkripti bahosi bilan o'rtacha. Ma'lumot yo'q kompetensiya
+     hisobotga kirmaydi.
+   - Ballar faqat kodda; AI faqat matn va `initiative`ni beradi. AI ishlamasa
+     hisobot matnsiz yoziladi.
+   - Hisobotlar baholash tugashini kutadi (oxirgi javobdan 15 daqiqagacha).
+     Yozilishi kerak bo'lganlarni har daqiqalik cron topib, arq job'larini
+     (`day_report_job`, `final_report_job`) navbatga qo'yadi.
 - Baholovchi model personaj modelidan **alohida chaqiruv**, personaj
   prompt'larini ko'rmaydi. AI ishlamasa — mavjud `queued_retry` →
   `failed_permanent` oqimi (§5).
