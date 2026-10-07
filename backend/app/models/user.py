@@ -19,6 +19,21 @@ class User(Base):
         nullable=True,
     )
     org_id = Column(GUID, nullable=True)
+    # Talaba qaysi universitetga TEGISHLI ekanligini bildiradi (ixtiyoriy).
+    # org_type/org_id'dan AJRATILGAN tushuncha: org_type=university bo'lsa
+    # bu — "universitet nomidan boshqaruvchi admin" (register-org orqali),
+    # university_id esa — "shu universitetning talabasi" (register orqali,
+    # oddiy /register). Ikkisini aralashtirib bo'lmaydi — aks holda
+    # University Portal haqiqiy talabalarni topa olmaydi (topilgan xato).
+    # use_alter=True: users<->universities orasida doiraviy FK bog'liqlik
+    # bor (University.verified_by_admin_id -> users.id). Buni belgilamasak
+    # SQLAlchemy drop_all()/create_all() uchun jadval tartibini aniqlay
+    # olmaydi (CircularDependencyError — sinab tasdiqlangan).
+    university_id = Column(
+        GUID,
+        ForeignKey("universities.id", use_alter=True, name="fk_users_university_id"),
+        nullable=True,
+    )
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at = Column(

@@ -72,7 +72,7 @@ async def _call_deepseek(
                 "temperature": 0.3,
                 "max_tokens": 512,
             },
-            timeout=30.0,
+            timeout=12.0,
         )
         resp.raise_for_status()
         import json as _json
@@ -106,7 +106,7 @@ async def _call_gemini(
             "contents": [{"parts": [{"text": user_prompt}]}],
             "generationConfig": {"temperature": 0.3, "maxOutputTokens": 512},
         }
-        resp = await client.post(url, json=body, timeout=30.0)
+        resp = await client.post(url, json=body, timeout=12.0)
         resp.raise_for_status()
         import json as _json
         text = resp.json()["candidates"][0]["content"]["parts"][0]["text"]
@@ -145,7 +145,7 @@ async def _call_openai(
                 "temperature": 0.3,
                 "max_tokens": 512,
             },
-            timeout=30.0,
+            timeout=12.0,
         )
         resp.raise_for_status()
         import json as _json

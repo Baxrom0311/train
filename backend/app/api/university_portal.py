@@ -16,6 +16,13 @@ from app.models.enums import OrgType
 
 router = APIRouter(prefix="/api/v1/university", tags=["University Portal"])
 
+class UniversityOut(BaseModel):
+    id: uuid.UUID
+    name: str
+    city: str
+
+    model_config = ConfigDict(from_attributes=True)
+
 class StudentOut(BaseModel):
     id: uuid.UUID
     full_name: str
@@ -60,6 +67,17 @@ async def check_university_access(current_user: User, db: AsyncSession):
     
     return current_user
 
+@router.get("/list", response_model=List[UniversityOut])
+async def list_universities(db: AsyncSession = Depends(get_db)):
+    """
+    Tasdiqlangan universitetlar ro'yxati — auth talab qilinmaydi, chunki
+    frontend'da talaba ro'yxatdan o'tishda o'z universitetini shu
+    ro'yxatdan tanlashi kerak (CONTRACT.md: talaba <-> universitet
+    bog'lanishi uchun).
+    """
+    result = await db.execute(select(University).where(University.is_verified == True))  # noqa: E712
+    return result.scalars().all()
+
 @router.get("/students", response_model=List[StudentOut])
 async def get_students(
     db: AsyncSession = Depends(get_db),
@@ -69,9 +87,7 @@ async def get_students(
     
     result = await db.execute(
         select(User).where(
-            User.org_type == OrgType.UNIVERSITY,
-            User.org_id == current_user.org_id,
-            User.id != current_user.id
+            User.university_id == current_user.org_id,
         )
     )
     students = result.scalars().all()
@@ -88,8 +104,7 @@ async def get_student_progress(
     result = await db.execute(
         select(User).where(
             User.id == user_id,
-            User.org_type == OrgType.UNIVERSITY,
-            User.org_id == current_user.org_id
+            User.university_id == current_user.org_id,
         )
     )
     student = result.scalars().first()
@@ -121,9 +136,7 @@ async def get_university_stats(
     
     students_query = await db.execute(
         select(User).where(
-            User.org_type == OrgType.UNIVERSITY,
-            User.org_id == current_user.org_id,
-            User.id != current_user.id
+            User.university_id == current_user.org_id,
         )
     )
     students = students_query.scalars().all()

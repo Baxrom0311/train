@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List, Optional
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime, UTC
 import uuid
 
@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/v1/admin/invoices", tags=["admin_invoices"])
 class InvoiceCreate(BaseModel):
     payer_type: OrgType
     payer_id: uuid.UUID
-    amount: float
+    amount: float = Field(gt=0)
     currency: str = "UZS"
     notes: Optional[str] = None
 

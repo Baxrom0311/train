@@ -21,7 +21,7 @@ from app.models.user import User
 from app.core.security import get_password_hash
 
 # Haqiqiy PostgreSQL test database — SQLite ISHLATILMAYDI (CONTRACT.md §3.1)
-_default_test_url = "postgresql+asyncpg://baxrom@localhost/tryjob_test"
+_default_test_url = "postgresql+asyncpg://postgres@localhost/tryjob_test"
 SQLALCHEMY_DATABASE_URL = os.environ.get("TEST_DATABASE_URL", _default_test_url)
 
 # NullPool — har connection pool caching qilmaydi

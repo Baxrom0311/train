@@ -1,6 +1,7 @@
-from sqlalchemy import String, Float, Boolean, DateTime, ForeignKey, Text, Enum as SAEnum
+from sqlalchemy import String, Float, Numeric, Boolean, DateTime, ForeignKey, Text, CheckConstraint, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime, UTC
+from decimal import Decimal
 import uuid
 
 from app.database import Base
@@ -32,13 +33,21 @@ class University(Base):
 
 class Invoice(Base):
     __tablename__ = "invoices"
-    
+    __table_args__ = (
+        # Pul miqdori manfiy yoki nol bo'lishi mumkin emas edi avvalgi
+        # versiyada (sinab tasdiqlangan haqiqiy bug) — endi DB darajasida
+        # ham qattiq cheklangan.
+        CheckConstraint("amount > 0", name="ck_invoices_amount_positive"),
+    )
+
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     payer_type: Mapped[OrgType] = mapped_column(
         SAEnum(OrgType, native_enum=False, values_callable=lambda e: [m.value for m in e])
     )
     payer_id: Mapped[uuid.UUID] = mapped_column() # UUID for Company or University
-    amount: Mapped[float] = mapped_column(Float)
+    # Numeric — pul miqdorlari uchun Float ishlatish yaxlitlash xatolariga
+    # olib kelishi mumkin (haqiqiy moliyaviy ma'lumot uchun mos emas).
+    amount: Mapped[Decimal] = mapped_column(Numeric(14, 2))
     currency: Mapped[str] = mapped_column(String, default="UZS")
     status: Mapped[InvoiceStatus] = mapped_column(
         SAEnum(InvoiceStatus, native_enum=False, values_callable=lambda e: [m.value for m in e]),

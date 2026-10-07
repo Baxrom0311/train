@@ -7,8 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.database import get_db
-from app.models.simulation import Submission, SimulationTask
+from app.models.simulation import Submission, SimulationTask, Simulation
 from app.core.deps import get_current_active_user
+from app.core.redis_client import get_arq_pool
 from app.models.user import User
 from app.ai.router import evaluate_submission
 from app.models.enums import AIEvalStatus
@@ -40,8 +41,12 @@ async def create_submission(
 ):
     # check if task exists
     task_res = await db.execute(select(SimulationTask).where(SimulationTask.id == sub_in.task_id))
-    if not task_res.scalars().first():
+    task = task_res.scalars().first()
+    if not task:
         raise HTTPException(status_code=404, detail="Task not found")
+
+    sim_res = await db.execute(select(Simulation).where(Simulation.id == task.simulation_id))
+    simulation = sim_res.scalars().first()
 
     submission = Submission(
         task_id=sub_in.task_id,
@@ -52,8 +57,18 @@ async def create_submission(
     await db.commit()
     await db.refresh(submission)
 
-    # Trigger AI Evaluation
-    await evaluate_submission(submission, db)
+    # Trigger AI Evaluation. redis/sector/expected_skills avval umuman
+    # uzatilmagan edi — natijada (a) hamma vaqt IT mentori tanlangan,
+    # (b) muvaffaqiyatsiz AI chaqiruvi hech qachon arq navbatiga
+    # qo'shilmagan (redis=None bo'lgani uchun).
+    arq_pool = await get_arq_pool()
+    await evaluate_submission(
+        submission,
+        db,
+        redis=arq_pool,
+        sector=simulation.sector if simulation else None,
+        expected_skills=task.expected_skills or [],
+    )
     await db.refresh(submission)
 
     return submission

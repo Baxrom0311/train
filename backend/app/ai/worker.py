@@ -2,17 +2,21 @@
 arq background worker: AI eval retry.
 Submission DB'dan olinadi, AI zanjiri qayta ishga tushiriladi.
 3 marta muvaffaqiyatsiz bo'lsa — 'failed_permanent'.
+
+Ishga tushirish (deploy/da): `arq app.ai.worker.WorkerSettings`
 """
 
 import logging
 from datetime import datetime, timezone
 
 import httpx
+from arq import Retry
+from arq.connections import RedisSettings
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy import select
 
 from app.config import settings
-from app.models.simulation import Submission
+from app.models.simulation import Submission, SimulationTask, Simulation
 from app.models.enums import AIEvalStatus
 from app.ai.guardrail import validate_submission_content
 from app.ai.router import run_ai_chain, _pick_persona, _build_user_prompt
@@ -30,15 +34,16 @@ def _make_session() -> async_sessionmaker:
 async def retry_ai_eval(ctx: dict, submission_id: str) -> None:
     """
     arq job — submission'ni DB'dan olib, AI zanjirini qayta ishga tushiradi.
-    ctx['redis'] arq pool.
+    ctx['job_try'] — arq o'zi avtomatik hisoblaydi (har `Retry` qayta
+    urinishda +1), shuning uchun alohida counter saqlash shart emas.
 
     Logika:
-    - DB'dan Submission olinadi
+    - DB'dan Submission olinadi (+ sektor/ko'nikmalar uchun Task/Simulation)
     - Guardrail: agar muvaffaqiyatsiz — failed_permanent
     - AI zanjiri ishga tushiriladi
     - Muvaffaqiyatli: completed + ball yoziladi
     - Muvaffaqiyatsiz: attempts hisoblanadi
-      * attempts < MAX_ATTEMPTS → 'queued_retry' qolib, qayta navbatga
+      * attempts < MAX_ATTEMPTS → arq.Retry (exponential backoff)
       * attempts >= MAX_ATTEMPTS → 'failed_permanent'
     """
     SessionLocal = _make_session()
@@ -53,7 +58,6 @@ async def retry_ai_eval(ctx: dict, submission_id: str) -> None:
             log.error("retry_ai_eval: submission topilmadi id=%s", submission_id)
             return
 
-        # Guardrail tekshiruvi
         is_valid = await validate_submission_content(submission.content)
         if not is_valid:
             submission.ai_eval_status = AIEvalStatus.FAILED_PERMANENT
@@ -62,20 +66,31 @@ async def retry_ai_eval(ctx: dict, submission_id: str) -> None:
             await db.commit()
             return
 
-        # Urinishlar sonini kuzatish (ai_feedback orqali minimal metadata)
-        # Asosiy mantiq: retry_count ai_feedback prefix sifatida saqlanadi
-        # Yoki — model'ga retry_count ustun qo'shilmagan, shuning uchun
-        # kontekst sifatida faqat MAX_ATTEMPTS ishlatamiz.
-        # Haqiqiy count uchun arq job_id / tries ni ctx'dan olamiz.
-        # arq ctx'da 'job_try' mavjud bo'lsa — undan foydalanamiz.
-        attempt = ctx.get("job_try", 1)  # arq 1-dan boshlaydi
+        # Sektor va kutilayotgan ko'nikmalarni Task/Simulation orqali olish
+        # (avvalgi versiyada bular hech qachon uzatilmagan edi — shuning
+        # uchun qayta urinishda ham doim IT mentori tanlanardi).
+        sector = None
+        expected_skills: list = []
+        task_result = await db.execute(
+            select(SimulationTask).where(SimulationTask.id == submission.task_id)
+        )
+        task = task_result.scalars().first()
+        if task is not None:
+            expected_skills = task.expected_skills or []
+            sim_result = await db.execute(
+                select(Simulation).where(Simulation.id == task.simulation_id)
+            )
+            simulation = sim_result.scalars().first()
+            if simulation is not None:
+                sector = simulation.sector
 
-        # AI zanjiri
+        attempt = ctx.get("job_try", 1)
+
         async with httpx.AsyncClient() as client:
             ai_result = await run_ai_chain(
                 client,
-                _pick_persona(None).system_prompt,
-                _build_user_prompt(submission.content, []),
+                _pick_persona(sector).system_prompt,
+                _build_user_prompt(submission.content, expected_skills),
             )
 
         if ai_result is not None:
@@ -88,7 +103,6 @@ async def retry_ai_eval(ctx: dict, submission_id: str) -> None:
             log.info("retry_ai_eval: muvaffaqiyatli id=%s score=%.1f", submission_id, score)
             return
 
-        # Muvaffaqiyatsiz
         if attempt >= MAX_ATTEMPTS:
             submission.ai_eval_status = AIEvalStatus.FAILED_PERMANENT
             submission.ai_feedback = f"AI eval {MAX_ATTEMPTS} marta urinishdan keyin muvaffaqiyatsiz."
@@ -98,26 +112,33 @@ async def retry_ai_eval(ctx: dict, submission_id: str) -> None:
                 "retry_ai_eval: failed_permanent id=%s attempt=%d",
                 submission_id, attempt,
             )
-        else:
-            # arq avtomatik qayta urinadi (raises arq.Retry yoki re-enqueue)
-            submission.ai_eval_status = AIEvalStatus.QUEUED_RETRY
-            await db.commit()
-            log.info(
-                "retry_ai_eval: qayta navbatga id=%s attempt=%d/%d",
-                submission_id, attempt, MAX_ATTEMPTS,
-            )
-            # arq'ga qayta urinishni bildirish
-            raise _RetrySignal(f"Attempt {attempt} muvaffaqiyatsiz, qayta uriniladi")
+            return
+
+        submission.ai_eval_status = AIEvalStatus.QUEUED_RETRY
+        await db.commit()
+        log.info(
+            "retry_ai_eval: qayta navbatga id=%s attempt=%d/%d",
+            submission_id, attempt, MAX_ATTEMPTS,
+        )
+        # arq'ga haqiqiy qayta urinishni bildirish — oldingi versiyada
+        # bu o'rniga hech narsa anglatmaydigan oddiy Exception
+        # (_RetrySignal) ko'tarilardi, arq buni "job muvaffaqiyatsiz
+        # tugadi" deb hisoblab qayta urinmasdi.
+        raise Retry(defer=2 ** attempt)
 
 
-class _RetrySignal(Exception):
-    """arq Retry signali — worker qayta urinishi uchun."""
-
-
-# arq WorkerSettings uchun eksport
 async def startup(ctx: dict) -> None:  # noqa: ARG001
     pass
 
 
 async def shutdown(ctx: dict) -> None:  # noqa: ARG001
     pass
+
+
+class WorkerSettings:
+    """`arq app.ai.worker.WorkerSettings` bilan ishga tushiriladi (deploy/)."""
+    functions = [retry_ai_eval]
+    redis_settings = RedisSettings.from_dsn(settings.REDIS_URL)
+    on_startup = startup
+    on_shutdown = shutdown
+    max_tries = MAX_ATTEMPTS

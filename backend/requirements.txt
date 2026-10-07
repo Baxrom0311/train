@@ -15,3 +15,4 @@ pytest-asyncio>=0.23
 python-multipart>=0.0.9
 bcrypt==3.2.2
 aiofiles
+email-validator>=2.0

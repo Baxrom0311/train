@@ -9,6 +9,7 @@ Imkoniyatlar:
 
 import os
 import re
+import uuid
 import asyncio
 import aiofiles
 from pathlib import Path
@@ -135,7 +136,10 @@ async def validate_and_save(
     """
     # 1. Kengaytma
     ext = check_extension(original_filename)
-    safe_name = sanitize_filename(original_filename)
+    # UUID prefiks — bir xil nomli fayllar bir-birining ustiga yozilib
+    # ketmasligi uchun (sinab tasdiqlangan haqiqiy bug: ikkinchi
+    # "resume.pdf" birinchisini almashtirib yuborardi).
+    safe_name = f"{uuid.uuid4().hex}_{sanitize_filename(original_filename)}"
     dest = destination_dir / safe_name
 
     # Magic bytes uchun dastlabki chunk kerak — iterator'ni "peek" qilamiz

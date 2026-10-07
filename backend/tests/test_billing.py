@@ -85,6 +85,24 @@ async def test_create_invoice_admin(client: AsyncClient, token_admin: str, unver
     assert data["status"] == "pending"
 
 @pytest.mark.asyncio
+async def test_create_invoice_rejects_non_positive_amount(
+    client: AsyncClient, token_admin: str, unverified_company: Company
+):
+    """amount <= 0 avvalgi versiyada qabul qilinardi (sinab tasdiqlangan bug)."""
+    for bad_amount in (0, -500.0):
+        res = await client.post(
+            "/api/v1/admin/invoices",
+            headers={"Authorization": f"Bearer {token_admin}"},
+            json={
+                "payer_type": "company",
+                "payer_id": str(unverified_company.id),
+                "amount": bad_amount,
+                "currency": "UZS",
+            }
+        )
+        assert res.status_code == 422, f"amount={bad_amount} rad etilishi kerak edi"
+
+@pytest.mark.asyncio
 async def test_mark_invoice_paid(client: AsyncClient, token_admin: str, unverified_company: Company, db_session: AsyncSession):
     res_create = await client.post(
         "/api/v1/admin/invoices",

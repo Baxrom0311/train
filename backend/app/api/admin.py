@@ -74,10 +74,25 @@ async def approve_org(
         
     if org.is_verified:
         return {"msg": "Already verified"}
-        
+
     org.is_verified = True
     org.verified_at = datetime.now(UTC)
     org.verified_by_admin_id = user.id
+
+    # Tashkilot tasdiqlangach, unga tegishli (hali faollashtirilmagan)
+    # foydalanuvchilarni ham faollashtirish shart — aks holda is_active=False
+    # bilan yaratilgan HR/universitet admin akkaunti HECH QACHON kira
+    # olmasdi (register-org'da is_active=False qilib yaratilgan,
+    # avvalgi versiyada shu yerda hech kim faollashtirmagan edi).
+    users_stmt = select(User).where(
+        User.org_type == data.org_type,
+        User.org_id == org_id,
+        User.is_active == False,  # noqa: E712
+    )
+    users_result = await db.execute(users_stmt)
+    for pending_user in users_result.scalars().all():
+        pending_user.is_active = True
+
     await db.commit()
-    
+
     return {"msg": "Approved successfully"}

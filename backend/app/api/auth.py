@@ -2,12 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from pydantic import BaseModel
-from typing import Optional, List
+from pydantic import BaseModel, EmailStr, Field
+from typing import Optional
+import uuid
 from app.database import get_db
 from app.models.user import User
-from app.models.talent import CandidateVisibility
 from app.models.rbac import Role
+from app.models.billing import Company, University
 from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token
 from app.core.deps import get_current_active_user
 from app.models.enums import OrgType, DefaultRole
@@ -16,13 +17,25 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 users_router = APIRouter(prefix="/users", tags=["users"])
 
 class UserCreate(BaseModel):
-    email: str
-    password: str
+    email: EmailStr
+    password: str = Field(min_length=8)
     full_name: str
+    # Talaba o'z universitetini ko'rsatishi mumkin (ixtiyoriy) — bu
+    # register-org orqali yaratiladigan "org_type=university" admin
+    # akkauntidan BUTUNLAY ALOHIDA tushuncha (yuqoridagi izohga qarang).
+    university_id: Optional[uuid.UUID] = None
 
 class UserCreateOrg(UserCreate):
+    """
+    Kompaniya/universitet HR/admin ro'yxatdan o'tishi. `org_id` client'dan
+    QABUL QILINMAYDI (avval shu yerga tasdiqlanmagan ixtiyoriy UUID
+    yuborish mumkin edi — tekshirilmasdan). Buning o'rniga tashkilot
+    shu yerda, is_verified=False holatda, yangi yaratiladi.
+    """
     org_type: OrgType
-    org_id: str
+    org_name: str = Field(min_length=1)
+    industry: Optional[str] = None  # faqat org_type=company uchun
+    city: Optional[str] = None      # faqat org_type=university uchun
 
 class Token(BaseModel):
     access_token: str
@@ -32,34 +45,38 @@ class Token(BaseModel):
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
-class VisibilityUpdate(BaseModel):
-    is_open_to_work: Optional[bool] = None
-    hidden_from_company_ids: Optional[List[str]] = None
-
 @router.post("/register", response_model=Token)
 async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.email == user_in.email))
     if result.scalars().first():
         raise HTTPException(status_code=400, detail="Email already registered")
-    
+
     role_result = await db.execute(select(Role).where(Role.name == DefaultRole.STUDENT.value))
     student_role = role_result.scalars().first()
     if not student_role:
         raise HTTPException(status_code=500, detail="Student role not found")
-        
+
+    university_id = None
+    if user_in.university_id is not None:
+        uni_result = await db.execute(select(University).where(University.id == user_in.university_id))
+        if not uni_result.scalars().first():
+            raise HTTPException(status_code=400, detail="University not found")
+        university_id = user_in.university_id
+
     new_user = User(
         email=user_in.email,
         hashed_password=get_password_hash(user_in.password),
         full_name=user_in.full_name,
-        role_id=student_role.id
+        role_id=student_role.id,
+        university_id=university_id,
     )
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
-    
+
     access_token = create_access_token(subject=str(new_user.id))
     refresh_token = create_refresh_token(subject=str(new_user.id))
-    
+
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
 @router.post("/register-org", response_model=Token)
@@ -67,7 +84,7 @@ async def register_org(user_in: UserCreateOrg, db: AsyncSession = Depends(get_db
     result = await db.execute(select(User).where(User.email == user_in.email))
     if result.scalars().first():
         raise HTTPException(status_code=400, detail="Email already registered")
-    
+
     role_name = (
         DefaultRole.COMPANY_HR.value
         if user_in.org_type == OrgType.COMPANY
@@ -77,23 +94,41 @@ async def register_org(user_in: UserCreateOrg, db: AsyncSession = Depends(get_db
     org_role = role_result.scalars().first()
     if not org_role:
         raise HTTPException(status_code=500, detail=f"Role {role_name} not found")
-        
+
+    # Tashkilot shu yerda yaratiladi (is_verified=False) — client'dan
+    # mavjud org_id qabul qilinmaydi, shuning uchun soxta/boshqa tashkilot
+    # ID'siga ulanib olish mumkin emas.
+    if user_in.org_type == OrgType.COMPANY:
+        org = Company(
+            name=user_in.org_name,
+            industry=user_in.industry or "N/A",
+            contact_email=user_in.email,
+        )
+    else:
+        org = University(
+            name=user_in.org_name,
+            city=user_in.city or "N/A",
+            contact_email=user_in.email,
+        )
+    db.add(org)
+    await db.flush()  # org.id kerak bo'ladi
+
     new_user = User(
         email=user_in.email,
         hashed_password=get_password_hash(user_in.password),
         full_name=user_in.full_name,
         role_id=org_role.id,
         org_type=user_in.org_type,
-        org_id=user_in.org_id,
-        is_active=False  # needs verification
+        org_id=org.id,
+        is_active=False,  # admin tasdiqlamaguncha yopiq
     )
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
-    
+
     access_token = create_access_token(subject=str(new_user.id))
     refresh_token = create_refresh_token(subject=str(new_user.id))
-    
+
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
 @router.post("/login", response_model=Token)
@@ -102,14 +137,19 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSessi
     user = result.scalars().first()
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
-    
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is not active (pending admin approval or disabled)",
+        )
+
     access_token = create_access_token(subject=str(user.id))
     refresh_token = create_refresh_token(subject=str(user.id))
-    
+
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
 @router.post("/refresh", response_model=Token)
-async def refresh(req: RefreshTokenRequest):
+async def refresh(req: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
     from jose import jwt, JWTError
     from app.config import settings
     try:
@@ -117,12 +157,19 @@ async def refresh(req: RefreshTokenRequest):
         user_id: str = payload.get("sub")
         if user_id is None:
             raise HTTPException(status_code=401, detail="Invalid refresh token")
-        # token_type tekshiruvi: faqat refresh token qabul qilinadi
         token_type: str = payload.get("token_type")
         if token_type != "refresh":
             raise HTTPException(status_code=401, detail="Access token cannot be used as refresh token")
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+    # Foydalanuvchi hali bazada bor va faolligini tekshirish (o'chirilgan/
+    # bloklangan user eski refresh token bilan yangi access token ola
+    # olmasligi kerak).
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalars().first()
+    if not user or not user.is_active:
+        raise HTTPException(status_code=401, detail="User not found or inactive")
 
     access_token = create_access_token(subject=user_id)
     refresh_token = create_refresh_token(subject=user_id)
@@ -138,25 +185,3 @@ async def get_me(current_user: User = Depends(get_current_active_user)):
         "org_type": current_user.org_type,
         "org_id": current_user.org_id
     }
-
-@users_router.patch("/me/visibility")
-async def update_visibility(
-    update_data: VisibilityUpdate,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db)
-):
-    result = await db.execute(select(CandidateVisibility).where(CandidateVisibility.user_id == current_user.id))
-    visibility = result.scalars().first()
-    
-    if not visibility:
-        visibility = CandidateVisibility(user_id=current_user.id)
-        db.add(visibility)
-        
-    if update_data.is_open_to_work is not None:
-        visibility.is_open_to_work = update_data.is_open_to_work
-    if update_data.hidden_from_company_ids is not None:
-        visibility.hidden_from_company_ids = update_data.hidden_from_company_ids
-        
-    await db.commit()
-    await db.refresh(visibility)
-    return {"is_open_to_work": visibility.is_open_to_work, "hidden_from_company_ids": visibility.hidden_from_company_ids}

@@ -64,10 +64,19 @@ def require_permission(key: str):
     return permission_checker
 
 
-def rate_limit(action: str, max_requests: int = 10, window_seconds: int = 60):
+def rate_limit(action: str, max_requests: int = 10, window_seconds: int = 60, fail_closed: bool = False):
     """
     Redis-asosida rate-limiting dependency factory.
     key format: rate_limit:{action}:{user_id}:{current_minute_window}
+
+    :param fail_closed: Redis ishlamay qolsa nima qilish kerak.
+        False (default) — o'tkazib yuborish (fail-open): oddiy UX-darajadagi
+        cheklovlar uchun (masalan API spam'ini kamaytirish) — Redis vaqtincha
+        ishlamay qolgani butun platformani to'xtatib qo'ymasin.
+        True — rad etish (fail-closed): rate-limit o'zi xavfsizlik nazorati
+        bo'lgan joylarda (masalan `/tools/sandbox` — bu auth'siz/ nazoratsiz
+        kod bajarish yukini cheklaydi) Redis ishlamay qolgani "cheksiz
+        so'rov qabul qilish" degani bo'lmasligi kerak.
     """
     async def _rate_limiter(current_user: User = Depends(get_current_active_user)):
         from app.core.redis_client import redis_client
@@ -89,6 +98,11 @@ def rate_limit(action: str, max_requests: int = 10, window_seconds: int = 60):
         except HTTPException:
             raise
         except Exception:
+            if fail_closed:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Rate limiting service unavailable; request rejected for safety.",
+                )
             # Redis ishlamay qolsa — bloklashdan ko'ra o'tkazib yuborish (fail open)
             pass
 

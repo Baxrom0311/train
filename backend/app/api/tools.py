@@ -49,7 +49,7 @@ class SandboxResponse(BaseModel):
 async def run_python_code(
     data: PythonRunRequest,
     current_user: User = Depends(get_current_user),           # MAJBURIY auth
-    _rl: User = Depends(rate_limit("sandbox", max_requests=10, window_seconds=60)),  # Redis rate-limit
+    _rl: User = Depends(rate_limit("sandbox", max_requests=10, window_seconds=60, fail_closed=True)),
 ):
     # Server tomonidan qattiq cheklov — client timeout_seconds qiymatiga ishonilmaydi
     timeout = min(data.timeout_seconds or 2.0, 3.0)

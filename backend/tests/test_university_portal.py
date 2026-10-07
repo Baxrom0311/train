@@ -38,18 +38,15 @@ async def setup_university_data(db_session: AsyncSession, test_user_factory):
     unver_admin.org_id = unver_uni_id
     
     student1 = await test_user_factory("s1@v.com", "pass", "student")
-    student1.org_type = "university"
-    student1.org_id = ver_uni_id
+    student1.university_id = ver_uni_id
     student1.full_name = "Student One"
     
     student2 = await test_user_factory("s2@v.com", "pass", "student")
-    student2.org_type = "university"
-    student2.org_id = ver_uni_id
+    student2.university_id = ver_uni_id
     student2.full_name = "Student Two"
     
     other_student = await test_user_factory("os@o.com", "pass", "student")
-    other_student.org_type = "company"
-    other_student.org_id = uuid.uuid4()
+    other_student.university_id = unver_uni_id
     
     sim_id = uuid.uuid4()
     sim = Simulation(

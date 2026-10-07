@@ -8,3 +8,9 @@ frontend/dist/
 .env
 uploads/*
 !uploads/.gitkeep
+
+# Eski agentik "council" metadata — joriy qayta qurilgan loyihaga aloqasi yo'q
+.agy/
+
+# TypeScript incremental build cache
+*.tsbuildinfo
