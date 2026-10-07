@@ -247,6 +247,11 @@ har modul uchun alohida agent task yoziladi.
 | Q5 | Davomiylik / uzilish | Kunlik (1 kun) va haftalik (5 ish kuni). 7 kun faollik bo'lmasa yoki muddat tugasa — Run **yonadi** (`expired`) |
 | Q6 | Baholash vaqti | Har task'dan keyin **qisqa feedback** + har kun oxirida **kunlik hisobot** + Run oxirida **yakuniy hisobot** |
 | Q7 | Branching | Sxema **daraxt** (shartli tugunlar), lekin v1 dvigateli faqat cheklangan shartlar to'plamini qo'llaydi (§9.3.3) |
+| Q8 | Bayramlar | O'zbekiston rasmiy bayramlari **ish kuni emas**. `work_holidays` jadvali avtomatik to'ldiriladi (`holidays` paketi), admin qo'lda tuzata oladi (§9.2) |
+| Q9 | Tushlik | **13:00–14:00 ish vaqtiga kirmaydi.** Ish kuni = 09:00–13:00 + 14:00–18:00 = 480 ish daqiqasi |
+| Q10 | Boshlanish | **Istalgan payt**, shu jumladan "hozir". Kech boshlansa ogohlantirish beriladi, ssenariy vaqt jadvali boshlanish nuqtasidan siljiydi (§9.2) |
+| Q11 | Qayta topshirish | **Ruxsat.** Bir task'ga ko'pi bilan `max_attempts` (standart 3) urinish, hisobga **oxirgisi** olinadi, urinish uchun jarima yo'q |
+| Q12 | Embedding | Gemini `gemini-embedding-001`, o'lcham **768**. Provayder bitta modulda; almashtirish = qayta indekslash |
 
 ### 9.1 Asosiy tushunchalar
 
@@ -264,25 +269,55 @@ har modul uchun alohida agent task yoziladi.
 
 ### 9.2 Vaqt modeli — real vaqt
 
-- Vaqt zonasi: **`Asia/Tashkent`**. Ish vaqti: dushanba–juma, 09:00–18:00.
-- Talaba Run yaratganda **boshlanish sanasini** tanlaydi; Run shu ish
-  kunining **09:00** da boshlanadi (`status=scheduled` → `active`).
-- Node vaqti: `day` (1..`duration_days`, ish kunlari bo'yicha; dam olish
-  kunlari o'tkazib yuboriladi) + `at` (`"HH:MM"`). Yoki nisbiy:
-  `after: {node, event: delivered|submitted, minutes}`.
-- Dedlayn: `due_in_minutes` — **ish daqiqalarida**. 18:00 dan oshsa,
-  keyingi ish kuni 09:00 dan davom etadi (masalan 17:30 + 60 daq = ertasi 09:30).
+- Vaqt zonasi: **`Asia/Tashkent`** (`zoneinfo`, qattiq `+05:00` emas; slim
+  image uchun `tzdata` paketi). DB'da barcha vaqtlar UTC `timestamptz`.
+- **Ish vaqti** (Q8, Q9): dushanba–juma, ikki bo'lak — 09:00–13:00 va
+  14:00–18:00 (kuniga 480 ish daqiqasi). `work_holidays` jadvalidagi sanalar
+  ish kuni emas. Bo'laklar va bayramlar bitta `WorkCalendar` obyektida
+  (`scenario/clock.py`), barcha vaqt matematikasi faqat shu yerda.
+- **Bayramlar:** haftalik arq job `holidays` paketining O'zbekiston
+  kalendaridan joriy va keyingi yil sanalarini `work_holidays`ga yozadi
+  (`source=auto`). Admin yozuvi (`source=manual`) avtomatik yozuvdan ustun:
+  hayit sanalari va ko'chirilgan dam olish kunlari har yili qaror bilan
+  e'lon qilinadi.
+- **Ish daqiqasi qo'shish:** `add_work_minutes(t, m)` — `t` ish vaqtidan
+  tashqarida bo'lsa keyingi bo'lak boshiga suriladi, so'ng bo'laklar bo'yicha
+  hisoblanadi; tushlik, kechqurun, dam olish va bayram kunlari o'tkazib
+  yuboriladi. Bo'lak oxiriga aynan tushgan natija (13:00, 18:00) o'sha
+  vaqtda qoladi. Misollar: 17:30 + 60 = ertasi 09:30; juma 17:30 + 60 =
+  dushanba 09:30; 12:30 + 60 = 14:30.
+- **Boshlanish** (Q10): talaba "hozir" yoki kelajakdagi vaqtni tanlaydi;
+  `runs.start_at = normalize(tanlangan)` (ish vaqtidan tashqarida bo'lsa
+  keyingi bo'lak boshi). `start_at` kelajakda bo'lsa `status=scheduled`,
+  aks holda darhol `active`.
+- **Node vaqti:** `day` (1..`duration_days`) + `at` (`"HH:MM"`, ish
+  bo'laklari ichida) ssenariyning **ish-daqiqa siljishi**ga aylantiriladi:
+  `offset = (day-1)·480 + work_minutes(09:00 → at)`, va
+  `scheduled_at = add_work_minutes(start_at, offset)`. Run 09:00 da
+  boshlansa bu aynan ssenariydagi soatlar; 15:00 da boshlansa butun jadval
+  5 ish soatiga siljiydi (1-kun ertasi 15:00 da tugaydi). Bunday holatda
+  `POST /runs` javobida `warning` va 1-kunning haqiqiy tugash vaqti qaytadi.
+- **Nisbiy node:** `after: {node, event: delivered|submitted, minutes}` →
+  `scheduled_at = add_work_minutes(trigger_vaqti, minutes)`.
+- **Dedlayn:** `due_at = add_work_minutes(delivered_at, due_in_minutes)` —
+  `scheduled_at`dan emas, cron kechiksa talaba vaqt yo'qotmaydi.
 - **Pauza yo'q.** `compression_ratio` ham yo'q (v1'dan olib tashlandi) — 1
   simulyatsiya soati = 1 real soat.
 - Ssenariy darajasidagi parametr: `duration_days` (1 = kunlik, 5 = haftalik).
+- **Tugash (`completed`):** oxirgi kunning `day_end` hodisasi `submitted`
+  yoki `missed` bo'lsa va `pending` hodisa qolmagan bo'lsa.
 - **Muddat tugashi (`expired`):**
   - `last_activity_at`dan 7 kalendar kun o'tsa, yoki
-  - oxirgi ish kuni + 2 ish kuni o'tsa.
-  Yongan Run uchun bajarilgan qism bo'yicha yakuniy hisobot "tugallanmagan"
-  belgisi bilan yoziladi, sertifikat berilmaydi. Talaba yangi Run ochishi mumkin.
+  - `ends_at`dan o'tsa: `ends_at` = eng kech fixed node'ning `scheduled_at`
+    kunidan keyingi 2-ish kunining 18:00 i.
+  Expire paytida `pending` → `skipped`, `delivered` → `missed`. Yongan Run
+  uchun bajarilgan qism bo'yicha yakuniy hisobot "tugallanmagan" belgisi
+  bilan yoziladi, sertifikat berilmaydi. Talaba yangi Run ochishi mumkin.
+- `last_activity_at` — Run egasining har qanday `runs/*` so'rovida yangilanadi.
 - Dedlayni o'tgan task → `missed`. Bu ballga (vaqtni boshqarish) ta'sir
-  qiladi va branching sharti bo'la oladi. `missed` task'ga kech topshirish
-  ruxsat etiladi (`late=true`), lekin jarima bilan.
+  qiladi va branching sharti bo'la oladi. Run `active` ekan, `missed`
+  task'ga kech topshirish ruxsat etiladi (`late=true`), jarima standart
+  **−20%** (node'da `late_penalty`).
 
 ### 9.3 Ssenariy formati (daraxt)
 
@@ -291,7 +326,10 @@ har modul uchun alohida agent task yoziladi.
 - Manba: `backend/content/scenarios/<slug>.yaml` (gitda, review qilinadi).
 - `tools/import_scenario.py` YAML'ni **Pydantic sxema** bilan validatsiya
   qiladi (sikl yo'qligi, mavjud bo'lmagan node/persona'ga havola yo'qligi,
-  vaqtlar ish soatlari ichida) va `scenario_versions`ga `draft` sifatida yozadi.
+  `at` ish bo'laklari ichida — 13:00–14:00 tushlik rad etiladi, `day`
+  1..`duration_days` ichida) va `scenario_versions`ga `draft` sifatida yozadi.
+  `missed: X` sharti X'ning eng erta mumkin bo'lgan `due_at`idan oldin
+  tekshirilsa — ogohlantirish.
 - `publish` → versiya o'zgarmas bo'ladi. Tahrir = yangi versiya.
 
 #### 9.3.2 Node turlari (v1)
@@ -307,7 +345,10 @@ har modul uchun alohida agent task yoziladi.
 `task`/`incident` maydonlari: `brief`, `attachments` (ssenariy fayllari),
 `answer_types` (`text|file|link|code`), `due_in_minutes`, `weight`,
 `competencies` (§9.6), `rubric` (faqat baholovchi ko'radi), `checks`
-(deterministik: sandbox testlari, sonli javob ± tolerance), `hints` (mentor uchun).
+(deterministik: sandbox testlari, sonli javob ± tolerance), `hints` (mentor uchun),
+`reference_answer` (faqat baholovchi va anti-spoiler tekshiruvi uchun),
+`max_attempts` (standart 3), `late_penalty` (standart 0.2), `hint_penalty`
+(standart 0.1).
 
 #### 9.3.3 Shartlar (v1 cheklangan DSL)
 
@@ -321,6 +362,10 @@ chose: {node, option}        flag: name
 ```
 
 Shart node'ning vaqti kelganda tekshiriladi: `false` bo'lsa → `skipped`.
+`score_*` predikatlari o'sha paytdagi **oxirgi baholangan** urinish ballini
+ko'radi. Ball hali tayyor bo'lmasa (AI baholash `pending`/`queued_retry`),
+yetkazish har daqiqada qayta tekshiriladi, ko'pi bilan 15 daqiqa; keyin
+ball `None` deb olinadi va `score_*` predikatlari `false` bo'ladi.
 Daraxt chuqurligi va yakunlar soni sxemada cheklanmaydi, lekin v1
 kontentida har ssenariyda **ko'pi bilan 2–3 tarmoqlanish** tavsiya qilinadi.
 
@@ -362,7 +407,7 @@ nodes:
   - id: incident_payments
     type: incident
     day: 1
-    at: "13:00"
+    at: "14:00"
     when: {any: [{missed: bug_orders}, {score_lt: {node: bug_orders, value: 60}}]}
     brief: "Prod: to'lov xizmati 500. Mijozlar shikoyat qilyapti!"
     due_in_minutes: 30
@@ -443,7 +488,12 @@ Kompetensiyalar (sobit ro'yxat, `enums.py`):
    - keyin **rubrika bo'yicha LLM** → tuzilgan JSON:
      `{criteria: [{id, score, evidence}], score, short_feedback}`;
    - `short_feedback` (2–3 gap) talabaga darhol SSE orqali ko'rsatiladi.
-   - Jarimalar: `late`, ishlatilgan `hints`.
+   - Jarimalar: `late`, ishlatilgan `hints` — hammasi kodda, LLM'ning
+     umumiy ballidan emas, mezon og'irliklaridan hisoblanadi.
+   - Qayta topshirish (Q11): har urinish alohida baholanadi, task balli =
+     oxirgi urinish. Hisobotda urinishlar bo'yicha o'sish ko'rsatiladi.
+   - Yakuniy task balli `submissions.ai_score`ga ham yoziladi — Universitet
+     portali statistikasi o'zgarishsiz ishlaydi.
 2. **Jarayon signallari:** dedlaynga ulgurish, incident'ga birinchi
    reaksiya vaqti, personajga aniqlashtiruvchi savol berganmi (kun oxirida
    chat transkriptidan baholovchi aniqlaydi).
@@ -466,25 +516,34 @@ scenario_versions  (id, scenario_id, version, status draft|published|archived,
                     published_at, UNIQUE(scenario_id, version))
 scenario_documents (id, scenario_version_id, key, title, content,
                     visible_to_personas JSONB)
-document_chunks    (id, document_id, chunk_index, text, embedding vector(N))
+document_chunks    (id, document_id, chunk_index, text, embedding vector(768),
+                    embedding_model, tsv tsvector)  -- HNSW + GIN indeks
 runs               (id, user_id, scenario_version_id,
                     status scheduled|active|completed|expired|abandoned,
-                    start_at, ends_at, last_activity_at, flags JSONB,
+                    start_at, ends_at, last_activity_at, flags JSONB,  -- INDEX(status, ends_at)
                     ai_tokens_used, competency_scores JSONB, final_report JSONB)
 run_events         (id, run_id, node_id, scheduled_at, delivered_at, due_at,
                     status pending|delivered|submitted|missed|skipped,
-                    choice, hints_used, result JSONB, UNIQUE(run_id, node_id))
+                    first_opened_at, choice, hints_used, result JSONB,
+                    UNIQUE(run_id, node_id))  -- INDEX(status, scheduled_at), INDEX(status, due_at)
 chat_messages      (id, run_id, persona_key, sender student|persona|system,
                     content_type, body, file_id NULL, link_url NULL,
                     generated bool, created_at)
 uploaded_files     (id, owner_user_id, run_id NULL, stored_path, mime,
                     size_bytes, sha256, created_at)
+work_holidays      (date PK, name, source auto|manual)
 ```
 
+Bir foydalanuvchida bir ssenariy versiyasi uchun bir vaqtda bitta faol Run:
+qisman UNIQUE `(user_id, scenario_version_id) WHERE status IN ('scheduled','active')`.
+
 `submissions` (Modul 2) kengaytiriladi:
-`run_id`, `run_event_id` (nullable FK), `rubric_scores JSONB`, `late bool`;
-`task_id` nullable bo'ladi; CHECK: `task_id` va `run_event_id`dan
-**aynan bittasi** to'ldirilgan. Talent Hunt/Universitet portali so'rovlari
+`run_id`, `run_event_id` (nullable FK), `rubric_scores JSONB`, `late bool`,
+`attempt smallint` (standart 1), `file_id` (nullable FK → `uploaded_files`),
+`link_url`; `task_id` nullable bo'ladi; CHECK: `task_id` va `run_event_id`dan
+**aynan bittasi** to'ldirilgan; UNIQUE `(run_event_id, attempt)` (qisman,
+`run_event_id IS NOT NULL`). `AIEvalStatus`ga `pending` qo'shiladi — Run
+submission'i har doim arq job orqali baholanadi. Talent Hunt/Universitet portali so'rovlari
 `submissions` orqali ishlashda davom etadi.
 
 ### 9.8 Dvigatel mexanikasi
@@ -499,19 +558,24 @@ uploaded_files     (id, owner_user_id, run_id NULL, stored_path, mime,
 - **Idempotent:** `UNIQUE(run_id, node_id)` + holat o'tishlari faqat bir
   yo'nalishda. `GET /runs/{id}` ham "kechikkan" hodisalarni shu funksiya
   bilan yetkazadi (cron kechiksa ham talaba to'g'ri holatni ko'radi).
-- **Bildirishnoma:** frontend'ga SSE oqimi. Talaba sahifada bo'lmasa —
-  keyingi kirishda inbox'da ko'radi (v1). Email/push — v2.
+- Barcha o'tishlar bitta funksiyada: `scenario/engine.py: advance(db, now,
+  run_id=None)`; `now` parametr, testlar aniq vaqtlar bilan yoziladi.
+- **Bildirishnoma:** frontend'ga SSE oqimi. Worker va API alohida
+  jarayonlar, shuning uchun hodisalar **Redis pub/sub** (`run:{id}` kanali)
+  orqali uzatiladi; SSE endpoint shu kanalga obuna bo'ladi. Talaba sahifada
+  bo'lmasa — keyingi kirishda inbox'da ko'radi (v1). Email/push — v2.
+- **Bayram sinxronizatsiyasi:** haftalik arq cron `sync_work_holidays` (§9.2).
 
 ### 9.9 API (Modul 9)
 
 ```
 GET    /api/v1/scenarios                         katalog (published, is_active)
 GET    /api/v1/scenarios/{id}
-POST   /api/v1/runs                              { scenario_id, start_date } -> scheduled
+POST   /api/v1/runs                              { scenario_id, start_at? } -> scheduled|active (+warning, day1_ends_at)
 GET    /api/v1/runs/my
 GET    /api/v1/runs/{id}                         holat: soat, hodisalar, dedlaynlar
 GET    /api/v1/runs/{id}/stream                  SSE: yangi hodisa, feedback
-POST   /api/v1/runs/{id}/events/{node_id}/submit { text?, file_id?, link_url?, code? }
+POST   /api/v1/runs/{id}/events/{node_id}/submit { text?, file_id?, link_url?, code? }  (<= max_attempts)
 POST   /api/v1/runs/{id}/events/{node_id}/decide { option }
 POST   /api/v1/runs/{id}/events/{node_id}/hint
 GET    /api/v1/runs/{id}/chat/{persona_key}
@@ -523,6 +587,9 @@ GET    /api/v1/files/{id}                        faqat egasi / baholovchi / admi
 
 POST   /api/v1/admin/scenarios/import            YAML; permission: manage_simulations
 POST   /api/v1/admin/scenarios/{id}/versions/{v}/publish
+GET    /api/v1/admin/holidays                     permission: manage_simulations
+PUT    /api/v1/admin/holidays/{date}              { name } -> source=manual
+DELETE /api/v1/admin/holidays/{date}
 ```
 
 Barcha `runs/*` endpointlari: faqat Run egasi (boshqa foydalanuvchiga 404).
@@ -541,11 +608,11 @@ fayliga **tegmaydi**):
 
 | Modul | Nima qo'shadi |
 |---|---|
-| 2 (AI) | `ai/` ichida: `persona_reply(ctx, history) -> str`, `evaluate_rubric(task, answer, rubric) -> RubricResult`, `embed(texts) -> list[list[float]]`, `summarize_day(...)`, `final_report(...)`; `submissions` migratsiyasi (§9.7); arq cron `deliver_due_events`ni `WorkerSettings`ga ulash (funksiyaning o'zi Modul 9'da) |
-| 1 (Core) | `models/enums.py`ga `Competency`, `RunStatus`, `RunEventStatus`, `NodeType`, `ChatContentType`; `file_validator`ga yangi turlar (v2) |
+| 2 (AI) | `ai/llm.py`: umumiy `chat(messages, schema?) -> LLMResult` (JSON-rejim, Pydantic tekshiruv, token hisobi, model nomlari `.env`dan); `ai/` ichida: `persona_reply(ctx, history) -> str`, `evaluate_rubric(task, answer, rubric) -> RubricResult`, `embed(texts) -> list[list[float]]`, `summarize_day(...)`, `final_report(...)`; `submissions` migratsiyasi (§9.7); arq cron `deliver_due_events`ni `WorkerSettings`ga ulash (funksiyaning o'zi Modul 9'da) |
+| 1 (Core) | `models/enums.py`ga `Competency`, `RunStatus`, `RunEventStatus`, `NodeType`, `ChatContentType`, `AIEvalStatus.PENDING`; `requirements.txt`ga `tzdata`, `holidays`, `pgvector`; `conftest.py`da `create_all`dan oldin `CREATE EXTENSION IF NOT EXISTS vector`; `file_validator`ga yangi turlar (v2) |
 | 8 (Deploy) | `postgres` image → `pgvector/pgvector:pg16`; `UPLOAD_DIR` volume; nginx'da `/api/v1/runs/*/stream` uchun `proxy_buffering off` va uzun `proxy_read_timeout` |
 | 7 (Frontend) | "Ish stoli": inbox, personajlar chati, task board, kalendar, soat, hisobot sahifasi |
-| 4, 6 | `runs.competency_scores`ni nomzod profili va universitet statistikasiga qo'shish |
+| 4, 6 | `runs.competency_scores`ni nomzod profili va universitet statistikasiga qo'shish; Modul 6: `SubmissionSummary.task_id` → `Optional` (Run submission'ida `task_id` yo'q) |
 
 ### 9.11 v1 qamrovi va v2
 
@@ -560,8 +627,6 @@ turi; ssenariy muharriri (admin UI).
 
 ### 9.12 Ochiq savollar (yozilgan, lekin hali hal qilinmagan)
 
-- **Embedding provayderi** (DeepSeek embedding bermaydi → Gemini/OpenAI)
-  va vektor o'lchami `N`.
 - **Shaxsiy ma'lumotlar:** talaba matni va fayllari xorijiy AI API'larga
   ketadi — rozilik matni, saqlash muddati va O'zbekiston qonunchiligidagi
   lokalizatsiya talabi yurist bilan tekshirilsin.

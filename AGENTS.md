@@ -6,8 +6,10 @@
 
 ## Holat
 
-Loyiha 2026-10-07 sanasida to'liq qayta qurilmoqda (eski kod `0e4be5e`
-commitida tarixda saqlanadi). Hozir faqat bo'sh skelet bor:
+Loyiha 2026-10-07 sanasida noldan qayta qurildi (eski kod `0e4be5e`
+commitida tarixda saqlanadi). `CONTRACT.md` §6 dagi 1–6 va 8-modullar
+`main`da bor (backend API, Alembic migratsiyalari, testlar, `deploy/`);
+frontend (Modul 7) boshlang'ich holatda.
 
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da
@@ -18,9 +20,11 @@ tools/
 docs/CONTRACT.md
 ```
 
-Hech bir modul hali implementatsiya qilinmagan. `CONTRACT.md` §6 jadvalidagi
-tartib bilan (Core&Auth → Simulations&AI → Billing → Talent Hunt/Case
-Cup/University Portal parallel → Frontend) quriladi.
+Keyingi ish — **Modul 9, ssenariy dvigateli** (`CONTRACT.md` §9): eski
+`simulations` muzlatilgan, o'rniga real vaqtdagi "ishdagi kun/hafta"
+Run'lari quriladi. Qurish tartibi: §9.10 interfeyslari (Modul 1, 2, 8) →
+`backend/app/scenario/` (soat, shartlar, sxema) → modellar va migratsiya →
+dvigatel va API → AI qatlami → chat/fayllar → hisobotlar → kontent → frontend.
 
 ## Ishlash qoidalari
 
