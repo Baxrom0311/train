@@ -1,9 +1,21 @@
 import pkgutil
 import importlib
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app import api
+from app.config import settings
 
 app = FastAPI(title="TryJob API")
+
+# Aniq ro'yxatdagi originlar + credentials (cookie/Authorization header).
+# "*" bilan allow_credentials=True birga ISHLATILMAYDI (xavfsizlik).
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Auto-router discovery: app/api/ papkasidagi barcha router'larni topib ulaydi.
 #

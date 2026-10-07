@@ -11,7 +11,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 from app.config import settings
 from app.database import Base
-from app.models import User, Role, Permission, CandidateVisibility, TalentOffer, Company, University, Invoice, Submission
+from app.models import (
+    User, Role, Permission, CandidateVisibility, TalentOffer,
+    Company, University, Invoice,
+    Simulation, SimulationTask, Submission,
+    CaseCup, CaseCupSubmission,
+)
 
 config = context.config
 

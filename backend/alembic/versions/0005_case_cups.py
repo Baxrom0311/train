@@ -1,7 +1,7 @@
 """case_cups
 
 Revision ID: 0005_case_cups
-Revises: 0003_billing
+Revises: 0004_merge
 Create Date: 2026-10-07 10:30:00.000000
 
 """
@@ -13,7 +13,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = '0005_case_cups'
-down_revision: Union[str, None] = '0003_billing'
+down_revision: Union[str, None] = '0004_merge'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
