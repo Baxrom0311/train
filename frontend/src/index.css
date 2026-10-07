@@ -138,7 +138,13 @@
   html.dark {
     color-scheme: dark;
   }
+  :root {
+    /* navbar balandligi: 3.5rem + yuqori chegara; o'rnatilgan ilovada soat/"chelka" ostidan (§22.4) */
+    --nav-h: calc(4.25rem + env(safe-area-inset-top, 0px));
+  }
   body {
+    /* telefon chetlari (chelka, pastki chiziq) ostiga kontent kirmasin */
+    padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font-family: var(--font-sans);
@@ -236,6 +242,11 @@
 @page certificate {
   size: A4 landscape;
   margin: 0;
+}
+
+/* Run ish stoli ekranni to'liq egallaydi: navbar va pastki xavfsiz hudud ayiriladi (§22.4) */
+.h-desk {
+  height: calc(100dvh - var(--nav-h) - env(safe-area-inset-bottom, 0px));
 }
 
 @media print {

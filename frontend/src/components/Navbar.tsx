@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Award, Briefcase, ChartColumn, Clapperboard, Globe, GraduationCap, Handshake, LayoutGrid, LogOut, Moon, Receipt, ShieldCheck, Sun, Users } from 'lucide-react'
+import { Award, Briefcase, ChartColumn, Clapperboard, Download, Globe, GraduationCap, Handshake, LayoutGrid, LogOut, Moon, Receipt, ShieldCheck, Sun, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -11,6 +11,7 @@ import {
 import { useTheme } from '@/context/ThemeContext'
 import { useAuth } from '@/context/AuthContext'
 import NotificationBell from '@/components/notifications/NotificationBell'
+import { useInstallPrompt } from '@/lib/pwa'
 import { cn } from '@/lib/utils'
 
 /** `compact` — telefonda faqat belgi (navbar'da joy tejash). */
@@ -31,7 +32,8 @@ export default function Navbar() {
   const { t, i18n } = useTranslation()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
-  const { user, logout, can } = useAuth()
+  const { user, loading, logout, can } = useAuth()
+  const install = useInstallPrompt()
 
   const languages = [
     { code: 'uz', label: t('languages.uz') },
@@ -59,8 +61,9 @@ export default function Navbar() {
     ...(can('manage_simulations') ? [{ to: '/admin/scenarios', label: t('nav.scenarios'), Icon: Clapperboard }] : []),
   ]
 
+  // yuqori chet: o'rnatilgan ilovada telefon soati/"chelka" ostidan (§22.4)
   return (
-    <header className="sticky top-0 z-40 px-3 pt-3 print:hidden">
+    <header className="sticky top-0 z-40 px-3 print:hidden" style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top, 0px))' }}>
       <nav className="glass mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 rounded-2xl px-3 sm:px-4">
         <Link to="/" aria-label="TryJob">
           <Logo compact />
@@ -87,6 +90,11 @@ export default function Navbar() {
         </div>
 
         <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+          {install && (
+            <Button variant="ghost" size="icon" onClick={install} aria-label={t('pwa.install')} title={t('pwa.install')}>
+              <Download className="h-4 w-4 text-primary" />
+            </Button>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" aria-label={t('nav.language')}>
@@ -132,7 +140,7 @@ export default function Navbar() {
                 <LogOut className="h-4 w-4" />
               </Button>
             </>
-          ) : (
+          ) : loading ? null : (
             <>
               <Button variant="ghost" size="sm" className="hidden sm:inline-flex" onClick={() => navigate('/login')}>
                 {t('nav.login')}

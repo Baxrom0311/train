@@ -434,4 +434,6 @@ def test_worker_settings_register_scenario_jobs():
         "cron:deliver_due_events", "cron:sync_work_holidays_job", "cron:embed_document_chunks_job",
         # §15: bildirishnomalar
         "cron:deadline_reminders_job", "cron:send_notification_emails_job",
+        # §22.2: push
+        "cron:send_push_notifications_job",
     }

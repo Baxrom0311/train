@@ -49,7 +49,7 @@ async def from_notes(db: AsyncSession, notes: list[Note], now: datetime) -> None
             db, run.user_id, Kind.TASK_DELIVERED,
             {"run_id": str(run.id), "node_id": node_id, "type": note.data["type"],
              "title": titles.get(node_id, ""), "due_at": note.data.get("due_at")},
-            link=f"/runs/{run.id}", key=f"event:{run.id}:{node_id}:delivered", at=now,
+            link=f"/runs/{run.id}?event={node_id}", key=f"event:{run.id}:{node_id}:delivered", at=now,
         )
 
 
@@ -78,7 +78,7 @@ async def deadline_reminders(db: AsyncSession, now: datetime) -> int:
             db, user_id, Kind.DEADLINE_SOON,
             {"run_id": str(e.run_id), "node_id": e.node_id, "title": runs[e.run_id][1].get(e.node_id, ""),
              "due_at": _iso(e.due_at)},
-            link=f"/runs/{e.run_id}", key=f"event:{e.run_id}:{e.node_id}:deadline", at=now,
+            link=f"/runs/{e.run_id}?event={e.node_id}", key=f"event:{e.run_id}:{e.node_id}:deadline", at=now,
         )
     return len(rows)
 
@@ -90,7 +90,7 @@ async def review_posted(
     await notify(
         db, run.user_id, Kind.MENTOR_REVIEW,
         {"run_id": str(run.id), "node_id": node_id, "title": title, "mentor": mentor},
-        link=f"/runs/{run.id}", key=f"review:{submission_id}", at=now,
+        link=f"/runs/{run.id}?event={node_id}", key=f"review:{submission_id}", at=now,
     )
 
 

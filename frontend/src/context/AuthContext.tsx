@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import { fetchMe, login as apiLogin, register as apiRegister, tokens, type StudentSignup } from '@/lib/api'
+import { ApiError, fetchMe, login as apiLogin, register as apiRegister, tokens, type StudentSignup } from '@/lib/api'
+import { forgetPush } from '@/lib/pwa'
 import type { Me } from '@/lib/types'
 
 interface AuthContextType {
@@ -23,18 +24,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const me = await fetchMe()
       setUser(me)
-      return me
-    } catch {
-      tokens.clear()
-      setUser(null)
-      return null
-    } finally {
       setLoading(false)
+      return me
+    } catch (err) {
+      if (err instanceof ApiError) {
+        tokens.clear()
+        setUser(null)
+        setLoading(false)
+        return null
+      }
+      // tarmoq yo'q (ilova oflayn ochildi, §22.1) — sessiya saqlanadi, aloqa qaytgach qayta urinamiz;
+      // shu orada sahifa "yuklanmoqda" holatida (yuqorida "Internet yo'q" yo'lagi)
+      const retry = () => {
+        window.removeEventListener('online', retry)
+        clearTimeout(timer)
+        loadMe().catch(() => undefined)
+      }
+      window.addEventListener('online', retry)
+      const timer = setTimeout(retry, 15_000)
+      throw err
     }
   }, [])
 
   useEffect(() => {
-    if (tokens.access) loadMe()
+    if (tokens.access) loadMe().catch(() => undefined)
   }, [loadMe])
 
   const login = async (email: string, password: string) => {
@@ -48,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const logout = () => {
+    void forgetPush(tokens.access)                         // push bu brauzerga endi kelmasin (§22.2)
     tokens.clear()
     setUser(null)
   }

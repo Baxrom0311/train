@@ -47,6 +47,12 @@ class Settings(BaseSettings):
     # Emaildagi havolalar uchun frontend manzili
     PUBLIC_URL: str = "http://localhost:5173"
 
+    # Web Push (CONTRACT.md §22.2). Bo'sh — push o'chirilgan. Kalitlar:
+    # `python tools/gen_vapid_keys.py` (base64url: ochiq 65 bayt, maxfiy 32 bayt).
+    VAPID_PUBLIC_KEY: str = ""
+    VAPID_PRIVATE_KEY: str = ""
+    VAPID_SUBJECT: str = ""   # mailto:admin@... — push xizmati muammoda shu manzilga yozadi
+
     # Frontend domenlari (vergul bilan ajratilgan). Bo'sh qoldirilsa CORS
     # umuman ochilmaydi (xavfsiz default) — "*" + credentials birikmasi
     # ataylab qo'llanilmaydi.

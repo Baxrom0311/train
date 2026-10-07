@@ -34,6 +34,10 @@ x-backend-env: &backend-env
   SMTP_FROM: ${SMTP_FROM:-TryJob <no-reply@localhost>}
   SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
   PUBLIC_URL: ${PUBLIC_URL:-http://localhost}
+  # §22.2: bo'sh — push o'chiq (sayt va email ishlaydi)
+  VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+  VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+  VAPID_SUBJECT: ${VAPID_SUBJECT:-}
   DOCS_ENABLED: ${DOCS_ENABLED:-true}
   # §19.2: talaba kodi faqat alohida runner'da bajariladi
   SANDBOX_URL: http://sandbox:8100

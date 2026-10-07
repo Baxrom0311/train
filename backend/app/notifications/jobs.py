@@ -1,8 +1,8 @@
-"""arq cron'lari (CONTRACT.md §15.2–15.3): dedlayn eslatmasi va email."""
+"""arq cron'lari (CONTRACT.md §15.2–15.3, §22.2): dedlayn eslatmasi, email va push."""
 import logging
 from datetime import datetime, timezone
 
-from app.notifications import mailer
+from app.notifications import mailer, push
 from app.notifications.emails import send_pending
 from app.notifications.run_events import deadline_reminders
 
@@ -31,4 +31,15 @@ async def send_notification_emails_job(ctx: dict) -> dict[str, int] | None:
         await db.commit()
     if counts["sent"] or counts["failed"]:
         log.info("email bildirishnomalar: %s", counts)
+    return counts
+
+
+async def send_push_notifications_job(ctx: dict) -> dict[str, int] | None:
+    if not push.enabled():
+        return None
+    async with _sessions(ctx)() as db:
+        counts = await push.send_pending(db, datetime.now(timezone.utc))
+        await db.commit()
+    if counts["sent"] or counts["failed"] or counts["removed"]:
+        log.info("push bildirishnomalar: %s", counts)
     return counts

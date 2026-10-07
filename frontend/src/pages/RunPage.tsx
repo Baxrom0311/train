@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useLocation, useParams } from 'react-router-dom'
-import { ArrowLeft, Inbox as InboxIcon, Moon, Sun, Sunrise, Sunset } from 'lucide-react'
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom'
+import { ArrowLeft, Inbox as InboxIcon, Moon, Sun, Sunrise, Sunset, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from './Badge'
 import { cn } from '@/lib/utils'
@@ -21,6 +21,8 @@ export default function RunPage() {
   const { id = '' } = useParams()
   const { t } = useTranslation()
   const warning = (useLocation().state as { warning?: string | null } | null)?.warning
+  const [params, setParams] = useSearchParams()
+  const wanted = params.get('event')
   const [run, setRun] = useState<RunDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
@@ -98,6 +100,19 @@ export default function RunPage() {
     if (!persona && run.personas.length) setPersona(run.personas[0].key)
   }, [run, selected, persona])
 
+  // bildirishnoma havolasi `?event=` (§22.2) — o'sha hodisa ochiladi, parametr URL'dan olib tashlanadi
+  useEffect(() => {
+    if (!run || !wanted) return
+    if (run.events.some((e) => e.node_id === wanted)) {
+      setSelected(wanted)
+      setPane('event')
+    }
+    setParams((p) => {
+      p.delete('event')
+      return p
+    }, { replace: true })
+  }, [run, wanted, setParams])
+
   const event = useMemo(() => run?.events.find((e) => e.node_id === selected) ?? null, [run, selected])
   const activePersona = run?.personas.find((p) => p.key === persona) ?? null
   const mentor = run?.personas.find((p) => p.kind === 'mentor') ?? null
@@ -107,6 +122,8 @@ export default function RunPage() {
     setPane('chat')
   }
   const pendingCount = run?.events.filter(isActionable).length ?? 0
+  const unreadCount = Object.values(unread).reduce((a, b) => a + b, 0)
+  const badge: Record<Pane, number> = { inbox: pendingCount, event: 0, chat: unreadCount }
 
   const abandon = async () => {
     if (!run || !window.confirm(t('desk.abandonConfirm'))) return
@@ -132,26 +149,30 @@ export default function RunPage() {
   const closed = !['active', 'scheduled'].includes(run.status)
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-4.25rem)] max-w-[1600px] flex-col gap-3 p-3">
-      <header className="glass flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3 animate-rise">
-        <div className="flex min-w-0 items-center gap-3">
+    <div className="h-desk mx-auto flex max-w-[1600px] flex-col gap-2 p-2 sm:gap-3 sm:p-3">
+      <header className="glass flex items-center justify-between gap-2 rounded-2xl px-2 py-2 animate-rise sm:flex-wrap sm:gap-3 sm:px-4 sm:py-3">
+        <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-3">
           <Button variant="ghost" size="icon" asChild aria-label={t('nav.simulations')}>
             <Link to="/simulations"><ArrowLeft className="h-4 w-4" /></Link>
           </Button>
           <div className="min-w-0">
-            <h1 className="truncate font-bold">{run.scenario.title}</h1>
-            <p className="text-xs text-muted-foreground">{run.scenario.company_name}</p>
+            <h1 className="line-clamp-2 text-sm font-bold leading-tight sm:truncate sm:text-base">{run.scenario.title}</h1>
+            <p className="hidden text-xs text-muted-foreground sm:block">{run.scenario.company_name}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-3">
           <DeskClock now={now} part={part} off={run.status === 'active' && !run.is_work_time} />
-          <Badge variant={closed ? 'secondary' : 'default'}>{t(`run.status.${run.status}`)}</Badge>
+          {/* telefonda faol holat belgisi tushiriladi — joy sarlavhaga */}
+          <Badge variant={closed ? 'secondary' : 'default'} className={cn(!closed && 'hidden sm:inline-flex')}>{t(`run.status.${run.status}`)}</Badge>
           {closed ? (
             <Button size="sm" asChild>
               <Link to={`/runs/${run.id}/report`}>{t('catalog.report')}</Link>
             </Button>
           ) : (
-            <Button size="sm" variant="ghost" onClick={abandon}>{t('desk.abandon')}</Button>
+            <Button size="sm" variant="ghost" onClick={abandon} aria-label={t('desk.abandon')} title={t('desk.abandon')}>
+              <X className="h-4 w-4 sm:hidden" />
+              <span className="hidden sm:inline">{t('desk.abandon')}</span>
+            </Button>
           )}
         </div>
       </header>
@@ -171,7 +192,12 @@ export default function RunPage() {
             className={cn('flex-1 rounded-xl py-2 text-sm font-medium transition-colors',
               pane === p ? 'bg-brand text-primary-foreground shadow' : 'text-muted-foreground')}>
             {t(`desk.pane.${p}`)}
-            {p === 'inbox' && pendingCount > 0 && ` (${pendingCount})`}
+            {badge[p] > 0 && (
+              <span className={cn('ml-1.5 inline-grid h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] font-bold',
+                pane === p ? 'bg-primary-foreground/25' : p === 'chat' ? 'bg-destructive text-destructive-foreground' : 'bg-primary/15 text-primary')}>
+                {badge[p]}
+              </span>
+            )}
           </button>
         ))}
       </nav>
@@ -234,15 +260,15 @@ function DeskClock({ now, part, off }: { now: number; part: Daypart; off: boolea
   const Icon = off ? Moon : PART_ICON[part]
   const progress = workdayProgress(new Date(now))
   return (
-    <div className="flex items-center gap-2.5 rounded-xl bg-background/50 px-3 py-1.5" title={t('desk.tashkentTime')}>
+    <div className="flex items-center gap-2 rounded-xl bg-background/50 px-2 py-1.5 sm:gap-2.5 sm:px-3" title={off ? `${t('desk.tashkentTime')} · ${t('desk.offHours')}` : t('desk.tashkentTime')}>
       <Icon className="h-4 w-4 text-primary" />
       <div className="leading-none">
         <p className="font-mono text-base font-bold tabular-nums">{formatTime(new Date(now))}</p>
-        <div className="mt-1 h-1 w-20 overflow-hidden rounded-full bg-muted" aria-hidden>
+        <div className="mt-1 h-1 w-14 overflow-hidden rounded-full bg-muted sm:w-20" aria-hidden>
           <div className="bg-brand h-full rounded-full transition-[width] duration-1000" style={{ width: `${progress * 100}%` }} />
         </div>
       </div>
-      {off && <span className="text-xs text-muted-foreground">{t('desk.offHours')}</span>}
+      {off && <span className="hidden text-xs text-muted-foreground sm:inline">{t('desk.offHours')}</span>}
     </div>
   )
 }

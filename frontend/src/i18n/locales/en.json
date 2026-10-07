@@ -1118,5 +1118,22 @@
     "hours_other": "{{count}} hours",
     "daysAgo_one": "{{count}} day",
     "daysAgo_other": "{{count}} days"
+  },
+  "pwa": {
+    "install": "Install app",
+    "offline": "You're offline. The page stays open, but sending answers and new messages will work once the connection is back.",
+    "push": {
+      "title": "Push notifications",
+      "hint": "New tasks, deadlines and mentor comments arrive on your phone or computer right away.",
+      "account": "Push enabled",
+      "deviceOn": "This device is connected",
+      "deviceOff": "This device is not connected",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "install": "On iPhone, push only works in the installed app: in Safari tap Share → Add to Home Screen, then open the app from the home screen.",
+      "unsupported": "This browser doesn't support push notifications. You'll still get them on the site and by email.",
+      "denied": "The browser blocked notifications. Allow them in site settings (the lock icon in the address bar) and reload the page.",
+      "error": "Couldn't connect. Please try again later."
+    }
   }
 }
