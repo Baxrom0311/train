@@ -20,6 +20,7 @@ Mentor (`CONTRACT.md` §9.13): talaba ishini ko'radi, har baholangan urinishdan 
 chatda izoh yozadi, dedlayn yaqinlashsa eslatadi.
 Sertifikat va portfolio (`CONTRACT.md` §13): tugagan Run'ga `TJ-XXXX-XXXX` kodli
 sertifikat (ochiq tekshiruv `/c/{code}`, QR, A4 PDF), talabaning ochiq portfoliosi `/p/{slug}`.
+Landing (`CONTRACT.md` §14): mehmon uchun `/` — ochiq `GET /api/v1/showcase` asosida; kirgan foydalanuvchi o'z bosh sahifasiga.
 
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da

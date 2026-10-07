@@ -387,3 +387,26 @@ export interface PortfolioPublic {
   sectors: Sector[]
   certificates: CertificatePublic[]
 }
+
+export interface ShowcaseSlot {
+  at: string
+  type: NodeType
+  title: string | null
+}
+
+export interface ShowcaseScenario {
+  slug: string
+  title: string
+  sector: Sector
+  company_name: string
+  difficulty: string
+  duration_days: number
+  tasks: number
+  mentor: { name: string; role: string } | null
+  day1: ShowcaseSlot[]
+}
+
+export interface Showcase {
+  stats: { scenarios: number; sectors: number; completed_runs: number }
+  scenarios: ShowcaseScenario[]
+}

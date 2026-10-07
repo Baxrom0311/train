@@ -643,6 +643,7 @@ submission'i har doim arq job orqali baholanadi. Talent Hunt/Universitet portali
 ```
 GET    /api/v1/scenarios                         katalog (published, is_active)
 GET    /api/v1/scenarios/{id}
+GET    /api/v1/showcase                          ochiq (login'siz) — landing uchun, §14.1
 POST   /api/v1/runs                              { scenario_id, start_at? } -> scheduled|active (+warning, day1_ends_at)
 GET    /api/v1/runs/my
 GET    /api/v1/runs/{id}                         holat: soat, hodisalar, dedlaynlar
@@ -1052,3 +1053,52 @@ overall_score, competencies, sectors, certificates: [CertificatePublic]`.
   emas) va portfolio sozlamalari; menyuda "Portfolio".
 - Run hisobotida (`/runs/{id}/report`) sertifikat bo'lsa — unga havola va
   LinkedIn tugmasi.
+
+---
+
+## 14. Landing sahifa (Modul 7 + 9)
+
+Kirmagan mehmon uchun `/` — platformaning ochiq bosh sahifasi. Kirgan
+foydalanuvchi `/`dan o'z bosh sahifasiga yo'naltiriladi (talaba — `/dashboard`,
+qolganlar — §11.4 `homeFor`); `/dashboard` faqat kirganlar uchun.
+
+### 14.1 `GET /api/v1/showcase` (ochiq)
+
+Faqat nashr qilingan (`published`, `is_active`) ssenariylar va umumiy
+sonlar; shaxsiy ma'lumot yo'q. `Cache-Control: public, max-age=300`.
+
+```
+Showcase: {
+  stats: { scenarios, sectors, completed_runs },
+  scenarios: [ShowcaseScenario]           # sarlavha bo'yicha
+}
+ShowcaseScenario: { slug, title, sector, company_name, difficulty,
+  duration_days, tasks,                   # task + incident + decision soni
+  mentor: { name, role } | null,
+  day1: [{ at: "HH:MM", type, title }] }  # 1-kunning `day`+`at` node'lari, vaqt bo'yicha
+```
+
+`day1[].title` — faqat `message` va `task` uchun `short_title(brief)`;
+`incident` va `decision` uchun `null` (kutilmagan vaziyat oldindan
+oshkor qilinmaydi, frontend "Kutilmagan vaziyat" / "Qaror" deb yozadi).
+`after` bilan keladigan node'lar ro'yxatga kirmaydi. Rubrika, hint,
+namunaviy javob, hujjat va personaj `knows`/`secrets` hech qachon chiqmaydi.
+
+### 14.2 Bo'limlar
+
+1. **Hero**: sarlavha, qisqa izoh, "Bepul boshlash" (`/register`) va
+   "Kompaniyalar uchun" (pastdagi bo'limga); yonida tanlangan ssenariyning
+   1-kun jadvali "ish stoli" ko'rinishida (Toshkent vaqti bilan joriy payt
+   belgisi).
+2. **Raqamlar**: ssenariylar, sohalar, ish kuni 09:00–18:00, AI mentor.
+   `completed_runs` 100 dan kam bo'lsa ko'rsatilmaydi.
+3. **Sohalar**: har soha kartasi va undagi ssenariylar (showcase'dan).
+4. **Qanday ishlaydi**: ssenariy tanlash → real vaqtda ish kuni → AI baholash
+   va mentor izohi → sertifikat va portfolio → kompaniya takliflari.
+5. **Sertifikat**: namuna varaq (`CertificateSheet`, "Namuna" belgisi bilan,
+   fictional ism) va kod bo'yicha tekshirish formasi (§13.4).
+6. **Kimlar uchun**: talaba (bepul, §1), kompaniya (Talent Hunt §10,
+   `/register?as=company`), universitet (portal §12, `/register?as=university`).
+7. **Savol-javob** va footer.
+
+Barcha matn uz/ru/en; kompaniya nomlari faqat ssenariylardagi fictional nomlar.

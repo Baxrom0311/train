@@ -496,5 +496,166 @@
     "certificates": "Sertifikatlar ({{count}})",
     "noCertificates": "Hozircha sertifikat yo'q.",
     "footer": "Natijalar TryJob virtual ish ssenariylarida AI va mentor baholashi asosida."
+  },
+  "landing": {
+    "hero": {
+      "badge": "O'zbekiston talabalari uchun virtual ish tajribasi",
+      "titleStart": "Ishga kirishdan oldin",
+      "titleAccent": "ishni sinab ko'ring",
+      "subtitle": "TryJob'da ish kuni real vaqtda o'tadi: hamkasblar xabar yozadi, dedlaynlar yaqinlashadi, kutilmagan vaziyatlar chiqadi. Javoblaringizni AI baholaydi, mentor yo'l ko'rsatadi, natija esa sertifikat bo'lib qoladi.",
+      "start": "Bepul boshlash",
+      "forOrgs": "Kompaniya va universitetlar uchun",
+      "point": {
+        "free": "Talabalar uchun bepul",
+        "realTime": "Toshkent vaqti, 09:00–18:00",
+        "certificate": "Tekshiriladigan sertifikat"
+      }
+    },
+    "desk": {
+      "day1": "1-kun",
+      "tashkent": "Toshkent",
+      "now": "hozir",
+      "mentor": "mentor",
+      "mentorLine": "Savol bo'lsa yozing. Javobni aytmayman, lekin to'g'ri yo'lni ko'rsataman.",
+      "switch": "Ssenariyni almashtirish"
+    },
+    "slot": {
+      "message": "Xabar",
+      "task": "Vazifa",
+      "incident": "Kutilmagan vaziyat",
+      "decision": "Qaror qabul qilish",
+      "day_end": "Kun yakuni hisoboti"
+    },
+    "numbers": {
+      "scenarios": "ish ssenariysi",
+      "sectors": "soha",
+      "workday": "real ish kuni, Toshkent vaqti",
+      "completed": "yakunlangan ish kuni",
+      "mentor": "AI mentor yordami"
+    },
+    "sectors": {
+      "eyebrow": "Sohalar",
+      "title": "O'zingizga mos kasbni tanlang",
+      "subtitle": "Har ssenariy — o'ylab topilgan, lekin real ishga juda yaqin kompaniyadagi ish kuni yoki haftasi.",
+      "tasks_one": "{{count}} ta vazifa",
+      "tasks_other": "{{count}} ta vazifa",
+      "soon": "Tez orada",
+      "about": {
+        "IT": "Backend, bug tuzatish, code review, prod'dagi incident.",
+        "Banking": "Kredit arizasi tahlili, risk, mijoz bilan yozishma.",
+        "Marketing": "Kampaniya metrikalari, budjet, brendga mos matnlar.",
+        "Data": "SQL hisobotlar, dashboard, A/B test xulosalari.",
+        "HR": "CV saralash, ta'til hisobi, nomzodlar bilan muloqot."
+      }
+    },
+    "how": {
+      "eyebrow": "Qanday ishlaydi",
+      "title": "Bir ish kuni — besh qadam",
+      "subtitle": "Oddiy test emas: siz jamoaning bir a'zosisiz va ish kuni sizni kutmaydi.",
+      "pick": {
+        "title": "Ssenariy tanlang",
+        "body": "Soha va qiyinlik bo'yicha: 1 kunlik yoki 1 haftalik."
+      },
+      "work": {
+        "title": "Ish kuni boshlanadi",
+        "body": "Vazifalar Toshkent vaqti bilan keladi, dedlaynlar ish daqiqalarida hisoblanadi."
+      },
+      "review": {
+        "title": "AI baholaydi",
+        "body": "Har javob rubrika bo'yicha baholanadi, mentor izoh yozadi. 3 tagacha urinish bor."
+      },
+      "certificate": {
+        "title": "Sertifikat oling",
+        "body": "Ssenariy yakunlansa — QR kodli, tekshiriladigan sertifikat va portfolio."
+      },
+      "offers": {
+        "title": "Takliflar keladi",
+        "body": "Ishga ochiq bo'lsangiz, kompaniyalar natijangizni ko'rib taklif yuboradi."
+      }
+    },
+    "certificate": {
+      "eyebrow": "Sertifikat",
+      "title": "Natija — tekshirib bo'ladigan hujjat",
+      "subtitle": "Har sertifikatning noyob kodi va QR kodi bor. Ish beruvchi uni bir zumda tekshiradi, PDF qilib chop etish ham mumkin.",
+      "sample": "Namuna",
+      "sampleName": "Namuna Talaba",
+      "verifyTitle": "Sertifikatni tekshirish",
+      "verifyHint": "Sertifikatdagi TJ-XXXX-XXXX kodini kiriting."
+    },
+    "audience": {
+      "eyebrow": "Kimlar uchun",
+      "title": "Talaba, kompaniya va universitet — bitta platformada",
+      "student": {
+        "title": "Talabalar",
+        "price": "Bepul",
+        "points": [
+          "Real ish kuni tajribasi va AI mentor",
+          "Har javobga batafsil baho va izoh",
+          "Sertifikat va ochiq portfolio",
+          "Kompaniyalardan ish takliflari"
+        ],
+        "cta": "Ro'yxatdan o'tish"
+      },
+      "company": {
+        "title": "Kompaniyalar",
+        "price": "Shartnoma asosida",
+        "points": [
+          "Nomzodlarni real vazifa natijasi bo'yicha ko'rish",
+          "Kompetensiyalar bo'yicha saralash",
+          "Ishga ochiq talabalarga to'g'ridan-to'g'ri taklif",
+          "Ariza admin tomonidan tasdiqlanadi"
+        ],
+        "cta": "Kompaniya sifatida ariza"
+      },
+      "university": {
+        "title": "Universitetlar",
+        "price": "Shartnoma asosida",
+        "points": [
+          "O'z talabalaringiz natijalari bir joyda",
+          "Sohalar va kompetensiyalar kesimida tahlil",
+          "Talabaning javob va chatlari ko'rinmaydi",
+          "Ariza admin tomonidan tasdiqlanadi"
+        ],
+        "cta": "Universitet sifatida ariza"
+      }
+    },
+    "faq": {
+      "eyebrow": "Savol-javob",
+      "title": "Ko'p so'raladigan savollar",
+      "free": {
+        "q": "Talabalar uchun pullikmi?",
+        "a": "Yo'q, talabalar uchun TryJob bepul. Platformani universitetlar va kompaniyalar shartnoma asosida moliyalashtiradi."
+      },
+      "time": {
+        "q": "Ish kuni qanday o'tadi?",
+        "a": "Ssenariy Toshkent vaqti bilan 09:00–18:00 oralig'ida real vaqtda ketadi, 13:00–14:00 tushlik. Pauza yo'q: vazifalar o'z vaqtida keladi va dedlaynlar ish daqiqalarida hisoblanadi. Dam olish va bayram kunlari ish yo'q."
+      },
+      "companies": {
+        "q": "Ssenariydagi kompaniyalar real kompaniyalarmi?",
+        "a": "Yo'q, barcha kompaniya, mijoz va raqamlar o'ylab topilgan. Lekin vaziyatlar va vazifalar real ishdagidek tuzilgan."
+      },
+      "grading": {
+        "q": "Javoblarni kim baholaydi?",
+        "a": "Har javobni AI oldindan yozilgan mezonlar (rubrika) bo'yicha baholaydi, mentor esa nimani yaxshilash kerakligini tushuntiradi. Har vazifaga 3 tagacha urinish bor, oxirgisi hisoblanadi."
+      },
+      "verify": {
+        "q": "Sertifikatni qanday tekshirish mumkin?",
+        "a": "Sertifikatdagi QR kodni skanerlang yoki TJ-XXXX-XXXX kodini shu sahifadagi formaga kiriting. Sahifa sertifikat haqiqiy yoki bekor qilinganini ko'rsatadi."
+      },
+      "privacy": {
+        "q": "Natijalarimni kim ko'radi?",
+        "a": "Kompaniyalar faqat siz \"Ishga ochiqman\" deb belgilagan bo'lsangiz ball va kompetensiyalaringizni ko'radi. Universitetingiz ham faqat natijalarni ko'radi. Javob va chatlaringiz hech kimga ko'rsatilmaydi."
+      }
+    },
+    "cta": {
+      "title": "Birinchi ish kuningiz sizni kutmoqda",
+      "subtitle": "Ro'yxatdan o'ting, ssenariy tanlang va bugunoq boshlang."
+    },
+    "footer": {
+      "note": "Ssenariylardagi kompaniyalar o'ylab topilgan; sertifikat ish tajribasini emas, ssenariy natijasini tasdiqlaydi.",
+      "how": "Qanday ishlaydi",
+      "verify": "Sertifikatni tekshirish",
+      "faq": "Savol-javob"
+    }
   }
 }
