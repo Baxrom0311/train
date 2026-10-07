@@ -225,7 +225,11 @@
       "typing": "{{name}} is typing…",
       "placeholder": "Write a message… (Enter to send)",
       "send": "Send",
-      "tooFast": "Too many messages — wait a moment"
+      "tooFast": "Too many messages — wait a moment",
+      "purpose": {
+        "review": "Feedback on your task",
+        "nudge": "Reminder"
+      }
     },
     "notFound": "Simulation not found",
     "abandon": "Abandon",
@@ -237,7 +241,8 @@
       "inbox": "Inbox",
       "event": "Task",
       "chat": "Chat"
-    }
+    },
+    "askMentor": "Discuss with {{name}}"
   },
   "report": {
     "title": "Report",

@@ -22,18 +22,18 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
-from sqlalchemy import and_, exists, or_, select
+from sqlalchemy import DateTime, and_, exists, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.ai.guardrail import MAX_CONTENT_LENGTH
 from app.models.enums import AIEvalStatus, ChatSender, NodeType, RunEventStatus, RunStatus
-from app.models.scenario import ChatMessage, Run, RunEvent, ScenarioVersion, UploadedFile
+from app.models.scenario import CHAT_PURPOSE_NUDGE, ChatMessage, Run, RunEvent, ScenarioVersion, UploadedFile
 from app.models.simulation import Submission
 from app.scenario.clock import WorkCalendar
 from app.scenario.conditions import ConditionContext, evaluate, pending_scores
 from app.scenario.holidays import load_calendar
-from app.scenario.schema import ANSWER_TYPES, AnswerType, Node, ScenarioDefinition
+from app.scenario.schema import ANSWER_TYPES, AnswerType, Node, ScenarioDefinition, short_title
 
 # §9.3.3 — `score_*` sharti uchun baho kutish chegarasi
 SCORE_WAIT = timedelta(minutes=15)
@@ -48,6 +48,10 @@ OPEN_STATUSES = (RunStatus.SCHEDULED, RunStatus.ACTIVE)
 # `day_end` yopilganda `run_events.result`ga — kunlik hisobot yozilishi kerak (§9.6)
 REPORT_DUE = "report_due"
 AWAITING_EVAL = (AIEvalStatus.PENDING, AIEvalStatus.QUEUED_RETRY)
+# §9.13 — mentor eslatmasi: `run_events.result` kalitlari va oyna (ish daqiqasi)
+NUDGE_AT = "nudge_at"
+NUDGE_MIN_WINDOW = 45
+NUDGE_MAX_LEAD = 30
 
 
 # ── Xatolar (API HTTP kodiga aylantiradi) ──────────────────────────────
@@ -136,6 +140,17 @@ def allowed_answer_types(node: Node) -> set[AnswerType]:
     if node.type == NodeType.DAY_END:
         return {AnswerType.TEXT}
     return set(node.answer_types)
+
+
+def nudge_lead(node: Node, due: int | None) -> int | None:
+    """§9.13: dedlayndan necha ish daqiqasi oldin mentor eslatadi (oyna qisqa bo'lsa — yo'q)."""
+    if node.type not in ANSWER_TYPES or due is None or due < NUDGE_MIN_WINDOW:
+        return None
+    return min(NUDGE_MAX_LEAD, due // 3)
+
+
+def _without_nudge(result: dict | None) -> dict:
+    return {k: v for k, v in (result or {}).items() if k != NUDGE_AT}
 
 
 def _iso(t: datetime | None) -> str | None:
@@ -249,6 +264,8 @@ async def advance(db: AsyncSession, now: datetime, run_id: uuid.UUID | None = No
             or_(
                 and_(RunEvent.status == RunEventStatus.PENDING, RunEvent.scheduled_at <= now),
                 and_(RunEvent.status == RunEventStatus.DELIVERED, RunEvent.due_at <= now),
+                # §9.13: mentor eslatmasi vaqti (yozilgach kalit o'chiriladi)
+                RunEvent.result[NUDGE_AT].astext.cast(DateTime(timezone=True)) <= now,
             ),
         ))
         q = q.where(or_(
@@ -288,6 +305,7 @@ async def advance_run(db: AsyncSession, run: Run, now: datetime, cal: WorkCalend
     if expire_at <= now:
         notes += state.close(RunStatus.EXPIRED, now)
     else:
+        notes += await state.nudge(now)
         notes += state.complete_if_done()
     await db.flush()
     return notes
@@ -403,6 +421,8 @@ class RunState:
         due = effective_due(node)
         # §9.2: dedlayn yetkazilgan paytdan — cron kechiksa talaba vaqt yo'qotmaydi
         e.due_at = self.cal.add_work_minutes(now, due) if due else None
+        if (lead := nudge_lead(node, due)) and self.defn.mentor is not None:
+            e.result = {**(e.result or {}), NUDGE_AT: _iso(self.cal.add_work_minutes(now, due - lead))}
         notes = [Note(self.run.id, "event_delivered", {
             "node_id": node.id, "type": node.type.value, "due_at": _iso(e.due_at),
         })]
@@ -419,7 +439,7 @@ class RunState:
 
     def _miss(self, e: RunEvent, at: datetime) -> Note:
         e.status = RunEventStatus.MISSED
-        e.result = {**(e.result or {}), "missed_at": _iso(at)}
+        e.result = {**_without_nudge(e.result), "missed_at": _iso(at)}
         mark_report_due(e, self.defn.node(e.node_id))
         return Note(self.run.id, "event_missed", {"node_id": e.node_id})
 
@@ -438,6 +458,42 @@ class RunState:
             )
             self.db.add(child)
             self.events.append(child)
+
+    # ── Mentor eslatmasi (§9.13) ──
+
+    async def nudge(self, now: datetime) -> list[Note]:
+        """Vaqti kelgan `nudge_at`: hali topshirilmagan va talaba jim bo'lsa — mentor eslatadi."""
+        mentor = self.defn.mentor
+        notes: list[Note] = []
+        for e in self.events:
+            at = (e.result or {}).get(NUDGE_AT)
+            if at is None or datetime.fromisoformat(at) > now:
+                continue
+            result = _without_nudge(e.result)
+            if mentor is not None and e.status == RunEventStatus.DELIVERED and not await self._student_wrote_since(e.delivered_at):
+                node = self.defn.node(e.node_id)
+                title = short_title(node.brief)
+                due = e.due_at.astimezone(self.cal.tz).strftime("%H:%M")
+                self._chat_seq += 1
+                msg = ChatMessage(
+                    id=uuid.uuid4(), run_id=self.run.id, persona_key=mentor.key, sender=ChatSender.PERSONA,
+                    body=mentor.nudge_text(title, due), generated=False,
+                    created_at=now + timedelta(microseconds=self._chat_seq), purpose=CHAT_PURPOSE_NUDGE, node_id=node.id,
+                )
+                self.db.add(msg)
+                result["nudged_at"] = _iso(now)
+                notes.append(Note(self.run.id, "chat_message", {"persona_key": mentor.key, "id": str(msg.id)}))
+            else:
+                result["nudge_skipped"] = _iso(now)
+            e.result = result
+        return notes
+
+    async def _student_wrote_since(self, since: datetime) -> bool:
+        return bool(await self.db.scalar(select(exists().where(
+            ChatMessage.run_id == self.run.id,
+            ChatMessage.sender == ChatSender.STUDENT,
+            ChatMessage.created_at >= since,
+        ))))
 
     # ── Yakunlash ──
 
@@ -534,6 +590,7 @@ async def submit_answer(
     db.add(sub)
     state.submissions.append(sub)
     e.status = RunEventStatus.SUBMITTED
+    e.result = _without_nudge(e.result) or None
     mark_report_due(e, node)
     if not previous:
         state.spawn_children(node_id, "submitted", now)

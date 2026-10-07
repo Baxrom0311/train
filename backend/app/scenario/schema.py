@@ -48,6 +48,20 @@ class AnswerType(str, Enum):
     CODE = "code"
 
 
+DEFAULT_NUDGE = (
+    "«{task}» dedlayni {time}da. Qayerda to'xtab qoldingiz? "
+    "Qaysi qadamda ikkilanayotganingizni yozing — birga ko'rib chiqamiz."
+)
+
+
+def short_title(brief: str, limit: int = 60) -> str:
+    """Chat matni uchun task nomi: brief'ning birinchi qatori, so'z chegarasida qisqartirilgan."""
+    line = (brief or "").split("\n")[0].strip()
+    if len(line) <= limit:
+        return line
+    return line[:limit].rsplit(" ", 1)[0].rstrip(" ,.;:—-") + "…"
+
+
 class PersonaKind(str, Enum):
     COLLEAGUE = "colleague"
     MENTOR = "mentor"  # §9.4: javobni aytmaydi, yo'naltiradi; hint beradi
@@ -65,6 +79,20 @@ class Persona(_Strict):
     busy_reply: str = "Hozir band edim, keyinroq yozing."
     # Anti-spoiler AI javobini bloklaganda (§9.4, 3-qavat)
     deflect_reply: str = "Buni o'zingiz hal qilib ko'ring — brief va hujjatlarni yana bir ko'rib chiqing."
+    # Mentorning dedlayn eslatmasi (§9.13): `{task}`, `{time}` o'rniga qo'yiladi
+    nudge_reply: str = DEFAULT_NUDGE
+
+    @field_validator("nudge_reply")
+    @classmethod
+    def _nudge_placeholders(cls, value: str) -> str:
+        try:
+            value.format(task="", time="")
+        except (KeyError, IndexError, ValueError) as exc:
+            raise ValueError("nudge_reply'da faqat {task} va {time} bo'lishi mumkin") from exc
+        return value
+
+    def nudge_text(self, task: str, time: str) -> str:
+        return self.nudge_reply.format(task=task, time=time)
 
 
 class Document(_Strict):
@@ -175,12 +203,18 @@ class ScenarioDefinition(_Strict):
     documents: list[Document] = []
     nodes: list[Node] = Field(min_length=1)
 
+    @property
+    def mentor(self) -> Persona | None:
+        return next((p for p in self.personas if p.kind == PersonaKind.MENTOR), None)
+
     @model_validator(mode="after")
     def _references(self) -> ScenarioDefinition:
         _unique("persona", [p.key for p in self.personas])
         _unique("document", [d.key for d in self.documents])
         _unique("node", [n.id for n in self.nodes])
 
+        if sum(p.kind == PersonaKind.MENTOR for p in self.personas) > 1:
+            raise ValueError("ssenariyda ko'pi bilan bitta mentor bo'ladi (§9.13)")
         persona_keys = {p.key for p in self.personas}
         doc_keys = {d.key for d in self.documents}
         nodes = {n.id: n for n in self.nodes}

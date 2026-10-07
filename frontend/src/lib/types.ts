@@ -111,6 +111,9 @@ export interface ChatMessage {
   link_url: string | null
   generated: boolean
   created_at: string
+  // mentorning o'zi boshlagan xabari (CONTRACT.md §9.13)
+  purpose: 'review' | 'nudge' | null
+  node_id: string | null
 }
 
 export interface DocumentOut {

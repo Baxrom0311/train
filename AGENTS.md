@@ -15,6 +15,8 @@ Talent Hunt (`CONTRACT.md` §10): kompaniya nomzodlarni Run natijalari bo'yicha
 ko'radi va taklif yuboradi, talaba ko'rinishini boshqaradi va javob beradi.
 Tashkilot arizasi → admin tasdiqlashi → invoice oqimi brauzerda (`CONTRACT.md` §11, `/admin`).
 Universitet portali (`CONTRACT.md` §12, `/university`): o'z talabalarining Run natijalari.
+Mentor (`CONTRACT.md` §9.13): talaba ishini ko'radi, har baholangan urinishdan keyin
+chatda izoh yozadi, dedlayn yaqinlashsa eslatadi.
 
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da

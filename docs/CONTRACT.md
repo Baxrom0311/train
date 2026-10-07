@@ -475,6 +475,8 @@ nodes:
   (`runs.ai_tokens_used`, standart 200 000). Limit tugasa yoki AI ishlamasa —
   personajning `busy_reply` skript javobi. LLM chaqiruvi Run qulfidan
   tashqarida: talaba xabari yozilib commit qilinadi, keyin javob yaratiladi.
+- **Mentor** talabaning ishini ko'radi, har baholangan urinishdan keyin o'zi
+  izoh yozadi va dedlayn yaqinlashsa eslatadi — §9.13.
 - **Hint:** `POST .../hint` navbatdagi `hints[i]`ni qaytaradi, `hints_used`
   oshadi (keyingi baholashlarda `hint_penalty` qo'llanadi); ssenariyda
   `kind: mentor` personaj bo'lsa, hint uning chatiga ham yoziladi.
@@ -583,7 +585,9 @@ run_events         (id, run_id, node_id, scheduled_at, delivered_at, due_at,
                     UNIQUE(run_id, node_id))  -- INDEX(status, scheduled_at), INDEX(status, due_at)
 chat_messages      (id, run_id, persona_key, sender student|persona|system,
                     content_type, body, file_id NULL, link_url NULL,
-                    generated bool, created_at)
+                    generated bool, created_at,
+                    purpose NULL review|nudge, node_id NULL,        -- mentor xabarlari (§9.13)
+                    submission_id NULL FK UNIQUE)                   -- bitta urinishga bitta izoh
 uploaded_files     (id, owner_user_id, run_id NULL, stored_path, original_name, mime,
                     size_bytes, sha256, created_at)
 work_holidays      (date PK, name, source auto|manual)
@@ -676,7 +680,7 @@ fayliga **tegmaydi**):
 
 | Modul | Nima qo'shadi |
 |---|---|
-| 2 (AI) | `ai/llm.py`: umumiy `chat(messages, schema?) -> LLMResult` (JSON-rejim, Pydantic tekshiruv, token hisobi, provayder tartibi `LLM_PROVIDERS` va model nomlari `.env`dan); `ai/` ichida: `persona_reply(ctx, history, message) -> LLMResult`, `evaluate_rubric(task, answer, rubric) -> RubricResult`, `embed(texts) -> list[list[float]]`, `summarize_day(...)`, `final_report(...)`; `submissions` migratsiyasi (§9.7); arq cron `deliver_due_events`ni `WorkerSettings`ga ulash (funksiyaning o'zi Modul 9'da) |
+| 2 (AI) | `ai/llm.py`: umumiy `chat(messages, schema?) -> LLMResult` (JSON-rejim, Pydantic tekshiruv, token hisobi, provayder tartibi `LLM_PROVIDERS` va model nomlari `.env`dan); `ai/` ichida: `persona_reply(ctx, history, message) -> LLMResult`, `evaluate_rubric(task, answer, rubric) -> RubricResult`, `embed(texts) -> list[list[float]]`, `summarize_day(...)`, `final_report(...)`, `mentor_review(ctx) -> LLMResult` (§9.13); `submissions` migratsiyasi (§9.7); arq cron `deliver_due_events`ni `WorkerSettings`ga ulash (funksiyaning o'zi Modul 9'da) |
 | 1 (Core) | `models/enums.py`ga `Competency`, `RunStatus`, `RunEventStatus`, `NodeType`, `ChatContentType`, `ChatSender`, `ScenarioVersionStatus`, `HolidaySource`, `AIEvalStatus.PENDING`; `requirements.txt`ga `tzdata`, `holidays`, `pgvector`; `conftest.py`da `create_all`dan oldin `CREATE EXTENSION IF NOT EXISTS vector`; `file_validator`ga yangi turlar (v2) |
 | 8 (Deploy) | `postgres` image → `pgvector/pgvector:pg16`; `UPLOAD_DIR` volume; nginx'da `/api/v1/runs/*/stream` uchun `proxy_buffering off` va uzun `proxy_read_timeout` |
 | 7 (Frontend) | "Ish stoli": inbox, personajlar chati, task board, kalendar, soat, hisobot sahifasi |
@@ -706,6 +710,51 @@ turi; ssenariy muharriri (admin UI).
 - **Real vaqt va talabaning darslari:** pauza yo'q qaror qabul qilingan;
   pilotdan keyin "yonib ketgan" Run'lar ulushi kuzatilsin va kerak bo'lsa
   ssenariy dedlaynlari yumshatilsin.
+
+### 9.13 Mentor (Modul 2 + 9)
+
+Ssenariydagi `kind: mentor` personaj — talabaning ish joyidagi ustozi. U
+oddiy hamkasbdan uchta narsa bilan farq qiladi; hammasi faqat ssenariyda
+mentor bo'lsa ishlaydi (bo'lmasa — hech narsa yuborilmaydi).
+
+1. **Talabaning ishini ko'radi.** Mentor chatining kontekstiga har
+   yetkazilgan task/incident bo'yicha oxirgi urinish qo'shiladi: urinish
+   raqami va qolgani, ball (jarimalar bilan), baholovchi izohi, eng past
+   mezon va dalili, talaba javobining boshi (≤ 600 belgi, `<data>` ichida).
+   Namunaviy javob va rubrikaning `reference_answer`i **kirmaydi**. Talaba
+   "nega 60 oldim?" desa — mentor aynan shu ish asosida tushuntiradi.
+2. **Har baholangan urinishdan keyin izoh** (`purpose=review`): baholash
+   job'i (`evaluate_run_submission_job`) `completed` bo'lgach shu job ichida
+   `scenario/mentor.py: post_review` chaqiriladi. Mentor chatiga 3–5 gaplik
+   xabar: bitta aniq kuchli tomon → eng zaif mezon va real ishda nimaga
+   olib kelishi → bitta yo'naltiruvchi savol; urinish qolgan va ball < 80
+   bo'lsa — qayta topshirishga taklif. Ball raqami yozilmaydi (u task
+   kartasida bor). Promptga brief, mezonlar (ball + dalil), talaba javobi
+   (`<data>`), task'ning `hints`lari (yo'nalish uchun, so'zma-so'z emas)
+   beriladi; namunaviy javob berilmaydi, chiqish baribir anti-spoiler
+   (§9.4, 3-qavat) tekshiruvidan o'tadi.
+   - Idempotent: `chat_messages.submission_id` UNIQUE — job qayta ishlasa
+     ikkinchi izoh yozilmaydi. `day_end` va `decision` uchun izoh yo'q
+     (ular kunlik hisobotda).
+   - AI ishlamasa, token byudjeti (§9.4) tugagan bo'lsa yoki anti-spoiler
+     bloklasa — skript izoh: baholovchining `short_feedback`i + (urinish
+     qolgan bo'lsa) qayta topshirish taklifi. Izoh har doim yoziladi.
+   - Tokenlar `runs.ai_tokens_used`ga qo'shiladi; kunlik AI xabar limitiga
+     kirmaydi (talaba boshlamagan).
+3. **Dedlayn eslatmasi** (`purpose=nudge`, LLM'siz, skript): task/incident
+   yetkazilganda, dedlayn oynasi ≥ 45 ish daqiqasi bo'lsa,
+   `run_events.result.nudge_at` = yetkazilgan payt + (oyna − min(30,
+   oyna/3)) ish daqiqasi. Shu vaqt kelganda (`advance`, cron) hodisa hali
+   `delivered` (topshirilmagan) va talaba yetkazilgandan beri **hech bir**
+   personajga yozmagan bo'lsa — mentor chatiga eslatma (personajning
+   `nudge_reply` shabloni, `{task}` va `{time}` bilan; standart matn bor).
+   Har hodisaga ko'pi bilan bitta: `nudge_at` o'chirilib, `nudged_at` yoki
+   `nudge_skipped` yoziladi.
+4. SSE: ikkala xabar ham `chat_message` (`persona_key` bilan) — frontend
+   o'qilmaganlar sonini oshiradi. Chat API `purpose` va `node_id`ni qaytaradi;
+   frontend izohni "Task bo'yicha izoh", eslatmani "Eslatma" yorlig'i bilan
+   ko'rsatadi, task kartasidagi baho ostida "Mentor bilan muhokama qilish"
+   tugmasi mentor chatini ochadi.
 
 ---
 
