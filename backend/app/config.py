@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     REDIS_URL: str = "redis://localhost:6379"
 
+    # Run chat fayllari (CONTRACT.md §9.5). Docker'da doimiy volume
+    # (`/data/uploads`), lokalda repo ichidagi `uploads/` (.gitignore'da).
+    UPLOAD_DIR: str = "uploads"
+
     # Frontend domenlari (vergul bilan ajratilgan). Bo'sh qoldirilsa CORS
     # umuman ochilmaydi (xavfsiz default) — "*" + credentials birikmasi
     # ataylab qo'llanilmaydi.

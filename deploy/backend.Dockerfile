@@ -16,7 +16,8 @@ COPY backend/ /srv/backend/
 COPY tools/ /srv/tools/
 
 # Root bo'lmagan foydalanuvchi — sandbox subprocess'i ham shu huquqlar bilan ishlaydi.
-RUN useradd --system --uid 10001 --no-create-home app
+RUN useradd --system --uid 10001 --no-create-home app \
+ && mkdir -p /data/uploads && chown app /data/uploads   # uploads volume egasi (§9.5)
 USER app
 
 EXPOSE 8000
