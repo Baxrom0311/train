@@ -83,11 +83,14 @@ services:
     expose:
       - "8000"
 
-  # arq AI-retry worker. HOZIRCHA O'CHIQ: app/ai/worker.py'da WorkerSettings
-  # hali yo'q (Modul 2). U qo'shilgach:  docker compose --profile worker up -d
+  # arq AI-retry worker — Cloud AI zanjiri (DeepSeek/Gemini/OpenAI)
+  # muvaffaqiyatsiz bo'lganda navbatga tushgan submission'larni qayta
+  # baholaydi (app/ai/worker.py WorkerSettings). Standart profilda ishga
+  # tushadi — alohida --profile kerak emas, chunki bu AI mentor
+  # funksiyasining ajralmas qismi (navbat ishlamasa, muvaffaqiyatsiz
+  # baholashlar abadiy "queued_retry" holatida qolib ketadi).
   worker:
     image: tryjob-backend
-    profiles: ["worker"]
     restart: unless-stopped
     environment: *backend-env
     command: ["arq", "app.ai.worker.WorkerSettings"]

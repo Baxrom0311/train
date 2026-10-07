@@ -9,7 +9,7 @@ Docker Compose bilan to'liq stek:
 | `migrate` | `tryjob-backend` | Bir martalik `alembic upgrade head` (rollar/ruxsatlar seed) |
 | `backend` | `tryjob-backend` | FastAPI (uvicorn), faqat ichki tarmoqda `:8000` |
 | `frontend` | `tryjob-frontend` | nginx: React build + `/api/`, `/docs` → backend proxy |
-| `worker` | `tryjob-backend` | arq AI-retry worker — `worker` profilida, hozircha o'chiq |
+| `worker` | `tryjob-backend` | arq AI-retry worker — standart profilda ishga tushadi |
 
 ## Ishga tushirish
 
@@ -48,7 +48,10 @@ birinchi marta yaratilganda paydo bo'ladi.
   `no-new-privileges`, `pids_limit`. Bu sandbox (`/tools/sandbox`) uchun
   **to'liq izolyatsiya emas** — kod hali ham backend konteyneri ichida va
   tarmoqqa chiqa oladi; alohida sandbox konteyneri keyingi qadam.
-- `worker` servisi `app/ai/worker.py`da `WorkerSettings` paydo bo'lgach
-  ishlaydi: `docker compose -f deploy/docker-compose.yml --profile worker up -d`.
+- `worker` servisi `app/ai/worker.py`dagi `WorkerSettings` bilan standart
+  profilda ishlaydi (`up -d` shartidan ortiq hech narsa kerak emas) —
+  Cloud AI zanjiri muvaffaqiyatsiz bo'lganda submission'larni qayta
+  baholaydi; bu servis ishlamasa, "queued_retry" holatidagi topshiriqlar
+  abadiy shu holatda qolib ketadi.
 - HTTPS: tashqi reverse proxy (Caddy/Traefik/Cloudflare) yoki `nginx.conf`ga
   sertifikat qo'shing.
