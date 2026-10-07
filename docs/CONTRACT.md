@@ -684,7 +684,9 @@ fayliga **tegmaydi**):
 personaj (RAG, anti-spoiler); cheklangan shartlar DSL; task feedback +
 kunlik + yakuniy hisobot; kontent: **1 ta IT (1 kun) + 1 ta Bank (1 kun)**,
 keyin 1 ta haftalik. Kontent `backend/content/scenarios/`da: `lazurit-go-backend-day1`
-(IT, Junior Backend), `oqsaroy-bank-credit-day1` (Bank, Junior kredit tahlilchisi).
+(IT, Junior Backend), `oqsaroy-bank-credit-day1` (Bank, Junior kredit tahlilchisi),
+`lazurit-go-backend-week1` (IT, 5 kun: tanishuv → dizayn → kod va review →
+incident va postmortem → demo va retro; 4-kun incident'i 3-kun kodi baliga bog'liq).
 Barcha kompaniya, mijoz va raqamlar o'ylab topilgan; bank chegaralari
 (DSCR, ta'minot, AML) o'quv maqsadidagi ichki siyosat, real normativ emas.
 

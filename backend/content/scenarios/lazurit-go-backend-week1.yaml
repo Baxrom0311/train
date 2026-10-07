@@ -1,0 +1,656 @@
+# CONTRACT.md §9.11 — v1 haftalik kontent. Kompaniya, odamlar, kod va raqamlar o'ylab topilgan.
+# Hikoya: yangi xodim bir hafta ichida "buyurtmani bekor qilish" funksiyasini
+# o'rganishdan demo'gacha olib boradi; 4-kun incident'i 3-kun kodi sifatiga bog'liq.
+slug: lazurit-go-backend-week1
+title: "Lazurit Go — Junior Backend dasturchi, 1 hafta: buyurtmani bekor qilish"
+sector: IT
+company_name: "Lazurit Go"           # fictional: oziq-ovqat yetkazib berish xizmati
+difficulty: junior
+duration_days: 5
+
+personas:
+  - key: sardor
+    name: "Sardor Qodirov"
+    role: "Backend Team Lead"
+    tone: "qisqa va aniq yozadi, talabchan, lekin yordam beradi; ustuvorlik va relizlarni o'zi belgilaydi"
+    knows: [doc_onboarding, doc_orders_service, doc_cancel_spec, doc_payments_api, doc_incident_runbook, doc_postmortem_template]
+    secrets:
+      - "Payments API refund'ni Idempotency-Key bilan takrorlansa ham bir marta bajaradi; kalitsiz har so'rov yangi refund."
+      - "Juma kuni kechqurun reliz qilish jamoa qoidasiga zid — faqat feature flag bilan bosqichma-bosqich."
+    busy_reply: "Hozir uchrashuvdaman, keyinroq yozaman. Shoshilinch bo'lsa — runbook'ga qarang."
+    deflect_reply: "Tayyor yechimni bermayman — hujjatlarni yana bir o'qing va o'zingiz taklif qiling, keyin muhokama qilamiz."
+  - key: nodir
+    name: "Nodir Rahimov"
+    role: "Senior Backend Engineer, mentor"
+    kind: mentor
+    tone: "sabrli, savol bilan yo'naltiradi, javobni o'zi aytmaydi"
+    knows: [doc_onboarding, doc_orders_service, doc_code_review, doc_payments_api]
+    busy_reply: "Kod review qilyapman, birozdan keyin javob beraman."
+    deflect_reply: "Javobni o'zingiz topsangiz yaxshiroq. Qaysi joyda ikkilanayotganingizni aniq yozing — o'sha yerdan savol beraman."
+  - key: malika
+    name: "Malika Tursunova"
+    role: "QA Engineer"
+    tone: "do'stona, aniq misollar bilan yozadi"
+    knows: [doc_cancel_spec, doc_incident_logs_dup]
+    secrets:
+      - "Staging'da 'Bekor qilish' tugmasini tez ikki marta bossa, ikkita so'rov ketadi."
+    busy_reply: "Regress testlar ishlayapti, tugashi bilan yozaman."
+  - key: aziza
+    name: "Aziza Karimova"
+    role: "Product Manager"
+    tone: "shoshqaloq, natijaga yo'naltirilgan, texnik tafsilotni kam biladi"
+    knows: [doc_cancel_spec]
+    busy_reply: "Hamkorlar bilan qo'ng'iroqdaman, keyin yozaman."
+  - key: timur
+    name: "Timur Olimov"
+    role: "SRE (platforma va monitoring)"
+    tone: "xotirjam, faktlar va grafiklar bilan gapiradi"
+    knows: [doc_incident_runbook, doc_incident_logs_dup, doc_incident_logs_timeout]
+    busy_reply: "Monitoring'ni kuzatyapman, birozdan keyin javob beraman."
+
+documents:
+  - key: doc_onboarding
+    title: "Backend jamoasi: onboarding"
+    content: |
+      Lazurit Go — Toshkentdagi oziq-ovqat yetkazib berish xizmati. Backend jamoasi: Sardor (team lead),
+      Nodir (senior, mentor), Malika (QA), Timur (SRE), uchta dasturchi. Mahsulot — Aziza (PM).
+
+      Ish kuni 09:00–18:00, tushlik 13:00–14:00. Standup har kuni 09:00 da (yozma ham bo'ladi):
+      kecha nima qildim / bugun nima qilaman / nima to'sib turibdi. 3–5 qator.
+      Har kuni 17:30 da kun yakuni hisoboti.
+
+      Ustuvorlik: 1) prod incident, 2) relizni to'sib turgan bug, 3) sprint task'lari, 4) yangi so'rovlar.
+      Ko'lam (scope) o'zgarishi faqat team lead bilan kelishiladi.
+      Relizlar dushanba–payshanba; juma kuni yangi funksiya faqat feature flag ortida, o'chirilgan holda chiqadi.
+      "Tayyor" degani: kod + testlar + PR tavsifi (nima, nega, qanday tekshirildi).
+
+  - key: doc_orders_service
+    title: "orders-service: holatlar va to'lov"
+    content: |
+      Buyurtma holatlari (orders.status):
+      new → accepted (restoran qabul qildi) → cooking → delivering → delivered.
+      Har qanday holatdan → cancelled (hozircha faqat operator panelidan).
+
+      To'lov buyurtma yaratilganda olinadi (payments.charge). Qaytarish — payments.refund (doc: Payments API).
+      Holat o'zgarishlari order_events jadvaliga yoziladi (kim, qachon, eski → yangi holat).
+      Restoran planshetiga o'zgarishlar order.updated hodisasi orqali boradi.
+
+      Kod tuzilishi: api/orders.py (endpointlar), services/orders.py (biznes mantiq),
+      clients/payments.py (Payments API mijozi), tests/.
+      Pul — faqat butun so'm (int). DB: PostgreSQL, SQLAlchemy 2.0 async.
+
+  - key: doc_cancel_spec
+    title: "Talab: buyurtmani bekor qilish (v1)"
+    content: |
+      Mijoz ilovada "Bekor qilish" tugmasini bosadi.
+      - Holat `new` — mijoz o'zi bekor qila oladi, pul to'liq qaytadi.
+      - `accepted` yoki `cooking` — mijoz bekor qila olmaydi, "operator bilan bog'laning" deyiladi.
+      - `delivering`, `delivered`, `cancelled` — bekor qilib bo'lmaydi.
+      - Sabab ixtiyoriy (ro'yxatdan yoki matn, 200 belgigacha).
+      - Pul qaytarish Payments API orqali, mijozga push xabar, restoranga order.updated.
+      - Ilova internet uzilib so'rovni qayta yuborsa — ikki marta refund bo'lmasligi kerak.
+      - Faqat buyurtma egasi bekor qila oladi.
+      Demo: juma, hamkor restoranlar bilan. v2 (keyingi sprint): `accepted` holatda restoran roziligi bilan bekor qilish.
+
+  - key: doc_payments_api
+    title: "Payments API: refund"
+    content: |
+      POST /v1/refunds  {payment_id, amount, reason}
+      Sarlavha: Idempotency-Key (ixtiyoriy, 24 soat saqlanadi). Bir xil kalit bilan takroriy so'rov
+      birinchi natijani qaytaradi, yangi refund yaratmaydi. Kalitsiz har so'rov — yangi refund.
+      Javob: 201 {refund_id, status: pending|succeeded|failed}. Refund odatda 1–3 soniyada succeeded bo'ladi.
+      Xatolar: 409 — summa to'langandan ko'p; 5xx yoki timeout — natija noma'lum, xuddi shu kalit bilan qayta urinish xavfsiz.
+      Tavsiya etilgan timeout: 5 soniya. Status: GET /v1/refunds/{id}.
+
+  - key: doc_code_review
+    title: "Code review qoidalari"
+    content: |
+      PR tavsifida: muammo, sabab, yechim, qanday tekshirilgan. Review'da tekshiring:
+      - to'g'rilik va chegara holatlari; testlar bormi va to'g'ri narsani tekshiradimi;
+      - xavfsizlik: avtorizatsiya (kim chaqira oladi), SQL faqat parametr bilan, maxfiy ma'lumot logga tushmaydi;
+      - pul: float yo'q, faqat int;
+      - poyga holatlari (race condition): bir vaqtda ikki so'rov.
+      Izohni hurmat bilan, aniq qator va taklif bilan yozing; "blocker" va "nit"ni ajrating.
+
+  - key: doc_pr_312
+    title: "PR #312 (Jahongir): buyurtmalar tarixini filtrlash"
+    content: |
+      Tavsif: "Mijoz o'z buyurtmalarini status bo'yicha filtrlay oladi. Test qo'shilmadi, kichik o'zgarish."
+
+      ```python
+      @router.get("/orders/history")
+      async def order_history(status: str, user_id: int, db: AsyncSession = Depends(get_db)):
+          query = f"SELECT * FROM orders WHERE user_id = {user_id} AND status = '{status}'"
+          rows = (await db.execute(text(query))).all()
+          total = sum(float(r.total) for r in rows)
+          return {"orders": [dict(r._mapping) for r in rows], "total_spent": total}
+      ```
+
+  - key: doc_incident_runbook
+    title: "Prod incident runbook"
+    content: |
+      1. #incidents kanalida e'lon: nima buzildi, qachondan, ta'sir (raqamlarda), SEV darajasi.
+         SEV-1 — pul yoki asosiy oqim (buyurtma/to'lov) zarar ko'rmoqda. SEV-2 — qisman, aylanma yo'l bor.
+      2. Avval ta'sirni to'xtating: feature flag'ni o'chiring yoki rollback. Sababni keyin qidiring.
+      3. Har 30 daqiqada holat yangilanishi.
+      4. Pul bilan bog'liq bo'lsa — moliya bo'limiga xabar, ta'sirlangan operatsiyalar ro'yxati.
+      5. Postmortem 2 ish kuni ichida (shablon bo'yicha), aybdor qidirilmaydi.
+      Taqiqlanadi: prod DB'ga qo'lda o'zgartirish, testsiz "tezkor fix".
+
+  - key: doc_incident_logs_dup
+    title: "Monitoring: refund'lar, bugun 09:00–10:00"
+    content: |
+      Kecha 16:00 da cancel_orders_enabled flag'i 100% mijozga yoqilgan.
+      09:12  Moliya: 14 ta buyurtma uchun ikki marta refund (jami 1 960 000 so'm ortiqcha qaytarilgan).
+      09:20  Loglar: bir xil order_id uchun 2 ta POST /v1/refunds, oraliq 80–300 ms, Idempotency-Key yo'q.
+      09:25  14 holatning 11 tasida mijoz ilovada tugmani ikki marta bosgan, 3 tasida mobil tarmoq qayta yuborgan.
+      09:40  Ortiqcha refund'lar davom etmoqda: soatiga ~6 ta.
+
+  - key: doc_incident_logs_timeout
+    title: "Monitoring: cancel endpoint, bugun 09:00–10:00"
+    content: |
+      Kecha 16:00 da cancel_orders_enabled flag'i 100% mijozga yoqilgan.
+      09:05  Payments API provayderi status sahifasi: "refund'lar sekinlashgan, tekshirilmoqda".
+      09:15  POST /orders/{id}/cancel p95 = 31 s (oldin 1.2 s), 22% so'rov timeout bilan tugayapti.
+      09:20  Mijozlar ilovada "bekor qilinmadi" ko'rib, operatorga qo'ng'iroq qilmoqda (soatiga ~40).
+      09:30  Refund'larning o'zi oxir-oqibat o'tmoqda (dublikat yo'q). Buyurtma berish oqimi normal.
+      Payments mijozida timeout sozlanmagan (default 60 s).
+
+  - key: doc_postmortem_template
+    title: "Postmortem shabloni"
+    content: |
+      1. Qisqacha: nima bo'ldi, qancha davom etdi, ta'sir (mijozlar, pul).
+      2. Vaqt chizig'i: aniqlandi → e'lon → ta'sir to'xtatildi → tuzatildi.
+      3. Asosiy sabab (5 ta "nega"), aybdor emas — jarayon va tizim.
+      4. Nima yaxshi ishladi / nima ishlamadi.
+      5. Choralar: har biri — egasi va muddati bilan; oldini olish va tezroq aniqlash.
+
+nodes:
+  # ── 1-kun: tanishuv ────────────────────────────────────────────────
+  - id: welcome
+    type: message
+    day: 1
+    at: "09:00"
+    from: sardor
+    brief: |
+      Xush kelibsiz! Bu hafta sizning asosiy ishingiz — "buyurtmani bekor qilish" funksiyasi:
+      bugun tanishuv, ertaga dizayn, chorshanba kod, juma — hamkorlarga demo.
+
+  - id: standup_d1
+    type: task
+    day: 1
+    at: "09:00"
+    from: sardor
+    brief: "Standup: bugungi rejangizni onboarding formatida yozing (3–5 qator)."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Formatga mos: reja / to'siqlar, 3–5 qator"}
+      - {id: concrete, description: "Reja aniq va tekshirsa bo'ladigan", weight: 2}
+    hints: ["Birinchi kunda 'kecha' o'rniga nima bilan tanishishni rejalashtirganingizni yozing."]
+    reference_answer: "Bugun: orders-service kodi va bekor qilish talabi bilan tanishaman, holatlar xaritasini tuzaman. To'siq: repo'ga kirish huquqi."
+
+  - id: mentor_intro
+    type: message
+    day: 1
+    at: "09:15"
+    from: nodir
+    brief: |
+      Salom! Men Nodir, shu hafta mentoringizman. Tayyor javob bermayman, lekin yo'naltiraman.
+      Qiyin bo'lsa hint so'rang — har hint task balini biroz kamaytiradi.
+
+  - id: codebase_tour
+    type: task
+    day: 1
+    at: "10:00"
+    from: sardor
+    brief: |
+      Bekor qilishdan oldin tizimni tushunib oling. Yozing:
+      1) buyurtma holatlari va bekor qilish ulardan qaysilariga ta'sir qiladi;
+      2) bekor qilishda qaysi tizimlar ishtirok etadi (DB, to'lov, restoran, mijoz);
+      3) eng katta 3 ta xavf.
+    attachments: [doc_orders_service, doc_cancel_spec, doc_payments_api]
+    answer_types: [text, link]
+    due_in_minutes: 180
+    competencies: [technical]
+    rubric:
+      - {id: states, description: "Holatlar to'g'ri va talab bilan bog'langan: faqat new mijoz tomonidan bekor qilinadi"}
+      - {id: systems, description: "Ishtirokchilar to'liq: orders DB va order_events, Payments refund, restoran (order.updated), mijoz push", weight: 1.5}
+      - {id: risks, description: "Muhim xavflar: ikki marta refund (idempotentlik), restoran bir vaqtda qabul qilishi (poyga), refund xatosi/timeout", weight: 2}
+    hints:
+      - "Bitta buyurtmani 'new' holatda bekor qilishni qadam-baqadam yozib chiqing: kim nimani o'zgartiradi?"
+      - "Payments API hujjatida Idempotency-Key haqida nima deyilgan? Kalitsiz nima bo'ladi?"
+    reference_answer: |
+      Holatlar: new → accepted → cooking → delivering → delivered; mijoz faqat new'da bekor qiladi, qolganlari operator yoki rad.
+      Ishtirokchilar: orders.status + order_events, payments.refund, restoran planshetiga order.updated, mijozga push.
+      Xavflar: 1) takroriy so'rovda ikki marta refund — Idempotency-Key kerak; 2) restoran shu payt accepted qilsa — poyga, holatni
+      qulf bilan tekshirish; 3) Payments timeout/5xx — natija noma'lum, qayta urinish va refund holatini saqlash.
+
+  - id: mentor_tour_feedback
+    type: message
+    after: {node: codebase_tour, event: submitted, minutes: 15}
+    from: nodir
+    brief: "Ko'rib chiqdim. Xavflar ro'yxatini saqlab qo'ying — ertangi dizaynda har biriga javob bo'lishi kerak."
+
+  - id: day1_end
+    type: day_end
+    day: 1
+    at: "17:30"
+    brief: "1-kun yakuni: nima o'rgandingiz, nima tushunarsiz qoldi, ertangi reja."
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Bugungi natija aniq", weight: 1.5}
+      - {id: questions, description: "Tushunarsiz joylar va ertangi reja ochiq aytilgan"}
+
+  # ── 2-kun: dizayn va ko'lam ────────────────────────────────────────
+  - id: standup_d2
+    type: task
+    day: 2
+    at: "09:00"
+    from: sardor
+    brief: "Standup (2-kun)."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Kecha / bugun / to'siqlar"}
+      - {id: concrete, description: "Bugungi reja aniq (dizayn, test reja)", weight: 2}
+    hints: ["Kechagi xavflar ro'yxati bugungi dizayn ishiga qanday ulanadi?"]
+    reference_answer: "Kecha: tizim bilan tanishdim, 3 xavfni topdim. Bugun: cancel API dizayni va test reja. To'siq: yo'q."
+
+  - id: api_design
+    type: task
+    day: 2
+    at: "09:30"
+    from: sardor
+    brief: |
+      Bekor qilish dizaynini tayyorlang: endpoint, so'rov va javob, har holat uchun HTTP kod,
+      idempotentlik, Payments refund qanday chaqiriladi va timeout bo'lsa nima bo'ladi.
+    attachments: [doc_cancel_spec, doc_payments_api, doc_orders_service]
+    answer_types: [text, link]
+    due_in_minutes: 180
+    weight: 1.5
+    competencies: [technical, communication]
+    rubric:
+      - {id: endpoint, description: "Endpoint va so'rov/javob aniq (masalan POST /orders/{id}/cancel)"}
+      - {id: states, description: "Holatlar talabga mos, HTTP kodlar (404 egasi emas, 409 operator / bekor qilib bo'lmaydi)", weight: 2}
+      - {id: idempotency, description: "Ikki marta refund yo'q: buyurtma qulfi + Idempotency-Key (masalan order_id asosida)", weight: 2}
+      - {id: failure, description: "Payments timeout/5xx: holat saqlanadi (refund pending), xuddi shu kalit bilan qayta urinish", weight: 1.5}
+    hints:
+      - "Kechagi uchta xavfning har biri dizaynda qaysi qaror bilan yopilganini yozing."
+      - "Idempotency-Key'ni nimadan yasash kerakki, ikkinchi bosish ham aynan o'sha kalitni bersin?"
+    reference_answer: |
+      POST /api/v1/orders/{id}/cancel {reason?}. Egasi emas → 404. SELECT ... FOR UPDATE; new → cancelled, order_events,
+      refund_status=pending, commit; keyin Payments POST /v1/refunds Idempotency-Key="cancel:{order_id}", timeout 5 s.
+      accepted/cooking → 409 contact_operator; boshqalar → 409 not_cancellable; allaqachon cancelled → 200 oldingi natija.
+      Timeout/5xx → refund_status=pending qoladi, fon job xuddi shu kalit bilan qayta urinadi; push va order.updated.
+
+  - id: scope_request
+    type: decision
+    day: 2
+    at: "11:30"
+    from: aziza
+    brief: |
+      Hamkorlar juma demosida `accepted` holatda ham bekor qilishni ko'rishni xohlashyapti (restoran roziligi bilan).
+      Shuni ham qo'shib qo'ya olasizmi? Sardorga aytmasak ham bo'ladi, kichkina narsa-ku.
+    competencies: [prioritization, communication]
+    options:
+      - key: keep_scope
+        label: "v1 ko'lamida qolaman: bu v2 ekanini aytaman, Sardorga ham yozaman va demo uchun v2 rejasini taklif qilaman"
+        grade: correct
+      - key: ask_lead
+        label: "Javob bermay, Sardordan nima qilishni so'rayman"
+        grade: acceptable
+      - key: add_quietly
+        label: "Sardorga aytmay, accepted holatni ham qo'shaman"
+        grade: wrong
+        flag: scope_creep
+
+  - id: lead_on_scope
+    type: message
+    day: 2
+    at: "14:00"
+    when: {flag: scope_creep}
+    from: sardor
+    brief: |
+      Aziza aytdi, accepted holatni ham qo'shayotgan ekansiz. Bu restoran tomonini ham o'zgartiradi va demo xavf ostida.
+      Ko'lam faqat men bilan kelishiladi — v1'da qolamiz, v2 keyingi sprintda.
+
+  - id: test_plan
+    type: task
+    day: 2
+    at: "14:30"
+    from: malika
+    brief: |
+      Salom! Ertaga kod yozishdan oldin test rejasini kelishib olaylik. Bekor qilish uchun test holatlarini
+      yozing: nima qilinadi → nima kutiladi. Kamida 8 ta, chegara holatlari bilan.
+    attachments: [doc_cancel_spec]
+    answer_types: [text, file, link]
+    due_in_minutes: 120
+    competencies: [technical, communication]
+    rubric:
+      - {id: coverage, description: "Barcha holatlar (new, accepted, cooking, delivering, delivered, cancelled) qamrab olingan", weight: 2}
+      - {id: edge, description: "Chegara holatlari: ikki marta bosish, tarmoq qayta yuborishi, begona foydalanuvchi, 201+ belgili sabab, Payments timeout", weight: 2}
+      - {id: format, description: "Har holat: qadam → kutilgan natija, tushunarli"}
+    hints: ["Talabdagi har jumladan kamida bitta test chiqarib ko'ring; keyin 'nima noto'g'ri ketishi mumkin' deb qo'shing."]
+    reference_answer: |
+      1) new → 200, cancelled, refund bir marta, push. 2) accepted → 409 contact_operator. 3) cooking → 409. 4) delivering/delivered → 409.
+      5) cancelled qayta → 200, ikkinchi refund yo'q. 6) ikki marta tez bosish → bitta refund. 7) begona user → 404.
+      8) sabab 201 belgi → 422. 9) Payments timeout → cancelled, refund pending, keyin qayta urinish. 10) restoran bir vaqtda accept → bittasi yutadi.
+
+  - id: day2_end
+    type: day_end
+    day: 2
+    at: "17:30"
+    brief: "2-kun yakuni: dizayn holati, ko'lam bo'yicha nima kelishildi, ertangi reja."
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Dizayn va test reja holati aniq", weight: 1.5}
+      - {id: plan, description: "Ertangi implementatsiya rejasi va xavflar"}
+
+  # ── 3-kun: kod va review ───────────────────────────────────────────
+  - id: standup_d3
+    type: task
+    day: 3
+    at: "09:00"
+    from: sardor
+    brief: "Standup (3-kun)."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Kecha / bugun / to'siqlar"}
+      - {id: concrete, description: "Bugungi kod rejasi aniq, qaysi qismdan boshlanadi", weight: 2}
+    hints: ["Bugungi ishni 2–3 bosqichga bo'ling: servis mantiq, endpoint, testlar."]
+    reference_answer: "Kecha: dizayn va test reja. Bugun: services.cancel_order + endpoint + testlar, tushlikkacha PR. To'siq: yo'q."
+
+  - id: implement_cancel
+    type: task
+    day: 3
+    at: "09:30"
+    from: sardor
+    brief: |
+      Dizayn bo'yicha bekor qilishni yozing: servis funksiyasi, endpoint va testlar (Malika rejasidagi
+      asosiy holatlar). Kod yoki PR havolasi + qisqa izoh yuboring.
+    attachments: [doc_orders_service, doc_payments_api, doc_code_review]
+    answer_types: [code, link, text]
+    due_in_minutes: 240
+    weight: 3
+    competencies: [technical]
+    rubric:
+      - {id: correctness, description: "Holatlar talabga mos, egasi tekshiriladi, sabab ≤200 belgi", weight: 2}
+      - {id: concurrency, description: "Buyurtma qatori qulflanadi (FOR UPDATE yoki shartli UPDATE ... WHERE status='new'), poyga yo'q", weight: 2}
+      - {id: idempotency, description: "Refund barqaror Idempotency-Key bilan (order_id asosida), takroriy so'rov ikkinchi refund qilmaydi", weight: 2.5}
+      - {id: failure, description: "Payments timeout sozlangan, xatoda refund pending saqlanadi, qayta urinish mumkin", weight: 1.5}
+      - {id: tests, description: "Testlar: new, 409 holatlar, takroriy so'rov, begona foydalanuvchi", weight: 1.5}
+    hints:
+      - "Ikki so'rov bir vaqtda kelsa, ikkalasi ham status='new' ni o'qib qolmasligi uchun nima qilish kerak?"
+      - "Idempotency-Key tasodifiy UUID bo'lsa, ikkinchi bosishda nima bo'ladi? Kalit nimaga bog'liq bo'lishi kerak?"
+      - "Avval ikki marta chaqiruv testini yozing va refund mijozi necha marta chaqirilganini tekshiring."
+    reference_answer: |
+      async def cancel_order(db, order_id, user, reason):
+          order = await db.scalar(select(Order).where(Order.id == order_id, Order.user_id == user.id).with_for_update())
+          if order is None: raise NotFound
+          if order.status == "cancelled": return order
+          if order.status in ("accepted", "cooking"): raise Conflict("contact_operator")
+          if order.status != "new": raise Conflict("not_cancellable")
+          order.status = "cancelled"; order.refund_status = "pending"; add order_event; await db.commit()
+          await payments.refund(order.payment_id, order.total, idempotency_key=f"cancel:{order.id}", timeout=5)
+      Xatoda refund_status pending qoladi va fon job shu kalit bilan qayta urinadi. Testlar: new, 409, ikki chaqiruv → bitta refund, begona → 404.
+
+  - id: mentor_code_note
+    type: message
+    after: {node: implement_cancel, event: submitted, minutes: 30}
+    from: nodir
+    brief: "Kodingizni ko'rdim. Ertaga flag yoqilgandan keyin monitoring'ga birga qaraymiz — real trafik testlardan boshqacha bo'ladi."
+
+  - id: review_pr
+    type: task
+    day: 3
+    at: "15:00"
+    from: sardor
+    brief: |
+      Jahongirning PR #312 siga review qiling. Code review qoidalari bo'yicha izohlar yozing:
+      har biri — qaysi joy, muammo, taklif, blocker yoki nit.
+    attachments: [doc_pr_312, doc_code_review]
+    answer_types: [text]
+    due_in_minutes: 90
+    competencies: [technical, communication]
+    rubric:
+      - {id: sql_injection, description: "f-string SQL — injection, blocker; parametrli so'rov taklif qilingan", weight: 2}
+      - {id: authz, description: "user_id query parametridan olinadi — boshqa mijozning buyurtmalari ko'rinadi, blocker; joriy foydalanuvchidan olish", weight: 2}
+      - {id: money_tests, description: "float pul uchun, test yo'q, SELECT * — topilgan"}
+      - {id: tone, description: "Hurmatli, aniq, blocker/nit ajratilgan"}
+    hints: ["Code review qoidalaridagi xavfsizlik bandini bitta-bitta PR koduga qo'yib ko'ring."]
+    reference_answer: |
+      Blocker: f-string bilan SQL — injection (status='x' OR 1=1); select(Order).where(...) yoki bound parametrlar.
+      Blocker: user_id so'rovdan olinyapti — istalgan mijoz tarixini ko'rish mumkin; current_user.id ishlatilsin.
+      Major: float(r.total) — pul int bo'lsin. Testlar yo'q — filtr va avtorizatsiya testi kerak. Nit: SELECT * o'rniga kerakli ustunlar, status enum bilan validatsiya.
+
+  - id: day3_end
+    type: day_end
+    day: 3
+    at: "17:30"
+    brief: "3-kun yakuni: kod holati, review, ertangi reja (flag yoqilgan — monitoring)."
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Kod va review natijasi aniq", weight: 1.5}
+      - {id: risks, description: "Ochiq xavflar va ertangi reja aytilgan"}
+
+  # ── 4-kun: incident ────────────────────────────────────────────────
+  - id: standup_d4
+    type: task
+    day: 4
+    at: "09:00"
+    from: sardor
+    brief: "Standup (4-kun). Kecha 16:00 da cancel_orders_enabled flag'i barcha mijozlarga yoqildi."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Kecha / bugun / to'siqlar"}
+      - {id: concrete, description: "Bugungi reja aniq, flag'dan keyingi monitoring kiritilgan", weight: 2}
+    hints: ["Yangi funksiya yoqilgan birinchi kunda nimani kuzatish kerak?"]
+    reference_answer: "Kecha: cancel kodi va PR #312 review. Bugun: cancel metrikalarini kuzataman, demo'ga tayyorlanaman. To'siq: yo'q."
+
+  - id: incident_double_refund
+    type: incident
+    day: 4
+    at: "10:00"
+    when: {any: [{missed: implement_cancel}, {score_lt: {node: implement_cancel, value: 60}}]}
+    from: timur
+    brief: |
+      SHOSHILINCH: moliya bo'limi ikki marta qaytarilgan pullarni topdi — bekor qilish funksiyasi bilan bog'liq.
+      Siz funksiya egasisiz, incident'ni boshqaring: 1) #incidents e'loni, 2) hozirgi qadamlar va nega,
+      3) sabab, 4) tuzatish rejasi.
+    attachments: [doc_incident_runbook, doc_incident_logs_dup]
+    answer_types: [text]
+    due_in_minutes: 45
+    weight: 2
+    competencies: [stress_handling, technical, communication]
+    rubric:
+      - {id: announce, description: "SEV-1 (pul zarar ko'rmoqda), ta'sir raqamlarda: 14 buyurtma, 1.96 mln so'm, davom etmoqda", weight: 1.5}
+      - {id: mitigate_first, description: "Avval cancel_orders_enabled flag'ini o'chirish; moliyaga xabar va ro'yxat", weight: 2}
+      - {id: cause, description: "Sabab: Idempotency-Key yo'q va takroriy so'rov (ikki bosish/qayta yuborish) ikkinchi refund qiladi", weight: 1.5}
+      - {id: fix, description: "Tuzatish: barqaror kalit cancel:{order_id}, qulf, ikki chaqiruv testi; keyin flag bosqichma-bosqich"}
+    hints:
+      - "Runbook 2-band: pul ketayotgan bo'lsa birinchi ish nima?"
+      - "Loglarda bir xil order_id uchun ikkita so'rov orasida nima yetishmayapti?"
+    reference_answer: |
+      E'lon: SEV-1, 09:12 dan ikki marta refund — 14 buyurtma, 1 960 000 so'm, soatiga ~6 ta davom etmoqda; sabab cancel funksiyasi.
+      Qadam: darhol cancel_orders_enabled=false; moliyaga 14 buyurtma ro'yxati; 30 daqiqada yangilanish.
+      Sabab: refund Idempotency-Key'siz, ikki bosish/qayta yuborish ikki refund. Tuzatish: kalit cancel:{order_id}, FOR UPDATE,
+      ikki chaqiruv testi, keyin flag 10% → 100%. Postmortem 2 kun ichida.
+
+  - id: incident_refund_timeout
+    type: incident
+    day: 4
+    at: "10:00"
+    when: {score_gte: {node: implement_cancel, value: 60}}
+    from: timur
+    brief: |
+      SHOSHILINCH: bekor qilish so'rovlari osilib qolyapti, mijozlar operatorga qo'ng'iroq qilmoqda.
+      Siz funksiya egasisiz, incident'ni boshqaring: 1) #incidents e'loni, 2) hozirgi qadamlar va nega,
+      3) sabab, 4) tuzatish rejasi.
+    attachments: [doc_incident_runbook, doc_incident_logs_timeout, doc_payments_api]
+    answer_types: [text]
+    due_in_minutes: 45
+    weight: 2
+    competencies: [stress_handling, technical, communication]
+    rubric:
+      - {id: announce, description: "SEV-2 (pul xavfsiz, aylanma yo'l — operator), ta'sir raqamlarda: p95 31 s, 22% timeout, ~40 qo'ng'iroq/soat", weight: 1.5}
+      - {id: mitigate_first, description: "Ta'sirni kamaytirish: tashqi provayder muammosi — flag'ni vaqtincha o'chirish yoki refund'ni fonga o'tkazish; operatorlarni ogohlantirish", weight: 2}
+      - {id: cause, description: "Sabab: provayder sekinlashgan + Payments mijozida timeout sozlanmagan (60 s), refund so'rov ichida sinxron", weight: 1.5}
+      - {id: fix, description: "Tuzatish: timeout 5 s, refund pending + fon qayta urinish shu kalit bilan, mijozga darhol 'bekor qilindi, pul qaytmoqda'"}
+    hints:
+      - "Muammo bizdami yoki provayderdami? Status sahifasi va 'dublikat yo'q' qatoriga qarang."
+      - "Payments API hujjatidagi tavsiya etilgan timeout bilan bizning sozlamani solishtiring."
+    reference_answer: |
+      E'lon: SEV-2, 09:15 dan cancel p95 31 s, 22% timeout; pul to'g'ri, dublikat yo'q; operatorlarga ~40 qo'ng'iroq/soat.
+      Qadam: operatorlarga skript; provayder tiklanguncha cancel_orders_enabled vaqtincha o'chiriladi yoki refund fonga.
+      Sabab: provayder sekin + mijozda timeout yo'q (60 s), refund javobini sinxron kutamiz. Tuzatish: timeout 5 s,
+      bekor qilish darhol, refund pending, fon job shu Idempotency-Key bilan qayta urinadi; 30 daqiqalik yangilanish.
+
+  - id: postmortem
+    type: task
+    day: 4
+    at: "14:00"
+    from: sardor
+    brief: "Bugungi incident bo'yicha postmortem yozing (shablon bo'yicha). Aybdor emas — jarayon va tizim."
+    attachments: [doc_postmortem_template, doc_incident_runbook]
+    answer_types: [text, file, link]
+    due_in_minutes: 150
+    weight: 1.5
+    competencies: [communication, technical, initiative]
+    rubric:
+      - {id: timeline, description: "Vaqt chizig'i va ta'sir raqamlar bilan"}
+      - {id: root_cause, description: "Asosiy sabab chuqur (5 nega): kod + nega testlar/review ushlamadi + nega flag birdaniga 100%", weight: 2}
+      - {id: actions, description: "Choralar aniq, egasi va muddati bilan; oldini olish va tezroq aniqlash (alert)", weight: 2}
+      - {id: blameless, description: "Aybdor qidirilmaydi, ohang konstruktiv"}
+    hints: ["Har 'nega'ga javobdan keyin yana 'nega' deb so'rang — oxirida jarayon (flag rollout, alert) chiqishi kerak."]
+    reference_answer: |
+      Qisqacha, vaqt chizig'i (flag 16:00 → aniqlandi → flag o'chirildi → tuzatildi), ta'sir raqamlarda.
+      Sabab: kod darajasi (kalit yo'q yoki timeout yo'q) → test real takror/sekin provayderni qamramagan → flag darhol 100%, alert yo'q.
+      Choralar: tuzatish + test (dasturchi, 1 kun), flag rollout 10/50/100 qoidasi (team lead, hafta), refund dublikat va
+      cancel latency alert'i (SRE, 3 kun). Ijobiy: flag tez o'chirildi.
+
+  - id: day4_end
+    type: day_end
+    day: 4
+    at: "17:30"
+    brief: "4-kun yakuni: incident qanday yopildi, postmortem, ertangi demo rejasi."
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Incident va postmortem holati aniq", weight: 1.5}
+      - {id: plan, description: "Demo uchun reja va xavflar"}
+
+  # ── 5-kun: demo va retro ───────────────────────────────────────────
+  - id: standup_d5
+    type: task
+    day: 5
+    at: "09:00"
+    from: sardor
+    brief: "Standup (5-kun)."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Kecha / bugun / to'siqlar"}
+      - {id: concrete, description: "Demo tayyorgarligi aniq", weight: 2}
+    hints: ["Demo'dan oldin nimani tekshirib olish kerak?"]
+    reference_answer: "Kecha: incident va postmortem. Bugun: demo matni, staging'da demo ssenariysini tekshiraman. To'siq: tuzatish review'da."
+
+  - id: demo_notes
+    type: task
+    day: 5
+    at: "10:00"
+    from: aziza
+    brief: |
+      Bugun 15:00 da hamkor restoranlarga demo. Menga texnik bo'lmagan tilda qisqa matn kerak:
+      funksiya nima qiladi, nima qilmaydi (cheklovlar), bu haftadagi muammo qanday hal qilindi, keyingi qadam.
+    attachments: [doc_cancel_spec]
+    answer_types: [text, file]
+    due_in_minutes: 120
+    competencies: [communication]
+    rubric:
+      - {id: clarity, description: "Texnik bo'lmagan, qisqa va aniq", weight: 2}
+      - {id: honest_limits, description: "Cheklovlar halol: faqat new holat, accepted — v2", weight: 1.5}
+      - {id: incident, description: "Incident ochiq, lekin xotirjam: nima bo'ldi, mijozlar pulini yo'qotmadi/qaytarildi, endi qanday himoya bor"}
+      - {id: next, description: "Keyingi qadam va taxminiy reja (v2)"}
+    hints: ["Matnni restoran menejeri o'qiydi deb tasavvur qiling: unga nima muhim?"]
+    reference_answer: |
+      Mijoz restoran buyurtmani qabul qilguncha uni ilovada bekor qila oladi, pul avtomatik qaytadi, restoran planshetida darhol ko'rinadi.
+      Qabul qilingandan keyin — hozircha operator orqali; restoran roziligi bilan bekor qilish keyingi sprintda (v2).
+      Bu hafta bekor qilishda texnik muammo bo'ldi, tez to'xtatildi va tuzatildi; qayta takrorlanmasligi uchun himoya va kuzatuv qo'shildi.
+
+  - id: friday_release
+    type: decision
+    day: 5
+    at: "14:00"
+    from: aziza
+    brief: |
+      Demo'dan oldin tuzatilgan versiyani bugun 16:30 da hamma mijozlarga yoqib qo'yaylik — hamkorlar
+      "allaqachon ishlayapti" deb ko'rishsin. Rozimisiz?
+    competencies: [prioritization, communication]
+    options:
+      - key: staged_monday
+        label: "Yo'q: bugun flag o'chiq holda chiqadi, dushanba 10% dan bosqichma-bosqich yoqamiz — demo staging'da. Sardorga ham yozaman"
+        grade: correct
+      - key: ask_lead
+        label: "Sardordan so'rab, u nima desa shuni qilaman"
+        grade: acceptable
+      - key: release_all
+        label: "Ha, 16:30 da hammaga yoqamiz"
+        grade: wrong
+        flag: friday_deploy
+
+  - id: lead_on_friday
+    type: message
+    day: 5
+    at: "15:00"
+    when: {flag: friday_deploy}
+    from: sardor
+    brief: |
+      Juma kechqurun hammaga yoqish — kecha ko'rgan incident'ni dam olish kunida takrorlash xavfi.
+      Jamoa qoidasi: juma — flag o'chiq. Dushanba 10% dan boshlaymiz; Aziza bilan o'zim gaplashaman.
+
+  - id: retro
+    type: task
+    day: 5
+    at: "15:30"
+    from: nodir
+    brief: |
+      Haftalik retro (mentor bilan): 3 ta yaxshi ketgan narsa, 3 ta yaxshilash kerak bo'lgan narsa
+      (aniq misol bilan) va keyingi hafta uchun bitta o'lchanadigan maqsad.
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 90
+    competencies: [initiative, communication]
+    rubric:
+      - {id: specific, description: "Har band aniq hafta voqeasiga bog'langan (dizayn, incident, review, ko'lam)", weight: 2}
+      - {id: honest, description: "O'z xatolarini halol tan olgan, aybni boshqaga qo'ymagan"}
+      - {id: goal, description: "Keyingi hafta maqsadi o'lchanadigan (masalan, har PR'da poyga testi)", weight: 1.5}
+    hints: ["Haftaning har kunidan bitta voqeani eslang: nima o'rgatdi?"]
+    reference_answer: "Yaxshi: xavflarni 1-kunda topdim; test rejani QA bilan kelishdim; incident'da avval flag'ni o'chirdim. Yaxshilash: idempotentlikni test bilan isbotlash; ko'lam so'rovini darhol lead'ga aytish; review'da xavfsizlikdan boshlash. Maqsad: har pul bilan bog'liq PR'da takroriy so'rov testi."
+
+  - id: day5_end
+    type: day_end
+    day: 5
+    at: "17:30"
+    brief: "Hafta yakuni: Sardorga haftalik hisobot — nima yetkazildi, nima ochiq, keyingi hafta rejasi."
+    competencies: [communication]
+    rubric:
+      - {id: delivered, description: "Hafta natijalari aniq: funksiya, incident, postmortem, demo", weight: 1.5}
+      - {id: open_items, description: "Ochiq ishlar (rollout, v2) va keyingi reja"}
+      - {id: reflection, description: "Haftadan asosiy xulosa"}
