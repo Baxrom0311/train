@@ -101,4 +101,4 @@ def build_messages(ctx: ReviewContext) -> list[dict[str, str]]:
 
 async def mentor_review(ctx: ReviewContext, *, chat_fn=chat) -> LLMResult | None:
     """AI ishlamasa → `None` (chaqiruvchi skript izoh yozadi). `result.data.message` — matn."""
-    return await chat_fn(build_messages(ctx), schema=MentorReviewOut, temperature=0.5, max_tokens=500)
+    return await chat_fn(build_messages(ctx), schema=MentorReviewOut, temperature=0.5, max_tokens=500, purpose="mentor")

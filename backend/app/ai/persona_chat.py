@@ -116,5 +116,5 @@ async def persona_reply(
 ) -> LLMResult | None:
     """AI ishlamasa → `None` (chaqiruvchi `busy_reply` yuboradi)."""
     return await chat_fn(
-        build_messages(ctx, history, student_message), temperature=0.6, max_tokens=400
+        build_messages(ctx, history, student_message), temperature=0.6, max_tokens=400, purpose="persona"
     )

@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { AlarmClock, CheckCircle2, Download, Loader2, MessageSquareReply, Send, Timer, Trophy, Users, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Segmented } from '@/components/ui/segmented'
 import { Stat } from '@/components/ui/stat'
 import { CompetencyBars, ScoreRing } from '@/components/score'
 import { api, ApiError, download } from '@/lib/api'
@@ -104,20 +105,8 @@ function hours(value: number | null, t: TFunction): string {
 
 function PeriodPicker({ value, onChange, busy }: { value: Period; onChange: (p: Period) => void; busy: boolean }) {
   const { t } = useTranslation()
-  return (
-    <div role="radiogroup" aria-label={t('companyReport.period.label')} className="glass flex items-center gap-1 rounded-xl p-1">
-      {PERIODS.map((p) => (
-        <button key={p ?? 'all'} type="button" role="radio" aria-checked={value === p} onClick={() => onChange(p)}
-          className={cn(
-            'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
-            value === p ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted/60',
-          )}>
-          {p ? t('companyReport.period.days', { count: p }) : t('companyReport.period.all')}
-        </button>
-      ))}
-      <Loader2 className={cn('mx-1 h-4 w-4 animate-spin text-muted-foreground', !busy && 'invisible')} />
-    </div>
-  )
+  const options = PERIODS.map((p) => ({ value: p, label: p ? t('companyReport.period.days', { count: p }) : t('companyReport.period.all') }))
+  return <Segmented options={options} value={value} onChange={onChange} busy={busy} label={t('companyReport.period.label')} />
 }
 
 function CsvButton({ path, name, label }: { path: string; name: string; label: string }) {

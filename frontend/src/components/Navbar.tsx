@@ -55,7 +55,7 @@ export default function Navbar() {
     ] : []),
     ...(can('manage_universities') ? [{ to: '/university', label: t('nav.students'), Icon: GraduationCap }] : []),
     ...(can('view_org_invoices') ? [{ to: '/billing', label: t('nav.billing'), Icon: Receipt }] : []),
-    ...(can('approve_companies') || can('manage_billing') ? [{ to: '/admin', label: t('nav.admin'), Icon: ShieldCheck }] : []),
+    ...(can('approve_companies') || can('manage_billing') || can('view_platform_stats') ? [{ to: '/admin', label: t('nav.admin'), Icon: ShieldCheck }] : []),
     ...(can('manage_simulations') ? [{ to: '/admin/scenarios', label: t('nav.scenarios'), Icon: Clapperboard }] : []),
   ]
 

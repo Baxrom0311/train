@@ -10,6 +10,7 @@ from .scenario import (
 )
 from .credential import Certificate, Portfolio
 from .notification import Notification, NotificationSettings
+from .ai_usage import AIUsage
 from app.database import Base
 
 __all__ = [
@@ -40,5 +41,6 @@ __all__ = [
     "Portfolio",
     "Notification",
     "NotificationSettings",
+    "AIUsage",
     "Base",
 ]

@@ -411,11 +411,12 @@
   },
   "admin": {
     "title": "Admin panel",
-    "subtitle": "Organization applications and invoices",
+    "subtitle": "Organization applications, invoices and platform statistics",
     "tabs": {
       "pending": "Applications",
       "verified": "Organizations",
-      "invoices": "Invoices"
+      "invoices": "Invoices",
+      "platform": "Statistics"
     },
     "stats": {
       "pending": "Pending applications",
@@ -1051,5 +1052,71 @@
       "offers": "Offers CSV",
       "candidates": "Candidates CSV"
     }
+  },
+  "platform": {
+    "generated": "as of {{date}}",
+    "period": "Period",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "stats": {
+      "students": "Students",
+      "newStudents": "New students",
+      "activeStudents": "Active students",
+      "inProgress": "Runs in progress",
+      "completionRate": "Completion rate",
+      "avgScore": "Average score",
+      "aiTokens": "AI tokens",
+      "aiCost": "AI cost",
+      "aiCostPartial": "AI cost (partial)"
+    },
+    "activity": "Daily activity",
+    "runsStarted": "Started",
+    "runsCompleted": "Completed",
+    "activityTip": "{{day}}: {{started}} started, {{completed}} completed, {{students}} new students",
+    "runsSummary": "{{started}} runs started in this period: {{completed}} completed, {{expired}} expired, {{abandoned}} abandoned.",
+    "aiDaily": "AI tokens by day",
+    "aiCalls": "{{calls}} calls, {{failures}} failures",
+    "tokensSplit": "Input {{input}} · output {{output}} tokens",
+    "pricesMissing": "some providers have no price in .env (LLM_PRICES)",
+    "alert": {
+      "title": "Check the evaluation queue",
+      "failed_one": "{{count}} answer was not evaluated",
+      "failed_other": "{{count}} answers were not evaluated",
+      "stale": "the oldest answer has waited {{time}}",
+      "redis": "could not read the arq queue (Redis)"
+    },
+    "queue": {
+      "title": "Evaluation queue",
+      "pending": "Waiting",
+      "retry": "Retrying",
+      "failed": "Not evaluated (period)",
+      "oldest": "Oldest",
+      "jobs": "In arq queue"
+    },
+    "minutes_one": "{{count}} minute",
+    "minutes_other": "{{count}} minutes",
+    "aiTitle": "AI usage",
+    "noAi": "No AI calls in this period.",
+    "callsShort_one": "{{count}} call",
+    "callsShort_other": "{{count}} calls",
+    "purpose": {
+      "evaluation": "Evaluation",
+      "persona": "Persona replies",
+      "mentor": "Mentor notes",
+      "day_report": "Daily report",
+      "final_report": "Final report",
+      "other": "Other"
+    },
+    "provider": "Provider",
+    "calls": "Calls",
+    "failures": "Failures",
+    "tokens": "Tokens",
+    "cost": "Cost",
+    "scenarios": "Scenarios",
+    "scenario": "Scenario",
+    "hours_one": "{{count}} hour",
+    "hours_other": "{{count}} hours",
+    "daysAgo_one": "{{count}} day",
+    "daysAgo_other": "{{count}} days"
   }
 }

@@ -53,7 +53,7 @@ export default function App() {
               <Route path="/talents" element={<RequirePermission permission="view_candidates"><TalentsPage /></RequirePermission>} />
               <Route path="/talents/offers" element={<RequirePermission permission="view_candidates"><SentOffersPage /></RequirePermission>} />
               <Route path="/talents/report" element={<RequirePermission permission="view_candidates"><CompanyReportPage /></RequirePermission>} />
-              <Route path="/admin" element={<RequirePermission permission={['approve_companies', 'manage_billing']}><AdminPage /></RequirePermission>} />
+              <Route path="/admin" element={<RequirePermission permission={['approve_companies', 'manage_billing', 'view_platform_stats']}><AdminPage /></RequirePermission>} />
               <Route path="/admin/scenarios" element={<RequirePermission permission="manage_simulations"><ScenarioListPage /></RequirePermission>} />
               <Route path="/admin/scenarios/new" element={<RequirePermission permission="manage_simulations"><ScenarioEditorPage key="new" /></RequirePermission>} />
               <Route path="/admin/scenarios/:id/edit" element={<RequirePermission permission="manage_simulations"><ScenarioEditorPage /></RequirePermission>} />

@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     GEMINI_MODEL: str = "gemini-2.5-flash"
     OPENAI_MODEL: str = "gpt-4o-mini"
     LLM_TIMEOUT_SECONDS: float = 20.0
+    # §21.1: 1M token narxi (USD), "provider=kirish/chiqish,..."; bo'sh — narx hisoblanmaydi
+    LLM_PRICES: str = ""
     # §9.0 Q12 — o'lcham `models/scenario.py: EMBEDDING_DIM` bilan bir xil
     EMBEDDING_MODEL: str = "gemini-embedding-001"
 
@@ -59,5 +61,18 @@ class Settings(BaseSettings):
     @property
     def llm_providers_list(self) -> List[str]:
         return [p.strip().lower() for p in self.LLM_PROVIDERS.split(",") if p.strip()]
+
+    @property
+    def llm_prices(self) -> dict[str, tuple[float, float]]:
+        """`deepseek=0.27/1.10` → {"deepseek": (0.27, 1.10)}; buzuq qism e'tiborsiz qoldiriladi."""
+        prices: dict[str, tuple[float, float]] = {}
+        for part in self.LLM_PRICES.split(","):
+            name, _, pair = part.partition("=")
+            price_in, _, price_out = pair.partition("/")
+            try:
+                prices[name.strip().lower()] = (float(price_in), float(price_out))
+            except ValueError:
+                continue
+        return prices
 
 settings = Settings()

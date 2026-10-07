@@ -33,6 +33,8 @@ Kod tekshiruvi (`CONTRACT.md` §19, `sandbox/`): talaba kodi alohida tarmoqsiz r
 `code` task'larida ssenariydagi yashirin testlar (`checks.tests`) baholashga qo'shiladi.
 Kompaniya hisobotlari (`CONTRACT.md` §20, `/talents/report`): kompaniyaga ochiq nomzodlar bazasi kesimi,
 takliflar voronkasi (oylar, lavozimlar, javob vaqti) va CSV eksport.
+Platforma statistikasi (`CONTRACT.md` §21, `/admin` → Statistika): foydalanuvchilar, Run'lar, baholash navbati,
+AI sarfi (`ai_usage` — har `chat()` chaqiruvi `purpose` bilan; narx `.env` `LLM_PRICES`).
 
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da

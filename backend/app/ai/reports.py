@@ -60,7 +60,7 @@ async def summarize_day(
     )
     result = await chat_fn(
         [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}],
-        schema=DaySummary, temperature=0.3, max_tokens=700,
+        schema=DaySummary, temperature=0.3, max_tokens=700, purpose="day_report",
     )
     return result.data if result else None
 
@@ -79,6 +79,6 @@ async def final_report(
     )
     result = await chat_fn(
         [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}],
-        schema=FinalSummary, temperature=0.3, max_tokens=900,
+        schema=FinalSummary, temperature=0.3, max_tokens=900, purpose="final_report",
     )
     return result.data if result else None
