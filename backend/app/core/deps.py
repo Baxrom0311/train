@@ -64,6 +64,16 @@ def require_permission(key: str):
     return permission_checker
 
 
+
+def require_any_permission(*keys: str):
+    """Kamida bittasi yetarli (masalan admin bosh sahifasi: tasdiqlash YOKI billing)."""
+    async def permission_checker(current_user: User = Depends(get_current_active_user)):
+        granted = {p.key for p in current_user.role.permissions} if current_user.role else set()
+        if not granted.intersection(keys):
+            raise HTTPException(status_code=403, detail="Not enough permissions")
+        return current_user
+    return permission_checker
+
 def rate_limit(action: str, max_requests: int = 10, window_seconds: int = 60, fail_closed: bool = False):
     """
     Redis-asosida rate-limiting dependency factory.

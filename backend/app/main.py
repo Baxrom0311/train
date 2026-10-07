@@ -27,7 +27,7 @@ app.add_middleware(
 
 for module_info in pkgutil.iter_modules(api.__path__):
     module = importlib.import_module(f"app.api.{module_info.name}")
-    for attr_name in ("router", "users_router"):
+    for attr_name in ("router", "users_router", "org_router"):
         r = getattr(module, attr_name, None)
         if r is None:
             continue
