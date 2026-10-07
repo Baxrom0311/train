@@ -19,6 +19,8 @@ import UniversityPage from './pages/UniversityPage'
 import CertificatePage from './pages/CertificatePage'
 import PortfolioPublicPage from './pages/PortfolioPublicPage'
 import PortfolioPage from './pages/PortfolioPage'
+import ScenarioListPage from './pages/ScenarioListPage'
+import ScenarioEditorPage from './pages/ScenarioEditorPage'
 
 /** `/`: mehmon — landing (CONTRACT.md §14), kirgan — o'z bosh sahifasi (talaba — dashboard). */
 function Home() {
@@ -48,6 +50,9 @@ export default function App() {
               <Route path="/talents" element={<RequirePermission permission="view_candidates"><TalentsPage /></RequirePermission>} />
               <Route path="/talents/offers" element={<RequirePermission permission="view_candidates"><SentOffersPage /></RequirePermission>} />
               <Route path="/admin" element={<RequirePermission permission={['approve_companies', 'manage_billing']}><AdminPage /></RequirePermission>} />
+              <Route path="/admin/scenarios" element={<RequirePermission permission="manage_simulations"><ScenarioListPage /></RequirePermission>} />
+              <Route path="/admin/scenarios/new" element={<RequirePermission permission="manage_simulations"><ScenarioEditorPage key="new" /></RequirePermission>} />
+              <Route path="/admin/scenarios/:id/edit" element={<RequirePermission permission="manage_simulations"><ScenarioEditorPage /></RequirePermission>} />
               <Route path="/university" element={<RequirePermission permission="manage_universities"><UniversityPage /></RequirePermission>} />
               <Route path="/portfolio" element={<RequirePermission permission="manage_portfolio"><PortfolioPage /></RequirePermission>} />
               <Route path="/c/:code" element={<CertificatePage />} />

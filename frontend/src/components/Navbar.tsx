@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Award, Briefcase, Globe, GraduationCap, Handshake, LayoutGrid, LogOut, Moon, Receipt, ShieldCheck, Sun, Users } from 'lucide-react'
+import { Award, Briefcase, Clapperboard, Globe, GraduationCap, Handshake, LayoutGrid, LogOut, Moon, Receipt, ShieldCheck, Sun, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -37,7 +37,7 @@ export default function Navbar() {
     { code: 'en', label: t('languages.en') },
   ]
 
-  // menyu ruxsatlarga qarab (CONTRACT.md §10.3, §11.4, §12.3, §13.4); kompaniya/admin simulyatsiya o'tmaydi
+  // menyu ruxsatlarga qarab (CONTRACT.md §10.3, §11.4, §12.3, §13.4, §16.3); kompaniya/admin simulyatsiya o'tmaydi
   const student = can('receive_offers')
   const links = [
     ...(student ? [
@@ -53,6 +53,7 @@ export default function Navbar() {
     ...(can('manage_universities') ? [{ to: '/university', label: t('nav.students'), Icon: GraduationCap }] : []),
     ...(can('view_org_invoices') ? [{ to: '/billing', label: t('nav.billing'), Icon: Receipt }] : []),
     ...(can('approve_companies') || can('manage_billing') ? [{ to: '/admin', label: t('nav.admin'), Icon: ShieldCheck }] : []),
+    ...(can('manage_simulations') ? [{ to: '/admin/scenarios', label: t('nav.scenarios'), Icon: Clapperboard }] : []),
   ]
 
   return (

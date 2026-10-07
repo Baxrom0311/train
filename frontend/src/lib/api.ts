@@ -7,9 +7,12 @@ const REFRESH = 'tj_refresh'
 
 export class ApiError extends Error {
   status: number
-  constructor(status: number, message: string) {
+  /** Javobning `detail`i — tuzilgan xatolar uchun (masalan, muharrirdagi `{errors}`). */
+  detail: unknown
+  constructor(status: number, message: string, detail?: unknown) {
     super(message)
     this.status = status
+    this.detail = detail
   }
 }
 
@@ -82,7 +85,7 @@ export async function api<T>(path: string, opts: Options = {}, retried = false):
     return api<T>(path, opts, true)
   }
   const body = r.status === 204 ? null : await r.json().catch(() => null)
-  if (!r.ok) throw new ApiError(r.status, errorMessage(body, r.statusText))
+  if (!r.ok) throw new ApiError(r.status, errorMessage(body, r.statusText), (body as { detail?: unknown } | null)?.detail)
   return body as T
 }
 
