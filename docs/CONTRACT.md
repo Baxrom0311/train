@@ -295,7 +295,7 @@ har modul uchun alohida agent task yoziladi.
   `offset = (day-1)·480 + work_minutes(09:00 → at)`, va
   `scheduled_at = add_work_minutes(start_at, offset)`. Run 09:00 da
   boshlansa bu aynan ssenariydagi soatlar; 15:00 da boshlansa butun jadval
-  5 ish soatiga siljiydi (1-kun ertasi ~12:00 da tugaydi). Bunday holatda
+  5 ish soatiga siljiydi (1-kun ertasi 15:00 da tugaydi). Bunday holatda
   `POST /runs` javobida `warning` va 1-kunning haqiqiy tugash vaqti qaytadi.
 - **Nisbiy node:** `after: {node, event: delivered|submitted, minutes}` →
   `scheduled_at = add_work_minutes(trigger_vaqti, minutes)`.
