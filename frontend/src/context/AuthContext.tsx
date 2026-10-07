@@ -6,9 +6,11 @@ import type { Me } from '@/lib/types'
 interface AuthContextType {
   user: Me | null
   loading: boolean
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string) => Promise<Me | null>
   register: (fullName: string, email: string, password: string) => Promise<void>
   logout: () => void
+  /** Ruxsat bo'yicha tekshiruv (CONTRACT.md §10.3) — rol nomi bo'yicha emas. */
+  can: (permission: string) => boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -17,12 +19,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<Me | null>(null)
   const [loading, setLoading] = useState(() => Boolean(tokens.access))
 
-  const loadMe = useCallback(async () => {
+  const loadMe = useCallback(async (): Promise<Me | null> => {
     try {
-      setUser(await fetchMe())
+      const me = await fetchMe()
+      setUser(me)
+      return me
     } catch {
       tokens.clear()
       setUser(null)
+      return null
     } finally {
       setLoading(false)
     }
@@ -34,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     await apiLogin(email, password)
-    await loadMe()
+    return loadMe()
   }
 
   const register = async (fullName: string, email: string, password: string) => {
@@ -47,8 +52,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
   }
 
+  const can = useCallback((permission: string) => Boolean(user?.permissions.includes(permission)), [user])
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, can }}>{children}</AuthContext.Provider>
   )
 }
 
@@ -64,4 +71,19 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
   if (loading) return null
   if (!user) return <Navigate to="/login" replace state={{ from: location.pathname }} />
   return <>{children}</>
+}
+
+/** Ruxsat yo'q bo'lsa — bosh sahifaga (backend baribir 403 qaytaradi). */
+export function RequirePermission({ permission, children }: { permission: string; children: React.ReactNode }) {
+  const { can } = useAuth()
+  return (
+    <RequireAuth>
+      {can(permission) ? children : <Navigate to="/dashboard" replace />}
+    </RequireAuth>
+  )
+}
+
+/** Kirgandan keyingi bosh sahifa: kompaniya xodimi — nomzodlar, talaba — simulyatsiyalar. */
+export function homeFor(user: Me | null): string {
+  return user?.permissions.includes('view_candidates') ? '/talents' : '/simulations'
 }

@@ -6,7 +6,10 @@
     "register": "Ro'yxatdan o'tish",
     "logout": "Chiqish",
     "language": "Til",
-    "theme": "Mavzu"
+    "theme": "Mavzu",
+    "talents": "Nomzodlar",
+    "sentOffers": "Takliflarim",
+    "offers": "Ish takliflari"
   },
   "auth": {
     "login": {
@@ -227,5 +230,80 @@
     "time_management": "Vaqtni boshqarish",
     "stress_handling": "Stressga chidamlilik",
     "initiative": "Tashabbuskorlik"
+  },
+  "talent": {
+    "title": "Nomzodlar",
+    "subtitle": "Simulyatsiyani muvaffaqiyatli tugatgan va ish izlayotgan talabalar — haqiqiy ish kunidagi natijalari bilan.",
+    "sentOffers": "Yuborilgan takliflar",
+    "sentSubtitle": "Nomzod qabul qilsa, uning emaili shu yerda ochiladi.",
+    "noSent": "Hali taklif yubormadingiz.",
+    "notVerified": "Kompaniyangiz hali tasdiqlanmagan. Admin tasdiqlagach nomzodlar ochiladi.",
+    "runsCompleted_one": "{{count}} ta simulyatsiya tugatgan",
+    "runsCompleted_other": "{{count}} ta simulyatsiya tugatgan",
+    "runs": "Tugatgan simulyatsiyalari",
+    "certificate": "Sertifikat",
+    "found_one": "{{count}} ta nomzod",
+    "found_other": "{{count}} ta nomzod",
+    "empty": "Mos nomzod topilmadi",
+    "emptyHint": "Filtrlarni yumshatib ko'ring. Faqat o'zi ochiq deb belgilagan talabalar ko'rinadi.",
+    "more": "Yana ko'rsatish",
+    "gone": "Nomzod endi mavjud emas yoki o'zini yashirgan.",
+    "filter": {
+      "sector": "Soha",
+      "any": "Hammasi",
+      "competency": "Kompetensiya",
+      "overall": "Umumiy ball",
+      "minScore": "Minimal ball",
+      "sort": "Tartib",
+      "byScore": "Ball bo'yicha",
+      "byRecent": "Yangilari"
+    },
+    "offer": {
+      "title": "Taklif yuborish",
+      "privacy": "Nomzodning emaili u taklifni qabul qilgandan keyin ochiladi. Javob muddati — 5 ish kuni.",
+      "position": "Lavozim",
+      "positionPlaceholder": "Masalan: Junior Backend dasturchi",
+      "message": "Xabar",
+      "messagePlaceholder": "Nima uchun aynan u? Keyingi qadam nima (suhbat, test topshiriq)?",
+      "send": "Yuborish",
+      "sent": "Taklif yuborildi. Javob kelganda «Yuborilgan takliflar» bo'limida ko'rinadi.",
+      "duplicate": "Bu nomzodga yuborilgan taklif hali javob kutyapti."
+    }
+  },
+  "offers": {
+    "title": "Ish takliflari",
+    "subtitle": "Kompaniyalar sizni simulyatsiya natijalaringiz bo'yicha topadi. Kim ko'rishini o'zingiz boshqarasiz.",
+    "visibility": {
+      "title": "Ko'rinish",
+      "open": "Ish izlayapman",
+      "openHint": "Yoqsangiz, tasdiqlangan kompaniyalar tugatgan simulyatsiyalaringiz natijasini ko'radi. Emailingiz faqat siz qabul qilgan taklifda ochiladi.",
+      "hidden": "Yashirilgan kompaniyalar",
+      "unknownCompany": "Kompaniya",
+      "unhide": "Qayta ko'rsatish"
+    },
+    "profile": {
+      "title": "Profilingiz",
+      "empty": "Profil tugatilgan simulyatsiyadan paydo bo'ladi. Birinchisini boshlang.",
+      "hint": "Kompaniyalar aynan shu ko'rinishni ko'radi: ballar, kompetensiyalar va kuchli tomonlaringiz.",
+      "preview": "Kompaniya ko'zi bilan ko'rish"
+    },
+    "received": "Kelgan takliflar",
+    "none": "Hali taklif yo'q. Ko'rinishni yoqing va simulyatsiyalarni tugating.",
+    "status": {
+      "sent": "Yuborildi",
+      "viewed": "Ko'rildi",
+      "accepted": "Qabul qilindi",
+      "declined": "Rad etildi",
+      "awaiting": "Javob kutilmoqda"
+    },
+    "dueBy": "{{date}} gacha",
+    "accept": "Qabul qilish",
+    "decline": "Rad etish",
+    "acceptConfirm": "{{company}} emailingizni ko'radi va siz bilan bog'lanadi.",
+    "declineConfirm": "Taklifni rad etasizmi?",
+    "notePlaceholderAccept": "Ixtiyoriy: qachon gaplashish qulay?",
+    "notePlaceholderDecline": "Ixtiyoriy: sababi",
+    "hideCompany": "{{company}} meni boshqa ko'rmasin",
+    "acceptedHint": "Kompaniya emailingizni oldi va tez orada bog'lanadi."
   }
 }

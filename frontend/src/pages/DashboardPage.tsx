@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { BarChart3, BookOpen } from 'lucide-react'
@@ -13,12 +13,13 @@ import type { RunSummary } from '@/lib/types'
 export default function DashboardPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, can } = useAuth()
   const [runs, setRuns] = useState<RunSummary[]>([])
+  const recruiter = can('view_candidates')
 
   useEffect(() => {
-    if (user) api<RunSummary[]>('/runs/my').then(setRuns).catch(() => setRuns([]))
-  }, [user])
+    if (user && !recruiter) api<RunSummary[]>('/runs/my').then(setRuns).catch(() => setRuns([]))
+  }, [user, recruiter])
 
   const stats = [
     {
@@ -32,6 +33,8 @@ export default function DashboardPage() {
       icon: <BarChart3 className="h-4 w-4 text-muted-foreground" />,
     },
   ]
+
+  if (recruiter) return <Navigate to="/talents" replace />
 
   return (
     <div className="container mx-auto px-4 py-8">

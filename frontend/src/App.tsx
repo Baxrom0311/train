@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider } from './context/ThemeContext'
-import { AuthProvider, RequireAuth } from './context/AuthContext'
+import { AuthProvider, RequireAuth, RequirePermission } from './context/AuthContext'
 import Navbar from './components/Navbar'
 import Backdrop from './components/layout/Backdrop'
 import LoginPage from './pages/LoginPage'
@@ -9,6 +9,9 @@ import DashboardPage from './pages/DashboardPage'
 import SimulationsPage from './pages/SimulationsPage'
 import RunPage from './pages/RunPage'
 import RunReportPage from './pages/RunReportPage'
+import TalentsPage from './pages/TalentsPage'
+import SentOffersPage from './pages/SentOffersPage'
+import OffersPage from './pages/OffersPage'
 
 export default function App() {
   return (
@@ -26,6 +29,9 @@ export default function App() {
               <Route path="/simulations" element={<RequireAuth><SimulationsPage /></RequireAuth>} />
               <Route path="/runs/:id" element={<RequireAuth><RunPage /></RequireAuth>} />
               <Route path="/runs/:id/report" element={<RequireAuth><RunReportPage /></RequireAuth>} />
+              <Route path="/offers" element={<RequirePermission permission="receive_offers"><OffersPage /></RequirePermission>} />
+              <Route path="/talents" element={<RequirePermission permission="view_candidates"><TalentsPage /></RequirePermission>} />
+              <Route path="/talents/offers" element={<RequirePermission permission="view_candidates"><SentOffersPage /></RequirePermission>} />
             </Routes>
           </div>
         </BrowserRouter>
