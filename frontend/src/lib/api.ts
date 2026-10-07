@@ -98,13 +98,30 @@ export async function login(email: string, password: string): Promise<void> {
   tokens.set(body.access_token, body.refresh_token)
 }
 
-export async function register(fullName: string, email: string, password: string): Promise<void> {
+export interface StudentSignup {
+  full_name: string
+  email: string
+  password: string
+  university_id?: string | null
+}
+
+export interface OrgSignup extends StudentSignup {
+  org_type: 'company' | 'university'
+  org_name: string
+  industry?: string
+  city?: string
+}
+
+export async function register(data: StudentSignup): Promise<void> {
   const body = await api<{ access_token: string; refresh_token: string }>('/auth/register', {
     method: 'POST',
-    json: { full_name: fullName, email, password },
+    json: data,
   })
   tokens.set(body.access_token, body.refresh_token)
 }
+
+/** Tashkilot arizasi: token yo'q, akkaunt admin tasdiqlaguncha yopiq (CONTRACT.md §11.1). */
+export const registerOrg = (data: OrgSignup) => api<{ status: 'pending' }>('/auth/register-org', { method: 'POST', json: data })
 
 export const fetchMe = () => api<Me>('/users/me')
 

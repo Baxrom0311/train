@@ -9,7 +9,9 @@
     "theme": "Mavzu",
     "talents": "Nomzodlar",
     "sentOffers": "Takliflarim",
-    "offers": "Ish takliflari"
+    "offers": "Ish takliflari",
+    "billing": "Hisob-kitob",
+    "admin": "Admin"
   },
   "auth": {
     "login": {
@@ -40,13 +42,35 @@
       "loginLink": "Kiring",
       "terms": "Ro'yxatdan o'tish orqali siz",
       "termsLink": "foydalanish shartlarini",
-      "termsEnd": "qabul qilasiz"
+      "termsEnd": "qabul qilasiz",
+      "subtitle_student": "Haqiqiy ish kunini sinab ko'ring",
+      "subtitle_company": "Nomzodlarni ish natijasi bo'yicha toping",
+      "subtitle_university": "Talabalaringiz natijalarini kuzating",
+      "accountType": "Hisob turi",
+      "kind": {
+        "student": "Talaba",
+        "company": "Kompaniya",
+        "university": "Universitet"
+      },
+      "orgName_company": "Kompaniya nomi",
+      "orgName_university": "Universitet nomi",
+      "industry": "Soha",
+      "industryPlaceholder": "Masalan: Fintech",
+      "city": "Shahar",
+      "cityPlaceholder": "Masalan: Toshkent",
+      "contactName": "Mas'ul shaxs",
+      "workEmail": "Ish emaili",
+      "university": "Universitetingiz (ixtiyoriy)",
+      "noUniversity": "Ko'rsatmayman",
+      "orgNote": "Ariza admin tomonidan tekshiriladi. Tasdiqlangach shu email va parol bilan kirasiz.",
+      "submitOrg": "Ariza yuborish"
     },
     "errors": {
       "invalid": "Email yoki parol noto'g'ri",
-      "inactive": "Hisob hali faollashtirilmagan",
+      "inactive": "Hisob hali faol emas: tashkilotingiz admin tasdiqlashini kutmoqda",
       "mismatch": "Parollar mos emas",
-      "exists": "Bu email bilan hisob allaqachon bor"
+      "exists": "Bu email bilan hisob allaqachon bor",
+      "orgExists": "Bu nomdagi tashkilot allaqachon ro'yxatdan o'tgan"
     },
     "hero": {
       "badge": "Real vaqtdagi ish simulyatsiyasi",
@@ -56,6 +80,10 @@
       "realTime": "Toshkent vaqti bilan haqiqiy ish kuni: 09:00–18:00",
       "colleagues": "Team lead, mentor va hamkasblar bilan chat",
       "feedback": "Har vazifaga AI baho va yakuniy kompetensiya hisoboti"
+    },
+    "pending": {
+      "title": "Ariza qabul qilindi",
+      "body": "«{{org}}» arizasi admin tekshiruviga yuborildi. Tasdiqlangach shu email va parol bilan kira olasiz."
     }
   },
   "dashboard": {
@@ -305,5 +333,56 @@
     "notePlaceholderDecline": "Ixtiyoriy: sababi",
     "hideCompany": "{{company}} meni boshqa ko'rmasin",
     "acceptedHint": "Kompaniya emailingizni oldi va tez orada bog'lanadi."
+  },
+  "billing": {
+    "title": "Hisob-kitob",
+    "subtitle": "Tashkilotingiz uchun yozilgan invoice'lar. To'lov bank o'tkazmasi orqali, admin tasdiqlaydi.",
+    "none": "Hali invoice yo'q",
+    "dueTotal_one": "{{count}} ta to'lanmagan invoice",
+    "dueTotal_other": "{{count}} ta to'lanmagan invoice",
+    "status": {
+      "pending": "To'lov kutilmoqda",
+      "paid": "To'langan",
+      "cancelled": "Bekor qilingan"
+    }
+  },
+  "admin": {
+    "title": "Admin panel",
+    "subtitle": "Tashkilot arizalari va invoice'lar",
+    "tabs": {
+      "pending": "Arizalar",
+      "verified": "Tashkilotlar",
+      "invoices": "Invoice'lar"
+    },
+    "stats": {
+      "pending": "Kutilayotgan arizalar",
+      "companies": "Kompaniyalar",
+      "universities": "Universitetlar",
+      "invoicesPending": "To'lanmagan invoice'lar"
+    },
+    "orgType": {
+      "company": "Kompaniya",
+      "university": "Universitet"
+    },
+    "approve": "Tasdiqlash",
+    "reject": "Rad etish",
+    "rejectConfirm": "«{{name}}» arizasi va uning akkaunti o'chiriladi. Davom etasizmi?",
+    "rejectConflict": "Bu tashkilotni rad etib bo'lmaydi: u allaqachon faol",
+    "noPending": "Kutilayotgan ariza yo'q",
+    "noVerified": "Tasdiqlangan tashkilot hali yo'q",
+    "verifiedAt": "{{date}} da tasdiqlangan",
+    "filterStatus": "Holat bo'yicha",
+    "allStatuses": "Barcha holatlar",
+    "newInvoice": "Yangi invoice",
+    "markPaid": "To'landi",
+    "cancel": "Bekor qilish",
+    "cancelConfirm": "Invoice bekor qilinsinmi?",
+    "payer": "To'lovchi",
+    "choosePayer": "Tashkilotni tanlang",
+    "amount": "Summa",
+    "currency": "Valyuta",
+    "notes": "Izoh",
+    "notesPlaceholder": "Masalan: Oktabr oyi obunasi",
+    "issue": "Invoice yozish"
   }
 }

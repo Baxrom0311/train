@@ -13,6 +13,7 @@ Modul 9 (ssenariy dvigateli) backend'da tayyor, kontent `backend/content/scenari
 frontend'da talaba "ish stoli" bor (katalog, Run sahifasi, chat, hisobot).
 Talent Hunt (`CONTRACT.md` §10): kompaniya nomzodlarni Run natijalari bo'yicha
 ko'radi va taklif yuboradi, talaba ko'rinishini boshqaradi va javob beradi.
+Tashkilot arizasi → admin tasdiqlashi → invoice oqimi brauzerda (`CONTRACT.md` §11, `/admin`).
 
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da
@@ -53,6 +54,7 @@ PostgreSQL (pgvector) va Redis kerak. Backend (`backend/` papkasidan, `.env` bil
 pip install -r requirements.txt
 alembic -c alembic/alembic.ini upgrade head          # rollar/ruxsatlar seed ham shu yerda
 python ../tools/import_scenario.py --publish content/scenarios/*.yaml
+python ../tools/bootstrap_admin.py --email admin@example.uz --password '...'   # birinchi admin
 uvicorn app.main:app --port 8000
 arq app.ai.worker.WorkerSettings                     # baholash, yetkazish cron'i, hisobotlar
 ```

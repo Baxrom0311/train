@@ -796,7 +796,7 @@ invoice'gacha bo'lgan oqimni brauzerda to'liq qiladi.
   ishlamasdi). Login 403 bilan "admin tasdiqlashini kutmoqda" deydi.
 - Tashkilot nomi katta-kichik harfga qaramay takrorlanmaydi → 409.
 - Talaba `/auth/register`da ixtiyoriy ravishda tasdiqlangan universitetni
-  tanlaydi (`GET /university-portal/list` — ochiq ro'yxat).
+  tanlaydi (`GET /university/list` — ochiq ro'yxat).
 
 ### 11.2 Admin: tashkilotlar
 

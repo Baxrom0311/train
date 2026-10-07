@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { BarChart3, BookOpen } from 'lucide-react'
 import { Badge } from './Badge'
-import { useAuth } from '@/context/AuthContext'
+import { homeFor, useAuth } from '@/context/AuthContext'
 import { api } from '@/lib/api'
 import { formatDateTime } from '@/lib/time'
 import type { RunSummary } from '@/lib/types'
@@ -15,11 +15,12 @@ export default function DashboardPage() {
   const navigate = useNavigate()
   const { user, can } = useAuth()
   const [runs, setRuns] = useState<RunSummary[]>([])
-  const recruiter = can('view_candidates')
+  // dashboard — talaba sahifasi; boshqalar o'z bosh sahifasiga
+  const elsewhere = Boolean(user) && !can('receive_offers')
 
   useEffect(() => {
-    if (user && !recruiter) api<RunSummary[]>('/runs/my').then(setRuns).catch(() => setRuns([]))
-  }, [user, recruiter])
+    if (user && !elsewhere) api<RunSummary[]>('/runs/my').then(setRuns).catch(() => setRuns([]))
+  }, [user, elsewhere])
 
   const stats = [
     {
@@ -34,7 +35,7 @@ export default function DashboardPage() {
     },
   ]
 
-  if (recruiter) return <Navigate to="/talents" replace />
+  if (elsewhere) return <Navigate to={homeFor(user)} replace />
 
   return (
     <div className="container mx-auto px-4 py-8">

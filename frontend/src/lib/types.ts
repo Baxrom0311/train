@@ -233,3 +233,48 @@ export interface ReceivedOffer extends TalentOffer {
   company_name: string
   company_industry: string
 }
+
+// Admin va invoice'lar (backend/app/api/admin.py, billing.py, CONTRACT.md §11)
+
+export type OrgType = 'company' | 'university'
+export type InvoiceStatus = 'pending' | 'paid' | 'cancelled'
+
+export interface Org {
+  id: string
+  org_type: OrgType
+  name: string
+  detail: string
+  contact_email: string
+  is_verified: boolean
+  verified_at: string | null
+  created_at: string
+  owner_name: string | null
+  owner_email: string | null
+}
+
+export interface OrgList {
+  companies: Org[]
+  universities: Org[]
+}
+
+export interface AdminStats {
+  pending_companies: number
+  pending_universities: number
+  verified_companies: number
+  verified_universities: number
+  invoices_pending: number
+}
+
+export interface Invoice {
+  id: string
+  payer_type: OrgType
+  payer_id: string
+  payer_name: string | null
+  /** Decimal — JSON'da satr ("2500000.50") */
+  amount: string
+  currency: 'UZS' | 'USD'
+  status: InvoiceStatus
+  paid_marked_at: string | null
+  notes: string | null
+  created_at: string
+}

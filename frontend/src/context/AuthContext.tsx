@@ -1,13 +1,13 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import { fetchMe, login as apiLogin, register as apiRegister, tokens } from '@/lib/api'
+import { fetchMe, login as apiLogin, register as apiRegister, tokens, type StudentSignup } from '@/lib/api'
 import type { Me } from '@/lib/types'
 
 interface AuthContextType {
   user: Me | null
   loading: boolean
   login: (email: string, password: string) => Promise<Me | null>
-  register: (fullName: string, email: string, password: string) => Promise<void>
+  register: (data: StudentSignup) => Promise<void>
   logout: () => void
   /** Ruxsat bo'yicha tekshiruv (CONTRACT.md §10.3) — rol nomi bo'yicha emas. */
   can: (permission: string) => boolean
@@ -42,8 +42,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return loadMe()
   }
 
-  const register = async (fullName: string, email: string, password: string) => {
-    await apiRegister(fullName, email, password)
+  const register = async (data: StudentSignup) => {
+    await apiRegister(data)
     await loadMe()
   }
 
@@ -73,17 +73,22 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
-/** Ruxsat yo'q bo'lsa — bosh sahifaga (backend baribir 403 qaytaradi). */
-export function RequirePermission({ permission, children }: { permission: string; children: React.ReactNode }) {
-  const { can } = useAuth()
+/** Ruxsatlardan kamida bittasi kerak; yo'q bo'lsa — o'z bosh sahifasiga (backend baribir 403 qaytaradi). */
+export function RequirePermission({ permission, children }: { permission: string | string[]; children: React.ReactNode }) {
+  const { user, can } = useAuth()
+  const allowed = (Array.isArray(permission) ? permission : [permission]).some(can)
   return (
     <RequireAuth>
-      {can(permission) ? children : <Navigate to="/dashboard" replace />}
+      {allowed ? children : <Navigate to={homeFor(user)} replace />}
     </RequireAuth>
   )
 }
 
-/** Kirgandan keyingi bosh sahifa: kompaniya xodimi — nomzodlar, talaba — simulyatsiyalar. */
+/** Kirgandan keyingi bosh sahifa ruxsatga qarab (CONTRACT.md §11.4). */
 export function homeFor(user: Me | null): string {
-  return user?.permissions.includes('view_candidates') ? '/talents' : '/simulations'
+  const has = (p: string) => Boolean(user?.permissions.includes(p))
+  if (has('approve_companies') || has('manage_billing')) return '/admin'
+  if (has('view_candidates')) return '/talents'
+  if (has('view_org_invoices')) return '/billing'
+  return '/simulations'
 }
