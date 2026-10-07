@@ -1,5 +1,5 @@
 """
-arq background worker: AI eval retry.
+arq background worker: AI eval retry + ssenariy dvigateli job'lari (§9.8).
 Submission DB'dan olinadi, AI zanjiri qayta ishga tushiriladi.
 3 marta muvaffaqiyatsiz bo'lsa — 'failed_permanent'.
 
@@ -10,7 +10,7 @@ import logging
 from datetime import datetime, timezone
 
 import httpx
-from arq import Retry
+from arq import Retry, cron, func
 from arq.connections import RedisSettings
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy import select
@@ -20,6 +20,12 @@ from app.models.simulation import Submission, SimulationTask, Simulation
 from app.models.enums import AIEvalStatus
 from app.ai.guardrail import validate_submission_content
 from app.ai.router import run_ai_chain, _pick_persona, _build_user_prompt
+from app.scenario.jobs import (
+    EVAL_JOB,
+    deliver_due_events,
+    evaluate_run_submission_job,
+    sync_work_holidays_job,
+)
 
 log = logging.getLogger(__name__)
 
@@ -137,7 +143,16 @@ async def shutdown(ctx: dict) -> None:  # noqa: ARG001
 
 class WorkerSettings:
     """`arq app.ai.worker.WorkerSettings` bilan ishga tushiriladi (deploy/)."""
-    functions = [retry_ai_eval]
+    functions = [
+        retry_ai_eval,
+        func(evaluate_run_submission_job, name=EVAL_JOB, max_tries=MAX_ATTEMPTS),
+    ]
+    cron_jobs = [
+        # §9.8: har daqiqa — yetkazish, dedlaynlar, Run yopilishi
+        cron(deliver_due_events, second=0, unique=True, timeout=50),
+        # §9.2: haftalik bayramlar (va worker ishga tushganda bir marta)
+        cron(sync_work_holidays_job, weekday="mon", hour=3, minute=0, run_at_startup=True),
+    ]
     redis_settings = RedisSettings.from_dsn(settings.REDIS_URL)
     on_startup = startup
     on_shutdown = shutdown

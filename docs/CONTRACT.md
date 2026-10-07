@@ -279,7 +279,8 @@ har modul uchun alohida agent task yoziladi.
   kalendaridan joriy va keyingi yil sanalarini `work_holidays`ga yozadi
   (`source=auto`). Admin yozuvi (`source=manual`) avtomatik yozuvdan ustun:
   hayit sanalari va ko'chirilgan dam olish kunlari har yili qaror bilan
-  e'lon qilinadi.
+  e'lon qilinadi. Sinxronizatsiya faqat hali bitta ham `auto` yozuvi yo'q
+  yilni to'ldiradi — admin o'chirgan taxminiy sana qaytib kelmaydi.
 - **Ish daqiqasi qo'shish:** `add_work_minutes(t, m)` — `t` ish vaqtidan
   tashqarida bo'lsa keyingi bo'lak boshiga suriladi, so'ng bo'laklar bo'yicha
   hisoblanadi; tushlik, kechqurun, dam olish va bayram kunlari o'tkazib
@@ -302,17 +303,23 @@ har modul uchun alohida agent task yoziladi.
 - **Nisbiy node:** `after: {node, event: delivered|submitted, minutes}` →
   `scheduled_at = start_after(trigger_vaqti, minutes)` (yuqoridagidek normallashtiriladi).
 - **Dedlayn:** `due_at = add_work_minutes(delivered_at, due_in_minutes)` —
-  `scheduled_at`dan emas, cron kechiksa talaba vaqt yo'qotmaydi.
+  `scheduled_at`dan emas, cron kechiksa talaba vaqt yo'qotmaydi
+  (`delivered_at` = haqiqiy yetkazilgan payt). `due_in_minutes` berilmagan
+  `decision` — 60, `day_end` — 30 ish daqiqasi; `message`da dedlayn yo'q.
 - **Pauza yo'q.** `compression_ratio` ham yo'q (v1'dan olib tashlandi) — 1
   simulyatsiya soati = 1 real soat.
 - Ssenariy darajasidagi parametr: `duration_days` (1 = kunlik, 5 = haftalik).
 - **Tugash (`completed`):** oxirgi kunning `day_end` hodisasi `submitted`
-  yoki `missed` bo'lsa va `pending` hodisa qolmagan bo'lsa.
+  yoki `missed` bo'lsa, `pending` hodisa qolmagan bo'lsa va dedlayni hali
+  o'tmagan (`delivered`) baholanadigan hodisa qolmagan bo'lsa — talaba
+  ochiq task'ini tugatishga ulguradi.
 - **Muddat tugashi (`expired`):**
   - `last_activity_at`dan 7 kalendar kun o'tsa, yoki
   - `ends_at`dan o'tsa: `ends_at` = eng kech fixed node'ning `scheduled_at`
     kunidan keyingi 2-ish kunining 18:00 i.
-  Expire paytida `pending` → `skipped`, `delivered` → `missed`. Yongan Run
+  Expire paytida avval yonish vaqtigacha bo'lgan hodisalar tartib bilan
+  bajariladi, keyin `pending` → `skipped`, baholanadigan `delivered` →
+  `missed` (`message` `delivered` qoladi). `abandoned` ham shunday yopiladi. Yongan Run
   uchun bajarilgan qism bo'yicha yakuniy hisobot "tugallanmagan" belgisi
   bilan yoziladi, sertifikat berilmaydi. Talaba yangi Run ochishi mumkin.
 - `last_activity_at` — Run egasining har qanday `runs/*` so'rovida yangilanadi.
@@ -553,15 +560,25 @@ submission'i har doim arq job orqali baholanadi. Talent Hunt/Universitet portali
 - Run yaratilganda vaqti aniq (`day`+`at`) barcha node'lar uchun
   `run_events` (`pending`, `scheduled_at` hisoblangan) yoziladi. Nisbiy
   (`after`) node'lar trigger sodir bo'lganda yaratiladi.
-- **Yetkazish:** arq cron har daqiqada `pending` va `scheduled_at <= now`
-  hodisalarni oladi (`SELECT ... FOR UPDATE SKIP LOCKED`), `when`ni
-  tekshiradi → `delivered` yoki `skipped`. Shu cron `due_at` o'tganlarni
-  `missed` qiladi va `expired` Run'larni yopadi.
+- **Yetkazish:** arq cron (`deliver_due_events`) har daqiqada ishi bor
+  ochiq Run'larni **Run qatori bo'yicha** qulflaydi (`SELECT ... FOR UPDATE
+  SKIP LOCKED`; API o'sha Run'ni kutib qulflaydi), `pending` va
+  `scheduled_at <= now` hodisalarda `when`ni tekshiradi → `delivered` yoki
+  `skipped`, `due_at` o'tganlarni `missed` qiladi, `scheduled` Run'ni
+  `active`, tugaganini `completed`, muddati o'tganini `expired` qiladi.
+  Yetkazish va dedlaynlar **xronologik** tartibda bajariladi: cron kechiksa
+  ham 13:00 dagi shart 13:30 dagi dedlayndan oldin tekshiriladi.
+- **Baholash navbati:** javob `pending` holatda yoziladi va arq job
+  (`evaluate_run_submission_job`, `_job_id=run-eval:{id}`) navbatga
+  qo'yiladi. 5 daqiqadan ko'p `pending` turgan javobni cron qayta navbatga
+  qo'yadi. `decision` AI'siz, darhol baholanadi (`correct` 100,
+  `acceptable` 60, `wrong` 0; kech bo'lsa `late_penalty`).
 - **Idempotent:** `UNIQUE(run_id, node_id)` + holat o'tishlari faqat bir
   yo'nalishda. `GET /runs/{id}` ham "kechikkan" hodisalarni shu funksiya
   bilan yetkazadi (cron kechiksa ham talaba to'g'ri holatni ko'radi).
-- Barcha o'tishlar bitta funksiyada: `scenario/engine.py: advance(db, now,
-  run_id=None)`; `now` parametr, testlar aniq vaqtlar bilan yoziladi.
+- Barcha o'tishlar bitta modulda: `scenario/engine.py: advance(db, now,
+  run_id=None)` (va talaba harakatlari `submit_answer`, `decide`,
+  `abandon`); `now` parametr, testlar aniq vaqtlar bilan yoziladi.
 - **Bildirishnoma:** frontend'ga SSE oqimi. Worker va API alohida
   jarayonlar, shuning uchun hodisalar **Redis pub/sub** (`run:{id}` kanali)
   orqali uzatiladi; SSE endpoint shu kanalga obuna bo'ladi. Talaba sahifada
