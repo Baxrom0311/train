@@ -496,5 +496,166 @@
     "certificates": "Certificates ({{count}})",
     "noCertificates": "No certificates yet.",
     "footer": "Results are based on AI and mentor assessment in TryJob virtual work scenarios."
+  },
+  "landing": {
+    "hero": {
+      "badge": "Virtual work experience for students in Uzbekistan",
+      "titleStart": "Before you get the job,",
+      "titleAccent": "try the job",
+      "subtitle": "On TryJob a workday runs in real time: colleagues message you, deadlines close in, surprises happen. AI grades your answers, a mentor shows the way, and the result stays with you as a certificate.",
+      "start": "Start for free",
+      "forOrgs": "For companies and universities",
+      "point": {
+        "free": "Free for students",
+        "realTime": "Tashkent time, 09:00–18:00",
+        "certificate": "Verifiable certificate"
+      }
+    },
+    "desk": {
+      "day1": "Day 1",
+      "tashkent": "Tashkent",
+      "now": "now",
+      "mentor": "mentor",
+      "mentorLine": "Message me if you get stuck. I won't give you the answer, but I'll point you the right way.",
+      "switch": "Switch scenario"
+    },
+    "slot": {
+      "message": "Message",
+      "task": "Task",
+      "incident": "Unexpected situation",
+      "decision": "Decision",
+      "day_end": "End-of-day report"
+    },
+    "numbers": {
+      "scenarios": "work scenarios",
+      "sectors": "fields",
+      "workday": "real workday, Tashkent time",
+      "completed": "workdays completed",
+      "mentor": "AI mentor support"
+    },
+    "sectors": {
+      "eyebrow": "Fields",
+      "title": "Pick the career that fits you",
+      "subtitle": "Each scenario is a workday or week at a fictional company that feels very close to the real thing.",
+      "tasks_one": "{{count}} task",
+      "tasks_other": "{{count}} tasks",
+      "soon": "Coming soon",
+      "about": {
+        "IT": "Backend, bug fixing, code review, a production incident.",
+        "Banking": "Credit application analysis, risk, client correspondence.",
+        "Marketing": "Campaign metrics, budget, on-brand copy.",
+        "Data": "SQL reports, dashboards, A/B test conclusions.",
+        "HR": "CV screening, leave calculations, talking to candidates."
+      }
+    },
+    "how": {
+      "eyebrow": "How it works",
+      "title": "One workday, five steps",
+      "subtitle": "Not a quiz: you are part of the team, and the workday won't wait for you.",
+      "pick": {
+        "title": "Pick a scenario",
+        "body": "By field and difficulty: one day or one week."
+      },
+      "work": {
+        "title": "The workday starts",
+        "body": "Tasks arrive on Tashkent time; deadlines count in working minutes."
+      },
+      "review": {
+        "title": "AI grades it",
+        "body": "Every answer is graded against a rubric and the mentor comments. Up to 3 attempts."
+      },
+      "certificate": {
+        "title": "Earn a certificate",
+        "body": "Finish the scenario to get a verifiable QR certificate and a portfolio."
+      },
+      "offers": {
+        "title": "Offers arrive",
+        "body": "If you're open to work, companies see your results and send offers."
+      }
+    },
+    "certificate": {
+      "eyebrow": "Certificate",
+      "title": "Your result is a verifiable document",
+      "subtitle": "Every certificate has a unique code and QR code. An employer can check it in seconds, and you can print it as a PDF.",
+      "sample": "Sample",
+      "sampleName": "Sample Student",
+      "verifyTitle": "Verify a certificate",
+      "verifyHint": "Enter the TJ-XXXX-XXXX code from the certificate."
+    },
+    "audience": {
+      "eyebrow": "Who it's for",
+      "title": "Students, companies and universities on one platform",
+      "student": {
+        "title": "Students",
+        "price": "Free",
+        "points": [
+          "Real workday experience and an AI mentor",
+          "Detailed grade and feedback on every answer",
+          "Certificate and public portfolio",
+          "Job offers from companies"
+        ],
+        "cta": "Sign up"
+      },
+      "company": {
+        "title": "Companies",
+        "price": "By contract",
+        "points": [
+          "See candidates by real task results",
+          "Filter by competencies",
+          "Send offers directly to students open to work",
+          "Applications are approved by an admin"
+        ],
+        "cta": "Apply as a company"
+      },
+      "university": {
+        "title": "Universities",
+        "price": "By contract",
+        "points": [
+          "Your students' results in one place",
+          "Breakdown by field and competency",
+          "Student answers and chats stay private",
+          "Applications are approved by an admin"
+        ],
+        "cta": "Apply as a university"
+      }
+    },
+    "faq": {
+      "eyebrow": "FAQ",
+      "title": "Frequently asked questions",
+      "free": {
+        "q": "Do students have to pay?",
+        "a": "No, TryJob is free for students. Universities and companies fund the platform by contract."
+      },
+      "time": {
+        "q": "How does a workday run?",
+        "a": "The scenario runs in real time from 09:00 to 18:00 Tashkent time, with lunch 13:00–14:00. There is no pause: tasks arrive on schedule and deadlines count in working minutes. No work on weekends or public holidays."
+      },
+      "companies": {
+        "q": "Are the companies in scenarios real?",
+        "a": "No, every company, client and number is made up. The situations and tasks are built like real work, though."
+      },
+      "grading": {
+        "q": "Who grades the answers?",
+        "a": "AI grades each answer against predefined criteria (a rubric), and the mentor explains what to improve. Each task allows up to 3 attempts; the last one counts."
+      },
+      "verify": {
+        "q": "How can a certificate be verified?",
+        "a": "Scan the QR code on the certificate or enter its TJ-XXXX-XXXX code in the form on this page. The page shows whether it is valid or revoked."
+      },
+      "privacy": {
+        "q": "Who sees my results?",
+        "a": "Companies see your scores and competencies only if you turn on \"Open to work\". Your university also sees only results. Your answers and chats are never shown to anyone."
+      }
+    },
+    "cta": {
+      "title": "Your first workday is waiting",
+      "subtitle": "Sign up, pick a scenario and start today."
+    },
+    "footer": {
+      "note": "Companies in scenarios are fictional; the certificate confirms a scenario result, not work experience.",
+      "how": "How it works",
+      "verify": "Verify a certificate",
+      "faq": "FAQ"
+    }
   }
 }

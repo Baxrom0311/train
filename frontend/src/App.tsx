@@ -1,11 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider } from './context/ThemeContext'
-import { AuthProvider, RequireAuth, RequirePermission } from './context/AuthContext'
+import { AuthProvider, RequireAuth, RequirePermission, homeFor, useAuth } from './context/AuthContext'
 import Navbar from './components/Navbar'
 import Backdrop from './components/layout/Backdrop'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
+import LandingPage from './pages/LandingPage'
 import SimulationsPage from './pages/SimulationsPage'
 import RunPage from './pages/RunPage'
 import RunReportPage from './pages/RunReportPage'
@@ -19,6 +20,14 @@ import CertificatePage from './pages/CertificatePage'
 import PortfolioPublicPage from './pages/PortfolioPublicPage'
 import PortfolioPage from './pages/PortfolioPage'
 
+/** `/`: mehmon — landing (CONTRACT.md §14), kirgan — o'z bosh sahifasi (talaba — dashboard). */
+function Home() {
+  const { user, loading, can } = useAuth()
+  if (loading) return null
+  if (!user) return <LandingPage />
+  return <Navigate to={can('receive_offers') ? '/dashboard' : homeFor(user)} replace />
+}
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -28,10 +37,10 @@ export default function App() {
             <Backdrop />
             <Navbar />
             <Routes>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/" element={<Home />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
               <Route path="/simulations" element={<RequireAuth><SimulationsPage /></RequireAuth>} />
               <Route path="/runs/:id" element={<RequireAuth><RunPage /></RequireAuth>} />
               <Route path="/runs/:id/report" element={<RequireAuth><RunReportPage /></RequireAuth>} />

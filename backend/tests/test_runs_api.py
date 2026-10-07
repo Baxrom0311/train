@@ -65,6 +65,33 @@ async def _login(client, factory, email, role="student"):
     return {"Authorization": f"Bearer {r.json()['access_token']}"}
 
 
+async def test_showcase_is_public_and_hides_secrets(client, db_session, scenario):
+    draft = ScenarioDefinition.model_validate({
+        **yaml.safe_load(FIXTURE.read_text(encoding="utf-8")), "slug": "draft-only", "title": "Draft",
+    })
+    await import_scenario(db_session, draft)
+    await db_session.commit()
+
+    r = await client.get("/api/v1/showcase")   # login'siz
+    assert r.status_code == 200 and "max-age=300" in r.headers["cache-control"]
+    data = r.json()
+    assert data["stats"] == {"scenarios": 1, "sectors": 1, "completed_runs": 0}
+    [s] = data["scenarios"]
+    assert s["slug"] == "elon-market-backend-day1" and s["tasks"] == 3
+    assert s["mentor"]["name"] and s["mentor"]["role"]
+    # 1-kun vaqt bo'yicha; `after` node'i yo'q; incident nomi oshkor qilinmaydi
+    assert [(x["at"], x["type"]) for x in s["day1"]] == [
+        ("09:00", "message"), ("09:00", "task"), ("09:30", "task"), ("14:00", "incident"), ("17:30", "day_end")]
+    assert s["day1"][2]["title"].startswith("Ticket ORD-142") and s["day1"][3]["title"] is None
+    dump = r.text
+    defn = yaml.safe_load(FIXTURE.read_text(encoding="utf-8"))
+    secrets = [h for n in defn["nodes"] for h in n.get("hints", [])] + [
+        n["reference_answer"] for n in defn["nodes"] if n.get("reference_answer")] + [
+        x for p in defn["personas"] for x in p.get("knows", []) + p.get("secrets", [])]
+    assert secrets and not any(x[:40] in dump for x in secrets)
+    assert "To'lov xizmati" not in dump and "Prod:" not in dump
+
+
 async def test_catalog_lists_published_only(client, db_session, test_user_factory, scenario):
     h = await _login(client, test_user_factory, "cat@example.com")
     draft = ScenarioDefinition.model_validate({

@@ -1,6 +1,6 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Building2, GraduationCap, Hourglass, School } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -25,7 +25,10 @@ export default function RegisterPage() {
   const { t } = useTranslation()
   const { register } = useAuth()
   const navigate = useNavigate()
-  const [kind, setKind] = useState<Kind>('student')
+  // landing'dagi "Kompaniyalar/Universitetlar uchun" tugmalari: /register?as=company (§14.2)
+  const [params] = useSearchParams()
+  const preset = params.get('as')
+  const [kind, setKind] = useState<Kind>(KINDS.some((k) => k.kind === preset) ? (preset as Kind) : 'student')
   const [form, setForm] = useState({ fullName: '', email: '', password: '', confirm: '', orgName: '', detail: '', universityId: '' })
   const [universities, setUniversities] = useState<University[]>([])
   const [error, setError] = useState<string | null>(null)

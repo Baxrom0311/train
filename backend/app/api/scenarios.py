@@ -4,6 +4,7 @@ Ssenariylar katalogi va ish kalendari boshqaruvi (CONTRACT.md §9.9, Modul 9).
 Katalogda faqat `published` versiyasi bor, `is_active` ssenariylar.
 Personajlarning faqat ommaviy maydonlari (ism, rol) ko'rsatiladi —
 `knows`/`secrets`, rubrika, hint va namunaviy javob hech qachon chiqmaydi.
+`/showcase` — landing uchun ochiq ko'rinish (§14.1).
 """
 
 import uuid
@@ -11,15 +12,16 @@ from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import extract, select
+from sqlalchemy import extract, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_active_user, require_permission
 from app.database import get_db
-from app.models.enums import HolidaySource, ScenarioVersionStatus, Sector
-from app.models.scenario import Scenario, ScenarioVersion, WorkHoliday
+from app.models.enums import HolidaySource, NodeType, RunStatus, ScenarioVersionStatus, Sector
+from app.models.scenario import Run, Scenario, ScenarioVersion, WorkHoliday
 from app.models.user import User
 from app.scenario.engine import definition_for
+from app.scenario.schema import ScenarioDefinition, short_title
 
 router = APIRouter(tags=["scenarios"])
 
@@ -44,6 +46,40 @@ class ScenarioOut(BaseModel):
 
 class ScenarioDetailOut(ScenarioOut):
     personas: list[PersonaPublic]
+
+
+class ShowcaseMentor(BaseModel):
+    name: str
+    role: str
+
+
+class ShowcaseSlot(BaseModel):
+    at: str
+    type: NodeType
+    title: str | None
+
+
+class ShowcaseScenario(BaseModel):
+    slug: str
+    title: str
+    sector: Sector
+    company_name: str
+    difficulty: str
+    duration_days: int
+    tasks: int
+    mentor: ShowcaseMentor | None
+    day1: list[ShowcaseSlot]
+
+
+class ShowcaseStats(BaseModel):
+    scenarios: int
+    sectors: int
+    completed_runs: int
+
+
+class Showcase(BaseModel):
+    stats: ShowcaseStats
+    scenarios: list[ShowcaseScenario]
 
 
 class HolidayIn(BaseModel):
@@ -84,6 +120,43 @@ async def published_version(db: AsyncSession, scenario_id: uuid.UUID) -> tuple[S
     if row is None:
         raise HTTPException(status_code=404, detail="Scenario not found")
     return row[0], row[1]
+
+
+# Kutilmagan vaziyat va qaror landing'da oldindan oshkor qilinmaydi (§14.1)
+_TITLED = {NodeType.MESSAGE, NodeType.TASK}
+_COUNTED = {NodeType.TASK, NodeType.INCIDENT, NodeType.DECISION}
+
+
+def _showcase(scenario: Scenario, defn: ScenarioDefinition) -> ShowcaseScenario:
+    day1 = sorted((n for n in defn.nodes if n.day == 1 and n.at), key=lambda n: n.at)
+    mentor = defn.mentor
+    return ShowcaseScenario(
+        slug=scenario.slug,
+        title=scenario.title,
+        sector=scenario.sector,
+        company_name=scenario.company_name,
+        difficulty=scenario.difficulty,
+        duration_days=scenario.duration_days,
+        tasks=sum(n.type in _COUNTED for n in defn.nodes),
+        mentor=ShowcaseMentor(name=mentor.name, role=mentor.role) if mentor else None,
+        day1=[
+            ShowcaseSlot(at=n.at, type=n.type, title=short_title(n.brief) if n.type in _TITLED else None)
+            for n in day1
+        ],
+    )
+
+
+@router.get("/showcase", response_model=Showcase)
+async def showcase(response: Response, db: AsyncSession = Depends(get_db)):
+    """Landing uchun ochiq ko'rinish — login shart emas, shaxsiy ma'lumot yo'q."""
+    rows = (await db.execute(_published().order_by(Scenario.title))).all()
+    items = [_showcase(s, definition_for(v)) for s, v in rows]
+    completed = await db.scalar(select(func.count()).select_from(Run).where(Run.status == RunStatus.COMPLETED))
+    response.headers["Cache-Control"] = "public, max-age=300"
+    return Showcase(
+        stats=ShowcaseStats(scenarios=len(items), sectors=len({i.sector for i in items}), completed_runs=completed or 0),
+        scenarios=items,
+    )
 
 
 @router.get("/scenarios", response_model=list[ScenarioOut])

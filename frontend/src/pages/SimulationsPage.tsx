@@ -1,26 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, BarChart3, Briefcase, CalendarDays, Code2, HeartHandshake, Landmark, Megaphone, Search, Users } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import { ArrowRight, Briefcase, CalendarDays, Search, Users } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from './Badge'
+import { SECTOR_ART } from '@/components/sectorArt'
 import { api, ApiError } from '@/lib/api'
 import { formatDateTime } from '@/lib/time'
 import { SECTORS, type RunCreated, type RunSummary, type Scenario, type Sector } from '@/lib/types'
 
 const OPEN = ['scheduled', 'active']
-
-// Soha bo'yicha karta "muqovasi": ikonka va rang
-const SECTOR_ART: Record<Sector, { Icon: LucideIcon; glow: string }> = {
-  IT: { Icon: Code2, glow: 'from-emerald-400/50 via-teal-300/30 to-transparent dark:from-violet-500/45 dark:via-indigo-500/25' },
-  Banking: { Icon: Landmark, glow: 'from-sky-400/45 via-emerald-300/30 to-transparent dark:from-cyan-400/40 dark:via-indigo-500/25' },
-  Marketing: { Icon: Megaphone, glow: 'from-rose-400/40 via-fuchsia-300/25 to-transparent dark:from-fuchsia-500/40 dark:via-violet-500/25' },
-  Data: { Icon: BarChart3, glow: 'from-cyan-400/45 via-sky-300/30 to-transparent dark:from-sky-400/40 dark:via-violet-500/25' },
-  HR: { Icon: HeartHandshake, glow: 'from-teal-400/45 via-sky-200/30 to-transparent dark:from-teal-400/35 dark:via-indigo-500/25' },
-}
 
 const CHIP = 'rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors'
 const CHIP_ON = 'border-primary/50 bg-primary/15 text-primary'
