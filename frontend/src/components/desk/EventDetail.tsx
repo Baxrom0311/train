@@ -265,7 +265,7 @@ function Hints({ runId, nodeId }: { runId: string; nodeId: string }) {
   return (
     <div className="space-y-2 border-t pt-4">
       {hints.map((h, i) => (
-        <p key={i} className="animate-rise rounded-xl border border-amber-300/50 bg-amber-50/80 p-3 text-sm text-amber-900 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-100">
+        <p key={i} className="animate-rise rounded-xl border border-amber-300/50 bg-amber-50/80 p-3 text-sm text-amber-900 dark:border-violet-400/25 dark:bg-violet-400/10 dark:text-violet-100">
           💡 {h}
         </p>
       ))}

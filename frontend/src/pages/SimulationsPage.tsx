@@ -14,8 +14,8 @@ const OPEN = ['scheduled', 'active']
 
 // Soha bo'yicha karta "muqovasi": ikonka va rang
 const SECTOR_ART = {
-  IT: { Icon: Code2, glow: 'from-emerald-400/50 via-teal-300/30 to-transparent dark:from-amber-400/40 dark:via-orange-500/20' },
-  Banking: { Icon: Landmark, glow: 'from-sky-400/45 via-emerald-300/30 to-transparent dark:from-yellow-300/35 dark:via-amber-600/20' },
+  IT: { Icon: Code2, glow: 'from-emerald-400/50 via-teal-300/30 to-transparent dark:from-violet-500/45 dark:via-indigo-500/25' },
+  Banking: { Icon: Landmark, glow: 'from-sky-400/45 via-emerald-300/30 to-transparent dark:from-cyan-400/40 dark:via-indigo-500/25' },
 } as const
 
 export default function SimulationsPage() {

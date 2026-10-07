@@ -3,7 +3,7 @@
 
 /*
  * TryJob dizayn tizimi: shadcn komponentlari + "liquid glass" qatlamlari.
- * Kunduzgi mavzu — oq va yashil; tungi — to'q ko'k fon, sariq (amber) yorug'lik.
+ * Kunduzgi mavzu — oq va yashil; tungi — to'q ko'k fon, binafsha/firuza (aurora) yorug'lik.
  * Ish stolida fon yorug'ligi Toshkent vaqtiga qarab o'zgaradi (data-daypart).
  */
 
@@ -79,37 +79,37 @@
   }
 
   .dark {
-    /* Tun: to'q ko'k + sariq yorug'lik */
-    --background: 225 40% 6%;
-    --foreground: 40 30% 94%;
-    --card: 225 32% 10%;
-    --card-foreground: 40 30% 94%;
-    --popover: 225 32% 10%;
-    --popover-foreground: 40 30% 94%;
-    --primary: 40 96% 56%;
-    --primary-foreground: 225 45% 8%;
-    --primary-2: 28 95% 58%;
-    --secondary: 225 25% 16%;
-    --secondary-foreground: 40 30% 92%;
-    --muted: 225 25% 14%;
-    --muted-foreground: 225 12% 66%;
-    --accent: 225 25% 18%;
-    --accent-foreground: 40 30% 94%;
-    --destructive: 0 75% 60%;
+    /* Tun: to'q ko'k osmon + binafsha/firuza "aurora" yorug'ligi */
+    --background: 230 45% 6%;
+    --foreground: 225 40% 95%;
+    --card: 230 38% 10%;
+    --card-foreground: 225 40% 95%;
+    --popover: 230 38% 10%;
+    --popover-foreground: 225 40% 95%;
+    --primary: 250 92% 72%;
+    --primary-foreground: 235 50% 8%;
+    --primary-2: 188 88% 58%;
+    --secondary: 232 30% 16%;
+    --secondary-foreground: 225 40% 92%;
+    --muted: 232 30% 14%;
+    --muted-foreground: 228 18% 68%;
+    --accent: 240 32% 19%;
+    --accent-foreground: 225 40% 95%;
+    --destructive: 352 85% 64%;
     --destructive-foreground: 0 0% 100%;
-    --success: 152 60% 52%;
-    --border: 225 20% 20%;
-    --input: 225 20% 24%;
-    --ring: 40 96% 56%;
+    --success: 160 70% 52%;
+    --border: 232 25% 20%;
+    --input: 232 25% 24%;
+    --ring: 250 92% 72%;
 
-    --glass-bg: 225 35% 12% / 0.55;
-    --glass-strong: 225 35% 10% / 0.82;
-    --glass-border: 0 0% 100% / 0.08;
-    --glass-shadow: 0 0% 0% / 0.45;
+    --glass-bg: 232 40% 12% / 0.55;
+    --glass-strong: 232 40% 10% / 0.82;
+    --glass-border: 230 80% 85% / 0.09;
+    --glass-shadow: 240 60% 2% / 0.5;
 
-    --glow-1: 40 95% 55%;
-    --glow-2: 25 90% 52%;
-    --glow-3: 230 70% 45%;
+    --glow-1: 255 85% 58%;
+    --glow-2: 188 90% 45%;
+    --glow-3: 285 75% 52%;
   }
 
   /* Ish stoli: kun qismiga qarab yorug'lik (faqat kunduzgi mavzuda); RunPage <html>ga qo'yadi */
