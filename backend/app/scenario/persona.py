@@ -22,18 +22,18 @@ from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.guardrail import validate_submission_content
-from app.ai.persona_chat import ChatTurn, PersonaContext, PersonaProfile, persona_reply
+from app.ai.persona_chat import ChatTurn, PersonaContext, persona_reply
 from app.ai.spoiler import is_spoiler
 from app.models.enums import ChatContentType, ChatSender, NodeType, RunEventStatus, RunStatus
 from app.models.scenario import ChatMessage, Run, RunEvent, Scenario, ScenarioVersion, UploadedFile
+from app.models.simulation import Submission
 from app.scenario.engine import Conflict, Invalid, NotFound, definition_for
 from app.scenario.holidays import load_calendar
+from app.scenario.limits import DAILY_AI_MESSAGES, RUN_AI_TOKEN_BUDGET
+from app.scenario.mentor import profile, student_work_lines
 from app.scenario.rag import search
-from app.scenario.schema import Persona, ScenarioDefinition
+from app.scenario.schema import Persona, PersonaKind, ScenarioDefinition
 
-# §9.4 limitlari
-DAILY_AI_MESSAGES = 60
-RUN_AI_TOKEN_BUDGET = 200_000
 HISTORY_LIMIT = 20
 
 WEEKDAYS = ("dushanba", "seshanba", "chorshanba", "payshanba", "juma", "shanba", "yakshanba")
@@ -91,6 +91,18 @@ async def _run_state(db: AsyncSession, run: Run, defn: ScenarioDefinition, tz) -
         if e.status != RunEventStatus.SUBMITTED and node.type in (NodeType.TASK, NodeType.INCIDENT):
             open_tasks.append(title)
     return lines, open_tasks
+
+
+async def _student_work(db: AsyncSession, run: Run, defn: ScenarioDefinition) -> list[str]:
+    """Mentor uchun: talabaning topshirgan ishlari va baholari (§9.13)."""
+    events = (await db.execute(
+        select(RunEvent).where(RunEvent.run_id == run.id, RunEvent.delivered_at.is_not(None))
+        .order_by(RunEvent.delivered_at)
+    )).scalars().all()
+    subs = (await db.execute(
+        select(Submission).where(Submission.run_id == run.id, Submission.run_event_id.is_not(None))
+    )).scalars().all()
+    return student_work_lines(defn, events, subs)
 
 
 async def _ai_messages_today(db: AsyncSession, run_id: uuid.UUID, now: datetime, tz) -> int:
@@ -189,16 +201,15 @@ async def accept_student_message(
 
     scenario = await db.get(Scenario, version.scenario_id)
     state_lines, open_tasks = await _run_state(db, run, defn, cal.tz)
+    is_mentor = persona.kind == PersonaKind.MENTOR
     plan.context = PersonaContext(
-        persona=PersonaProfile(
-            key=persona.key, name=persona.name, role=persona.role, kind=persona.kind.value,
-            tone=persona.tone, secrets=tuple(persona.secrets),
-        ),
+        persona=profile(persona),
         company_name=scenario.company_name,
         scenario_title=scenario.title,
         local_time=_clock(now, cal.tz),
         run_state=tuple(state_lines),
-        open_tasks=tuple(open_tasks) if persona.kind.value == "mentor" else (),
+        open_tasks=tuple(open_tasks) if is_mentor else (),
+        student_work=tuple(await _student_work(db, run, defn)) if is_mentor else (),
     )
     plan.history = [_as_turn(m, file_names) for m in previous]
     plan.prompt = _as_turn(student, file_names).body

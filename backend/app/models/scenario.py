@@ -8,6 +8,7 @@ from datetime import date as date_type, datetime, timezone
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     Computed,
     Date,
     DateTime,
@@ -203,10 +204,18 @@ class UploadedFile(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
 
+# Mentorning o'zi boshlagan xabarlari (§9.13)
+CHAT_PURPOSE_REVIEW = "review"
+CHAT_PURPOSE_NUDGE = "nudge"
+
+
 class ChatMessage(Base):
     """Faqat Run ichidagi personaj chati (§9.5) — TalentOffer xabarlari bilan aralashmaydi."""
     __tablename__ = "chat_messages"
-    __table_args__ = (Index("ix_chat_messages_thread", "run_id", "persona_key", "created_at"),)
+    __table_args__ = (
+        Index("ix_chat_messages_thread", "run_id", "persona_key", "created_at"),
+        CheckConstraint("purpose IN ('review', 'nudge')", name="ck_chat_messages_purpose"),
+    )
 
     id: Mapped[uuid.UUID] = _uuid_pk()
     run_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("runs.id", ondelete="CASCADE"), nullable=False)
@@ -220,6 +229,13 @@ class ChatMessage(Base):
     link_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
     generated: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=text("false"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    # CHAT_PURPOSE_*; oddiy suhbatda NULL
+    purpose: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    node_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    # bitta urinishga bitta izoh — baholash job'i qayta ishlasa takrorlanmaydi
+    submission_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("submissions.id", ondelete="CASCADE"), nullable=True, unique=True
+    )
 
 
 class WorkHoliday(Base):

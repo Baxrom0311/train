@@ -417,6 +417,9 @@ class ChatMessageOut(BaseModel):
     link_url: str | None
     generated: bool
     created_at: datetime
+    # mentorning o'zi boshlagan xabari (§9.13): review | nudge
+    purpose: str | None = None
+    node_id: str | None = None
 
     model_config = {"from_attributes": True}
 

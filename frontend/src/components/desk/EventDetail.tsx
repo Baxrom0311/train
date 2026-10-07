@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FileText, Lightbulb, Loader2, Paperclip } from 'lucide-react'
+import { FileText, Lightbulb, Loader2, MessageCircle, Paperclip } from 'lucide-react'
 import { ScoreRing } from '@/components/score'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,6 +21,7 @@ export default function EventDetail({
   now,
   onRun,
   onOpenDoc,
+  onAskMentor,
 }: {
   run: RunDetail
   event: RunEvent
@@ -28,6 +29,7 @@ export default function EventDetail({
   now: number
   onRun: (run: RunDetail) => void
   onOpenDoc: (key: string) => void
+  onAskMentor?: () => void
 }) {
   const { t } = useTranslation()
   const sender = personas.find((p) => p.key === event.from_persona)
@@ -77,7 +79,9 @@ export default function EventDetail({
 
       {event.type === 'decision' && <Decision run={run} event={event} canDecide={canDecide} onRun={onRun} />}
 
-      {ANSWERABLE.includes(event.type) && <Feedback event={event} />}
+      {ANSWERABLE.includes(event.type) && (
+        <Feedback event={event} mentor={personas.find((p) => p.kind === 'mentor')} onAskMentor={onAskMentor} />
+      )}
 
       {canAnswer && !evaluating && (
         <AnswerForm key={event.node_id + event.attempts_used} run={run} event={event} onRun={onRun} />
@@ -132,7 +136,7 @@ function Decision({ run, event, canDecide, onRun }: { run: RunDetail; event: Run
   )
 }
 
-function Feedback({ event }: { event: RunEvent }) {
+function Feedback({ event, mentor, onAskMentor }: { event: RunEvent; mentor?: Persona; onAskMentor?: () => void }) {
   const { t } = useTranslation()
   if (event.attempts_used === 0) return null
   const evaluating = event.last_eval_status === 'pending' || event.last_eval_status === 'queued_retry'
@@ -149,6 +153,12 @@ function Feedback({ event }: { event: RunEvent }) {
       )}
       {event.last_eval_status === 'failed' && <p className="text-muted-foreground">{t('desk.evalFailed')}</p>}
       {event.last_feedback && <p className="whitespace-pre-wrap">{event.last_feedback}</p>}
+      {/* mentor shu baho bo'yicha chatda izoh yozgan (CONTRACT.md §9.13) */}
+      {mentor && onAskMentor && event.last_score !== null && (
+        <Button variant="outline" size="sm" onClick={onAskMentor}>
+          <MessageCircle className="mr-1.5 h-4 w-4" /> {t('desk.askMentor', { name: mentor.name })}
+        </Button>
+      )}
     </div>
   )
 }

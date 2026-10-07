@@ -100,6 +100,12 @@ export default function RunPage() {
 
   const event = useMemo(() => run?.events.find((e) => e.node_id === selected) ?? null, [run, selected])
   const activePersona = run?.personas.find((p) => p.key === persona) ?? null
+  const mentor = run?.personas.find((p) => p.kind === 'mentor') ?? null
+  const openChat = (key: string) => {
+    setPersona(key)
+    setUnread((u) => ({ ...u, [key]: 0 }))
+    setPane('chat')
+  }
   const pendingCount = run?.events.filter(isActionable).length ?? 0
 
   const abandon = async () => {
@@ -193,7 +199,8 @@ export default function RunPage() {
         <main className={cn('glass-strong min-h-0 overflow-y-auto rounded-2xl', pane !== 'event' && 'hidden lg:block')}>
           {event ? (
             <div key={event.node_id} className="animate-rise">
-              <EventDetail run={run} event={event} personas={run.personas} now={now} onRun={applyRun} onOpenDoc={setDoc} />
+              <EventDetail run={run} event={event} personas={run.personas} now={now} onRun={applyRun} onOpenDoc={setDoc}
+                onAskMentor={mentor ? () => openChat(mentor.key) : undefined} />
             </div>
           ) : (
             <p className="p-6 text-sm text-muted-foreground">{t('desk.selectEvent')}</p>
@@ -204,10 +211,7 @@ export default function RunPage() {
           <div className="flex gap-2 overflow-x-auto px-3 pt-3 pb-2">
             {run.personas.map((p) => (
               <PersonaChip key={p.key} persona={p} active={persona === p.key} unread={unread[p.key] ?? 0}
-                onClick={() => {
-                  setPersona(p.key)
-                  setUnread((u) => ({ ...u, [p.key]: 0 }))
-                }} />
+                onClick={() => openChat(p.key)} />
             ))}
           </div>
           {activePersona && (

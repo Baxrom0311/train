@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Loader2, Send } from 'lucide-react'
+import { AlarmClock, ClipboardCheck, Loader2, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
@@ -9,6 +9,8 @@ import { formatTime } from '@/lib/time'
 import type { ChatMessage, Persona } from '@/lib/types'
 import Avatar from './Avatar'
 import { reflow } from './RichText'
+
+const PURPOSE_ICON = { review: ClipboardCheck, nudge: AlarmClock }
 
 export default function ChatPanel({
   runId,
@@ -80,11 +82,18 @@ export default function ChatPanel({
         {messages.length === 0 && <p className="text-sm text-muted-foreground">{t('desk.chat.empty')}</p>}
         {messages.map((m) => {
           const mine = m.sender === 'student'
+          const Tag = m.purpose ? PURPOSE_ICON[m.purpose] : null
           return (
             <div key={m.id} className={cn('flex flex-col animate-rise', mine ? 'items-end' : 'items-start')}>
+              {Tag && (
+                <span className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-primary">
+                  <Tag className="h-3.5 w-3.5" /> {t(`desk.chat.purpose.${m.purpose}`)}
+                </span>
+              )}
               <div className={cn(
                 'max-w-[85%] whitespace-pre-wrap rounded-2xl px-3.5 py-2 text-sm leading-relaxed shadow-sm',
                 mine ? 'bg-brand rounded-br-md text-primary-foreground' : 'rounded-bl-md bg-background/85',
+                m.purpose && 'ring-1 ring-primary/30',
               )}>
                 {mine ? m.body : reflow(m.body)}
                 {m.link_url && (

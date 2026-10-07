@@ -4,7 +4,8 @@ Ssenariy dvigatelining arq job'lari (CONTRACT.md §9.8). `WorkerSettings`ga
 
 - `deliver_due_events` — har daqiqa: `advance`, bildirishnomalar, va
   navbatga tushmay qolgan `pending` javoblarni qayta navbatga qo'yish.
-- `evaluate_run_submission_job` — bitta Run javobini baholash.
+- `evaluate_run_submission_job` — bitta Run javobini baholash, keyin mentor
+  izohi (§9.13).
 - `sync_work_holidays_job` — haftalik bayramlar sinxronizatsiyasi.
 - `embed_document_chunks_job` — embedding'i yo'q RAG bo'laklarini to'ldirish.
 - `day_report_job`, `final_report_job` — hisobotlar (§9.6); kerakli joylarni
@@ -23,6 +24,7 @@ from app.models.simulation import Submission
 from app.scenario import notify
 from app.scenario.engine import Note, advance
 from app.scenario.evaluation import evaluate_run_submission
+from app.scenario.mentor import post_review
 from app.scenario.holidays import sync_work_holidays
 from app.scenario.rag import embed_pending_chunks
 from app.scenario.reports import (
@@ -97,9 +99,14 @@ async def evaluate_run_submission_job(ctx: dict, submission_id: str) -> None:
         notes, retry = await evaluate_run_submission(
             db, submission_id, datetime.now(timezone.utc), job_try=job_try
         )
+    # ball darhol ko'rinsin — mentor izohi (LLM) undan keyin
     await notify.publish(notes)
     if retry:
         raise Retry(defer=2 ** job_try)
+    async with _sessions(ctx)() as db:
+        note = await post_review(db, submission_id, datetime.now(timezone.utc))
+    if note:
+        await notify.publish([note])
 
 
 async def sync_work_holidays_job(ctx: dict) -> int:

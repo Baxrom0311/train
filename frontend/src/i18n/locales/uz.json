@@ -225,7 +225,11 @@
       "typing": "{{name}} yozmoqda…",
       "placeholder": "Xabar yozing… (Enter — yuborish)",
       "send": "Yuborish",
-      "tooFast": "Juda tez yozyapsiz — bir oz kuting"
+      "tooFast": "Juda tez yozyapsiz — bir oz kuting",
+      "purpose": {
+        "review": "Task bo'yicha izoh",
+        "nudge": "Eslatma"
+      }
     },
     "notFound": "Simulyatsiya topilmadi",
     "abandon": "To'xtatish",
@@ -237,7 +241,8 @@
       "inbox": "Kiruvchi",
       "event": "Vazifa",
       "chat": "Chat"
-    }
+    },
+    "askMentor": "{{name}} bilan muhokama qilish"
   },
   "report": {
     "title": "Hisobot",
