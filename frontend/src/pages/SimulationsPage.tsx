@@ -85,7 +85,7 @@ export default function SimulationsPage() {
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="relative max-w-sm">
-        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="pointer-events-none absolute z-10 left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input className="pl-10" placeholder={t('simulations.search')} value={query}
           onChange={(e) => setQuery(e.target.value)} />
       </div>

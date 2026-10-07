@@ -46,8 +46,8 @@ export default function EventDetail({
           <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
             event.type === 'incident' ? 'bg-destructive/12 text-destructive' : 'bg-primary/12 text-primary'
           }`}>{t(`desk.type.${event.type}`)}</span>
-          {sender && <span>· {sender.name}, {sender.role}</span>}
-          {event.delivered_at && <span>· {formatDateTime(event.delivered_at)}</span>}
+          {sender && <span className="font-medium text-foreground/80">{sender.name}<span className="font-normal text-muted-foreground"> · {sender.role}</span></span>}
+          {event.delivered_at && <span className="ml-auto tabular-nums">{formatDateTime(event.delivered_at)}</span>}
         </div>
         {event.type !== 'message' && (
           <div className="flex flex-wrap items-center gap-3 text-sm">
