@@ -1,0 +1,120 @@
+# TryJob — to'liq stek: postgres, redis, migrate, backend, frontend (nginx).
+#
+#   cp deploy/.env.example deploy/.env   # va to'ldiring
+#   docker compose -f deploy/docker-compose.yml up -d --build
+#
+# Tafsilotlar: deploy/README.md
+
+name: tryjob
+
+x-backend-env: &backend-env
+  DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:?POSTGRES_USER kerak}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD kerak}@postgres:5432/${POSTGRES_DB:-tryjob_dev}
+  SECRET_KEY: ${SECRET_KEY:?SECRET_KEY kerak (openssl rand -hex 32)}
+  REDIS_URL: redis://redis:6379
+  CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost}
+  DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+  GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-tryjob_dev}
+      POSTGRES_TEST_DB: ${POSTGRES_TEST_DB:-tryjob_test}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Bir martalik: alembic upgrade head (roles/permissions seed ham shu yerda).
+  migrate:
+    build:
+      context: ..
+      dockerfile: deploy/backend.Dockerfile
+    image: tryjob-backend
+    environment: *backend-env
+    command: ["alembic", "-c", "alembic/alembic.ini", "upgrade", "head"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  backend:
+    image: tryjob-backend
+    restart: unless-stopped
+    environment: *backend-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/openapi.json', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    expose:
+      - "8000"
+
+  # arq AI-retry worker. HOZIRCHA O'CHIQ: app/ai/worker.py'da WorkerSettings
+  # hali yo'q (Modul 2). U qo'shilgach:  docker compose --profile worker up -d
+  worker:
+    image: tryjob-backend
+    profiles: ["worker"]
+    restart: unless-stopped
+    environment: *backend-env
+    command: ["arq", "app.ai.worker.WorkerSettings"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: deploy/frontend.Dockerfile
+    image: tryjob-frontend
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  redisdata:
