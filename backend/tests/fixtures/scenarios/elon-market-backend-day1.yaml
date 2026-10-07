@@ -45,6 +45,7 @@ nodes:
     at: "09:30"
     from: dilnoza
     brief: "Ticket ORD-142: /orders ba'zan 500 qaytaryapti."
+    attachments: [doc_orders_api]
     answer_types: [code, text]
     due_in_minutes: 120
     checks: {sandbox_tests: tests/orders_refund.py}

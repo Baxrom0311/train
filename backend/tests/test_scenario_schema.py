@@ -58,6 +58,10 @@ def test_unknown_document_in_knows_rejected():
     _invalid(lambda d: d["personas"][0]["knows"].append("doc_secret"), "noma'lum hujjat")
 
 
+def test_unknown_attachment_rejected():
+    _invalid(lambda d: node(d, "bug_orders").update(attachments=["doc_missing"]), "attachments")
+
+
 def test_both_fixed_and_after_rejected():
     _invalid(lambda d: node(d, "lead_followup").update(day=1, at="10:00"), "aynan bittasi")
 

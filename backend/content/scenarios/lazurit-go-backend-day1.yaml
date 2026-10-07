@@ -1,0 +1,366 @@
+# CONTRACT.md §9.11 — v1 IT kontenti. Kompaniya, odamlar, kod va raqamlar o'ylab topilgan.
+slug: lazurit-go-backend-day1
+title: "Lazurit Go — Junior Backend dasturchi, 1 kun"
+sector: IT
+company_name: "Lazurit Go"           # fictional: oziq-ovqat yetkazib berish xizmati
+difficulty: junior
+duration_days: 1
+
+personas:
+  - key: sardor
+    name: "Sardor Qodirov"
+    role: "Backend Team Lead"
+    tone: "qisqa va aniq yozadi, talabchan, lekin yordam beradi; ustuvorlikni o'zi belgilaydi"
+    knows: [doc_onboarding, doc_orders_service, doc_ticket_lz214, doc_incident_runbook, doc_incident_logs]
+    secrets:
+      - "Promo bug'i ikki xil: foizli promo yetkazish narxiga ham qo'llanyapti, qat'iy summali promo esa jamini manfiy qiladi."
+      - "Bugungi 15:10 dagi v2.14.0 relizida courier_location_sync job'i qo'shilgan; u courier_sync_enabled feature flag bilan o'chiriladi."
+    busy_reply: "Hozir uchrashuvdaman, 20 daqiqadan keyin yozaman. Shoshilinch bo'lsa — runbook'ga qarang."
+    deflect_reply: "Tayyor yechimni bermayman — ticket va kodni yana bir o'qing, qaysi summaga chegirma qo'llanayotganiga qarang."
+  - key: nodir
+    name: "Nodir Rahimov"
+    role: "Senior Backend Engineer, mentor"
+    kind: mentor
+    tone: "sabrli, savol bilan yo'naltiradi, javobni o'zi aytmaydi"
+    knows: [doc_onboarding, doc_orders_service, doc_code_review]
+    busy_reply: "Kod review qilyapman, birozdan keyin javob beraman."
+    deflect_reply: "Bu savolga javobni o'zingiz topsangiz yaxshiroq. Qaysi qatorda summa noto'g'ri bo'layotganini bitta misol bilan qo'lda hisoblab ko'ring."
+  - key: malika
+    name: "Malika Tursunova"
+    role: "QA Engineer"
+    tone: "do'stona, aniq misollar bilan yozadi"
+    knows: [doc_ticket_lz214, doc_promo_rules]
+    secrets:
+      - "Qayta tiklash uchun: savatcha 30 000 so'm, yetkazish 12 000 so'm, MINUS50K promo — to'lov xizmati 500 qaytaradi."
+    busy_reply: "Regress testlarni ishga tushirib qo'ydim, tugashi bilan yozaman."
+  - key: aziza
+    name: "Aziza Karimova"
+    role: "Product Manager"
+    tone: "shoshqaloq, natijaga yo'naltirilgan, texnik tafsilotni kam biladi"
+    knows: [doc_cancel_spec, doc_promo_rules]
+    busy_reply: "Hamkorlar bilan qo'ng'iroqdaman, keyin yozaman."
+
+documents:
+  - key: doc_onboarding
+    title: "Backend jamoasi: onboarding"
+    content: |
+      Lazurit Go — Toshkentdagi oziq-ovqat yetkazib berish xizmati. Backend jamoasi 6 kishi:
+      Sardor (team lead), Nodir (senior, yangi xodimlar mentori), Malika (QA), uchta dasturchi.
+      Mahsulot bo'yicha savollar — Aziza (PM).
+
+      Ish kuni 09:00–18:00, tushlik 13:00–14:00. Standup har kuni 09:00 da, yozma ham bo'ladi.
+      Standup formati: kecha nima qildim / bugun nima qilaman / nima to'sib turibdi. 3–5 qator.
+
+      Ustuvorlik tartibi: 1) prod incident, 2) relizni to'sib turgan bug, 3) sprint task'lari,
+      4) yangi so'rovlar. Ustuvorlikni team lead belgilaydi; PM yangi so'rov bersa — team lead
+      bilan kelishiladi, muddat oshkora aytiladi.
+
+      Git: har task alohida branch (LZ-<raqam>-qisqa-nom), PR'da kamida bitta review.
+      "Tayyor" degani: kod + testlar + PR tavsifi (nima, nega, qanday tekshirildi).
+      Relizlar: har kuni 15:00 da, staging'dan o'tgan PR'lar chiqadi.
+
+  - key: doc_orders_service
+    title: "orders-service: narx hisoblash"
+    content: |
+      orders-service (Python 3.12, FastAPI) buyurtma yaratadi va to'lov xizmatiga summani yuboradi.
+      Summa butun so'mda, manfiy bo'lishi mumkin emas (to'lov xizmati manfiy summani 500 bilan rad etadi).
+
+      pricing.py:
+
+      ```python
+      from dataclasses import dataclass
+
+      @dataclass
+      class Item:
+          price: int   # so'm
+          qty: int
+
+      @dataclass
+      class Promo:
+          code: str
+          kind: str          # "percent" yoki "fixed"
+          value: int         # foiz (1–100) yoki so'm
+          min_subtotal: int  # promo ishlashi uchun minimal mahsulotlar summasi
+
+      def calculate_total(items: list[Item], delivery_fee: int, promo: Promo | None = None) -> int:
+          subtotal = sum(i.price * i.qty for i in items)
+          total = subtotal + delivery_fee
+          if promo:
+              if promo.kind == "percent":
+                  total = total * (100 - promo.value) / 100
+              elif promo.kind == "fixed":
+                  total = total - promo.value
+          return int(total)
+      ```
+
+      Testlar: tests/test_pricing.py (pytest). Hozircha faqat promo'siz holat tekshiriladi.
+
+  - key: doc_promo_rules
+    title: "Promo-kod qoidalari (mahsulot talabi)"
+    content: |
+      1. Promo faqat mahsulotlar summasiga (subtotal) qo'llanadi. Yetkazish narxiga hech qachon.
+      2. Foizli promo: chegirma = subtotal × foiz / 100, butun so'mga pastga yaxlitlanadi.
+      3. Qat'iy summali promo: chegirma subtotal'dan oshmaydi (mahsulotlar 0 so'mgacha tushishi mumkin,
+         yetkazish narxi to'lanadi).
+      4. Subtotal min_subtotal'dan kam bo'lsa promo qo'llanmaydi (xato emas, oddiy narx).
+      5. Mijozga ko'rsatiladigan va to'lovga yuboriladigan summa bir xil bo'lishi shart.
+
+  - key: doc_ticket_lz214
+    title: "LZ-214: Promo-kod bilan noto'g'ri summa"
+    content: |
+      Ustuvorlik: High (bugungi relizni to'sib turibdi). Topdi: QA (Malika).
+
+      1-holat: savatcha 80 000 so'm, yetkazish 15 000 so'm, SALE20 (20%).
+      Kutilgan: 80 000 − 16 000 + 15 000 = 79 000. Haqiqiy: 76 000.
+
+      2-holat: savatcha 30 000 so'm, yetkazish 12 000 so'm, MINUS50K (50 000 so'm, min_subtotal 0).
+      Kutilgan: 0 + 12 000 = 12 000. Haqiqiy: to'lov xizmati 500 qaytaradi.
+
+      Mijozlardan 3 ta shikoyat bor. Talab: tuzatish + regress testlar.
+
+  - key: doc_code_review
+    title: "Code review qoidalari"
+    content: |
+      PR tavsifida: muammo, sabab, yechim, qanday tekshirilgan. Har bug fix uchun avval bug'ni
+      qayta tiklaydigan test, keyin tuzatish. Chegara holatlari: 0, manfiy, juda katta qiymat,
+      yaxlitlash. Pul summalari bilan float ishlatilmaydi — faqat butun son (so'm).
+
+  - key: doc_cancel_spec
+    title: "Talab: buyurtmani bekor qilish"
+    content: |
+      Mijoz ilovada "Bekor qilish" tugmasini bosadi.
+      - Buyurtma holati `new` (restoran hali qabul qilmagan) — mijoz o'zi bekor qila oladi, pul to'liq qaytadi.
+      - `accepted` yoki `cooking` — mijoz bekor qila olmaydi, "operator bilan bog'laning" deyiladi.
+      - `delivering`, `delivered`, `cancelled` — bekor qilib bo'lmaydi.
+      - Bekor qilish sababi ixtiyoriy (ro'yxatdan yoki matn, 200 belgigacha).
+      - Pul qaytarish to'lov xizmati orqali (refund), mijozga push xabar.
+      - Ilova internet uzilib qayta yuborsa — ikki marta refund bo'lmasligi kerak.
+      - Faqat buyurtma egasi bekor qila oladi.
+
+  - key: doc_incident_runbook
+    title: "Prod incident runbook"
+    content: |
+      1. #incidents kanalida e'lon qiling: nima buzildi, qachondan, ta'sir (qancha mijoz/foiz), SEV darajasi.
+         SEV-1 — asosiy oqim (buyurtma berish/to'lov) to'xtagan yoki xatolar >10%. SEV-2 — qisman.
+      2. Muammo relizdan keyin boshlangan bo'lsa — avval ta'sirni to'xtating: yangi funksiyani feature flag
+         bilan o'chiring yoki oldingi versiyaga qayting (rollback). Sababni keyin qidiring.
+      3. Har 30 daqiqada holat yangilanishi (hatto "hali tekshiryapmiz" bo'lsa ham).
+      4. Barqarorlashgandan keyin: sabab, vaqt chizig'i, ta'sir, oldini olish choralari — postmortem 2 ish kuni ichida.
+      Taqiqlanadi: prod DB'ga qo'lda o'zgartirish, sababi aniq bo'lmagan "tezkor fix"ni testlarsiz chiqarish.
+
+  - key: doc_incident_logs
+    title: "Monitoring: orders-service, bugun 15:00–15:30"
+    content: |
+      15:10  deploy orders-service v2.14.0 (yangi: courier_location_sync job, flag courier_sync_enabled=true)
+      15:14  p95 latency 220ms → 3.8s
+      15:18  5xx ulushi 0.3% → 14%
+      15:20  ERROR sqlalchemy.exc.TimeoutError: QueuePool limit of size 20 overflow 10 reached, connection timed out
+      15:21  WARN courier_location_sync: 412 kuryer uchun sessiya ochildi, tugatilgani: 0
+      15:25  Buyurtma berish muvaffaqiyati 97% → 81%
+      DB CPU 35% (normal). Tarmoq xatosi yo'q.
+
+nodes:
+  - id: welcome
+    type: message
+    day: 1
+    at: "09:00"
+    from: sardor
+    brief: |
+      Xush kelibsiz, Lazurit Go backend jamoasiga! Bugun sizning birinchi kuningiz.
+      Onboarding hujjatini o'qib chiqing, savollar bo'lsa — menga yoki Nodirga yozing.
+
+  - id: standup
+    type: task
+    day: 1
+    at: "09:00"
+    from: sardor
+    brief: |
+      Standup vaqti. Onboarding'dagi formatda yozing: bugun nimalarni rejalashtiryapsiz va
+      nima to'sib turishi mumkin. Birinchi kun bo'lsa ham reja aniq bo'lsin.
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Onboarding'dagi standup formatiga mos (reja / to'siqlar), 3–5 qator"}
+      - {id: concrete, description: "Reja aniq va tekshirsa bo'ladigan: nima qilinadi, nima natija chiqadi", weight: 2}
+      - {id: blockers, description: "To'siq yoki savolni ochiq aytgan (masalan, kirish huquqlari, kod bazasi bilan tanishish)"}
+    hints:
+      - "Onboarding hujjatidagi uch savolga javob bering. Birinchi kunda 'kecha' o'rniga nima bilan tanishganingizni yozsa bo'ladi."
+    reference_answer: |
+      Bugun: onboarding va orders-service kodi bilan tanishaman, menga berilgan birinchi ticket'ni olaman.
+      Natija: ticket bo'yicha sababni topib, testlar bilan PR ochish.
+      To'siq: repo va staging'ga kirish huquqi hali yo'q — Sardordan so'rayman.
+
+  - id: mentor_intro
+    type: message
+    day: 1
+    at: "09:15"
+    from: nodir
+    brief: |
+      Salom! Men Nodir, birinchi haftangizda mentoringizman. Tayyor javob bermayman, lekin to'g'ri
+      savol bilan yo'naltiraman. Qiyin bo'lsa "hint" so'rang — faqat har hint task balini biroz kamaytiradi.
+
+  - id: bug_promo
+    type: task
+    day: 1
+    at: "09:30"
+    from: sardor
+    brief: |
+      Birinchi ticket: LZ-214 — promo-kod bilan summa noto'g'ri hisoblanyapti, bugungi 15:00
+      relizini to'sib turibdi. Sababini toping, calculate_total'ni tuzating va regress testlar yozing.
+      Javobda: kod (funksiya + testlar) va qisqa izoh — sabab nima edi, nimani o'zgartirdingiz.
+    attachments: [doc_ticket_lz214, doc_orders_service, doc_promo_rules]
+    answer_types: [code, text, link]
+    due_in_minutes: 150
+    weight: 2
+    competencies: [technical]
+    rubric:
+      - {id: root_cause, description: "Ikkala sababni topgan: chegirma yetkazish narxiga ham qo'llanyapti va qat'iy promo jamini manfiy qiladi", weight: 2}
+      - {id: fix_correct, description: "Tuzatish promo qoidalarining barchasiga mos: faqat subtotal, chegirma subtotal'dan oshmaydi, min_subtotal, butun so'm", weight: 2}
+      - {id: tests, description: "Ticket'dagi ikkala holat va chegara holatlari uchun testlar (0, min_subtotal, 100%)", weight: 1.5}
+      - {id: money_types, description: "Pul uchun float ishlatmagan, yaxlitlash qoidaga mos (pastga)"}
+      - {id: explanation, description: "Izoh qisqa va aniq: sabab, yechim, qanday tekshirilgan"}
+    hints:
+      - "Ticket'dagi 1-holatni qo'lda hisoblang: 76 000 qanday chiqyapti? Chegirma qaysi summadan olinyapti?"
+      - "Promo qoidalarining 1 va 3-bandlarini kodda alohida qadam qilib yozing: avval chegirmani hisoblang, keyin uni cheklang."
+      - "Testlarni avval yozing: ticket'dagi ikkala holat qizil bo'lishi kerak, tuzatishdan keyin yashil."
+    reference_answer: |
+      Sabab: chegirma subtotal + delivery_fee jamiga qo'llanyapti (foizli promo yetkazishni ham arzonlashtiradi),
+      qat'iy promo esa cheklanmagan, shuning uchun jami manfiy bo'lib, to'lov xizmati 500 qaytaradi. Float bilan bo'lish ham bor.
+      def calculate_total(items, delivery_fee, promo=None):
+          subtotal = sum(i.price * i.qty for i in items)
+          discount = 0
+          if promo and subtotal >= promo.min_subtotal:
+              if promo.kind == "percent":
+                  discount = subtotal * promo.value // 100
+              elif promo.kind == "fixed":
+                  discount = min(promo.value, subtotal)
+          return subtotal - discount + delivery_fee
+      Testlar: SALE20 80000+15000 -> 79000; MINUS50K 30000+12000 -> 12000; min_subtotal'dan kam -> promo'siz; 100% -> faqat yetkazish.
+
+  - id: qa_ack
+    type: message
+    after: {node: bug_promo, event: submitted, minutes: 10}
+    from: malika
+    brief: "Tuzatishingizni oldim, staging'da ticket'dagi holatlarni tekshirib ko'raman. Rahmat!"
+
+  - id: pm_request
+    type: decision
+    day: 1
+    at: "11:30"
+    from: aziza
+    brief: |
+      Salom! Hamkor restoranlar bugun "buyurtmani bekor qilish" funksiyasini so'rashdi. 15:00 dagi
+      relizga ulgurtirsangiz zo'r bo'lardi — promo bug'i kutib tursa ham bo'ladi, shikoyat atigi 3 ta-ku.
+      Nima qilasiz?
+    competencies: [prioritization, communication]
+    options:
+      - key: finish_bug
+        label: "Avval LZ-214 ni tugataman (u relizni to'sib turibdi), Aziza'ga bekor qilish uchun real muddatni yozaman va Sardorni xabardor qilaman"
+        grade: correct
+      - key: ask_lead
+        label: "Hech narsani o'zgartirmay, Sardordan qaysi biri muhimroq ekanini so'rayman"
+        grade: acceptable
+      - key: switch_now
+        label: "Bug'ni qoldirib, darhol bekor qilish funksiyasini boshlayman"
+        grade: wrong
+        flag: dropped_bug
+
+  - id: lead_on_priority
+    type: message
+    day: 1
+    at: "12:00"
+    when: {flag: dropped_bug}
+    from: sardor
+    brief: |
+      Aziza aytdi, LZ-214 ni qoldirgansiz. Ustuvorlikni men belgilayman: reliz bloklovchi bug
+      yangi so'rovdan oldin turadi. Keyingi safar bunday so'rovni avval men bilan kelishing.
+
+  - id: api_design
+    type: task
+    day: 1
+    at: "14:00"
+    from: sardor
+    brief: |
+      Bekor qilish funksiyasini ertaga boshlaymiz. Bugun dizaynini tayyorlang: endpoint (metod, yo'l),
+      so'rov va javob tanasi, holat kodlari, qaysi holatda nima bo'ladi, takroriy so'rov (idempotentlik)
+      va refund qanday chaqiriladi. Matn yoki hujjat havolasi bilan yuboring.
+    attachments: [doc_cancel_spec]
+    answer_types: [text, link]
+    due_in_minutes: 120
+    weight: 1.5
+    competencies: [technical, communication]
+    rubric:
+      - {id: endpoint, description: "REST'ga mos endpoint (masalan POST /orders/{id}/cancel), so'rov/javob tanasi aniq"}
+      - {id: states, description: "Barcha holatlar talabga mos qayta ishlangan: new — ruxsat, accepted/cooking — operator, qolganlari — rad; mos HTTP kodlar (409/403/404)", weight: 2}
+      - {id: idempotency, description: "Takroriy so'rovda ikki marta refund bo'lmasligi yechilgan (Idempotency-Key yoki holatni atomik tekshirish)", weight: 2}
+      - {id: security, description: "Faqat buyurtma egasi bekor qila olishi tekshiriladi"}
+      - {id: clarity, description: "Dizayn boshqa dasturchi o'qib, darhol qura oladigan darajada tushunarli"}
+    hints:
+      - "Talabdagi har bir buyurtma holati uchun jadval tuzing: holat → javob kodi → nima bo'ladi."
+      - "Internet uzilib so'rov ikki marta kelsa, ikkinchisi nimani ko'rishi kerak? Buyurtma holati allaqachon cancelled bo'ladi-ku."
+    reference_answer: |
+      POST /api/v1/orders/{order_id}/cancel, sarlavha Idempotency-Key, tana {reason?: string ≤200}.
+      Egasi bo'lmasa 404. Holat new → bir tranzaksiyada SELECT ... FOR UPDATE, holat cancelled, refund so'rovi
+      idempotency key bilan, 200 {status: cancelled, refund: pending}. accepted/cooking → 409 {code: contact_operator}.
+      delivering/delivered → 409 {code: not_cancellable}. Allaqachon cancelled → 200 oldingi natija (ikkinchi refund yo'q).
+      Push xabar refund tasdiqlangach yuboriladi.
+
+  - id: qa_retest_failed
+    type: message
+    day: 1
+    at: "14:15"
+    when: {any: [{missed: bug_promo}, {score_lt: {node: bug_promo, value: 60}}]}
+    from: malika
+    brief: |
+      LZ-214 bo'yicha: staging'da MINUS50K holati hali ham xato beryapti, reliz bu bug bilan chiqa olmaydi.
+      Imkoningiz bo'lsa, tuzatishni qayta ko'rib chiqing — urinishlar qolgan bo'lsa qayta yuborsangiz bo'ladi.
+
+  - id: incident_orders
+    type: incident
+    day: 1
+    at: "15:30"
+    from: sardor
+    brief: |
+      SHOSHILINCH: 15:10 relizdan keyin orders-service sekinlashdi, buyurtmalarning bir qismi o'tmayapti.
+      Men hamkorlar bilan qo'ng'iroqdaman — incident'ni siz boshqaring. Runbook va loglar ilovada.
+      Yozing: 1) #incidents uchun e'lon matni, 2) hozir qanday qadam qilasiz va nega, 3) taxminiy sabab.
+    attachments: [doc_incident_runbook, doc_incident_logs]
+    answer_types: [text]
+    due_in_minutes: 45
+    weight: 1.5
+    competencies: [stress_handling, technical, communication]
+    rubric:
+      - {id: announce, description: "E'lon runbook'ga mos: nima buzildi, qachondan, ta'sir raqamlarda, to'g'ri SEV (xatolar >10% → SEV-1)", weight: 1.5}
+      - {id: mitigate_first, description: "Avval ta'sirni to'xtatadi: courier_sync_enabled flag'ini o'chirish yoki v2.14.0 rollback; sabab qidirishni keyinga qoldiradi", weight: 2}
+      - {id: diagnosis, description: "Loglardan sababni to'g'ri taxmin qilgan: yangi job DB ulanishlarini yopmayapti, pool tugagan"}
+      - {id: follow_up, description: "Keyingi qadamlar: 30 daqiqalik yangilanish, tuzatish testlar bilan, postmortem"}
+    hints:
+      - "Runbook'ning 2-bandiga qarang: muammo relizdan keyin boshlangan bo'lsa, birinchi ish nima?"
+      - "Loglarda 15:20 va 15:21 qatorlarini solishtiring — qaysi yangi narsa ulanishlarni egallab turibdi?"
+    reference_answer: |
+      E'lon: SEV-1. 15:14 dan orders-service sekin, 5xx 14%, buyurtma muvaffaqiyati 97% → 81%. v2.14.0 relizi bilan bog'liq.
+      Qadam: darhol courier_sync_enabled=false (runbook: avval flag), 5 daqiqada metrikalar tiklanmasa — v2.14.0 rollback.
+      Sabab: courier_location_sync har kuryer uchun DB sessiya ochib yopmayapti, QueuePool (20+10) tugagan.
+      Keyin: 30 daqiqada yangilanish, sessiyani context manager bilan yopish + test, postmortem 2 kun ichida.
+
+  - id: incident_thanks
+    type: message
+    after: {node: incident_orders, event: submitted, minutes: 20}
+    from: sardor
+    brief: "Rahmat, incident'ni ushlab turdingiz. Ertaga postmortem'ni birga yozamiz."
+
+  - id: day1_end
+    type: day_end
+    day: 1
+    at: "17:30"
+    brief: |
+      Kun yakuni. Sardorga qisqa hisobot yozing: bugun nima qildingiz, nima tugamadi va ertangi reja.
+      Bugungi kundan bitta xulosa ham qo'shing.
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Bugungi natijalar aniq sanalgan (ticket, dizayn, incident)", weight: 1.5}
+      - {id: open_items, description: "Tugamagan ishlar va ertangi reja ochiq aytilgan"}
+      - {id: reflection, description: "Kundan o'rganilgan aniq xulosa bor"}
