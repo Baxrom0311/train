@@ -1,110 +1,156 @@
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link, useNavigate } from 'react-router-dom'
+import { ArrowRight, Briefcase, CalendarDays, Code2, Landmark, Search, Users } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from './Badge'
-import { Clock, Search } from 'lucide-react'
+import { api, ApiError } from '@/lib/api'
+import { formatDateTime } from '@/lib/time'
+import type { RunCreated, RunSummary, Scenario } from '@/lib/types'
 
-interface SimCard {
-  key: string
-  titleKey: string
-  companyKey: string
-  categoryKey: string
-  durationKey: string
-  difficultyKey: string
-  descriptionKey: string
-}
+const OPEN = ['scheduled', 'active']
 
-const simCards: SimCard[] = [
-  {
-    key: 'card1',
-    titleKey: 'simulations.mockCards.card1.title',
-    companyKey: 'simulations.mockCards.card1.company',
-    categoryKey: 'simulations.mockCards.card1.category',
-    durationKey: 'simulations.mockCards.card1.duration',
-    difficultyKey: 'simulations.mockCards.card1.difficulty',
-    descriptionKey: 'simulations.mockCards.card1.description',
-  },
-  {
-    key: 'card2',
-    titleKey: 'simulations.mockCards.card2.title',
-    companyKey: 'simulations.mockCards.card2.company',
-    categoryKey: 'simulations.mockCards.card2.category',
-    durationKey: 'simulations.mockCards.card2.duration',
-    difficultyKey: 'simulations.mockCards.card2.difficulty',
-    descriptionKey: 'simulations.mockCards.card2.description',
-  },
-  {
-    key: 'card3',
-    titleKey: 'simulations.mockCards.card3.title',
-    companyKey: 'simulations.mockCards.card3.company',
-    categoryKey: 'simulations.mockCards.card3.category',
-    durationKey: 'simulations.mockCards.card3.duration',
-    difficultyKey: 'simulations.mockCards.card3.difficulty',
-    descriptionKey: 'simulations.mockCards.card3.description',
-  },
-  {
-    key: 'card4',
-    titleKey: 'simulations.mockCards.card4.title',
-    companyKey: 'simulations.mockCards.card4.company',
-    categoryKey: 'simulations.mockCards.card4.category',
-    durationKey: 'simulations.mockCards.card4.duration',
-    difficultyKey: 'simulations.mockCards.card4.difficulty',
-    descriptionKey: 'simulations.mockCards.card4.description',
-  },
-]
+// Soha bo'yicha karta "muqovasi": ikonka va rang
+const SECTOR_ART = {
+  IT: { Icon: Code2, glow: 'from-emerald-400/50 via-teal-300/30 to-transparent dark:from-violet-500/45 dark:via-indigo-500/25' },
+  Banking: { Icon: Landmark, glow: 'from-sky-400/45 via-emerald-300/30 to-transparent dark:from-cyan-400/40 dark:via-indigo-500/25' },
+} as const
 
 export default function SimulationsPage() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const [scenarios, setScenarios] = useState<Scenario[]>([])
+  const [runs, setRuns] = useState<RunSummary[]>([])
+  const [query, setQuery] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [starting, setStarting] = useState<string | null>(null)
+
+  useEffect(() => {
+    Promise.all([api<Scenario[]>('/scenarios'), api<RunSummary[]>('/runs/my')])
+      .then(([s, r]) => {
+        setScenarios(s)
+        setRuns(r)
+      })
+      .catch(() => setError(t('common.error')))
+  }, [t])
+
+  const openRun = runs.find((r) => OPEN.includes(r.status))
+  const q = query.trim().toLowerCase()
+  const visible = scenarios.filter(
+    (s) => !q || s.title.toLowerCase().includes(q) || s.company_name.toLowerCase().includes(q),
+  )
+
+  const start = async (scenarioId: string) => {
+    setStarting(scenarioId)
+    setError(null)
+    try {
+      const created = await api<RunCreated>('/runs', { method: 'POST', json: { scenario_id: scenarioId } })
+      navigate(`/runs/${created.run.id}`, { state: { warning: created.warning } })
+    } catch (err) {
+      setError(err instanceof ApiError && err.status === 409 ? t('catalog.alreadyOpen') : t('common.error'))
+      setStarting(null)
+    }
+  }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">{t('simulations.title')}</h1>
-        <p className="text-muted-foreground mt-2">{t('simulations.subtitle')}</p>
+    <div className="mx-auto max-w-7xl space-y-8 px-4 py-8">
+      <div className="animate-rise space-y-2">
+        <h1 className="text-4xl font-extrabold tracking-tight">{t('simulations.title')}</h1>
+        <p className="max-w-2xl text-muted-foreground">{t('catalog.subtitle')}</p>
       </div>
 
-      {/* Search */}
-      <div className="flex items-center space-x-2 mb-6">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            className="pl-9"
-            placeholder={t('simulations.search')}
-          />
+      {openRun && (
+        <div className="glass glow-ring animate-rise flex flex-wrap items-center justify-between gap-4 rounded-2xl p-5">
+          <div className="flex items-center gap-4">
+            <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary/15 text-primary">
+              <span className="h-2.5 w-2.5 rounded-full bg-primary animate-glow" />
+            </span>
+            <div>
+              <p className="font-bold">{openRun.scenario.title}</p>
+              <p className="text-sm text-muted-foreground">
+                {t('catalog.openRun', { date: formatDateTime(openRun.ends_at) })}
+              </p>
+            </div>
+          </div>
+          <Button asChild>
+            <Link to={`/runs/${openRun.id}`}>
+              {t('catalog.continue')} <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
         </div>
+      )}
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
+
+      <div className="relative max-w-sm">
+        <Search className="pointer-events-none absolute z-10 left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input className="pl-10" placeholder={t('simulations.search')} value={query}
+          onChange={(e) => setQuery(e.target.value)} />
       </div>
 
-      {/* Cards grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4">
-        {simCards.map((card) => (
-          <Card key={card.key} className="flex flex-col hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between gap-2">
-                <CardTitle className="text-base leading-snug">{t(card.titleKey)}</CardTitle>
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {visible.map((s, i) => {
+          const art = SECTOR_ART[s.sector]
+          return (
+            <Card key={s.id} style={{ animationDelay: `${i * 60}ms` }}
+              className="group animate-rise flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-20px_hsl(var(--primary)/0.45)]">
+              <div className={`relative h-32 overflow-hidden bg-gradient-to-br ${art.glow}`}>
+                <art.Icon className="absolute -right-4 -bottom-6 h-36 w-36 text-foreground/10 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-6" />
+                <div className="absolute left-5 top-5 flex gap-2">
+                  <Badge variant="outline">{t(`catalog.sector.${s.sector}`)}</Badge>
+                  <Badge variant="outline">{s.difficulty}</Badge>
+                </div>
               </div>
-              <CardDescription className="text-xs font-medium">
-                {t(card.companyKey)}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 space-y-3">
-              <p className="text-sm text-muted-foreground">{t(card.descriptionKey)}</p>
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary">{t(card.categoryKey)}</Badge>
-                <Badge variant="outline">{t(card.difficultyKey)}</Badge>
-              </div>
-              <div className="flex items-center text-xs text-muted-foreground">
-                <Clock className="h-3 w-3 mr-1" />
-                {t(card.durationKey)}
-              </div>
-            </CardContent>
-            <CardFooter className="pt-3 flex gap-2">
-              <Button size="sm" className="flex-1">{t('simulations.startSim')}</Button>
-              <Button size="sm" variant="outline" className="flex-1">{t('simulations.viewDetails')}</Button>
-            </CardFooter>
-          </Card>
-        ))}
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">{s.title}</CardTitle>
+                <CardDescription className="flex items-center gap-1.5 font-medium">
+                  <Briefcase className="h-3.5 w-3.5" /> {s.company_name}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1">
+                <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <CalendarDays className="h-3.5 w-3.5" /> {t('catalog.days', { count: s.duration_days })}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5" /> {t('catalog.realTime')}
+                  </span>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button className="w-full" disabled={Boolean(openRun) || starting !== null} onClick={() => start(s.id)}>
+                  {t('simulations.startSim')} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </Button>
+              </CardFooter>
+            </Card>
+          )
+        })}
+        {!error && scenarios.length === 0 && <p className="text-muted-foreground">{t('catalog.empty')}</p>}
       </div>
+
+      {runs.some((r) => !OPEN.includes(r.status)) && (
+        <section className="space-y-3">
+          <h2 className="text-xl font-bold">{t('catalog.history')}</h2>
+          <div className="glass divide-y divide-border/60 rounded-2xl">
+            {runs.filter((r) => !OPEN.includes(r.status)).map((r) => (
+              <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3.5 text-sm">
+                <div>
+                  <p className="font-medium">{r.scenario.title}</p>
+                  <p className="text-muted-foreground">{formatDateTime(r.start_at)}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">{t(`run.status.${r.status}`)}</Badge>
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to={`/runs/${r.id}/report`}>{t('catalog.report')}</Link>
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

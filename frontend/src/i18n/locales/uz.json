@@ -38,6 +38,21 @@
       "terms": "Ro'yxatdan o'tish orqali siz",
       "termsLink": "foydalanish shartlarini",
       "termsEnd": "qabul qilasiz"
+    },
+    "errors": {
+      "invalid": "Email yoki parol noto'g'ri",
+      "inactive": "Hisob hali faollashtirilmagan",
+      "mismatch": "Parollar mos emas",
+      "exists": "Bu email bilan hisob allaqachon bor"
+    },
+    "hero": {
+      "badge": "Real vaqtdagi ish simulyatsiyasi",
+      "title1": "Birinchi ish kuningizni",
+      "title2": "bugun boshlang",
+      "subtitle": "Haqiqiy jamoa, dedlaynlar va kutilmagan incident'lar — ishga kirishdan oldin tajriba orttiring.",
+      "realTime": "Toshkent vaqti bilan haqiqiy ish kuni: 09:00–18:00",
+      "colleagues": "Team lead, mentor va hamkasblar bilan chat",
+      "feedback": "Har vazifaga AI baho va yakuniy kompetensiya hisoboti"
     }
   },
   "dashboard": {
@@ -55,7 +70,8 @@
     "startFirst": "Birinchi simulyatsiyangizni boshlang",
     "quickActions": "Tezkor harakatlar",
     "browseSimulations": "Simulyatsiyalarni ko'rish",
-    "viewProfile": "Profilni ko'rish"
+    "viewProfile": "Profilni ko'rish",
+    "welcomeName": "Xush kelibsiz, {{name}}!"
   },
   "simulations": {
     "title": "Simulyatsiyalar",
@@ -74,41 +90,7 @@
     "viewDetails": "Batafsil",
     "hours": "soat",
     "company": "Kompaniya",
-    "category": "Soha",
-    "mockCards": {
-      "card1": {
-        "title": "Dasturiy ta'minot muhandisi vazifasi",
-        "company": "TechNova Solutions",
-        "category": "IT/Dasturlash",
-        "duration": "3-5 soat",
-        "difficulty": "O'rta",
-        "description": "Real loyiha muhitida backend API ishlab chiqish va kodni optimizatsiya qilish"
-      },
-      "card2": {
-        "title": "Moliyaviy tahlilchi simulyatsiyasi",
-        "company": "NorthBank UZ",
-        "category": "Bank/Moliya",
-        "duration": "2-4 soat",
-        "difficulty": "Oson",
-        "description": "Moliyaviy ma'lumotlarni tahlil qilish va hisobot tayyorlash ko'nikmalarini rivojlantirish"
-      },
-      "card3": {
-        "title": "Frontend ishlab chiquvchi vazifasi",
-        "company": "Pixel Digital Agency",
-        "category": "IT/Dasturlash",
-        "duration": "4-6 soat",
-        "difficulty": "Qiyin",
-        "description": "Zamonaviy UI komponentlarini yaratish va foydalanuvchi tajribasini yaxshilash"
-      },
-      "card4": {
-        "title": "Kredit bo'limi mutaxassisi",
-        "company": "Atlas Global Finance",
-        "category": "Bank/Moliya",
-        "duration": "3-4 soat",
-        "difficulty": "O'rta",
-        "description": "Kredit arizalarini ko'rib chiqish va riskni baholash jarayonlarini o'rganish"
-      }
-    }
+    "category": "Soha"
   },
   "common": {
     "loading": "Yuklanmoqda...",
@@ -135,5 +117,115 @@
     "uz": "O'zbek",
     "ru": "Русский",
     "en": "English"
+  },
+  "catalog": {
+    "subtitle": "Real vaqtdagi ish kuni yoki haftasi: vazifalar, hamkasblar, dedlaynlar",
+    "alreadyOpen": "Sizda tugallanmagan simulyatsiya bor — avval uni yakunlang",
+    "openRun": "Davom etayotgan simulyatsiya · {{date}} gacha",
+    "continue": "Davom etish",
+    "sector": {
+      "IT": "IT",
+      "Banking": "Bank"
+    },
+    "days_one": "{{count}} kun",
+    "days_other": "{{count}} kun",
+    "empty": "Hozircha simulyatsiyalar yo'q",
+    "history": "Oldingi simulyatsiyalar",
+    "report": "Hisobot",
+    "realTime": "Real vaqtda"
+  },
+  "run": {
+    "status": {
+      "scheduled": "Rejalashtirilgan",
+      "active": "Faol",
+      "completed": "Yakunlangan",
+      "expired": "Muddati o'tgan",
+      "abandoned": "To'xtatilgan"
+    }
+  },
+  "desk": {
+    "inbox": "Kiruvchi",
+    "inboxEmpty": "Hali hech narsa kelmadi. Ish kuni 09:00 da boshlanadi.",
+    "selectEvent": "Chapdan xabar yoki vazifani tanlang",
+    "type": {
+      "message": "Xabar",
+      "task": "Vazifa",
+      "incident": "Incident",
+      "decision": "Qaror",
+      "day_end": "Kun yakuni"
+    },
+    "status": {
+      "pending": "Kutilmoqda",
+      "delivered": "Javob kutilmoqda",
+      "submitted": "Topshirildi",
+      "missed": "O'tkazib yuborildi",
+      "skipped": "O'tkazildi"
+    },
+    "due": "Dedlayn: {{time}}",
+    "left": "{{time}} qoldi",
+    "dayEndDefault": "Bugungi ish bo'yicha qisqa hisobot yozing: nima qildingiz, nima qoldi, ertangi reja.",
+    "attempts": "Urinish {{used}}/{{max}}",
+    "evaluating": "Javobingiz baholanmoqda…",
+    "evalFailed": "Avtomatik baholash ishlamadi — javobingiz saqlangan",
+    "resubmit": "Qayta yuborish",
+    "yourAnswer": "Javobingiz",
+    "answer": {
+      "text": "Matn",
+      "code": "Kod",
+      "link": "Havola",
+      "file": "Fayl (PDF, DOCX, XLSX, rasm)"
+    },
+    "submit": "Yuborish",
+    "hint": "Mentor yordami",
+    "hintConfirm": "Yordam bu vazifaning maksimal balini kamaytiradi. Davom etasizmi?",
+    "hintLeft": "Yana {{count}} ta yordam bor",
+    "chat": {
+      "mentor": "mentor",
+      "empty": "Hali xabar yo'q. Savolingizni yozing.",
+      "typing": "{{name}} yozmoqda…",
+      "placeholder": "Xabar yozing… (Enter — yuborish)",
+      "send": "Yuborish",
+      "tooFast": "Juda tez yozyapsiz — bir oz kuting"
+    },
+    "notFound": "Simulyatsiya topilmadi",
+    "abandon": "To'xtatish",
+    "abandonConfirm": "Simulyatsiyani to'xtatsangiz, qayta davom ettirib bo'lmaydi. To'xtatasizmi?",
+    "tashkentTime": "Toshkent vaqti",
+    "offHours": "Ish vaqtidan tashqari",
+    "scheduled": "Simulyatsiya {{date}} da boshlanadi",
+    "pane": {
+      "inbox": "Kiruvchi",
+      "event": "Vazifa",
+      "chat": "Chat"
+    }
+  },
+  "report": {
+    "title": "Hisobot",
+    "backToDesk": "Ish stoliga",
+    "pending": "Yakuniy hisobot tayyorlanmoqda…",
+    "none": "Hisobot hali yo'q — u kun yakunidan keyin paydo bo'ladi",
+    "final": "Yakuniy natija",
+    "certificate": "Sertifikat",
+    "incomplete": "Tugallanmagan",
+    "overall": "Umumiy ball",
+    "onTime": "O'z vaqtida",
+    "tasksDone": "Topshirilgan",
+    "competencies": "Kompetensiyalar",
+    "strengths": "Kuchli tomonlar",
+    "improvements": "Rivojlantirish kerak",
+    "day": "{{day}}-kun",
+    "task": "Vazifa",
+    "status": "Holat",
+    "score": "Ball",
+    "late": "kechikkan",
+    "abandoned": "Simulyatsiya to'xtatilgan — hisobot tuzilmaydi"
+  },
+  "competency": {
+    "technical": "Texnik ko'nikma",
+    "communication": "Muloqot",
+    "prioritization": "Ustuvorlik",
+    "time_management": "Vaqtni boshqarish",
+    "stress_handling": "Stressga chidamlilik",
+    "initiative": "Tashabbuskorlik"
   }
 }
