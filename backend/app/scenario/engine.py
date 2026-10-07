@@ -130,6 +130,11 @@ def definition_for(version: ScenarioVersion) -> ScenarioDefinition:
     return defn
 
 
+def forget_definition(version_id: uuid.UUID) -> None:
+    """Qoralama joyida yangilanganda (§16.1) — keshdagi eski ta'rif tashlanadi."""
+    _DEFINITIONS.pop(version_id, None)
+
+
 def effective_due(node: Node) -> int | None:
     if node.due_in_minutes is not None:
         return node.due_in_minutes

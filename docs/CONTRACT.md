@@ -659,8 +659,7 @@ GET    /api/v1/runs/{id}/documents/{key}         ilova hujjat (faqat yetkazilgan
 POST   /api/v1/files                             multipart; auth + rate-limit
 GET    /api/v1/files/{id}                        faqat egasi / baholovchi / admin
 
-POST   /api/v1/admin/scenarios/import            YAML; permission: manage_simulations
-POST   /api/v1/admin/scenarios/{id}/versions/{v}/publish
+# Ssenariy muharriri (admin, manage_simulations) — to'liq ro'yxat §16.2
 GET    /api/v1/admin/holidays                     permission: manage_simulations
 PUT    /api/v1/admin/holidays/{date}              { name } -> source=manual
 DELETE /api/v1/admin/holidays/{date}
@@ -673,7 +672,7 @@ Barcha `runs/*` endpointlari: faqat Run egasi (boshqa foydalanuvchiga 404).
 **Modul 9 — Scenario Engine** egaligi:
 `backend/app/scenario/` (engine, clock, conditions, schema, rag),
 `backend/app/models/scenario.py`, `backend/app/api/scenarios.py`,
-`backend/app/api/runs.py`, `backend/app/api/files.py`,
+`backend/app/api/runs.py`, `backend/app/api/files.py`, `backend/app/api/scenario_admin.py`,
 `backend/content/scenarios/`, `tools/import_scenario.py`,
 `backend/tests/test_scenario_*.py`, `backend/tests/test_runs_*.py`.
 
@@ -727,7 +726,7 @@ jadval, ``` bloklari kod sifatida, chekinishli qatorlar alohida qator bo'lib ko'
 
 **v2:** `voice`/`image`/`video`; email/push bildirishnoma; murakkab
 shartlar va ko'p yakunli ssenariylar; `meeting` (jonli savol-javob) node
-turi; ssenariy muharriri (admin UI).
+turi. Ssenariy muharriri (admin UI) — §16.
 
 ### 9.12 Ochiq savollar (yozilgan, lekin hali hal qilinmagan)
 
@@ -1102,3 +1101,62 @@ namunaviy javob, hujjat va personaj `knows`/`secrets` hech qachon chiqmaydi.
 7. **Savol-javob** va footer.
 
 Barcha matn uz/ru/en; kompaniya nomlari faqat ssenariylardagi fictional nomlar.
+
+---
+
+## 16. Ssenariy muharriri (Modul 9 + 7)
+
+Admin (`manage_simulations`) ssenariyni brauzerda yaratadi va tahrirlaydi —
+YAML fayl va `tools/import_scenario.py` ixtiyoriy bo'lib qoladi. Manba va
+qoidalar o'zgarmaydi: ta'rif — §9.3 sxemasi (`ScenarioDefinition`),
+tekshiruv — o'sha validatorlar, versiyalash — §9.3.1.
+
+### 16.1 Versiyalar
+
+- `published` va `archived` versiya o'zgarmas (unga Run'lar bog'langan).
+- Tahrir **qoralama**ga yoziladi: oxirgi versiya `draft` bo'lsa — o'sha
+  joyida yangilanadi (ta'rif, hujjatlar va bo'laklar qayta yoziladi),
+  aks holda yangi `draft` versiya ochiladi. Qoralamaga Run bog'lanmaydi
+  (katalogda faqat `published`).
+- Mavjud ssenariyning `slug`i o'zgarmaydi (boshqa slug — 422); yangi
+  ssenariy band slug bilan — 409.
+- Nashr — §9.3.1 `publish_version` (avvalgi `published` → `archived`).
+- `is_active=false` — ssenariy katalog va landingdan yashiriladi, boshlangan
+  Run'lar davom etadi.
+
+### 16.2 API (`manage_simulations`)
+
+```
+GET    /api/v1/admin/scenarios                          ro'yxat: versiyalar, Run'lar soni
+POST   /api/v1/admin/scenarios                          {definition} → yangi ssenariy, v1 draft; 409 slug band
+GET    /api/v1/admin/scenarios/{id}/versions/{v}        {version, status, definition, warnings}
+PUT    /api/v1/admin/scenarios/{id}/draft               {definition} → qoralama (16.1)
+POST   /api/v1/admin/scenarios/{id}/versions/{v}/publish   409 — arxivlangan
+PATCH  /api/v1/admin/scenarios/{id}                     {is_active}
+POST   /api/v1/admin/scenarios/validate                 {definition} → {ok, errors, warnings, summary} (DB'ga yozmaydi)
+POST   /api/v1/admin/scenarios/yaml                     {text} → {definition | null, errors} (YAML → ta'rif)
+POST   /api/v1/admin/scenarios/to-yaml                  {definition} → {text} (saqlanmagan holat ham; noto'g'ri ta'rif — xom holicha)
+GET    /api/v1/admin/scenarios/{id}/versions/{v}/yaml   text/yaml — content/ uchun eksport
+```
+
+`errors[]`: `{path: [str|int], message}` — Pydantic `loc` (masalan
+`["nodes", 3, "due_in_minutes"]`); ta'rif darajasidagi xatoda `path` bo'sh,
+xabar node id bilan boshlanadi (`"bug_orders: ..."`). Saqlash va nashr
+noto'g'ri ta'rifni 422 bilan rad etadi (xuddi shu `errors` bilan).
+`summary`: `{days, nodes, graded, personas, documents, mentor}`.
+
+### 16.3 Frontend
+
+`/admin/scenarios` — ro'yxat (holat, versiyalar, faollik, tahrirlash, yangi).
+`/admin/scenarios/new`, `/admin/scenarios/{id}/edit` — muharrir:
+- bo'limlar: umumiy ma'lumot, personajlar, hujjatlar, node'lar (kunlar
+  bo'yicha vaqt chizig'i), YAML (to'liq matn, ikki tomonlama);
+- har o'zgarishdan keyin (debounce) `validate`: xatolar ro'yxati, bosilsa
+  tegishli bo'lim/node ochiladi; node ro'yxatida xatoli node belgilanadi;
+- node formasi turga qarab: vaqt (`day`+`at` yoki `after`), kimdan, brief
+  (talabaga qanday ko'rinishi — `RichText` oldindan ko'rinishi), ilovalar,
+  javob turlari, dedlayn, vazn, kompetensiyalar, rubrika, hintlar, namunaviy
+  javob, decision variantlari, `when` sharti (oddiy shartlar uchun
+  konstruktor, murakkabi — JSON); `checks` faqat YAML bo'limida;
+- "Qoralamani saqlash" va "Nashr qilish" (tasdiq bilan); nashr qilingan
+  versiyani ochganda tahrir yangi qoralama bo'lib saqlanadi.
