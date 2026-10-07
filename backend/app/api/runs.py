@@ -43,6 +43,7 @@ from app.scenario.engine import (
     take_hint,
 )
 from app.scenario.holidays import load_calendar
+from app.scenario.evaluation import public_checks
 from app.scenario.jobs import enqueue_evaluation
 from app.scenario.persona import (
     StudentMessage,
@@ -84,6 +85,14 @@ class AttachmentOut(BaseModel):
     title: str
 
 
+class ChecksOut(BaseModel):
+    """Yashirin testlar natijasi (§19.4) — faqat sonlar va yiqilgan test nomlari."""
+    status: str
+    passed: int
+    total: int
+    failed: list[str]
+
+
 class EventOut(BaseModel):
     node_id: str
     type: NodeType
@@ -101,6 +110,7 @@ class EventOut(BaseModel):
     last_score: float | None
     last_feedback: str | None
     last_eval_status: AIEvalStatus | None
+    last_checks: ChecksOut | None = None
 
 
 class ScenarioBrief(BaseModel):
@@ -225,6 +235,7 @@ async def _detail(db: AsyncSession, run: Run, now: datetime) -> RunDetailOut:
             last_score=last.ai_score if last else None,
             last_feedback=last.ai_feedback if last else None,
             last_eval_status=last.ai_eval_status if last else None,
+            last_checks=public_checks(last.check_results) if last else None,
         ))
     local = now.astimezone(cal.tz)
     return RunDetailOut(

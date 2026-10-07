@@ -10,6 +10,7 @@ Docker Compose bilan to'liq stek:
 | `backend` | `tryjob-backend` | FastAPI (uvicorn), faqat ichki tarmoqda `:8000` |
 | `frontend` | `tryjob-frontend` | nginx: React build + `/api/`, `/docs` → backend proxy |
 | `worker` | `tryjob-backend` | arq worker: baholash, hodisalar yetkazish cron'i, hisobotlar |
+| `sandbox` | `tryjob-sandbox` | Talaba kodi va yashirin testlar (§19): faqat ichki `sandbox` tarmog'ida, internet/DB/Redis'siz |
 | `backup` | `pgvector/pgvector:pg16` | Kunlik `pg_dump` + `uploads` arxivi `deploy/backups/`ga |
 | `caddy` | `caddy:2-alpine` | Faqat `docker-compose.https.yml` bilan: HTTPS (Let's Encrypt) |
 
@@ -17,7 +18,7 @@ Docker Compose bilan to'liq stek:
 
 ```bash
 cp deploy/.env.example deploy/.env
-# deploy/.env ni to'ldiring: POSTGRES_PASSWORD, SECRET_KEY (openssl rand -hex 32), ...
+# deploy/.env ni to'ldiring: POSTGRES_PASSWORD, SECRET_KEY va SANDBOX_TOKEN (openssl rand -hex 32), ...
 
 docker compose -f deploy/docker-compose.yml up -d --build
 ```
@@ -132,10 +133,14 @@ birinchi marta yaratilganda paydo bo'ladi.
 
 - Secretlar faqat `deploy/.env`da (`.gitignore`da) — compose majburiy
   qiymatlarsiz (`SECRET_KEY`, `POSTGRES_*`) ishga tushmaydi.
-- `backend` konteyneri: root emas, `read_only`, `cap_drop: ALL`,
-  `no-new-privileges`, `pids_limit`. Bu sandbox (`/tools/sandbox`) uchun
-  **to'liq izolyatsiya emas** — kod hali ham backend konteyneri ichida va
-  tarmoqqa chiqa oladi; alohida sandbox konteyneri keyingi qadam.
+- Talaba kodi `backend`da emas, `sandbox` konteynerida bajariladi (§19):
+  `internal: true` tarmoq (internet, Postgres, Redis yo'q), `read_only`,
+  root emas, `cap_drop: ALL`, xotira/CPU/jarayon limitlari, secret faqat
+  `SANDBOX_TOKEN`. Qolgan xavf: runner ichidagi kod `backend:8000` API'ga
+  ulana oladi (internetdagi har kim kabi — auth va rate-limit amal qiladi).
+  Tekshirish: `docker compose -f deploy/docker-compose.yml exec sandbox
+  python -c "import urllib.request; urllib.request.urlopen('https://example.com', timeout=3)"`
+  — xato bilan tugashi kerak.
 - `worker` servisi `app/ai/worker.py`dagi `WorkerSettings` bilan standart
   profilda ishlaydi (`up -d` shartidan ortiq hech narsa kerak emas) —
   Cloud AI zanjiri muvaffaqiyatsiz bo'lganda submission'larni qayta

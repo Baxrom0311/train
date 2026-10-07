@@ -11,6 +11,7 @@ import { formatDateTime, remaining } from '@/lib/time'
 import type { AnswerType, HintResult, Persona, RunDetail, RunEvent, SubmissionResult } from '@/lib/types'
 import RichText from './RichText'
 import { StatusLabel } from './Inbox'
+import { ChecksPanel } from './Checks'
 
 const ANSWERABLE = ['task', 'incident', 'day_end']
 
@@ -152,6 +153,7 @@ function Feedback({ event, mentor, onAskMentor }: { event: RunEvent; mentor?: Pe
         </p>
       )}
       {event.last_eval_status === 'failed' && <p className="text-muted-foreground">{t('desk.evalFailed')}</p>}
+      {event.last_checks && <ChecksPanel checks={event.last_checks} />}
       {event.last_feedback && <p className="whitespace-pre-wrap">{event.last_feedback}</p>}
       {/* mentor shu baho bo'yicha chatda izoh yozgan (CONTRACT.md §9.13) */}
       {mentor && onAskMentor && event.last_score !== null && (

@@ -71,6 +71,15 @@ export interface RunEvent {
   last_score: number | null
   last_feedback: string | null
   last_eval_status: EvalStatus | null
+  last_checks: CheckResults | null
+}
+
+/** Yashirin testlar natijasi (CONTRACT.md §19.4) — test kodi emas, faqat nomlar. */
+export interface CheckResults {
+  status: 'ok' | 'error' | 'timeout' | 'no_code'
+  passed: number
+  total: number
+  failed: string[]
 }
 
 export interface RunDetail extends RunSummary {
@@ -140,6 +149,7 @@ export interface TaskResult {
   score: number | null
   attempts: number
   late: boolean
+  checks?: CheckResults | null
 }
 
 export interface DayReport {

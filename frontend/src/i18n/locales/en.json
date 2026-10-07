@@ -982,5 +982,14 @@
       "days_one": "{{count}} day ago",
       "days_other": "{{count}} days ago"
     }
+  },
+  "checks": {
+    "title": "Automated tests",
+    "allPassed": "All tests passed",
+    "status": {
+      "error": "Code failed to start (syntax or import error), tests didn't run",
+      "timeout": "Code ran out of time",
+      "no_code": "No code submitted, tests didn't run"
+    }
   }
 }

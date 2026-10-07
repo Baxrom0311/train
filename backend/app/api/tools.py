@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 
 from app.core.deps import get_current_user, rate_limit
-from app.core.sandbox import run_code, SandboxResult
+from app.core.sandbox import run_script, SandboxResult
 from app.models.user import User
 
 router = APIRouter(prefix="/tools", tags=["tools"])
@@ -54,7 +54,7 @@ async def run_python_code(
     # Server tomonidan qattiq cheklov — client timeout_seconds qiymatiga ishonilmaydi
     timeout = min(data.timeout_seconds or 2.0, 3.0)
 
-    result: SandboxResult = run_code(data.code, timeout=timeout)
+    result: SandboxResult = await run_script(data.code, timeout=timeout)
 
     return SandboxResponse(
         success=result.success,

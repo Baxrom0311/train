@@ -78,6 +78,9 @@ class Submission(Base):
     link_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    # §19.4: `code` javobi alohida (yashirin testlar uchun) va testlar natijasi
+    code: Mapped[str | None] = mapped_column(Text, nullable=True)
+    check_results: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     ai_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     ai_feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
     ai_eval_status: Mapped[AIEvalStatus] = mapped_column(

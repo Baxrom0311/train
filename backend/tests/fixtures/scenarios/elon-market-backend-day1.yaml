@@ -48,7 +48,6 @@ nodes:
     attachments: [doc_orders_api]
     answer_types: [code, text]
     due_in_minutes: 120
-    checks: {sandbox_tests: tests/orders_refund.py}
     competencies: [technical]
     rubric:
       - {id: root_cause, description: "Refund holatidagi sababni topgan", weight: 2}

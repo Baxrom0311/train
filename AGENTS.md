@@ -29,9 +29,12 @@ Talaba analitikasi (`CONTRACT.md` §17, `/dashboard`): ball dinamikasi, kompeten
 fokus kompetensiyalar, AI maslahatlari va ularni mashq qildiradigan ssenariy tavsiyalari.
 Ishga tushirish (`CONTRACT.md` §18, `deploy/README.md`): `GET /api/v1/health`, HTTPS (Caddy,
 `docker-compose.https.yml`), kunlik zaxira nusxa va tiklash tartibi, log rotatsiya.
+Kod tekshiruvi (`CONTRACT.md` §19, `sandbox/`): talaba kodi alohida tarmoqsiz runner konteynerida;
+`code` task'larida ssenariydagi yashirin testlar (`checks.tests`) baholashga qo'shiladi.
 
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da
+sandbox/                            # kod runner'i (§19), faqat stdlib
 backend/{tests,alembic}/
 frontend/
 deploy/

@@ -211,11 +211,51 @@ nodes:
       Birinchi ticket: LZ-214 — promo-kod bilan summa noto'g'ri hisoblanyapti, bugungi 15:00
       relizini to'sib turibdi. Sababini toping, calculate_total'ni tuzating va regress testlar yozing.
       Javobda: kod (funksiya + testlar) va qisqa izoh — sabab nima edi, nimani o'zgartirdingiz.
+      Kod maydonidagi calculate_total CI'dagi avtomatik testlardan ham o'tkaziladi.
     attachments: [doc_ticket_lz214, doc_orders_service, doc_promo_rules]
     answer_types: [code, text, link]
     due_in_minutes: 150
     weight: 2
     competencies: [technical]
+    checks:
+      module: solution
+      weight: 0.5
+      tests: |
+        from types import SimpleNamespace as NS
+        from solution import calculate_total
+
+        def item(price, qty=1):
+            return NS(price=price, qty=qty)
+
+        def promo(kind, value, min_subtotal=0):
+            return NS(code="TEST", kind=kind, value=value, min_subtotal=min_subtotal)
+
+        def test_no_promo():
+            assert calculate_total([item(5000, 2), item(3000)], 3000) == 16000
+
+        def test_percent_not_applied_to_delivery():
+            assert calculate_total([item(80000)], 15000, promo("percent", 20)) == 79000
+
+        def test_fixed_discount_capped_at_subtotal():
+            assert calculate_total([item(30000)], 12000, promo("fixed", 50000)) == 12000
+
+        def test_fixed_discount_regular():
+            assert calculate_total([item(30000)], 12000, promo("fixed", 10000)) == 32000
+
+        def test_min_subtotal_not_reached():
+            assert calculate_total([item(40000)], 10000, promo("percent", 10, 50000)) == 50000
+
+        def test_min_subtotal_exactly_reached():
+            assert calculate_total([item(50000)], 10000, promo("percent", 10, 50000)) == 55000
+
+        def test_percent_rounds_down():
+            assert calculate_total([item(999)], 0, promo("percent", 15)) == 850
+
+        def test_full_percent_keeps_delivery():
+            assert calculate_total([item(20000)], 5000, promo("percent", 100)) == 5000
+
+        def test_result_is_int():
+            assert type(calculate_total([item(999)], 1000, promo("percent", 15))) is int
     rubric:
       - {id: root_cause, description: "Ikkala sababni topgan: chegirma yetkazish narxiga ham qo'llanyapti va qat'iy promo jamini manfiy qiladi", weight: 2}
       - {id: fix_correct, description: "Tuzatish promo qoidalarining barchasiga mos: faqat subtotal, chegirma subtotal'dan oshmaydi, min_subtotal, butun so'm", weight: 2}
