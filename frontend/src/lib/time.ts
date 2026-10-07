@@ -55,3 +55,10 @@ export function formatDate(iso: string | Date, lang: string): string {
   }
   return new Intl.DateTimeFormat(lang, { timeZone: TZ, day: 'numeric', month: 'long', year: 'numeric' }).format(date)
 }
+
+/** Grafik o'qi uchun qisqa sana: "07.10" (Toshkent vaqti). */
+export function formatDayMonth(iso: string | Date): string {
+  const parts = dayParts.formatToParts(new Date(iso))
+  const part = (type: string) => parts.find((p) => p.type === type)?.value.padStart(2, '0')
+  return `${part('day')}.${part('month')}`
+}
