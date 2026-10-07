@@ -718,7 +718,9 @@ eslatmasi va ikkinchi task → 15:00/15:30 30 daqiqalik incident → 17:30 day_e
 Marketing/HR qoidalari ham o'quv maqsadidagi ichki siyosat, real qonunchilik
 emas. Baholovchi soha bo'yicha tanlanadi (`app/ai/personas.for_sector`);
 noma'lum soha — IT. Hujjat va brief matnida ketma-ket `a | b | c` qatorlar
-jadval, ``` bloklari kod sifatida, chekinishli qatorlar alohida qator bo'lib ko'rsatiladi.
+jadval, ``` bloklari kod sifatida, chekinishli qatorlar alohida qator bo'lib ko'rsatiladi;
+`A) Sarlavha. Izoh` bilan boshlanib, qolgan qatorlari chekinishli abzas — kartochka
+(CV, profil: `YYYY-MM – YYYY-MM|hozir: ...` qatorlari vaqt chizig'i, `Kalit: qiymat` — maydon).
 
 **v2:** `voice`/`image`/`video`; email/push bildirishnoma; murakkab
 shartlar va ko'p yakunli ssenariylar; `meeting` (jonli savol-javob) node
