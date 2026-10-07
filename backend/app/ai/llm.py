@@ -8,7 +8,8 @@ Umumiy LLM chaqiruvi (CONTRACT.md §9.10, Modul 2).
   yo'q provayder o'tkazib yuboriladi.
 - `schema` berilsa: JSON-rejim yoqiladi, javob Pydantic bilan tekshiriladi;
   yaroqsiz JSON — keyingi provayder.
-- Token hisobi provayder javobidan olinadi (`LLMResult.tokens`).
+- Token hisobi provayder javobidan olinadi (`LLMResult.tokens`); har urinish
+  `purpose` bilan `ai_usage`ga yig'iladi (§21.1, `app/ai/usage.py`).
 - Hammasi muvaffaqiyatsiz → `None` (chaqiruvchi `queued_retry`/zaxira javobga o'tadi).
 
 Model nomlari va kalitlar faqat `.env`dan (`app/config.py`).
@@ -25,6 +26,7 @@ from dataclasses import dataclass
 import httpx
 from pydantic import BaseModel, ValidationError
 
+from app.ai import usage
 from app.config import settings
 
 log = logging.getLogger(__name__)
@@ -153,6 +155,7 @@ async def chat(
     temperature: float = 0.3,
     max_tokens: int = 800,
     client: httpx.AsyncClient | None = None,
+    purpose: str = "other",
 ) -> LLMResult | None:
     own_client = client is None
     client = client or httpx.AsyncClient()
@@ -171,10 +174,13 @@ async def chat(
             except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError, ValidationError) as exc:
                 # ValidationError va json.JSONDecodeError — ValueError avlodi
                 log.warning("LLM %s muvaffaqiyatsiz: %s", name, exc)
+                await usage.record(name, model(), purpose, failed=True)
                 continue
             if schema is None and not raw.text.strip():
                 log.warning("LLM %s bo'sh javob qaytardi", name)
+                await usage.record(name, model(), purpose, failed=True)
                 continue
+            await usage.record(name, model(), purpose, tokens_in=raw.tokens_in, tokens_out=raw.tokens_out)
             return LLMResult(
                 text=raw.text, data=data, provider=name, model=model(),
                 tokens_in=raw.tokens_in, tokens_out=raw.tokens_out,

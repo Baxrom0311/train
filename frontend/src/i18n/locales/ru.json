@@ -423,11 +423,12 @@
   },
   "admin": {
     "title": "Админ-панель",
-    "subtitle": "Заявки организаций и счета",
+    "subtitle": "Заявки организаций, счета и статистика платформы",
     "tabs": {
       "pending": "Заявки",
       "verified": "Организации",
-      "invoices": "Счета"
+      "invoices": "Счета",
+      "platform": "Статистика"
     },
     "stats": {
       "pending": "Заявки на проверке",
@@ -1111,5 +1112,83 @@
       "offers": "Предложения CSV",
       "candidates": "Кандидаты CSV"
     }
+  },
+  "platform": {
+    "generated": "по состоянию на {{date}}",
+    "period": "Период",
+    "days_one": "{{count}} день",
+    "days_few": "{{count}} дня",
+    "days_many": "{{count}} дней",
+    "days_other": "{{count}} дня",
+    "stats": {
+      "students": "Студенты",
+      "newStudents": "Новые студенты",
+      "activeStudents": "Активные студенты",
+      "inProgress": "Идущие сейчас Run'ы",
+      "completionRate": "Доля завершения",
+      "avgScore": "Средний балл",
+      "aiTokens": "Токены ИИ",
+      "aiCost": "Расходы на ИИ",
+      "aiCostPartial": "Расходы на ИИ (частично)"
+    },
+    "activity": "Активность по дням",
+    "runsStarted": "Начато",
+    "runsCompleted": "Завершено",
+    "activityTip": "{{day}}: начато {{started}}, завершено {{completed}}, новых студентов {{students}}",
+    "runsSummary": "За период начато Run'ов: {{started}}. Завершено {{completed}}, просрочено {{expired}}, брошено {{abandoned}}.",
+    "aiDaily": "Токены ИИ по дням",
+    "aiCalls": "вызовов: {{calls}}, ошибок: {{failures}}",
+    "tokensSplit": "Вход {{input}} · выход {{output}} токенов",
+    "pricesMissing": "для некоторых провайдеров нет цены в .env (LLM_PRICES)",
+    "alert": {
+      "title": "Проверьте очередь оценки",
+      "failed_one": "{{count}} ответ не оценён",
+      "failed_few": "{{count}} ответа не оценены",
+      "failed_many": "{{count}} ответов не оценены",
+      "failed_other": "{{count}} ответа не оценены",
+      "stale": "самый старый ответ ждёт уже {{time}}",
+      "redis": "не удалось прочитать очередь arq (Redis)"
+    },
+    "queue": {
+      "title": "Очередь оценки",
+      "pending": "Ожидают",
+      "retry": "Повторная попытка",
+      "failed": "Не оценены (за период)",
+      "oldest": "Самый старый",
+      "jobs": "В очереди arq"
+    },
+    "minutes_one": "{{count}} минута",
+    "minutes_few": "{{count}} минуты",
+    "minutes_many": "{{count}} минут",
+    "minutes_other": "{{count}} минуты",
+    "aiTitle": "Расход ИИ",
+    "noAi": "За этот период вызовов ИИ не было.",
+    "callsShort_one": "{{count}} вызов",
+    "callsShort_few": "{{count}} вызова",
+    "callsShort_many": "{{count}} вызовов",
+    "callsShort_other": "{{count}} вызова",
+    "purpose": {
+      "evaluation": "Оценка",
+      "persona": "Ответы персонажей",
+      "mentor": "Комментарии ментора",
+      "day_report": "Дневной отчёт",
+      "final_report": "Итоговый отчёт",
+      "other": "Другое"
+    },
+    "provider": "Провайдер",
+    "calls": "Вызовы",
+    "failures": "Ошибки",
+    "tokens": "Токены",
+    "cost": "Стоимость",
+    "scenarios": "Сценарии",
+    "scenario": "Сценарий",
+    "hours_one": "{{count}} час",
+    "hours_few": "{{count}} часа",
+    "hours_many": "{{count}} часов",
+    "hours_other": "{{count}} часа",
+    "daysAgo_one": "{{count}} день",
+    "daysAgo_few": "{{count}} дня",
+    "daysAgo_many": "{{count}} дней",
+    "daysAgo_other": "{{count}} дня"
   }
 }

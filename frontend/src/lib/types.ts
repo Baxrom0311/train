@@ -310,6 +310,65 @@ export interface AdminStats {
   invoices_pending: number
 }
 
+// Platforma statistikasi (backend/app/analytics/platform.py, CONTRACT.md §21)
+
+export interface PlatformStats {
+  generated_at: string
+  days: number
+  users: { students: number; companies: number; universities: number; new_students: number; active_students: number }
+  runs: {
+    in_progress: number
+    started: number
+    completed: number
+    expired: number
+    abandoned: number
+    completion_rate: number | null
+    avg_score: number | null
+  }
+  evaluation: {
+    pending: number
+    queued_retry: number
+    failed: number
+    oldest_pending_minutes: number | null
+    queue_jobs: number | null
+  }
+  ai: {
+    calls: number
+    failures: number
+    tokens_in: number
+    tokens_out: number
+    cost_usd: number | null
+    cost_complete: boolean
+    by_purpose: { purpose: string; calls: number; tokens: number; cost_usd: number | null }[]
+    by_provider: {
+      provider: string
+      model: string
+      calls: number
+      failures: number
+      tokens_in: number
+      tokens_out: number
+      cost_usd: number | null
+    }[]
+  }
+  daily: {
+    day: string
+    new_students: number
+    runs_started: number
+    runs_completed: number
+    ai_tokens: number
+    ai_cost_usd: number | null
+  }[]
+  scenarios: {
+    scenario_id: string
+    title: string
+    sector: Sector
+    started: number
+    completed: number
+    completion_rate: number | null
+    avg_score: number | null
+  }[]
+}
+
 export interface Invoice {
   id: string
   payer_type: OrgType

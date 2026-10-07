@@ -158,7 +158,7 @@ schema / endpoint shakli) orqali gaplashadi.
 | # | Modul | Egalik qiladigan papkalar | Bog'liqligi |
 |---|---|---|---|
 | 1 | **Core & Auth & RBAC** | `backend/app/core/`, `backend/app/models/user.py`, `backend/app/models/rbac.py`, `backend/app/api/auth.py` | Yo'q (birinchi quriladi) |
-| 2 | **Simulations & AI Mentor** | `backend/app/models/simulation.py`, `backend/app/api/simulations.py`, `backend/app/api/submissions.py`, `backend/app/ai/` | (1)ga bog'liq |
+| 2 | **Simulations & AI Mentor** | `backend/app/models/simulation.py`, `backend/app/models/ai_usage.py`, `backend/app/api/simulations.py`, `backend/app/api/submissions.py`, `backend/app/ai/` | (1)ga bog'liq |
 | 3 | **Billing & Admin approval** | `backend/app/models/billing.py`, `backend/app/api/billing.py`, `backend/app/api/admin.py` | (1)ga bog'liq |
 | 4 | **Talent Hunt** | `backend/app/models/talent.py`, `backend/app/api/talent_hunt.py`, `backend/app/talent/` | (1),(3),(9)ga bog'liq — ball Run natijalaridan (§10) |
 | 5 | **Case Cup** | `backend/app/api/case_cups.py` | (1),(2)ga bog'liq |
@@ -168,7 +168,7 @@ schema / endpoint shakli) orqali gaplashadi.
 | 9 | **Scenario Engine** | §9.10 ro'yxati (`backend/app/scenario/`, `models/scenario.py`, `api/scenarios.py`, `api/runs.py`, `api/files.py`, `backend/content/scenarios/`, `tools/import_scenario.py`) | (1),(2) interfeyslari — §9.10 |
 | 10 | **Credentials** | `backend/app/models/credential.py`, `backend/app/api/credentials.py`, `backend/app/credentials/` | (1),(6),(9)ga bog'liq — sertifikat Run'dan, portfolio §10.1 profilidan (§13) |
 | 11 | **Notifications** | `backend/app/models/notification.py`, `backend/app/api/notifications.py`, `backend/app/notifications/` | (1),(4),(9),(10)ga bog'liq — manbalar §15.2 |
-| 12 | **Analytics** | `backend/app/api/analytics.py`, `backend/app/analytics/` | (9),(10)ga bog'liq — Run natijalarini faqat o'qiydi (§17) |
+| 12 | **Analytics** | `backend/app/api/analytics.py`, `backend/app/analytics/` | (9),(10)ga bog'liq — Run natijalarini faqat o'qiydi (§17); platforma statistikasi hisobi `analytics/platform.py` (§21), endpointi Modul 3 `api/admin.py`da |
 | 13 | **Sandbox runner** | `sandbox/`, `deploy/sandbox.Dockerfile` | Tashqi bog'liqliksiz (faqat stdlib); backend `core/sandbox.py` orqali chaqiradi (§19) |
 
 Qurish ketma-ketligi: **1 → (2,3 parallel) → (4,5,6 parallel) → 7 har
@@ -222,6 +222,7 @@ POST   /api/v1/talents/offers             counts against subscription's "intervi
 
 # Talent Hunt to'liq ro'yxati (profil, takliflarga javob) — §10.4
 # Kompaniya hisobotlari (nomzodlar bazasi, takliflar voronkasi, CSV) — §20
+# Platforma statistikasi va AI sarfi (admin) — §21
 # Universitet portali (talabalar natijalari, bog'lanish) — §12.2
 ```
 
@@ -1522,3 +1523,80 @@ Nomzodlar CSV'sida email yo'q (§10.2).
 oylar bo'yicha takliflar, lavozimlar jadvali, baza kesimi (ball
 oraliqlari, sohalar, kompetensiyalar) va ikkala CSV yuklab olish tugmasi.
 Grafiklar SVG/CSS, kutubxonasiz.
+
+## 21. Platforma statistikasi (Modul 2 + 12 + 3 + 7)
+
+Admin pilotni bitta sahifadan kuzatadi: kim keldi, Run'lar qanday tugayapti,
+baholash navbati tiqilmaganmi va AI qancha token/pul sarflayapti. Mavjud
+`GET /admin/stats` (§11.2, arizalar va invoice'lar) o'zgarmaydi.
+
+### 21.1 AI sarfi hisobi (Modul 2)
+
+- Yangi jadval `ai_usage`: `day` (DATE, Toshkent kuni), `provider`, `model`,
+  `purpose`, `calls`, `failures`, `tokens_in`, `tokens_out`; PK
+  `(day, provider, model, purpose)`. Bir kun-provayder-model-maqsad uchun bitta
+  qator, `INSERT … ON CONFLICT DO UPDATE` bilan oshiriladi.
+- `ai/llm.py` `chat(..., purpose=)`: `evaluation` (rubrika), `persona`
+  (personaj javobi), `mentor`, `day_report`, `final_report`; berilmasa
+  `other`. Muvaffaqiyatli javob — `calls + 1` va tokenlar; provayder xatosi
+  yoki yaroqsiz javob — shu provayderga `failures + 1` (keyingi provayderga
+  o'tiladi, §9.10).
+- Yozuv alohida qisqa sessiyada; yozib bo'lmasa — log, `chat` natijasi
+  o'zgarmaydi (hisob AI ishini hech qachon to'xtatmaydi). Xabar matni,
+  foydalanuvchi yoki Run id **saqlanmaydi** — faqat yig'indi sonlar.
+- Narx: `.env` `LLM_PRICES` — `provider=kirish/chiqish` (1M token uchun USD),
+  vergul bilan, masalan `deepseek=0.27/1.10,gemini=0.10/0.40`. Narxi yo'q
+  provayder qatorida `cost_usd = null`. Yig'indilarda (`ai.cost_usd`,
+  maqsadlar, kunlar) — narxi ma'lum qismlar yig'indisi (birortasi ham
+  ma'lum bo'lmasa `null`); `cost_complete=false` — tokenlarning bir qismi
+  narxsiz qolganini bildiradi. Narx 4 xonagacha yaxlitlanadi.
+
+### 21.2 Ruxsat
+
+`view_platform_stats` (**yangi**, `admin`; migratsiya `0020`). Inline rol
+tekshiruvi yo'q (§4).
+
+### 21.3 API
+
+```
+GET /api/v1/admin/platform?days=7|30|90      view_platform_stats (standart 30)
+→ {
+    generated_at, days,
+    users:  { students, companies, universities, new_students, active_students },
+    runs:   { in_progress, started, completed, expired, abandoned, completion_rate, avg_score },
+    evaluation: { pending, queued_retry, failed, oldest_pending_minutes, queue_jobs },
+    ai:     { calls, failures, tokens_in, tokens_out, cost_usd, cost_complete,
+              by_purpose: [{purpose, calls, tokens, cost_usd}],
+              by_provider: [{provider, model, calls, failures, tokens_in, tokens_out, cost_usd}] },
+    daily:  [{ day, new_students, runs_started, runs_completed, ai_tokens, ai_cost_usd }],
+    scenarios: [{ scenario_id, title, sector, started, completed, completion_rate, avg_score }]
+  }
+```
+
+- Davr — oxirgi `days` Toshkent kuni, bugun ham kiradi; `daily`da har kun
+  bor (bo'sh kun — 0), eskidan yangiga.
+- `students`/`companies`/`universities` — jami (faol talabalar, tasdiqlangan
+  tashkilotlar). `new_students` — davrda ro'yxatdan o'tgan talabalar;
+  `active_students` — davrda Run faolligi (`last_activity_at`) bo'lgan
+  talabalar.
+- `runs`: `in_progress` — hozir `scheduled|active`; qolganlari davrda
+  **boshlangan** (`created_at`) Run'lar bo'yicha. `completion_rate =
+  completed / (completed + expired + abandoned)` (foiz, tugamaganlar
+  kirmaydi; maxraj 0 — `null`). `avg_score` — `final_report.overall_score`
+  o'rtachasi.
+- `evaluation`: hozirgi `submissions` holati (Run javoblari): `pending`,
+  `queued_retry`, davrda `failed_permanent` bo'lganlar, eng eski kutayotgan
+  javob yoshi (daqiqa). `queue_jobs` — arq navbatidagi ishlar soni (Redis
+  ishlamasa `null`).
+- `scenarios` — davrda eng ko'p boshlangan 10 ta ssenariy (teng bo'lsa nom
+  bo'yicha).
+- Hisob `app/analytics/platform.py`da (faqat o'qiydi), endpoint `api/admin.py`da.
+
+### 21.4 Frontend
+
+`/admin` sahifasida yangi "Statistika" bo'limi (`view_platform_stats`):
+davr tanlovi (7 / 30 / 90 kun), asosiy raqamlar, kunlik faollik grafigi
+(yangi talabalar, boshlangan va tugagan Run'lar), AI sarfi (kunlik tokenlar,
+maqsad va provayder kesimi, narx — ma'lum bo'lsa), baholash navbati holati
+(tiqilib qolsa ogohlantirish: `failed > 0` yoki eng eskisi > 30 daqiqa) va
+ssenariylar jadvali. Grafiklar SVG/CSS, kutubxonasiz.

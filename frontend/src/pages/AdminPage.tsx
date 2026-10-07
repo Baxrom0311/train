@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import PlatformStats from '@/components/admin/PlatformStats'
 import InvoiceList from '@/components/billing/InvoiceList'
 import { Stat } from '@/components/ui/stat'
 import { useAuth } from '@/context/AuthContext'
@@ -15,7 +16,7 @@ import { cn } from '@/lib/utils'
 import { formatDateTime } from '@/lib/time'
 import type { AdminStats, Invoice, InvoiceStatus, Org, OrgList } from '@/lib/types'
 
-type Tab = 'pending' | 'verified' | 'invoices'
+type Tab = 'pending' | 'verified' | 'invoices' | 'platform'
 const SELECT = 'h-10 rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring'
 
 const flatten = (list: OrgList) => [...list.companies, ...list.universities]
@@ -25,18 +26,21 @@ export default function AdminPage() {
   const { can } = useAuth()
   const canOrgs = can('approve_companies')
   const canBilling = can('manage_billing')
-  const [tab, setTab] = useState<Tab>(canOrgs ? 'pending' : 'invoices')
+  const canPlatform = can('view_platform_stats')
+  const [tab, setTab] = useState<Tab>(canOrgs ? 'pending' : canBilling ? 'invoices' : 'platform')
   const [stats, setStats] = useState<AdminStats | null>(null)
 
   const loadStats = useCallback(() => {
-    api<AdminStats>('/admin/stats').then(setStats).catch(() => {})
-  }, [])
+    // §11.2: faqat approve_companies | manage_billing; statistika ruxsati yolg'iz bo'lsa so'ralmaydi
+    if (canOrgs || canBilling) api<AdminStats>('/admin/stats').then(setStats).catch(() => {})
+  }, [canOrgs, canBilling])
   useEffect(loadStats, [loadStats])
 
   const tabs: { key: Tab; label: string; count?: number; show: boolean }[] = [
     { key: 'pending', label: t('admin.tabs.pending'), count: stats ? stats.pending_companies + stats.pending_universities : undefined, show: canOrgs },
     { key: 'verified', label: t('admin.tabs.verified'), show: canOrgs },
     { key: 'invoices', label: t('admin.tabs.invoices'), count: stats?.invoices_pending, show: canBilling },
+    { key: 'platform', label: t('admin.tabs.platform'), show: canPlatform },
   ]
 
   return (
@@ -55,10 +59,10 @@ export default function AdminPage() {
         </div>
       )}
 
-      <nav className="glass flex w-fit gap-1 rounded-2xl p-1">
+      <nav className="glass flex w-fit max-w-full gap-1 overflow-x-auto rounded-2xl p-1 [scrollbar-width:none]">
         {tabs.filter((x) => x.show).map((x) => (
           <button key={x.key} type="button" onClick={() => setTab(x.key)}
-            className={cn('flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-colors',
+            className={cn('flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-colors',
               tab === x.key ? 'bg-brand text-primary-foreground shadow' : 'text-muted-foreground hover:text-foreground')}>
             {x.label}
             {!!x.count && <span className={cn('rounded-full px-1.5 text-xs', tab === x.key ? 'bg-black/15' : 'bg-primary/15 text-primary')}>{x.count}</span>}
@@ -69,6 +73,7 @@ export default function AdminPage() {
       {tab === 'pending' && <Applications onChange={loadStats} />}
       {tab === 'verified' && <VerifiedOrgs />}
       {tab === 'invoices' && <Invoices onChange={loadStats} />}
+      {tab === 'platform' && <PlatformStats />}
     </div>
   )
 }

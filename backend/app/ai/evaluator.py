@@ -138,6 +138,7 @@ async def evaluate_rubric(
         schema=schema,
         temperature=0.2,
         max_tokens=1000,
+        purpose="evaluation",
     )
     if result is None:
         return None

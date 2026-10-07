@@ -411,11 +411,12 @@
   },
   "admin": {
     "title": "Admin panel",
-    "subtitle": "Tashkilot arizalari va invoice'lar",
+    "subtitle": "Tashkilot arizalari, invoice'lar va platforma statistikasi",
     "tabs": {
       "pending": "Arizalar",
       "verified": "Tashkilotlar",
-      "invoices": "Invoice'lar"
+      "invoices": "Invoice'lar",
+      "platform": "Statistika"
     },
     "stats": {
       "pending": "Kutilayotgan arizalar",
@@ -1051,5 +1052,71 @@
       "offers": "Takliflar CSV",
       "candidates": "Nomzodlar CSV"
     }
+  },
+  "platform": {
+    "generated": "{{date}} holatiga",
+    "period": "Davr",
+    "days_one": "{{count}} kun",
+    "days_other": "{{count}} kun",
+    "stats": {
+      "students": "Talabalar",
+      "newStudents": "Yangi talabalar",
+      "activeStudents": "Faol talabalar",
+      "inProgress": "Hozir ketayotgan Run'lar",
+      "completionRate": "Tugatish darajasi",
+      "avgScore": "O'rtacha ball",
+      "aiTokens": "AI tokenlari",
+      "aiCost": "AI xarajati",
+      "aiCostPartial": "AI xarajati (qisman)"
+    },
+    "activity": "Kunlik faollik",
+    "runsStarted": "Boshlangan",
+    "runsCompleted": "Tugagan",
+    "activityTip": "{{day}}: {{started}} boshlangan, {{completed}} tugagan, {{students}} yangi talaba",
+    "runsSummary": "Davrda {{started}} ta Run boshlangan: {{completed}} tugagan, {{expired}} muddati o'tgan, {{abandoned}} tashlab ketilgan.",
+    "aiDaily": "AI tokenlari kunlar bo'yicha",
+    "aiCalls": "{{calls}} chaqiruv, {{failures}} xato",
+    "tokensSplit": "Kirish {{input}} · chiqish {{output}} token",
+    "pricesMissing": "ba'zi provayderlar narxi .env'da (LLM_PRICES) yo'q",
+    "alert": {
+      "title": "Baholash navbatini tekshiring",
+      "failed_one": "{{count}} ta javob baholanmay qoldi",
+      "failed_other": "{{count}} ta javob baholanmay qoldi",
+      "stale": "eng eski javob {{time}}dan beri kutyapti",
+      "redis": "arq navbati o'qilmadi (Redis)"
+    },
+    "queue": {
+      "title": "Baholash navbati",
+      "pending": "Kutyapti",
+      "retry": "Qayta urinishda",
+      "failed": "Baholanmadi (davrda)",
+      "oldest": "Eng eskisi",
+      "jobs": "arq navbatida"
+    },
+    "minutes_one": "{{count}} daqiqa",
+    "minutes_other": "{{count}} daqiqa",
+    "aiTitle": "AI sarfi",
+    "noAi": "Bu davrda AI chaqiruvi bo'lmagan.",
+    "callsShort_one": "{{count}} chaqiruv",
+    "callsShort_other": "{{count}} chaqiruv",
+    "purpose": {
+      "evaluation": "Baholash",
+      "persona": "Personaj javoblari",
+      "mentor": "Mentor izohlari",
+      "day_report": "Kunlik hisobot",
+      "final_report": "Yakuniy hisobot",
+      "other": "Boshqa"
+    },
+    "provider": "Provayder",
+    "calls": "Chaqiruv",
+    "failures": "Xato",
+    "tokens": "Token",
+    "cost": "Narx",
+    "scenarios": "Ssenariylar",
+    "scenario": "Ssenariy",
+    "hours_one": "{{count}} soat",
+    "hours_other": "{{count}} soat",
+    "daysAgo_one": "{{count}} kun",
+    "daysAgo_other": "{{count}} kun"
   }
 }

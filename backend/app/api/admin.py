@@ -1,16 +1,21 @@
 """
-Admin: tashkilot arizalari va umumiy statistika (CONTRACT.md §11.2).
+Admin: tashkilot arizalari va umumiy statistika (CONTRACT.md §11.2),
+platforma statistikasi va AI sarfi (§21).
 Modul 3 egaligi: backend/app/api/admin.py
 """
+import asyncio
+import logging
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from enum import Enum
 
-from fastapi import APIRouter, Depends, HTTPException
+from arq.constants import default_queue_name
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.analytics import platform
 from app.core.deps import require_any_permission, require_permission
 from app.database import get_db
 from app.models.billing import Company, Invoice, University
@@ -18,6 +23,8 @@ from app.models.enums import InvoiceStatus, OrgType
 from app.models.user import User
 
 router = APIRouter(prefix="/api/v1/admin", tags=["admin_orgs"])
+log = logging.getLogger(__name__)
+PLATFORM_PERIODS = (7, 30, 90)   # §21.3
 
 ORG_MODELS = {OrgType.COMPANY: Company, OrgType.UNIVERSITY: University}
 
@@ -56,6 +63,101 @@ class AdminStats(BaseModel):
     verified_companies: int
     verified_universities: int
     invoices_pending: int
+
+
+class PlatformUsers(BaseModel):
+    students: int
+    companies: int
+    universities: int
+    new_students: int
+    active_students: int
+
+
+class PlatformRuns(BaseModel):
+    in_progress: int
+    started: int
+    completed: int
+    expired: int
+    abandoned: int
+    completion_rate: float | None
+    avg_score: float | None
+
+
+class PlatformEvaluation(BaseModel):
+    pending: int
+    queued_retry: int
+    failed: int
+    oldest_pending_minutes: int | None
+    queue_jobs: int | None
+
+
+class AIPurpose(BaseModel):
+    purpose: str
+    calls: int
+    tokens: int
+    cost_usd: float | None
+
+
+class AIProvider(BaseModel):
+    provider: str
+    model: str
+    calls: int
+    failures: int
+    tokens_in: int
+    tokens_out: int
+    cost_usd: float | None
+
+
+class PlatformAI(BaseModel):
+    calls: int
+    failures: int
+    tokens_in: int
+    tokens_out: int
+    cost_usd: float | None
+    cost_complete: bool
+    by_purpose: list[AIPurpose]
+    by_provider: list[AIProvider]
+
+
+class PlatformDay(BaseModel):
+    day: date
+    new_students: int
+    runs_started: int
+    runs_completed: int
+    ai_tokens: int
+    ai_cost_usd: float | None
+
+
+class PlatformScenario(BaseModel):
+    scenario_id: uuid.UUID
+    title: str
+    sector: str
+    started: int
+    completed: int
+    completion_rate: float | None
+    avg_score: float | None
+
+
+class PlatformStats(BaseModel):
+    generated_at: datetime
+    days: int
+    users: PlatformUsers
+    runs: PlatformRuns
+    evaluation: PlatformEvaluation
+    ai: PlatformAI
+    daily: list[PlatformDay]
+    scenarios: list[PlatformScenario]
+
+
+async def _queue_jobs() -> int | None:
+    """arq navbatidagi ishlar; Redis javob bermasa — None (statistika baribir chiqadi)."""
+    from app.core.redis_client import redis_client
+
+    try:
+        return await asyncio.wait_for(redis_client.zcard(default_queue_name), 2.0)
+    except Exception as exc:  # noqa: BLE001
+        log.warning("arq navbati o'qilmadi: %s", exc)
+        return None
 
 
 async def _owners(db: AsyncSession, org_type: OrgType, ids: list[uuid.UUID]) -> dict[uuid.UUID, User]:
@@ -180,3 +282,15 @@ async def admin_stats(
         verified_universities=await count(University, University.is_verified.is_(True)),
         invoices_pending=await count(Invoice, Invoice.status == InvoiceStatus.PENDING),
     )
+
+
+@router.get("/platform", response_model=PlatformStats)
+async def platform_stats(
+    days: int = Query(default=30),
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_permission("view_platform_stats")),
+):
+    """Foydalanuvchilar, Run'lar, baholash navbati va AI sarfi (§21.3)."""
+    if days not in PLATFORM_PERIODS:
+        raise HTTPException(status_code=422, detail=f"days must be one of {PLATFORM_PERIODS}")
+    return await platform.build(db, days, datetime.now(UTC), await _queue_jobs())
