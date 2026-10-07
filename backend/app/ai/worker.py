@@ -20,7 +20,7 @@ from app.models.simulation import Submission, SimulationTask, Simulation
 from app.models.enums import AIEvalStatus
 from app.ai.guardrail import validate_submission_content
 from app.ai.router import run_ai_chain, _pick_persona, _build_user_prompt
-from app.notifications.jobs import deadline_reminders_job, send_notification_emails_job
+from app.notifications.jobs import deadline_reminders_job, send_notification_emails_job, send_push_notifications_job
 from app.scenario.jobs import (
     DAY_REPORT_JOB,
     EVAL_JOB,
@@ -169,6 +169,8 @@ class WorkerSettings:
         # §15: dedlayn eslatmasi va email bildirishnomalar (SMTP sozlanmagan bo'lsa — no-op)
         cron(deadline_reminders_job, second=10, unique=True, timeout=50),
         cron(send_notification_emails_job, second=20, unique=True, timeout=50),
+        # §22.2: push — yetkazish (0) va eslatmadan (10) keyin; VAPID bo'lmasa no-op
+        cron(send_push_notifications_job, second=15, unique=True, timeout=50),
     ]
     redis_settings = RedisSettings.from_dsn(settings.REDIS_URL)
     # §18.1: `/api/v1/health` shu kalitni tekshiradi — worker o'lsa ~1 daqiqada ko'rinadi

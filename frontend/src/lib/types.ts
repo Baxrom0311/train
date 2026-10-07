@@ -533,6 +533,8 @@ export interface NotificationSettings {
   email_enabled: boolean
   email_kinds: NotificationKind[]
   available: NotificationKind[]
+  /** Hisob bo'yicha push (§22.2); qurilma obunasi alohida — `lib/pwa.ts`. */
+  push_enabled: boolean
 }
 
 // Talaba analitikasi (backend/app/api/analytics.py, CONTRACT.md §17)

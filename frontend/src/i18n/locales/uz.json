@@ -1118,5 +1118,22 @@
     "hours_other": "{{count}} soat",
     "daysAgo_one": "{{count}} kun",
     "daysAgo_other": "{{count}} kun"
+  },
+  "pwa": {
+    "install": "Ilovani o'rnatish",
+    "offline": "Internet yo'q. Sahifa ochiq qoladi, lekin javob yuborish va yangi xabarlar tarmoq qaytgach ishlaydi.",
+    "push": {
+      "title": "Push bildirishnomalar",
+      "hint": "Yangi vazifa, dedlayn va mentor izohi telefon yoki kompyuteringizga darhol keladi.",
+      "account": "Push yoqilgan",
+      "deviceOn": "Bu qurilma ulangan",
+      "deviceOff": "Bu qurilma ulanmagan",
+      "connect": "Ulash",
+      "disconnect": "Uzish",
+      "install": "iPhone'da push faqat o'rnatilgan ilovada ishlaydi: Safari'da «Ulashish» → «Bosh ekranga qo'shish», so'ng ilovani bosh ekrandan oching.",
+      "unsupported": "Bu brauzer push bildirishnomalarni qo'llab-quvvatlamaydi. Xabarlar sayt ichida va emailda keladi.",
+      "denied": "Brauzer bildirishnomalarni bloklagan. Sayt sozlamalarida (manzil satridagi qulf belgisi) ruxsat bering va sahifani yangilang.",
+      "error": "Ulab bo'lmadi. Keyinroq qayta urinib ko'ring."
+    }
   }
 }

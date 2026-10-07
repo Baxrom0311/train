@@ -35,6 +35,9 @@ Kompaniya hisobotlari (`CONTRACT.md` §20, `/talents/report`): kompaniyaga ochiq
 takliflar voronkasi (oylar, lavozimlar, javob vaqti) va CSV eksport.
 Platforma statistikasi (`CONTRACT.md` §21, `/admin` → Statistika): foydalanuvchilar, Run'lar, baholash navbati,
 AI sarfi (`ai_usage` — har `chat()` chaqiruvi `purpose` bilan; narx `.env` `LLM_PRICES`).
+Mobil PWA (`CONTRACT.md` §22): sayt telefonga o'rnatiladi (`public/manifest.webmanifest`, `public/sw.js`),
+Web Push (`pywebpush`, VAPID `.env`dan, kalit: `tools/gen_vapid_keys.py`) — vazifa, dedlayn, mentor izohi;
+Run ish stoli telefonda ixcham, bildirishnoma havolasi `?event=` bilan hodisani ochadi.
 
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da

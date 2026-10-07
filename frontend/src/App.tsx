@@ -3,6 +3,7 @@ import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider, RequireAuth, RequirePermission, homeFor, useAuth } from './context/AuthContext'
 import Navbar from './components/Navbar'
 import Backdrop from './components/layout/Backdrop'
+import OfflineBanner from './components/layout/OfflineBanner'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
@@ -40,6 +41,7 @@ export default function App() {
           <div className="relative min-h-screen text-foreground">
             <Backdrop />
             <Navbar />
+            <OfflineBanner />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<LoginPage />} />

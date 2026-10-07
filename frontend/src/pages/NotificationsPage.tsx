@@ -1,13 +1,14 @@
-// /notifications (CONTRACT.md §15.5): to'liq ro'yxat va email sozlamalari.
+// /notifications (CONTRACT.md §15.5, §22.4): to'liq ro'yxat, push va email sozlamalari.
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { Bell, CheckCheck, Loader2, Mail } from 'lucide-react'
+import { Bell, BellOff, BellRing, CheckCheck, Download, Loader2, Mail, Smartphone, type LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { describe, ago } from '@/components/notifications/describe'
 import { NOTIFICATIONS_CHANGED, markRead } from '@/components/notifications/NotificationBell'
 import { api } from '@/lib/api'
+import { disablePush, enablePush, pushState, useInstallPrompt, type PushState } from '@/lib/pwa'
 import { formatDateTime } from '@/lib/time'
 import type { AppNotification, NotificationKind, NotificationPage, NotificationSettings } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -109,13 +110,14 @@ export default function NotificationsPage() {
             </div>
           )}
         </section>
-        <EmailSettings />
+        <Settings />
       </div>
     </div>
   )
 }
 
-function EmailSettings() {
+/** Sozlamalar ustuni: push (§22.2) va email (§15.4) — bitta `notification-settings` holati. */
+function Settings() {
   const { t } = useTranslation()
   const [s, setS] = useState<NotificationSettings | null>(null)
   const [saving, setSaving] = useState(false)
@@ -133,7 +135,8 @@ function EmailSettings() {
     setStatus(null)
     try {
       setS(await api<NotificationSettings>('/users/me/notification-settings', {
-        method: 'PUT', json: { email_enabled: next.email_enabled, email_kinds: next.email_kinds },
+        method: 'PUT',
+        json: { email_enabled: next.email_enabled, email_kinds: next.email_kinds, push_enabled: next.push_enabled },
       }))
       setStatus('saved')
     } catch {
@@ -145,22 +148,116 @@ function EmailSettings() {
   }
 
   if (!s) return <aside className="glass h-fit rounded-3xl p-5">{status === 'error' ? t('notifications.settingsError') : <Loader2 className="h-5 w-5 animate-spin text-primary" />}</aside>
-  if (!s.available.length) return null
-  const toggleKind = (k: NotificationKind, on: boolean) =>
-    save({ ...s, email_kinds: on ? [...s.email_kinds, k] : s.email_kinds.filter((x) => x !== k) })
 
   return (
-    <aside className="glass h-fit space-y-4 rounded-3xl p-5 lg:sticky lg:top-24">
-      <div className="flex items-start gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary/12 text-primary"><Mail className="h-5 w-5" /></span>
-        <div className="min-w-0 flex-1">
-          <p className="font-bold">{t('notifications.email.title')}</p>
-          <p className="text-xs text-muted-foreground">{t('notifications.email.hint')}</p>
-        </div>
+    <aside className="h-fit space-y-4 lg:sticky lg:top-24">
+      <PushSettings settings={s} saving={saving} onSave={save} />
+      {s.available.length > 0 && <EmailSettings settings={s} saving={saving} onSave={save} />}
+      <p className={cn('h-4 px-2 text-xs', status === 'error' ? 'text-destructive' : 'text-success')} role="status">
+        {status === 'saved' && t('notifications.email.saved')}
+        {status === 'error' && t('notifications.settingsError')}
+      </p>
+    </aside>
+  )
+}
+
+interface SettingsProps {
+  settings: NotificationSettings
+  saving: boolean
+  onSave: (next: NotificationSettings) => Promise<void>
+}
+
+function CardHead({ Icon, title, hint }: { Icon: LucideIcon; title: string; hint: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary/12 text-primary"><Icon className="h-5 w-5" /></span>
+      <div className="min-w-0 flex-1">
+        <p className="font-bold">{title}</p>
+        <p className="text-xs text-muted-foreground">{hint}</p>
       </div>
+    </div>
+  )
+}
+
+/**
+ * Push: hisob kaliti (`push_enabled`, hamma qurilmalar) va shu qurilma obunasi.
+ * Server push'siz sozlangan bo'lsa (VAPID yo'q) — karta ko'rsatilmaydi.
+ */
+function PushSettings({ settings: s, saving, onSave }: SettingsProps) {
+  const { t } = useTranslation()
+  const install = useInstallPrompt()
+  const [state, setState] = useState<PushState | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    pushState().then(setState).catch(() => setState('unsupported'))
+  }, [])
+
+  const toggleDevice = async (on: boolean) => {
+    setBusy(true)
+    setError(false)
+    try {
+      setState(await (on ? enablePush() : disablePush()))
+      if (on && !s.push_enabled) await onSave({ ...s, push_enabled: true })
+    } catch (err) {
+      console.warn('push', err)
+      setError(true)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (state === 'server-off') return null
+  const ready = state === 'on' || state === 'off'
+
+  return (
+    <section className="glass space-y-4 rounded-3xl p-5">
+      <CardHead Icon={Smartphone} title={t('pwa.push.title')} hint={t('pwa.push.hint')} />
+      {state === null && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
+      {ready && (
+        <>
+          <label className="flex items-center justify-between gap-3 rounded-2xl border bg-background/40 px-3 py-2.5 text-sm font-semibold">
+            {t('pwa.push.account')}
+            <Switch checked={s.push_enabled} disabled={saving} onCheckedChange={(v) => onSave({ ...s, push_enabled: v })} />
+          </label>
+          <div className={cn('flex items-center justify-between gap-3 rounded-2xl px-3 py-1 text-sm', !s.push_enabled && 'opacity-50')}>
+            <span className="flex items-center gap-2">
+              {state === 'on' ? <BellRing className="h-4 w-4 text-primary" /> : <BellOff className="h-4 w-4 text-muted-foreground" />}
+              {t(state === 'on' ? 'pwa.push.deviceOn' : 'pwa.push.deviceOff')}
+            </span>
+            <Button size="sm" variant={state === 'on' ? 'ghost' : 'default'} disabled={busy || !s.push_enabled}
+              onClick={() => toggleDevice(state !== 'on')}>
+              {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+              {t(state === 'on' ? 'pwa.push.disconnect' : 'pwa.push.connect')}
+            </Button>
+          </div>
+        </>
+      )}
+      {state && !ready && (
+        <p className="rounded-2xl bg-muted/60 px-3 py-2.5 text-sm text-muted-foreground">{t(`pwa.push.${state}`)}</p>
+      )}
+      {error && <p className="text-xs text-destructive">{t('pwa.push.error')}</p>}
+      {install && (
+        <Button variant="outline" size="sm" className="w-full" onClick={install}>
+          <Download className="h-4 w-4" /> {t('pwa.install')}
+        </Button>
+      )}
+    </section>
+  )
+}
+
+function EmailSettings({ settings: s, saving, onSave }: SettingsProps) {
+  const { t } = useTranslation()
+  const toggleKind = (k: NotificationKind, on: boolean) =>
+    onSave({ ...s, email_kinds: on ? [...s.email_kinds, k] : s.email_kinds.filter((x) => x !== k) })
+
+  return (
+    <section className="glass space-y-4 rounded-3xl p-5">
+      <CardHead Icon={Mail} title={t('notifications.email.title')} hint={t('notifications.email.hint')} />
       <label className="flex items-center justify-between gap-3 rounded-2xl border bg-background/40 px-3 py-2.5 text-sm font-semibold">
         {t('notifications.email.enabled')}
-        <Switch checked={s.email_enabled} disabled={saving} onCheckedChange={(v) => save({ ...s, email_enabled: v })} />
+        <Switch checked={s.email_enabled} disabled={saving} onCheckedChange={(v) => onSave({ ...s, email_enabled: v })} />
       </label>
       <fieldset disabled={!s.email_enabled || saving} className={cn('space-y-1', !s.email_enabled && 'opacity-50')}>
         <legend className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('notifications.email.kinds')}</legend>
@@ -172,10 +269,6 @@ function EmailSettings() {
           </label>
         ))}
       </fieldset>
-      <p className={cn('h-4 text-xs', status === 'error' ? 'text-destructive' : 'text-success')} role="status">
-        {status === 'saved' && t('notifications.email.saved')}
-        {status === 'error' && t('notifications.settingsError')}
-      </p>
-    </aside>
+    </section>
   )
 }

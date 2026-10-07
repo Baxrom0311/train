@@ -54,6 +54,21 @@ docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.https.yml u
 Caddy sertifikatni o'zi oladi va yangilaydi (`caddy_data` volume'ida),
 HSTS qo'yadi; `frontend` tashqi portni ochmaydi.
 
+### Telefon ilovasi va push (§22)
+
+Sayt telefonga ilova sifatida o'rnatiladi va push xabar yuboradi — ikkalasi
+ham faqat HTTPS'da ishlaydi (brauzer talabi; `localhost` bundan mustasno).
+Push uchun bir marta kalit juftligi yarating va `deploy/.env`ga qo'ying:
+
+```bash
+docker compose -f deploy/docker-compose.yml exec backend python ../tools/gen_vapid_keys.py
+# VAPID_PUBLIC_KEY=..., VAPID_PRIVATE_KEY=... → deploy/.env, VAPID_SUBJECT=mailto:admin@<domen>
+docker compose -f deploy/docker-compose.yml up -d backend worker
+```
+
+Yuborishni `worker` bajaradi (har daqiqa). Kalitni almashtirsangiz eski
+obunalar ishlamay qoladi — foydalanuvchilar `/notifications`da qayta ulaydi.
+
 ## Holat
 
 `GET /api/v1/health` → `{status, db, redis, worker}`; hammasi ishlasa 200,

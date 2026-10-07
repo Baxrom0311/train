@@ -167,7 +167,7 @@ schema / endpoint shakli) orqali gaplashadi.
 | 8 | **Deploy** | `deploy/` | Docker-compose, nginx, Dockerfile'lar — backend/frontend tuzilishi barqarorlashgach yangilanadi |
 | 9 | **Scenario Engine** | §9.10 ro'yxati (`backend/app/scenario/`, `models/scenario.py`, `api/scenarios.py`, `api/runs.py`, `api/files.py`, `backend/content/scenarios/`, `tools/import_scenario.py`) | (1),(2) interfeyslari — §9.10 |
 | 10 | **Credentials** | `backend/app/models/credential.py`, `backend/app/api/credentials.py`, `backend/app/credentials/` | (1),(6),(9)ga bog'liq — sertifikat Run'dan, portfolio §10.1 profilidan (§13) |
-| 11 | **Notifications** | `backend/app/models/notification.py`, `backend/app/api/notifications.py`, `backend/app/notifications/` | (1),(4),(9),(10)ga bog'liq — manbalar §15.2 |
+| 11 | **Notifications** | `backend/app/models/notification.py`, `backend/app/api/notifications.py`, `backend/app/notifications/`, `tools/gen_vapid_keys.py` | (1),(4),(9),(10)ga bog'liq — manbalar §15.2 |
 | 12 | **Analytics** | `backend/app/api/analytics.py`, `backend/app/analytics/` | (9),(10)ga bog'liq — Run natijalarini faqat o'qiydi (§17); platforma statistikasi hisobi `analytics/platform.py` (§21), endpointi Modul 3 `api/admin.py`da |
 | 13 | **Sandbox runner** | `sandbox/`, `deploy/sandbox.Dockerfile` | Tashqi bog'liqliksiz (faqat stdlib); backend `core/sandbox.py` orqali chaqiradi (§19) |
 
@@ -223,6 +223,7 @@ POST   /api/v1/talents/offers             counts against subscription's "intervi
 # Talent Hunt to'liq ro'yxati (profil, takliflarga javob) — §10.4
 # Kompaniya hisobotlari (nomzodlar bazasi, takliflar voronkasi, CSV) — §20
 # Platforma statistikasi va AI sarfi (admin) — §21
+# Push obunalari va PWA — §22
 # Universitet portali (talabalar natijalari, bog'lanish) — §12.2
 ```
 
@@ -1600,3 +1601,78 @@ davr tanlovi (7 / 30 / 90 kun), asosiy raqamlar, kunlik faollik grafigi
 maqsad va provayder kesimi, narx — ma'lum bo'lsa), baholash navbati holati
 (tiqilib qolsa ogohlantirish: `failed > 0` yoki eng eskisi > 30 daqiqa) va
 ssenariylar jadvali. Grafiklar SVG/CSS, kutubxonasiz.
+
+## 22. Mobil PWA va push bildirishnomalar (Modul 7 + 11 + 8)
+
+Run real vaqtda ketadi (§9.2), talabalar esa ko'pincha telefondan kiradi.
+Sayt telefonga ilova kabi o'rnatiladi, vazifa va dedlayn haqida push xabar
+keladi, ish stoli telefonda qulay ishlaydi. Alohida mobil ilova yo'q — shu
+React ilova.
+
+### 22.1 PWA (frontend)
+
+- `public/manifest.webmanifest`: nom `TryJob`, `display: standalone`,
+  `start_url: /`, rang — brend; ikonlar 192/512 (oddiy va `maskable`),
+  `apple-touch-icon` 180. `index.html`: `theme-color`, `viewport-fit=cover`.
+- `public/sw.js` (qo'lda, kutubxonasiz; ilova yuklanganda ro'yxatdan o'tadi):
+  - `/api/*` va boshqa domen so'rovlari **hech qachon keshlanmaydi** (shaxsiy ma'lumot);
+  - `/assets/*` (Vite hash'li fayllar) — cache-first;
+  - sahifa navigatsiyasi — network-first, tarmoq yo'q bo'lsa keshdagi
+    `index.html` (ilova ochiladi va "internet yo'q" deydi);
+  - yangi versiya o'rnatilganda eski keshlar o'chiriladi.
+- "Ilovani o'rnatish": brauzer `beforeinstallprompt` bersa — navbar'da va
+  `/notifications` push kartasida tugma; iOS Safari'da — "Ulashish → Bosh ekranga" ko'rsatmasi
+  (`/notifications` sahifasida). O'rnatilgan (standalone) holatda ko'rsatilmaydi.
+- Tarmoq uzilsa — sahifa tepasida "Internet yo'q" yo'lagi.
+
+### 22.2 Push (Modul 11)
+
+- Web Push + VAPID, `pywebpush` kutubxonasi (shifrlash qo'lda yozilmaydi).
+  `.env`: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
+  (`mailto:…`). Bo'sh — push o'chirilgan (faqat sayt va email).
+  Kalit juftligi: `python tools/gen_vapid_keys.py`.
+- `push_subscriptions`: `id, user_id (FK, CASCADE), endpoint (UNIQUE, ≤ 1000),
+  p256dh, auth, user_agent (≤ 200), created_at, last_used_at`. Bitta
+  foydalanuvchida ko'pi bilan **10** ta obuna (eskisi o'chiriladi). Shu
+  endpoint boshqa foydalanuvchida bo'lsa — yangi egaga o'tadi (bitta brauzer,
+  boshqa akkaunt). `endpoint` faqat `https://`.
+- `notifications.push_status` (`null | sent | skipped | failed`),
+  `notification_settings.push_enabled` (default `true`; turlar bo'yicha
+  ajratilmaydi — push hamma tegishli turlarga).
+- Cron `send_push_notifications` (har daqiqa): `push_status IS NULL`,
+  **10 daqiqadan** yangi (eskisi `skipped` — kech push foydasiz), 50 tadan.
+  O'qilgan, foydalanuvchi faol emas, push o'chirilgan yoki obuna yo'q —
+  `skipped`. Har obunaga yuboriladi (`asyncio.to_thread`); bittasiga yetsa
+  `sent`, hammasi xato — `failed`. 404/410 javobi — obuna o'chiriladi.
+  Qayta urinish yo'q.
+- Payload (JSON, ≤ 2 KB): `{title, body, link, tag}` — matn email bilan bir
+  xil o'zbekcha (§15.3 `render`), `tag = notification id` (takror ko'rsatilmaydi).
+  Push bosilsa — `link` ochiladi (ochiq oyna bo'lsa o'sha fokuslanadi).
+- Chiqishda (logout) frontend shu brauzer obunasini `DELETE` qiladi va
+  `unsubscribe()` — boshqa akkaunt kirsa avvalgisining xabarlari kelmaydi.
+  Qurilma obunasi va `push_enabled` alohida: `push_enabled=false` — hech bir
+  qurilmaga yuborilmaydi; qurilmani ulash `push_enabled`ni ham yoqadi.
+- Run hodisalari havolasi `/runs/{id}?event={node_id}` (`task_delivered`,
+  `deadline_soon`, `mentor_review`) — Run sahifasi shu hodisani ochadi
+  (telefonda "Vazifa" bo'limida).
+
+### 22.3 API
+
+```
+GET    /api/v1/push/config                          ochiq → {enabled, public_key | null}
+POST   /api/v1/users/me/push-subscriptions          kirgan; {endpoint, keys: {p256dh, auth}} → 204
+DELETE /api/v1/users/me/push-subscriptions          kirgan; {endpoint} → 204 (o'ziniki bo'lmasa ham 204)
+GET/PUT /api/v1/users/me/notification-settings      + push_enabled (§15.4)
+```
+
+Push o'chirilgan (`enabled=false`) bo'lsa POST — 409.
+
+### 22.4 Ish stoli telefonda
+
+- Run sarlavhasi ixcham (kompaniya nomi va "To'xtatish" kichik ekranda
+  qisqaroq), bo'limlar yo'lagida "Chat" o'qilmagan xabarlar soni bilan.
+- Xavfsiz hudud (`env(safe-area-inset-*)`) — o'rnatilgan ilovada pastki va
+  yuqori chetlar kesilmaydi.
+- `/notifications`: "Push bildirishnomalar" kartasi — holat (qo'llab-quvvatlanmaydi,
+  ruxsat berilmagan, yoqilgan), yoqish/o'chirish, iOS uchun o'rnatish ko'rsatmasi.
+  Server push'siz (`enabled=false`) bo'lsa karta ko'rsatilmaydi.

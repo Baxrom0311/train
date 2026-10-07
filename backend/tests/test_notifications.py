@@ -47,7 +47,7 @@ async def test_delivered_tasks_notify_once(db_session, setup):  # noqa: F811
     assert [n.params["node_id"] for n in items] == ["standup", "bug_orders"]
     bug = items[1]
     assert bug.params["title"].startswith("Ticket ORD-142") and bug.params["type"] == "task"
-    assert bug.link == f"/runs/{run.id}" and bug.params["due_at"]
+    assert bug.link == f"/runs/{run.id}?event=bug_orders" and bug.params["due_at"]
 
 
 async def test_deadline_reminder_once_and_only_when_unsubmitted(db_session, setup):  # noqa: F811

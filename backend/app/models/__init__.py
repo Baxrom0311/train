@@ -9,7 +9,7 @@ from .scenario import (
     Run, RunEvent, UploadedFile, ChatMessage, WorkHoliday,
 )
 from .credential import Certificate, Portfolio
-from .notification import Notification, NotificationSettings
+from .notification import Notification, NotificationSettings, PushSubscription
 from .ai_usage import AIUsage
 from app.database import Base
 
@@ -41,6 +41,7 @@ __all__ = [
     "Portfolio",
     "Notification",
     "NotificationSettings",
+    "PushSubscription",
     "AIUsage",
     "Base",
 ]
