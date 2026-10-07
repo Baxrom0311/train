@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from typing import Literal, Union
+from typing import Union
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime, UTC
 import uuid
@@ -10,11 +10,12 @@ from app.database import get_db
 from app.core.deps import require_permission
 from app.models.user import User
 from app.models.billing import Company, University
+from app.models.enums import OrgType
 
 router = APIRouter(prefix="/api/v1/admin/orgs", tags=["admin_orgs"])
 
 class OrgApproveIn(BaseModel):
-    org_type: Literal["company", "university"]
+    org_type: OrgType
 
 class CompanyOut(BaseModel):
     id: uuid.UUID
@@ -63,13 +64,13 @@ async def approve_org(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_permission("approve_companies"))
 ):
-    model = Company if data.org_type == "company" else University
+    model = Company if data.org_type == OrgType.COMPANY else University
     stmt = select(model).where(model.id == org_id)
     result = await db.execute(stmt)
     org = result.scalars().first()
-    
+
     if not org:
-        raise HTTPException(status_code=404, detail=f"{data.org_type.capitalize()} not found")
+        raise HTTPException(status_code=404, detail=f"{data.org_type.value.capitalize()} not found")
         
     if org.is_verified:
         return {"msg": "Already verified"}

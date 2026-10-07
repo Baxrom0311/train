@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from typing import List, Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, cast, String
 from sqlalchemy.dialects.postgresql import JSONB
@@ -17,6 +17,7 @@ from app.models.talent import CandidateVisibility, TalentOffer
 from app.models.billing import Company
 from app.models.simulation import Submission
 from app.core.deps import get_current_active_user, require_permission
+from app.models.enums import OrgType, TalentOfferStatus
 
 router = APIRouter(prefix="/api/v1/talents", tags=["Talent Hunt"])
 # /api/v1/users/... endpointlar uchun alohida router (main.py users_router ni topadi)
@@ -37,8 +38,7 @@ class VisibilityOut(BaseModel):
     is_open_to_work: bool
     hidden_from_company_ids: List[str]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CandidateOut(BaseModel):
@@ -50,8 +50,7 @@ class CandidateOut(BaseModel):
     full_name: str
     completed_simulations: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TalentOfferCreate(BaseModel):
@@ -66,12 +65,11 @@ class TalentOfferOut(BaseModel):
     candidate_user_id: uuid.UUID
     position_title: str
     message: str
-    status: str
+    status: TalentOfferStatus
     respond_due_at: datetime | None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ---------------------------------------------------------------------------
@@ -121,7 +119,7 @@ async def get_talents(
     bo'lmagan nomzodlarni qaytaradi.
     CandidateVisibility yozuvi yo'q = ko'rinmaydi (yo'q yozuv = yopiq).
     """
-    if current_user.org_type != "company" or not current_user.org_id:
+    if current_user.org_type != OrgType.COMPANY or not current_user.org_id:
         raise HTTPException(status_code=403, detail="Only company users can view candidates")
 
     company = await db.get(Company, current_user.org_id)
@@ -177,7 +175,7 @@ async def create_talent_offer(
     Yashirilgan yoki mavjud bo'lmagan nomzodga 404 — 403 EMAS
     (04-talent-hunt.md §2: yashiringanini bildirmaslik kerak).
     """
-    if current_user.org_type != "company" or not current_user.org_id:
+    if current_user.org_type != OrgType.COMPANY or not current_user.org_id:
         raise HTTPException(status_code=403, detail="Only company users can send offers")
 
     company = await db.get(Company, current_user.org_id)

@@ -13,6 +13,7 @@ from sqlalchemy import select
 
 from app.config import settings
 from app.models.simulation import Submission
+from app.models.enums import AIEvalStatus
 from app.ai.guardrail import validate_submission_content
 from app.ai.router import run_ai_chain, _pick_persona, _build_user_prompt
 
@@ -55,7 +56,7 @@ async def retry_ai_eval(ctx: dict, submission_id: str) -> None:
         # Guardrail tekshiruvi
         is_valid = await validate_submission_content(submission.content)
         if not is_valid:
-            submission.ai_eval_status = "failed_permanent"
+            submission.ai_eval_status = AIEvalStatus.FAILED_PERMANENT
             submission.ai_feedback = "Content failed guardrail validation (retry)."
             submission.evaluated_at = datetime.now(timezone.utc)
             await db.commit()
@@ -81,7 +82,7 @@ async def retry_ai_eval(ctx: dict, submission_id: str) -> None:
             score, feedback = ai_result
             submission.ai_score = round(score, 1)
             submission.ai_feedback = feedback
-            submission.ai_eval_status = "completed"
+            submission.ai_eval_status = AIEvalStatus.COMPLETED
             submission.evaluated_at = datetime.now(timezone.utc)
             await db.commit()
             log.info("retry_ai_eval: muvaffaqiyatli id=%s score=%.1f", submission_id, score)
@@ -89,7 +90,7 @@ async def retry_ai_eval(ctx: dict, submission_id: str) -> None:
 
         # Muvaffaqiyatsiz
         if attempt >= MAX_ATTEMPTS:
-            submission.ai_eval_status = "failed_permanent"
+            submission.ai_eval_status = AIEvalStatus.FAILED_PERMANENT
             submission.ai_feedback = f"AI eval {MAX_ATTEMPTS} marta urinishdan keyin muvaffaqiyatsiz."
             submission.evaluated_at = datetime.now(timezone.utc)
             await db.commit()
@@ -99,7 +100,7 @@ async def retry_ai_eval(ctx: dict, submission_id: str) -> None:
             )
         else:
             # arq avtomatik qayta urinadi (raises arq.Retry yoki re-enqueue)
-            submission.ai_eval_status = "queued_retry"
+            submission.ai_eval_status = AIEvalStatus.QUEUED_RETRY
             await db.commit()
             log.info(
                 "retry_ai_eval: qayta navbatga id=%s attempt=%d/%d",

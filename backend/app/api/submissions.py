@@ -2,7 +2,7 @@ import uuid
 from typing import List, Optional
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -11,6 +11,7 @@ from app.models.simulation import Submission, SimulationTask
 from app.core.deps import get_current_active_user
 from app.models.user import User
 from app.ai.router import evaluate_submission
+from app.models.enums import AIEvalStatus
 
 router = APIRouter(tags=["submissions"])
 
@@ -25,12 +26,11 @@ class SubmissionOut(BaseModel):
     content: str
     ai_score: float | None = None
     ai_feedback: str | None = None
-    ai_eval_status: str
+    ai_eval_status: AIEvalStatus
     submitted_at: datetime
     evaluated_at: datetime | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 @router.post("/submissions", response_model=SubmissionOut, status_code=status.HTTP_201_CREATED)
 async def create_submission(

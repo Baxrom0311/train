@@ -1,9 +1,10 @@
-from sqlalchemy import String, Float, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import String, Float, Boolean, DateTime, ForeignKey, Text, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime, UTC
 import uuid
 
 from app.database import Base
+from app.models.enums import OrgType, InvoiceStatus
 
 class Company(Base):
     __tablename__ = "companies"
@@ -33,11 +34,16 @@ class Invoice(Base):
     __tablename__ = "invoices"
     
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
-    payer_type: Mapped[str] = mapped_column(String) # "company" | "university"
+    payer_type: Mapped[OrgType] = mapped_column(
+        SAEnum(OrgType, native_enum=False, values_callable=lambda e: [m.value for m in e])
+    )
     payer_id: Mapped[uuid.UUID] = mapped_column() # UUID for Company or University
     amount: Mapped[float] = mapped_column(Float)
     currency: Mapped[str] = mapped_column(String, default="UZS")
-    status: Mapped[str] = mapped_column(String, default="pending") # pending | paid | cancelled
+    status: Mapped[InvoiceStatus] = mapped_column(
+        SAEnum(InvoiceStatus, native_enum=False, values_callable=lambda e: [m.value for m in e]),
+        default=InvoiceStatus.PENDING,
+    )
     issued_by_admin_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     paid_marked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)

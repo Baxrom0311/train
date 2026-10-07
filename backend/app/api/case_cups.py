@@ -8,6 +8,7 @@ from sqlalchemy import select, desc
 
 from app.database import get_db
 from app.models.case_cup import CaseCup, CaseCupSubmission
+from app.models.enums import Sector, AIEvalStatus
 from app.models.user import User
 from app.core.deps import get_current_active_user, require_permission
 from app.ai.router import evaluate_submission
@@ -18,7 +19,7 @@ class CaseCupCreate(BaseModel):
     title: str
     description: str
     company_id: uuid.UUID
-    sector: str
+    sector: Sector
     start_date: datetime
     end_date: datetime
     is_active: bool = True
@@ -28,7 +29,7 @@ class CaseCupOut(BaseModel):
     title: str
     description: str
     company_id: uuid.UUID
-    sector: str
+    sector: Sector
     start_date: datetime
     end_date: datetime
     is_active: bool
@@ -47,6 +48,7 @@ class CaseCupSubmissionOut(BaseModel):
     content: str
     ai_score: Optional[float]
     ai_feedback: Optional[str]
+    ai_eval_status: AIEvalStatus
     submitted_at: datetime
     rank: Optional[int]
 

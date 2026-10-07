@@ -1,13 +1,14 @@
 import uuid
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
 from app.models.simulation import Simulation, SimulationTask
+from app.models.enums import Sector
 from app.core.deps import get_current_active_user, require_permission
 from app.models.user import User
 
@@ -26,13 +27,12 @@ class TaskOut(BaseModel):
     description: str
     expected_skills: list[str]
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class SimulationCreate(BaseModel):
     title: str
     description: str
-    sector: str
+    sector: Sector
     difficulty: str
     company_name: str
     tasks: list[TaskCreate]
@@ -41,14 +41,13 @@ class SimulationOut(BaseModel):
     id: uuid.UUID
     title: str
     description: str
-    sector: str
+    sector: Sector
     difficulty: str
     company_name: str
     is_active: bool
     tasks: list[TaskOut] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 @router.get("/simulations", response_model=List[SimulationOut])

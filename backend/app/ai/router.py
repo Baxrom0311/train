@@ -11,6 +11,7 @@ import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.simulation import Submission
+from app.models.enums import Sector, AIEvalStatus
 from app.ai.guardrail import validate_submission_content
 from app.ai.personas import IT_MENTOR, FINANCE_MENTOR
 
@@ -20,8 +21,8 @@ log = logging.getLogger(__name__)
 # Yordamchi: persona tanlash
 # ──────────────────────────────────────────────
 
-def _pick_persona(sector: str | None):
-    if sector and sector.upper() in ("BANK", "BANKING", "FINANCE"):
+def _pick_persona(sector: Sector | str | None):
+    if sector == Sector.BANKING:
         return FINANCE_MENTOR
     return IT_MENTOR
 
@@ -201,7 +202,7 @@ async def evaluate_submission(
     # — Guardrail —
     is_valid = await validate_submission_content(submission.content)
     if not is_valid:
-        submission.ai_eval_status = "failed_permanent"
+        submission.ai_eval_status = AIEvalStatus.FAILED_PERMANENT
         submission.ai_feedback = "Content failed guardrail validation."
         submission.evaluated_at = datetime.now(timezone.utc)
         await db.commit()
@@ -221,13 +222,13 @@ async def evaluate_submission(
         score, feedback = result
         submission.ai_score = round(score, 1)
         submission.ai_feedback = feedback
-        submission.ai_eval_status = "completed"
+        submission.ai_eval_status = AIEvalStatus.COMPLETED
         submission.evaluated_at = datetime.now(timezone.utc)
         await db.commit()
         return
 
     # — Hamma provider muvaffaqiyatsiz: retry navbatiga —
-    submission.ai_eval_status = "queued_retry"
+    submission.ai_eval_status = AIEvalStatus.QUEUED_RETRY
     await db.commit()
 
     if redis is not None:

@@ -3,10 +3,11 @@ Talent Hunt moduli modellari (CONTRACT.md §5, §6 Modul 4 egaligi).
 """
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, ForeignKey, DateTime, Boolean, JSON
+from sqlalchemy import String, ForeignKey, DateTime, Boolean, JSON, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 from app.models.rbac import GUID
+from app.models.enums import TalentOfferStatus
 
 
 class CandidateVisibility(Base):
@@ -49,9 +50,9 @@ class TalentOffer(Base):
     position_title = mapped_column(String, nullable=False)
     message = mapped_column(String, nullable=False)
     status = mapped_column(
-        String,
+        SAEnum(TalentOfferStatus, native_enum=False, values_callable=lambda e: [m.value for m in e]),
         nullable=False,
-        default="sent",
+        default=TalentOfferStatus.SENT,
         server_default="sent",
     )
     # SLA: yuborilgan vaqtdan +5 ish kuni (CONTRACT.md §5)

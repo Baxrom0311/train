@@ -1,9 +1,10 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, Boolean, DateTime, ForeignKey, Text, Float, Integer, Uuid
+from sqlalchemy import String, Boolean, DateTime, ForeignKey, Text, Float, Integer, Uuid, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
+from app.models.enums import Sector, AIEvalStatus
 
 class CaseCup(Base):
     __tablename__ = "case_cups"
@@ -12,7 +13,10 @@ class CaseCup(Base):
     title: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     company_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("companies.id"), nullable=False)
-    sector: Mapped[str] = mapped_column(String, nullable=False)
+    sector: Mapped[Sector] = mapped_column(
+        SAEnum(Sector, native_enum=False, values_callable=lambda e: [m.value for m in e]),
+        nullable=False,
+    )
     start_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     end_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -30,18 +34,9 @@ class CaseCupSubmission(Base):
     ai_feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
     submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     rank: Mapped[int | None] = mapped_column(Integer, nullable=True)
-
-    @property
-    def ai_eval_status(self):
-        return None
-    @ai_eval_status.setter
-    def ai_eval_status(self, value):
-        pass
-
-    @property
-    def evaluated_at(self):
-        return None
-    @evaluated_at.setter
-    def evaluated_at(self, value):
-        pass
+    ai_eval_status: Mapped[AIEvalStatus] = mapped_column(
+        SAEnum(AIEvalStatus, native_enum=False, values_callable=lambda e: [m.value for m in e]),
+        default=AIEvalStatus.COMPLETED,
+    )
+    evaluated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 

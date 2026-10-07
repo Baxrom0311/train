@@ -1,10 +1,14 @@
 import uuid
-from datetime import datetime
-from sqlalchemy import String, Boolean, DateTime, ForeignKey, Text, Float, Integer, JSON
+from datetime import datetime, timezone
+from sqlalchemy import String, Boolean, DateTime, ForeignKey, Text, Float, Integer, JSON, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 
 from app.database import Base
+from app.models.enums import Sector, AIEvalStatus
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
 
 class Simulation(Base):
     __tablename__ = "simulations"
@@ -12,13 +16,16 @@ class Simulation(Base):
     id: Mapped[uuid.UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    sector: Mapped[str] = mapped_column(String, nullable=False)
+    sector: Mapped[Sector] = mapped_column(
+        SAEnum(Sector, native_enum=False, values_callable=lambda e: [m.value for m in e]),
+        nullable=False,
+    )
     difficulty: Mapped[str] = mapped_column(String, nullable=False)
     company_name: Mapped[str] = mapped_column(String, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_by_admin_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, onupdate=_utcnow)
 
     tasks = relationship("SimulationTask", back_populates="simulation", cascade="all, delete-orphan", lazy="selectin")
 
@@ -31,7 +38,7 @@ class SimulationTask(Base):
     title: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     expected_skills: Mapped[list | dict] = mapped_column(JSON, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
     simulation = relationship("Simulation", back_populates="tasks")
     submissions = relationship("Submission", back_populates="task", cascade="all, delete-orphan")
@@ -45,8 +52,11 @@ class Submission(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False)
     ai_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     ai_feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
-    ai_eval_status: Mapped[str] = mapped_column(String, default="completed")
-    submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    ai_eval_status: Mapped[AIEvalStatus] = mapped_column(
+        SAEnum(AIEvalStatus, native_enum=False, values_callable=lambda e: [m.value for m in e]),
+        default=AIEvalStatus.COMPLETED,
+    )
+    submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
     evaluated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     task = relationship("SimulationTask", back_populates="submissions")

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from typing import List, Literal, Optional
+from typing import List, Optional
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime, UTC
 import uuid
@@ -10,11 +10,12 @@ from app.database import get_db
 from app.core.deps import require_permission
 from app.models.user import User
 from app.models.billing import Invoice, Company, University
+from app.models.enums import OrgType, InvoiceStatus
 
 router = APIRouter(prefix="/api/v1/admin/invoices", tags=["admin_invoices"])
 
 class InvoiceCreate(BaseModel):
-    payer_type: Literal["company", "university"]
+    payer_type: OrgType
     payer_id: uuid.UUID
     amount: float
     currency: str = "UZS"
@@ -22,11 +23,11 @@ class InvoiceCreate(BaseModel):
 
 class InvoiceOut(BaseModel):
     id: uuid.UUID
-    payer_type: str
+    payer_type: OrgType
     payer_id: uuid.UUID
     amount: float
     currency: str
-    status: str
+    status: InvoiceStatus
     issued_by_admin_id: uuid.UUID
     paid_marked_at: datetime | None = None
     notes: str | None = None
@@ -39,7 +40,7 @@ async def create_invoice(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_permission("manage_billing"))
 ):
-    model = Company if data.payer_type == "company" else University
+    model = Company if data.payer_type == OrgType.COMPANY else University
     stmt = select(model).where(model.id == data.payer_id)
     result = await db.execute(stmt)
     org = result.scalars().first()
@@ -97,10 +98,10 @@ async def mark_invoice_paid(
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
         
-    if invoice.status == "paid":
+    if invoice.status == InvoiceStatus.PAID:
         return invoice
-        
-    invoice.status = "paid"
+
+    invoice.status = InvoiceStatus.PAID
     invoice.paid_marked_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(invoice)

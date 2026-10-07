@@ -10,6 +10,7 @@ from app.models.talent import CandidateVisibility
 from app.models.rbac import Role
 from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token
 from app.core.deps import get_current_active_user
+from app.models.enums import OrgType, DefaultRole
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 users_router = APIRouter(prefix="/users", tags=["users"])
@@ -20,7 +21,7 @@ class UserCreate(BaseModel):
     full_name: str
 
 class UserCreateOrg(UserCreate):
-    org_type: str
+    org_type: OrgType
     org_id: str
 
 class Token(BaseModel):
@@ -41,7 +42,7 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
     if result.scalars().first():
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    role_result = await db.execute(select(Role).where(Role.name == "student"))
+    role_result = await db.execute(select(Role).where(Role.name == DefaultRole.STUDENT.value))
     student_role = role_result.scalars().first()
     if not student_role:
         raise HTTPException(status_code=500, detail="Student role not found")
@@ -67,7 +68,11 @@ async def register_org(user_in: UserCreateOrg, db: AsyncSession = Depends(get_db
     if result.scalars().first():
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    role_name = "company_hr" if user_in.org_type == "company" else "university_admin"
+    role_name = (
+        DefaultRole.COMPANY_HR.value
+        if user_in.org_type == OrgType.COMPANY
+        else DefaultRole.UNIVERSITY_ADMIN.value
+    )
     role_result = await db.execute(select(Role).where(Role.name == role_name))
     org_role = role_result.scalars().first()
     if not org_role:

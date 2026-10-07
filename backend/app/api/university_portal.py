@@ -4,7 +4,7 @@ from sqlalchemy.future import select
 from sqlalchemy import func
 import uuid
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
 from app.database import get_db
@@ -12,6 +12,7 @@ from app.core.deps import require_permission, get_current_active_user
 from app.models.user import User
 from app.models.billing import University
 from app.models.simulation import Submission
+from app.models.enums import OrgType
 
 router = APIRouter(prefix="/api/v1/university", tags=["University Portal"])
 
@@ -21,16 +22,14 @@ class StudentOut(BaseModel):
     email: str
     is_active: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class SubmissionSummary(BaseModel):
     task_id: uuid.UUID
     ai_score: Optional[float]
     submitted_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class StudentProgressOut(BaseModel):
     student: StudentOut
@@ -48,7 +47,7 @@ class UniversityStats(BaseModel):
     top_students: List[TopStudent]
 
 async def check_university_access(current_user: User, db: AsyncSession):
-    if current_user.org_type != "university" or not current_user.org_id:
+    if current_user.org_type != OrgType.UNIVERSITY or not current_user.org_id:
         raise HTTPException(status_code=403, detail="Not a university admin")
     
     result = await db.execute(select(University).where(University.id == current_user.org_id))
@@ -70,7 +69,7 @@ async def get_students(
     
     result = await db.execute(
         select(User).where(
-            User.org_type == "university",
+            User.org_type == OrgType.UNIVERSITY,
             User.org_id == current_user.org_id,
             User.id != current_user.id
         )
@@ -89,7 +88,7 @@ async def get_student_progress(
     result = await db.execute(
         select(User).where(
             User.id == user_id,
-            User.org_type == "university",
+            User.org_type == OrgType.UNIVERSITY,
             User.org_id == current_user.org_id
         )
     )
@@ -122,7 +121,7 @@ async def get_university_stats(
     
     students_query = await db.execute(
         select(User).where(
-            User.org_type == "university",
+            User.org_type == OrgType.UNIVERSITY,
             User.org_id == current_user.org_id,
             User.id != current_user.id
         )
