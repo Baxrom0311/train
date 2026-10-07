@@ -6,7 +6,10 @@
     "register": "Sign Up",
     "logout": "Sign Out",
     "language": "Language",
-    "theme": "Theme"
+    "theme": "Theme",
+    "talents": "Candidates",
+    "sentOffers": "My offers",
+    "offers": "Job offers"
   },
   "auth": {
     "login": {
@@ -227,5 +230,80 @@
     "time_management": "Time management",
     "stress_handling": "Stress handling",
     "initiative": "Initiative"
+  },
+  "talent": {
+    "title": "Candidates",
+    "subtitle": "Students who completed a simulation and are open to work — with results from a real workday.",
+    "sentOffers": "Sent offers",
+    "sentSubtitle": "When a candidate accepts, their email appears here.",
+    "noSent": "You haven't sent any offers yet.",
+    "notVerified": "Your company is not verified yet. Candidates unlock once an admin approves it.",
+    "runsCompleted_one": "{{count}} simulation completed",
+    "runsCompleted_other": "{{count}} simulations completed",
+    "runs": "Completed simulations",
+    "certificate": "Certificate",
+    "found_one": "{{count}} candidate",
+    "found_other": "{{count}} candidates",
+    "empty": "No matching candidates",
+    "emptyHint": "Try looser filters. Only students who opted in are shown.",
+    "more": "Show more",
+    "gone": "This candidate is no longer available.",
+    "filter": {
+      "sector": "Sector",
+      "any": "All",
+      "competency": "Competency",
+      "overall": "Overall score",
+      "minScore": "Min score",
+      "sort": "Sort",
+      "byScore": "By score",
+      "byRecent": "Newest"
+    },
+    "offer": {
+      "title": "Send an offer",
+      "privacy": "The candidate's email is shared once they accept. They have 5 working days to reply.",
+      "position": "Position",
+      "positionPlaceholder": "e.g. Junior Backend Developer",
+      "message": "Message",
+      "messagePlaceholder": "Why them? What's the next step (interview, take-home)?",
+      "send": "Send",
+      "sent": "Offer sent. The reply will show up under \"Sent offers\".",
+      "duplicate": "Your previous offer to this candidate is still awaiting a reply."
+    }
+  },
+  "offers": {
+    "title": "Job offers",
+    "subtitle": "Companies find you by your simulation results. You decide who can see you.",
+    "visibility": {
+      "title": "Visibility",
+      "open": "Open to work",
+      "openHint": "When on, verified companies can see results of your completed simulations. Your email is shared only in offers you accept.",
+      "hidden": "Hidden companies",
+      "unknownCompany": "Company",
+      "unhide": "Show again"
+    },
+    "profile": {
+      "title": "Your profile",
+      "empty": "Your profile appears after your first completed simulation.",
+      "hint": "This is exactly what companies see: scores, competencies and strengths.",
+      "preview": "See it as a company"
+    },
+    "received": "Received offers",
+    "none": "No offers yet. Turn on visibility and complete simulations.",
+    "status": {
+      "sent": "Sent",
+      "viewed": "Viewed",
+      "accepted": "Accepted",
+      "declined": "Declined",
+      "awaiting": "Awaiting reply"
+    },
+    "dueBy": "by {{date}}",
+    "accept": "Accept",
+    "decline": "Decline",
+    "acceptConfirm": "{{company}} will see your email and get in touch.",
+    "declineConfirm": "Decline this offer?",
+    "notePlaceholderAccept": "Optional: when is a good time to talk?",
+    "notePlaceholderDecline": "Optional: reason",
+    "hideCompany": "Hide me from {{company}}",
+    "acceptedHint": "The company has your email and will reach out soon."
   }
 }

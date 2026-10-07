@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FileText, Lightbulb, Loader2, Paperclip } from 'lucide-react'
+import { ScoreRing } from '@/components/score'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -275,23 +276,6 @@ function Hints({ runId, nodeId }: { runId: string; nodeId: string }) {
         </Button>
         {info && <span className="text-xs text-muted-foreground">{info}</span>}
       </div>
-    </div>
-  )
-}
-
-export function ScoreRing({ value, size = 56 }: { value: number; size?: number }) {
-  const r = (size - 6) / 2
-  const c = 2 * Math.PI * r
-  const tone = value >= 75 ? 'hsl(var(--success))' : value >= 50 ? 'hsl(var(--primary))' : 'hsl(var(--destructive))'
-  return (
-    <div className="relative grid place-items-center" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth={5} />
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={tone} strokeWidth={5} strokeLinecap="round"
-          strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(100, value) / 100)}
-          style={{ transition: 'stroke-dashoffset 1s cubic-bezier(0.22, 1, 0.36, 1)' }} />
-      </svg>
-      <span className="absolute text-sm font-extrabold tabular-nums">{Math.round(value)}</span>
     </div>
   )
 }

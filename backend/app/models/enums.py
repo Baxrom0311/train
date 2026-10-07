@@ -36,6 +36,11 @@ class TalentOfferStatus(str, enum.Enum):
     RESPONDED = "responded"
 
 
+class OfferResponse(str, enum.Enum):
+    ACCEPTED = "accepted"
+    DECLINED = "declined"
+
+
 class AIEvalStatus(str, enum.Enum):
     PENDING = "pending"  # §9.7 — Run submission'i arq job'da baholanishini kutmoqda
     COMPLETED = "completed"

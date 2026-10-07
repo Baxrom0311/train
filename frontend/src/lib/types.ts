@@ -12,6 +12,9 @@ export interface Me {
   email: string
   full_name: string
   role: string
+  org_type: 'company' | 'university' | null
+  org_id: string | null
+  permissions: string[]
 }
 
 export interface Persona {
@@ -159,4 +162,74 @@ export interface RunReport {
   final: FinalReport | null
   competency_scores: Record<string, number> | null
   final_pending: boolean
+}
+
+// Talent Hunt (backend/app/api/talent_hunt.py, CONTRACT.md §10)
+
+export type Competency =
+  | 'technical' | 'communication' | 'prioritization' | 'time_management' | 'stress_handling' | 'initiative'
+export const COMPETENCIES: Competency[] = [
+  'technical', 'communication', 'prioritization', 'time_management', 'stress_handling', 'initiative',
+]
+
+export interface Visibility {
+  is_open_to_work: boolean
+  hidden_from_company_ids: string[]
+}
+
+export interface CandidateCard {
+  id: string
+  full_name: string
+  overall_score: number | null
+  runs_completed: number
+  sectors: Sector[]
+  top_competencies: Record<string, number>
+  last_completed_at: string | null
+}
+
+export interface CandidateRun {
+  scenario_title: string
+  company_name: string
+  sector: Sector
+  completed_at: string
+  overall_score: number | null
+  competency_scores: Record<string, number>
+  strengths: string[]
+}
+
+export interface CandidateProfile extends CandidateCard {
+  competencies: Record<string, number>
+  runs: CandidateRun[]
+}
+
+export interface CandidatePage {
+  items: CandidateCard[]
+  total: number
+}
+
+export type OfferStatus = 'sent' | 'viewed' | 'responded'
+export type OfferResponse = 'accepted' | 'declined'
+
+export interface TalentOffer {
+  id: string
+  company_id: string
+  candidate_user_id: string
+  position_title: string
+  message: string
+  status: OfferStatus
+  response: OfferResponse | null
+  response_note: string | null
+  respond_due_at: string | null
+  responded_at: string | null
+  created_at: string
+}
+
+export interface SentOffer extends TalentOffer {
+  candidate_name: string
+  candidate_email: string | null
+}
+
+export interface ReceivedOffer extends TalentOffer {
+  company_name: string
+  company_industry: string
 }

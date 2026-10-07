@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from './Badge'
 import { api } from '@/lib/api'
-import { ScoreRing } from '@/components/desk/EventDetail'
+import { CompetencyBars, ScoreRing } from '@/components/score'
 import type { DayReport, RunReport, TaskResult } from '@/lib/types'
 
 const score = (v: number | null | undefined) => (v === null || v === undefined ? '—' : Math.round(v))
@@ -86,17 +86,7 @@ export default function RunReportPage() {
             {competencies.length > 0 && (
               <div className="space-y-2">
                 <h3 className="font-semibold">{t('report.competencies')}</h3>
-                {competencies.map(([key, value]) => (
-                  <div key={key} className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span>{t(`competency.${key}`)}</span>
-                      <span className="font-medium">{Math.round(value)}</span>
-                    </div>
-                    <div className="h-2.5 overflow-hidden rounded-full bg-muted">
-                      <div className="bg-brand h-full rounded-full transition-[width] duration-700" style={{ width: `${Math.min(100, value)}%` }} />
-                    </div>
-                  </div>
-                ))}
+                <CompetencyBars scores={Object.fromEntries(competencies)} />
               </div>
             )}
 

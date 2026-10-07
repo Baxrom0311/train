@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useAuth } from '@/context/AuthContext'
+import { homeFor, useAuth } from '@/context/AuthContext'
 import { ApiError } from '@/lib/api'
 import AuthShell from '@/components/layout/AuthShell'
 
@@ -13,7 +13,7 @@ export default function LoginPage() {
   const { t } = useTranslation()
   const { login } = useAuth()
   const navigate = useNavigate()
-  const from = (useLocation().state as { from?: string } | null)?.from ?? '/simulations'
+  const from = (useLocation().state as { from?: string } | null)?.from
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -24,8 +24,8 @@ export default function LoginPage() {
     setBusy(true)
     setError(null)
     try {
-      await login(email, password)
-      navigate(from, { replace: true })
+      const me = await login(email, password)
+      navigate(from ?? homeFor(me), { replace: true })
     } catch (err) {
       setError(err instanceof ApiError && err.status === 403 ? t('auth.errors.inactive') : t('auth.errors.invalid'))
     } finally {

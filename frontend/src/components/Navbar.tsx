@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Briefcase, Globe, LayoutGrid, LogOut, Moon, Sun } from 'lucide-react'
+import { Briefcase, Globe, Handshake, LayoutGrid, LogOut, Moon, Sun, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -29,7 +29,7 @@ export default function Navbar() {
   const { t, i18n } = useTranslation()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, logout, can } = useAuth()
 
   const languages = [
     { code: 'uz', label: t('languages.uz') },
@@ -37,10 +37,17 @@ export default function Navbar() {
     { code: 'en', label: t('languages.en') },
   ]
 
-  const links = [
-    { to: '/dashboard', label: t('nav.dashboard'), Icon: LayoutGrid },
-    { to: '/simulations', label: t('nav.simulations'), Icon: Briefcase },
-  ]
+  // menyu ruxsatlarga qarab (CONTRACT.md §10.3); kompaniya xodimi simulyatsiya o'tmaydi
+  const links = can('view_candidates')
+    ? [
+        { to: '/talents', label: t('nav.talents'), Icon: Users },
+        { to: '/talents/offers', label: t('nav.sentOffers'), Icon: Handshake },
+      ]
+    : [
+        { to: '/dashboard', label: t('nav.dashboard'), Icon: LayoutGrid },
+        { to: '/simulations', label: t('nav.simulations'), Icon: Briefcase },
+        ...(can('receive_offers') ? [{ to: '/offers', label: t('nav.offers'), Icon: Handshake }] : []),
+      ]
 
   return (
     <header className="sticky top-0 z-40 px-3 pt-3">
@@ -54,6 +61,7 @@ export default function Navbar() {
             <NavLink
               key={to}
               to={to}
+              end
               className={({ isActive }) =>
                 cn(
                   'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors',

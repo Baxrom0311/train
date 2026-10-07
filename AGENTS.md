@@ -11,6 +11,8 @@ commitida tarixda saqlanadi). `CONTRACT.md` §6 dagi 1–6 va 8-modullar
 `main`da bor (backend API, Alembic migratsiyalari, testlar, `deploy/`).
 Modul 9 (ssenariy dvigateli) backend'da tayyor, kontent `backend/content/scenarios/`da;
 frontend'da talaba "ish stoli" bor (katalog, Run sahifasi, chat, hisobot).
+Talent Hunt (`CONTRACT.md` §10): kompaniya nomzodlarni Run natijalari bo'yicha
+ko'radi va taklif yuboradi, talaba ko'rinishini boshqaradi va javob beradi.
 
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da
