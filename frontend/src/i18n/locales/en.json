@@ -14,7 +14,8 @@
     "admin": "Admin",
     "students": "Students",
     "portfolio": "Portfolio",
-    "scenarios": "Scenarios"
+    "scenarios": "Scenarios",
+    "companyReport": "Report"
   },
   "auth": {
     "login": {
@@ -990,6 +991,65 @@
       "error": "Code failed to start (syntax or import error), tests didn't run",
       "timeout": "Code ran out of time",
       "no_code": "No code submitted, tests didn't run"
+    }
+  },
+  "companyReport": {
+    "title": "Report",
+    "generated": "as of {{date}}",
+    "noOffers": "No offers were sent in this period. Find a matching student under Candidates and send your first offer.",
+    "toTalents": "Go to candidates",
+    "lessThanHour": "under an hour",
+    "hours_one": "{{count}} hour",
+    "hours_other": "{{count}} hours",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "period": {
+      "label": "Period",
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days",
+      "all": "All time"
+    },
+    "stats": {
+      "sent": "Offers sent",
+      "responseRate": "Responded",
+      "acceptanceRate": "Accepted (of responses)",
+      "medianResponse": "Response time (median)"
+    },
+    "funnel": {
+      "title": "Offer funnel",
+      "sent": "Sent",
+      "viewed": "Viewed",
+      "responded": "Responded",
+      "accepted": "Accepted",
+      "declined_one": "{{count}} declined",
+      "declined_other": "{{count}} declined",
+      "pending_one": "{{count}} awaiting reply",
+      "pending_other": "{{count}} awaiting reply",
+      "overdue_one": "{{count}} overdue",
+      "overdue_other": "{{count}} overdue"
+    },
+    "months": {
+      "title": "By month",
+      "declined": "Declined"
+    },
+    "positions": {
+      "title": "By position",
+      "position": "Position",
+      "pending": "Pending"
+    },
+    "pool": {
+      "title": "Candidate pool",
+      "subtitle": "Candidates open to you, as of now. Students who hid from you are not counted.",
+      "candidates": "Open candidates",
+      "active": "Active candidates",
+      "activeDays_one": "Active in the last {{count}} day",
+      "activeDays_other": "Active in the last {{count}} days",
+      "avgScore": "Average score",
+      "bands": "Score distribution"
+    },
+    "csv": {
+      "offers": "Offers CSV",
+      "candidates": "Candidates CSV"
     }
   }
 }

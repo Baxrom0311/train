@@ -89,6 +89,20 @@ export async function api<T>(path: string, opts: Options = {}, retried = false):
   return body as T
 }
 
+/** Auth bilan fayl yuklab olish (CSV va h.k.): nom serverning `Content-Disposition`idan. */
+export async function download(path: string, fallbackName: string, retried = false): Promise<void> {
+  const r = await fetch(`${BASE}${path}`, { headers: authHeaders() })
+  if (r.status === 401 && !retried && (await refreshTokens())) return download(path, fallbackName, true)
+  if (!r.ok) throw new ApiError(r.status, errorMessage(await r.json().catch(() => null), r.statusText))
+  const name = /filename="([^"]+)"/.exec(r.headers.get('Content-Disposition') ?? '')?.[1] ?? fallbackName
+  const url = URL.createObjectURL(await r.blob())
+  const a = Object.assign(document.createElement('a'), { href: url, download: name })
+  document.body.append(a)
+  a.click()
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 0)
+}
+
 export async function login(email: string, password: string): Promise<void> {
   const form = new URLSearchParams({ username: email, password })
   const r = await fetch(`${BASE}/auth/login`, {

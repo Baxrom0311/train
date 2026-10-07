@@ -31,6 +31,8 @@ Ishga tushirish (`CONTRACT.md` §18, `deploy/README.md`): `GET /api/v1/health`, 
 `docker-compose.https.yml`), kunlik zaxira nusxa va tiklash tartibi, log rotatsiya.
 Kod tekshiruvi (`CONTRACT.md` §19, `sandbox/`): talaba kodi alohida tarmoqsiz runner konteynerida;
 `code` task'larida ssenariydagi yashirin testlar (`checks.tests`) baholashga qo'shiladi.
+Kompaniya hisobotlari (`CONTRACT.md` §20, `/talents/report`): kompaniyaga ochiq nomzodlar bazasi kesimi,
+takliflar voronkasi (oylar, lavozimlar, javob vaqti) va CSV eksport.
 
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da
