@@ -16,7 +16,8 @@
     "portfolio": "Portfolio",
     "scenarios": "Ssenariylar",
     "companyReport": "Hisobot",
-    "vacancies": "Vakansiyalar"
+    "vacancies": "Vakansiyalar",
+    "interviews": "Suhbatlar"
   },
   "auth": {
     "login": {
@@ -1110,6 +1111,7 @@
       "mentor": "Mentor izohlari",
       "day_report": "Kunlik hisobot",
       "final_report": "Yakuniy hisobot",
+      "interview": "Suhbat mashqi",
       "other": "Boshqa"
     },
     "provider": "Provayder",
@@ -1247,6 +1249,79 @@
       "practiceHint": "Kompaniya tavsiya qilgan va yetishmayotgan kompetensiyalarni mashq qildiradigan ssenariylar.",
       "done": "Tugatilgan",
       "start": "Boshlash"
+    }
+  },
+  "interview": {
+    "kicker": "Sinov suhbati",
+    "notFound": "Suhbat topilmadi",
+    "dailyLimit": "Bugun uchun sinov suhbatlari limiti tugadi (kuniga 3 ta). Ertaga yana urinib ko'ring.",
+    "status": {
+      "active": "Davom etmoqda",
+      "evaluating": "Baholanmoqda",
+      "completed": "Baholandi",
+      "failed": "Baholanmadi",
+      "abandoned": "To'xtatilgan"
+    },
+    "prepare": {
+      "title": "Suhbatga tayyorlanish",
+      "hint": "AI suhbatdosh shu vakansiya talablari bo'yicha 5 ta savol beradi va har javobingizga izoh yozadi. Natijani faqat siz ko'rasiz.",
+      "last": "Oxirgi sinov suhbati",
+      "best": "Eng yaxshi natijangiz: {{score}}"
+    },
+    "start": "Sinov suhbatini boshlash",
+    "again": "Yana mashq qilish",
+    "continue": "Suhbatni davom ettirish",
+    "reading": "Suhbatdosh javobingizni o'qiyapti…",
+    "placeholder": "Javobingizni yozing. Aniq misol keltiring: qanday vaziyat edi, siz nima qildingiz va natija nima bo'ldi?",
+    "answerLabel": "Javobingiz",
+    "minLength_one": "Kamida {{count}} belgi",
+    "minLength_other": "Kamida {{count}} belgi",
+    "shortcut": "Ctrl + Enter — yuborish",
+    "abandon": "Yakunlash",
+    "send": "Javob berish",
+    "abandonConfirm": "Suhbatni to'xtatasizmi? U baholanmaydi.",
+    "evaluating": "Javoblaringiz baholanmoqda",
+    "evaluatingHint": "Odatda bir daqiqadan kam vaqt oladi. Sahifani yopsangiz ham natija shu yerda saqlanadi.",
+    "failed": "Hozircha baholab bo'lmadi",
+    "failedHint": "AI xizmati javob bermadi. Javoblaringiz saqlangan, qayta baholashni bosing.",
+    "retry": "Qayta baholash",
+    "abandoned": "Bu suhbat to'xtatilgan va baholanmagan.",
+    "questionOf": "{{n}}-savol / {{total}}",
+    "followUp": "Aniqlashtiruvchi savol",
+    "progress": "Jarayon",
+    "focus": "E'tibor qaratiladi",
+    "tips": {
+      "title": "Kuchli javob tuzilishi",
+      "situation": "Vaziyat",
+      "situationHint": "qayerda, qachon, qanday muammo",
+      "task": "Vazifa",
+      "taskHint": "sizning rolingiz nima edi",
+      "action": "Harakat",
+      "actionHint": "aynan siz nima qildingiz",
+      "result": "Natija",
+      "resultHint": "nima o'zgardi, raqam bo'lsa — yanada yaxshi",
+      "private": "Bu mashq: natija kompaniyaga ko'rinmaydi va profilingizga ta'sir qilmaydi."
+    },
+    "verdict": {
+      "strong": "Kuchli suhbat",
+      "solid": "Yaxshi asos",
+      "practice": "Mashq kerak"
+    },
+    "summary": "Umumiy taassurot",
+    "byCompetency": "Kompetensiyalar bo'yicha",
+    "strengths": "Kuchli tomonlaringiz",
+    "improvements": "Nimani yaxshilash kerak",
+    "perQuestion": "Har savol bo'yicha",
+    "transcript": "To'liq suhbat yozuvi",
+    "all": "Barcha suhbatlar",
+    "showAnswer": "Javobimni ko'rsatish",
+    "hideAnswer": "Javobni yashirish",
+    "better": "Kuchliroq javob:",
+    "list": {
+      "title": "Sinov suhbatlari",
+      "subtitle": "Vakansiyalar bo'yicha AI suhbatdosh bilan mashqlaringiz va ularning natijalari.",
+      "empty": "Hali sinov suhbati o'tmagansiz. Vakansiyani oching va \"Sinov suhbatini boshlash\"ni bosing.",
+      "toVacancies": "Vakansiyalarga o'tish"
     }
   }
 }

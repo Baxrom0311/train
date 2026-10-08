@@ -18,7 +18,7 @@ from app.scenario.clock import TASHKENT
 
 log = logging.getLogger(__name__)
 
-PURPOSES = ("evaluation", "persona", "mentor", "day_report", "final_report", "other")
+PURPOSES = ("evaluation", "persona", "mentor", "day_report", "final_report", "interview", "other")
 
 
 def today(now: datetime | None = None) -> date:

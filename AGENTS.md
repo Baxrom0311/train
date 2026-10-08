@@ -41,6 +41,9 @@ Run ish stoli telefonda ixcham, bildirishnoma havolasi `?event=` bilan hodisani 
 Kompaniya vakansiyalari (`CONTRACT.md` §23, `/company/vacancies`, `/vacancies`): kompaniya talablar (kompetensiya ≥ ball)
 bilan vakansiya e'lon qiladi, mos nomzodlarni ko'radi; talaba moslik foizi, yetishmayotgan kompetensiyalar
 va mashq ssenariylarini ko'radi, ariza beradi (ariza — rozilik: yopiq profil ham kompaniyaga ko'rinadi).
+AI suhbat mashqi (`CONTRACT.md` §24, `/interviews`, Modul 14 `backend/app/interview/`): talaba vakansiya bo'yicha
+AI suhbatdosh bilan 5 savollik sinov suhbatidan o'tadi (aniqlashtiruvchi savollar, AI'siz — `bank.py` savollari),
+arq `interview_report_job` har javobga baho va izoh yozadi; natija shaxsiy, profilga ta'sir qilmaydi.
 
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da

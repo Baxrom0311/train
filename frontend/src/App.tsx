@@ -29,6 +29,8 @@ import CompanyVacancyPage from './pages/CompanyVacancyPage'
 import VacancyEditorPage from './pages/VacancyEditorPage'
 import VacanciesPage from './pages/VacanciesPage'
 import VacancyPage from './pages/VacancyPage'
+import InterviewPage from './pages/InterviewPage'
+import InterviewsPage from './pages/InterviewsPage'
 
 /** `/`: mehmon — landing (CONTRACT.md §14), kirgan — o'z bosh sahifasi (talaba — dashboard). */
 function Home() {
@@ -59,6 +61,8 @@ export default function App() {
               <Route path="/offers" element={<RequirePermission permission="receive_offers"><OffersPage /></RequirePermission>} />
               <Route path="/vacancies" element={<RequirePermission permission="receive_offers"><VacanciesPage /></RequirePermission>} />
               <Route path="/vacancies/:id" element={<RequirePermission permission="receive_offers"><VacancyPage /></RequirePermission>} />
+              <Route path="/interviews" element={<RequirePermission permission="practice_interviews"><InterviewsPage /></RequirePermission>} />
+              <Route path="/interviews/:id" element={<RequirePermission permission="practice_interviews"><InterviewPage /></RequirePermission>} />
               <Route path="/company/vacancies" element={<RequirePermission permission="manage_vacancies"><CompanyVacanciesPage /></RequirePermission>} />
               <Route path="/company/vacancies/new" element={<RequirePermission permission="manage_vacancies"><VacancyEditorPage key="new" /></RequirePermission>} />
               <Route path="/company/vacancies/:id" element={<RequirePermission permission="manage_vacancies"><CompanyVacancyPage /></RequirePermission>} />
