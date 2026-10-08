@@ -554,6 +554,14 @@
         "free": "Talabalar uchun bepul",
         "realTime": "Toshkent vaqti, 09:00–18:00",
         "certificate": "Tekshiriladigan sertifikat"
+      },
+      "chip": {
+        "scoreLabel": "AI baho · 2-urinish",
+        "score": "86 / 100",
+        "deadlineLabel": "Dedlayn",
+        "deadline": "45 ish daqiqasi qoldi",
+        "offerLabel": "Yangi xabar",
+        "offer": "Sizga ish taklifi keldi"
       }
     },
     "desk": {
@@ -578,6 +586,70 @@
       "completed": "yakunlangan ish kuni",
       "mentor": "AI mentor yordami"
     },
+    "features": {
+      "eyebrow": "Imkoniyatlar",
+      "title": "Birinchi vazifadan ish taklifigacha",
+      "subtitle": "Ish kunini o'tkazish, o'sish va ish topish uchun kerak bo'lgan hamma narsa — bitta platformada.",
+      "mentor": {
+        "title": "AI mentor yoningizda",
+        "body": "Javobni aytib qo'ymaydi, lekin to'g'ri savol beradi: har baholangan urinishdan keyin izoh yozadi, dedlayn yaqinlashsa eslatadi.",
+        "name": "Mentor",
+        "student": "Konversiyani kimlardan hisoblayman — ro'yxatdan o'tganlarmi yoki to'lov qilganlarmi?",
+        "reply": "Yaxshi savol. Briefdagi \"faol mijoz\" ta'rifini qayta o'qing — javob o'sha yerda. Keyin nega aynan shuni tanlaganingizni bir jumlada yozing.",
+        "typing": "{{name}} yozmoqda…"
+      },
+      "rubric": {
+        "title": "Rubrika bo'yicha baho",
+        "body": "Har javob oldindan yozilgan mezonlar bilan tekshiriladi: nima yaxshi, nima yetishmaydi.",
+        "attempt": "2-urinish · oxirgisi hisoblanadi",
+        "verdict": "Kuchli javob"
+      },
+      "interview": {
+        "title": "AI suhbat mashqi",
+        "body": "Vakansiya bo'yicha 5 savollik sinov suhbati, aniqlashtiruvchi savollar bilan.",
+        "progress": "Savol {{n}}/{{total}}",
+        "question": "Jamoadoshingiz dedlaynni o'tkazib yubordi va bu sizning vazifangizni to'xtatib qo'ydi. Nima qilasiz?",
+        "followUp": "Aniqlashtiruvchi savol"
+      },
+      "vacancy": {
+        "title": "Vakansiyaga moslik",
+        "body": "Qaysi kompetensiya yetmayotganini va uni qaysi ssenariyda mashq qilishni ko'rasiz.",
+        "match": "Vakansiyaga 78% mos kelasiz"
+      },
+      "analytics": {
+        "title": "O'sishingiz ko'rinib turadi",
+        "body": "Ball dinamikasi, kompetensiyalar o'zgarishi va AI maslahatlari.",
+        "growth_one": "+{{count}} ball",
+        "growth_other": "+{{count}} ball",
+        "caption_one": "Oxirgi {{count}} ta ssenariy",
+        "caption_other": "Oxirgi {{count}} ta ssenariy"
+      },
+      "alerts": {
+        "title": "Hech narsa o'tib ketmaydi",
+        "body": "Yangi vazifa, dedlayn va takliflar — saytda, emailda va telefoningizda.",
+        "task": {
+          "title": "Yangi vazifa",
+          "body": "Standup hisobotini 10:30 gacha yuboring",
+          "when": "hozir"
+        },
+        "deadline": {
+          "title": "Dedlayn yaqin",
+          "body": "Bug tuzatish vazifasiga 30 ish daqiqasi qoldi",
+          "when": "5 daq."
+        },
+        "offer": {
+          "title": "Ish taklifi",
+          "body": "Kompaniya natijangizni ko'rib taklif yubordi",
+          "when": "1 soat"
+        }
+      },
+      "code": {
+        "title": "Kod real testlarda tekshiriladi",
+        "body": "Kod vazifalarida yechimingiz alohida, internetsiz muhitda yashirin testlardan o'tadi.",
+        "sandbox": "tekshiruv muhiti",
+        "summary": "{{passed}} / {{total}} test o'tdi"
+      }
+    },
     "sectors": {
       "eyebrow": "Sohalar",
       "title": "O'zingizga mos kasbni tanlang",
@@ -591,7 +663,9 @@
         "Marketing": "Kampaniya metrikalari, budjet, brendga mos matnlar.",
         "Data": "SQL hisobotlar, dashboard, A/B test xulosalari.",
         "HR": "CV saralash, ta'til hisobi, nomzodlar bilan muloqot."
-      }
+      },
+      "count_one": "{{count}} ssenariy",
+      "count_other": "{{count}} ssenariy"
     },
     "how": {
       "eyebrow": "Qanday ishlaydi",
@@ -617,6 +691,34 @@
         "title": "Takliflar keladi",
         "body": "Ishga ochiq bo'lsangiz, kompaniyalar natijangizni ko'rib taklif yuboradi."
       }
+    },
+    "compare": {
+      "eyebrow": "Farqi nimada",
+      "title": "Kurs emas — haqiqiy ish tajribasi",
+      "subtitle": "Video ko'rib test yechish boshqa, ish kunining bosimida qaror qabul qilish boshqa.",
+      "course": "Odatiy onlayn kurs",
+      "rows": [
+        {
+          "course": "Video darslarni ko'rasiz",
+          "tryjob": "Jamoa a'zosi sifatida real vazifalarni bajarasiz"
+        },
+        {
+          "course": "Test savollarida to'g'ri variantni tanlaysiz",
+          "tryjob": "Ochiq javob yozasiz, AI uni rubrika bo'yicha baholaydi"
+        },
+        {
+          "course": "O'z tempingizda, xohlagan paytda",
+          "tryjob": "Real vaqt: dedlaynlar, kutilmagan vaziyatlar, qarorlar"
+        },
+        {
+          "course": "Qatnashganlik sertifikati",
+          "tryjob": "Ball va kompetensiyalar yozilgan, tekshiriladigan sertifikat"
+        },
+        {
+          "course": "Ish beruvchi natijangizni ko'rmaydi",
+          "tryjob": "Kompaniyalar natijangizni ko'rib taklif yuboradi"
+        }
+      ]
     },
     "certificate": {
       "eyebrow": "Sertifikat",
@@ -667,6 +769,7 @@
     "faq": {
       "eyebrow": "Savol-javob",
       "title": "Ko'p so'raladigan savollar",
+      "subtitle": "Platforma haqida eng ko'p beriladigan savollarga qisqa javoblar.",
       "free": {
         "q": "Talabalar uchun pullikmi?",
         "a": "Yo'q, talabalar uchun TryJob bepul. Platformani universitetlar va kompaniyalar shartnoma asosida moliyalashtiradi."
@@ -698,6 +801,7 @@
     },
     "footer": {
       "note": "Ssenariylardagi kompaniyalar o'ylab topilgan; sertifikat ish tajribasini emas, ssenariy natijasini tasdiqlaydi.",
+      "features": "Imkoniyatlar",
       "how": "Qanday ishlaydi",
       "verify": "Sertifikatni tekshirish",
       "faq": "Savol-javob"

@@ -1101,17 +1101,27 @@ namunaviy javob, hujjat va personaj `knows`/`secrets` hech qachon chiqmaydi.
 1. **Hero**: sarlavha, qisqa izoh, "Bepul boshlash" (`/register`) va
    "Kompaniyalar uchun" (pastdagi bo'limga); yonida tanlangan ssenariyning
    1-kun jadvali "ish stoli" ko'rinishida (Toshkent vaqti bilan joriy payt
-   belgisi).
+   belgisi) va uning atrofida bezak chiplar (baho, dedlayn, taklif — namuna).
+   Ostida ssenariylar lentasi (sarlavha + fictional kompaniya, showcase'dan).
 2. **Raqamlar**: ssenariylar, sohalar, ish kuni 09:00–18:00, AI mentor.
    `completed_runs` 100 dan kam bo'lsa ko'rsatilmaydi.
-3. **Sohalar**: har soha kartasi va undagi ssenariylar (showcase'dan).
-4. **Qanday ishlaydi**: ssenariy tanlash → real vaqtda ish kuni → AI baholash
+3. **Imkoniyatlar** (`#features`): AI mentor (§9.13), rubrika bahosi, AI suhbat
+   mashqi (§24), vakansiyaga moslik (§23), analitika (§17), bildirishnomalar va
+   PWA (§15, §22), kod tekshiruvi (§19) — har biri kichik interfeys namunasi bilan.
+   Namunadagi raqam va matnlar o'ylab topilgan; mentor ismi showcase'dagi
+   ssenariydan (bo'lmasa umumiy "Mentor").
+4. **Sohalar**: har soha kartasi va undagi ssenariylar (showcase'dan).
+5. **Qanday ishlaydi**: ssenariy tanlash → real vaqtda ish kuni → AI baholash
    va mentor izohi → sertifikat va portfolio → kompaniya takliflari.
-5. **Sertifikat**: namuna varaq (`CertificateSheet`, "Namuna" belgisi bilan,
+6. **Kurs bilan solishtirish**: odatiy onlayn kurs va TryJob farqi (5 qator).
+7. **Sertifikat**: namuna varaq (`CertificateSheet`, "Namuna" belgisi bilan,
    fictional ism) va kod bo'yicha tekshirish formasi (§13.4).
-6. **Kimlar uchun**: talaba (bepul, §1), kompaniya (Talent Hunt §10,
+8. **Kimlar uchun**: talaba (bepul, §1), kompaniya (Talent Hunt §10,
    `/register?as=company`), universitet (portal §12, `/register?as=university`).
-7. **Savol-javob** va footer.
+9. **Savol-javob**, yakuniy chaqiriq va footer.
+
+Harakatlar (paydo bo'lish, suzuvchi chiplar, lenta) `prefers-reduced-motion`da
+o'chadi; landingga xos uslublar `components/landing/landing.css`da.
 
 Barcha matn uz/ru/en; kompaniya nomlari faqat ssenariylardagi fictional nomlar.
 
