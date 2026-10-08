@@ -1,16 +1,14 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { Loader2, Mail, Send, SlidersHorizontal, Users } from 'lucide-react'
+import { Loader2, Send, SlidersHorizontal, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { CompetencyBars, ScoreRing } from '@/components/score'
 import CandidateProfileView from '@/components/talent/CandidateProfileView'
 import Initials from '@/components/talent/Initials'
+import OfferForm from '@/components/talent/OfferForm'
 import { Badge } from './Badge'
 import { api, ApiError } from '@/lib/api'
 import { formatDateTime } from '@/lib/time'
@@ -189,59 +187,5 @@ function CandidateDialog({ id, onClose }: { id: string | null; onClose: () => vo
         </div>
       </DialogContent>
     </Dialog>
-  )
-}
-
-function OfferForm({ candidateId }: { candidateId: string }) {
-  const { t } = useTranslation()
-  const [position, setPosition] = useState('')
-  const [message, setMessage] = useState('')
-  const [state, setState] = useState<'idle' | 'sending' | 'sent'>('idle')
-  const [error, setError] = useState<string | null>(null)
-
-  const submit = async (e: FormEvent) => {
-    e.preventDefault()
-    setState('sending')
-    setError(null)
-    try {
-      await api('/talents/offers', {
-        method: 'POST',
-        json: { candidate_user_id: candidateId, position_title: position, message },
-      })
-      setState('sent')
-    } catch (err) {
-      setError(err instanceof ApiError && err.status === 409 ? t('talent.offer.duplicate') : t('common.error'))
-      setState('idle')
-    }
-  }
-
-  if (state === 'sent') {
-    return (
-      <p className="rounded-2xl border border-success/30 bg-success/10 px-4 py-3 text-sm">
-        {t('talent.offer.sent')}
-      </p>
-    )
-  }
-
-  return (
-    <form onSubmit={submit} className="space-y-3 rounded-2xl border bg-background/60 p-4">
-      <h3 className="flex items-center gap-2 font-semibold"><Mail className="h-4 w-4 text-primary" /> {t('talent.offer.title')}</h3>
-      <DialogDescription className="text-xs text-muted-foreground">{t('talent.offer.privacy')}</DialogDescription>
-      <div className="space-y-1.5">
-        <Label htmlFor="position">{t('talent.offer.position')}</Label>
-        <Input id="position" required minLength={2} maxLength={120} value={position}
-          onChange={(e) => setPosition(e.target.value)} placeholder={t('talent.offer.positionPlaceholder')} />
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="message">{t('talent.offer.message')}</Label>
-        <Textarea id="message" required minLength={10} maxLength={2000} rows={4} value={message}
-          onChange={(e) => setMessage(e.target.value)} placeholder={t('talent.offer.messagePlaceholder')} />
-      </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" disabled={state === 'sending'}>
-        {state === 'sending' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-        {t('talent.offer.send')}
-      </Button>
-    </form>
   )
 }

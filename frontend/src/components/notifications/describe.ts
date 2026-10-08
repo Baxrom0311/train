@@ -1,7 +1,8 @@
 // Bildirishnoma matni: backend matn saqlamaydi — `kind` + `params`dan interfeys tilida (CONTRACT.md §15.1).
 import type { TFunction } from 'i18next'
 import {
-  AlarmClock, Award, ClipboardList, GitBranch, GraduationCap, Handshake, Siren, UserCheck, UserX, type LucideIcon,
+  AlarmClock, Award, BriefcaseBusiness, ClipboardList, FileX2, GitBranch, GraduationCap, Handshake, Siren, UserCheck, UserX,
+  type LucideIcon,
 } from 'lucide-react'
 import { formatTime } from '@/lib/time'
 import type { AppNotification } from '@/lib/types'
@@ -42,6 +43,10 @@ export function describe(n: AppNotification, t: TFunction): Described {
         title: t(p.accepted ? 'notifications.kind.offer_accepted' : 'notifications.kind.offer_declined'),
         body: `${str('candidate')} — ${str('position')}`,
       }
+    case 'application_received':
+      return { Icon: BriefcaseBusiness, title: t('notifications.kind.application_received'), body: `${str('candidate')} — ${str('vacancy')}`, urgent: false }
+    case 'application_rejected':
+      return { Icon: FileX2, title: t('notifications.kind.application_rejected'), body: `${str('company')} — ${str('vacancy')}`, urgent: false }
   }
 }
 

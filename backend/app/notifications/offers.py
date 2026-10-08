@@ -19,13 +19,16 @@ async def offer_received(db: AsyncSession, offer: TalentOffer, company_name: str
     )
 
 
+async def company_staff(db: AsyncSession, company_id) -> list:
+    """Kompaniyaning faol xodimlari — taklif/ariza kim tomonidan ko'rilishi saqlanmaydi."""
+    return list((await db.execute(
+        select(User.id).where(User.org_type == OrgType.COMPANY, User.org_id == company_id, User.is_active.is_(True))
+    )).scalars().all())
+
+
 async def offer_responded(db: AsyncSession, offer: TalentOffer, candidate_name: str, now: datetime) -> None:
     """Kompaniyaning barcha faol xodimlariga — kim yuborgani saqlanmaydi (§10.2)."""
-    staff = (await db.execute(
-        select(User.id).where(
-            User.org_type == OrgType.COMPANY, User.org_id == offer.company_id, User.is_active.is_(True),
-        )
-    )).scalars().all()
+    staff = await company_staff(db, offer.company_id)
     params = {
         "offer_id": str(offer.id), "candidate": candidate_name, "position": offer.position_title,
         "accepted": offer.response == OfferResponse.ACCEPTED,

@@ -236,6 +236,7 @@ export interface TalentOffer {
   response_note: string | null
   respond_due_at: string | null
   responded_at: string | null
+  vacancy_id: string | null
   created_at: string
 }
 
@@ -514,6 +515,7 @@ export interface Showcase {
 
 export type NotificationKind =
   | 'task_delivered' | 'deadline_soon' | 'mentor_review' | 'report_ready' | 'offer_received' | 'offer_responded'
+  | 'application_received' | 'application_rejected'
 
 export interface AppNotification {
   id: string
@@ -585,4 +587,109 @@ export interface StudentAnalytics {
   focus: { key: Competency; current: number; trend: Trend }[]
   improvements: string[]
   recommendations: Recommendation[]
+}
+
+// Vakansiyalar (backend/app/api/vacancies.py, CONTRACT.md §23)
+
+export type VacancyStatus = 'draft' | 'open' | 'closed'
+export type Employment = 'full_time' | 'part_time' | 'internship'
+export type WorkFormat = 'office' | 'remote' | 'hybrid'
+export type ApplicationStatus = 'applied' | 'withdrawn' | 'rejected' | 'offered'
+export const EMPLOYMENTS: Employment[] = ['full_time', 'part_time', 'internship']
+export const WORK_FORMATS: WorkFormat[] = ['office', 'remote', 'hybrid']
+
+/** Kompaniya yuboradigan/tahrirlaydigan maydonlar. */
+export interface VacancyInput {
+  title: string
+  description: string
+  sector: Sector
+  employment: Employment
+  work_format: WorkFormat
+  location: string | null
+  salary_min: number | null
+  salary_max: number | null
+  requirements: Partial<Record<Competency, number>>
+  min_score: number | null
+  scenario_ids: string[]
+}
+
+export interface Vacancy extends VacancyInput {
+  id: string
+  company_id: string
+  status: VacancyStatus
+  published_at: string | null
+  closed_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface CompanyVacancy extends Vacancy {
+  counts: { applications: number; new: number; matches: number }
+}
+
+export interface FitGap {
+  competency: Competency
+  required: number
+  actual: number | null
+}
+
+export interface Fit {
+  fit: number
+  meets: boolean
+  gaps: FitGap[]
+  sector_match: boolean
+}
+
+export interface VacancyMatch extends CandidateCard {
+  fit: Fit
+  applied: boolean
+}
+
+export interface CompanyApplication {
+  id: string
+  status: ApplicationStatus
+  note: string | null
+  created_at: string
+  updated_at: string
+  candidate: CandidateCard
+  fit: Fit
+}
+
+export interface VacancyCard extends Vacancy {
+  company: { id: string; name: string; industry: string }
+  my_fit: Fit | null
+  application_status: ApplicationStatus | null
+}
+
+export interface PracticeScenario {
+  scenario_id: string
+  title: string
+  sector: Sector
+  company_name: string
+  duration_days: number
+  difficulty: string
+  completed: boolean
+  practices: Record<string, number>
+}
+
+export interface VacancyDetail extends VacancyCard {
+  my_overall: number | null
+  my_competencies: Record<string, number>
+  practice: PracticeScenario[]
+}
+
+export interface VacancyApplication {
+  id: string
+  vacancy_id: string
+  status: ApplicationStatus
+  note: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface MyApplication extends VacancyApplication {
+  vacancy_title: string
+  vacancy_status: VacancyStatus
+  company_name: string
+  sector: Sector
 }

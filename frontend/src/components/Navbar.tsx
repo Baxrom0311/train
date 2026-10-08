@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Award, Briefcase, ChartColumn, Clapperboard, Download, Globe, GraduationCap, Handshake, LayoutGrid, LogOut, Moon, Receipt, ShieldCheck, Sun, Users } from 'lucide-react'
+import { Award, Briefcase, BriefcaseBusiness, ChartColumn, Clapperboard, Download, Globe, GraduationCap, Handshake, LayoutGrid, LogOut, Moon, Receipt, ShieldCheck, Sun, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -41,15 +41,19 @@ export default function Navbar() {
     { code: 'en', label: t('languages.en') },
   ]
 
-  // menyu ruxsatlarga qarab (CONTRACT.md §10.3, §11.4, §12.3, §13.4, §16.3); kompaniya/admin simulyatsiya o'tmaydi
+  // menyu ruxsatlarga qarab (CONTRACT.md §10.3, §11.4, §12.3, §13.4, §16.3, §23.5); kompaniya/admin simulyatsiya o'tmaydi
   const student = can('receive_offers')
   const links = [
     ...(student ? [
       { to: '/dashboard', label: t('nav.dashboard'), Icon: LayoutGrid },
       { to: '/simulations', label: t('nav.simulations'), Icon: Briefcase },
     ] : []),
-    ...(can('receive_offers') ? [{ to: '/offers', label: t('nav.offers'), Icon: Handshake }] : []),
+    ...(can('receive_offers') ? [
+      { to: '/vacancies', label: t('nav.vacancies'), Icon: BriefcaseBusiness },
+      { to: '/offers', label: t('nav.offers'), Icon: Handshake },
+    ] : []),
     ...(can('manage_portfolio') ? [{ to: '/portfolio', label: t('nav.portfolio'), Icon: Award }] : []),
+    ...(can('manage_vacancies') ? [{ to: '/company/vacancies', label: t('nav.vacancies'), Icon: BriefcaseBusiness }] : []),
     ...(can('view_candidates') ? [
       { to: '/talents', label: t('nav.talents'), Icon: Users },
       { to: '/talents/offers', label: t('nav.sentOffers'), Icon: Handshake },
