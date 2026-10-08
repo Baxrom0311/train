@@ -554,6 +554,14 @@
         "free": "Free for students",
         "realTime": "Tashkent time, 09:00–18:00",
         "certificate": "Verifiable certificate"
+      },
+      "chip": {
+        "scoreLabel": "AI score · attempt 2",
+        "score": "86 / 100",
+        "deadlineLabel": "Deadline",
+        "deadline": "45 work minutes left",
+        "offerLabel": "New message",
+        "offer": "You've got a job offer"
       }
     },
     "desk": {
@@ -578,6 +586,70 @@
       "completed": "workdays completed",
       "mentor": "AI mentor support"
     },
+    "features": {
+      "eyebrow": "Features",
+      "title": "From your first task to a job offer",
+      "subtitle": "Everything you need to get through a workday, grow and find a job, in one platform.",
+      "mentor": {
+        "title": "An AI mentor by your side",
+        "body": "It won't hand you the answer, but it asks the right question: it comments on every graded attempt and reminds you when a deadline is close.",
+        "name": "Mentor",
+        "student": "Should I calculate conversion from sign-ups or from paying users?",
+        "reply": "Good question. Re-read how the brief defines an \"active customer\" — the answer is there. Then explain in one sentence why you chose it.",
+        "typing": "{{name}} is typing…"
+      },
+      "rubric": {
+        "title": "Graded against a rubric",
+        "body": "Every answer is checked against criteria written in advance: what works and what is missing.",
+        "attempt": "Attempt 2 · the last one counts",
+        "verdict": "Strong answer"
+      },
+      "interview": {
+        "title": "AI interview practice",
+        "body": "A 5-question mock interview for a vacancy, with follow-up questions.",
+        "progress": "Question {{n}}/{{total}}",
+        "question": "A teammate missed a deadline and it blocked your task. What do you do?",
+        "followUp": "Follow-up question"
+      },
+      "vacancy": {
+        "title": "Vacancy match",
+        "body": "See which competencies you are missing and which scenario lets you practise them.",
+        "match": "You match this vacancy by 78%"
+      },
+      "analytics": {
+        "title": "Watch yourself grow",
+        "body": "Score trends, competency changes and AI tips.",
+        "growth_one": "+{{count}} point",
+        "growth_other": "+{{count}} points",
+        "caption_one": "Last {{count}} scenario",
+        "caption_other": "Last {{count}} scenarios"
+      },
+      "alerts": {
+        "title": "Never miss a thing",
+        "body": "New tasks, deadlines and offers on the site, by email and on your phone.",
+        "task": {
+          "title": "New task",
+          "body": "Send your stand-up report by 10:30",
+          "when": "now"
+        },
+        "deadline": {
+          "title": "Deadline soon",
+          "body": "30 work minutes left on the bug fix",
+          "when": "5 min"
+        },
+        "offer": {
+          "title": "Job offer",
+          "body": "A company reviewed your results and sent an offer",
+          "when": "1 h"
+        }
+      },
+      "code": {
+        "title": "Code is checked by real tests",
+        "body": "In coding tasks your solution runs hidden tests in a separate, offline sandbox.",
+        "sandbox": "check sandbox",
+        "summary": "{{passed}} / {{total}} tests passed"
+      }
+    },
     "sectors": {
       "eyebrow": "Fields",
       "title": "Pick the career that fits you",
@@ -591,7 +663,9 @@
         "Marketing": "Campaign metrics, budget, on-brand copy.",
         "Data": "SQL reports, dashboards, A/B test conclusions.",
         "HR": "CV screening, leave calculations, talking to candidates."
-      }
+      },
+      "count_one": "{{count}} scenario",
+      "count_other": "{{count}} scenarios"
     },
     "how": {
       "eyebrow": "How it works",
@@ -617,6 +691,34 @@
         "title": "Offers arrive",
         "body": "If you're open to work, companies see your results and send offers."
       }
+    },
+    "compare": {
+      "eyebrow": "What's different",
+      "title": "Not a course — real work experience",
+      "subtitle": "Watching videos and taking quizzes is one thing; making decisions under the pressure of a workday is another.",
+      "course": "A typical online course",
+      "rows": [
+        {
+          "course": "You watch video lessons",
+          "tryjob": "You do real tasks as a member of the team"
+        },
+        {
+          "course": "You pick the right option in a quiz",
+          "tryjob": "You write open answers, graded by AI against a rubric"
+        },
+        {
+          "course": "At your own pace, whenever",
+          "tryjob": "Real time: deadlines, surprises, decisions"
+        },
+        {
+          "course": "A certificate of attendance",
+          "tryjob": "A verifiable certificate with your score and competencies"
+        },
+        {
+          "course": "Employers never see your results",
+          "tryjob": "Companies see your results and send offers"
+        }
+      ]
     },
     "certificate": {
       "eyebrow": "Certificate",
@@ -667,6 +769,7 @@
     "faq": {
       "eyebrow": "FAQ",
       "title": "Frequently asked questions",
+      "subtitle": "Short answers to the most common questions about the platform.",
       "free": {
         "q": "Do students have to pay?",
         "a": "No, TryJob is free for students. Universities and companies fund the platform by contract."
@@ -698,6 +801,7 @@
     },
     "footer": {
       "note": "Companies in scenarios are fictional; the certificate confirms a scenario result, not work experience.",
+      "features": "Features",
       "how": "How it works",
       "verify": "Verify a certificate",
       "faq": "FAQ"
