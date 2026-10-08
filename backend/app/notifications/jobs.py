@@ -1,9 +1,10 @@
-"""arq cron'lari (CONTRACT.md §15.2–15.3, §22.2): dedlayn eslatmasi, email va push."""
+"""arq cron'lari (CONTRACT.md §15.2–15.3, §22.2, §25.5): dedlayn va suhbat eslatmasi, email va push."""
 import logging
 from datetime import datetime, timezone
 
 from app.notifications import mailer, push
 from app.notifications.emails import send_pending
+from app.notifications.meetings import interview_reminders
 from app.notifications.run_events import deadline_reminders
 
 log = logging.getLogger(__name__)
@@ -19,6 +20,13 @@ def _sessions(ctx: dict):
 async def deadline_reminders_job(ctx: dict) -> int:
     async with _sessions(ctx)() as db:
         count = await deadline_reminders(db, datetime.now(timezone.utc))
+        await db.commit()
+    return count
+
+
+async def interview_reminders_job(ctx: dict) -> int:
+    async with _sessions(ctx)() as db:
+        count = await interview_reminders(db, datetime.now(timezone.utc))
         await db.commit()
     return count
 

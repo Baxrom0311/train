@@ -516,11 +516,12 @@ export interface Showcase {
 export type NotificationKind =
   | 'task_delivered' | 'deadline_soon' | 'mentor_review' | 'report_ready' | 'offer_received' | 'offer_responded'
   | 'application_received' | 'application_rejected'
+  | 'interview_proposed' | 'interview_cancelled' | 'interview_confirmed' | 'interview_declined' | 'interview_reminder'
 
 export interface AppNotification {
   id: string
   kind: NotificationKind
-  params: Record<string, string | number | boolean | null>
+  params: Record<string, string | number | boolean | null | string[]>
   link: string
   created_at: string
   read_at: string | null
@@ -594,7 +595,7 @@ export interface StudentAnalytics {
 export type VacancyStatus = 'draft' | 'open' | 'closed'
 export type Employment = 'full_time' | 'part_time' | 'internship'
 export type WorkFormat = 'office' | 'remote' | 'hybrid'
-export type ApplicationStatus = 'applied' | 'withdrawn' | 'rejected' | 'offered'
+export type ApplicationStatus = 'applied' | 'interviewing' | 'withdrawn' | 'rejected' | 'offered'
 export const EMPLOYMENTS: Employment[] = ['full_time', 'part_time', 'internship']
 export const WORK_FORMATS: WorkFormat[] = ['office', 'remote', 'hybrid']
 
@@ -653,6 +654,7 @@ export interface CompanyApplication {
   updated_at: string
   candidate: CandidateCard
   fit: Fit
+  interviews: HiringInterview[]
 }
 
 export interface VacancyCard extends Vacancy {
@@ -676,6 +678,7 @@ export interface VacancyDetail extends VacancyCard {
   my_overall: number | null
   my_competencies: Record<string, number>
   practice: PracticeScenario[]
+  interviews: MyHiringInterview[]
 }
 
 export interface VacancyApplication {
@@ -692,6 +695,54 @@ export interface MyApplication extends VacancyApplication {
   vacancy_status: VacancyStatus
   company_name: string
   sector: Sector
+  interview: MyHiringInterview | null
+}
+
+// ── Suhbat bosqichlari (CONTRACT.md §25) ────────────────────────────
+
+export type HiringInterviewStatus = 'proposed' | 'confirmed' | 'declined' | 'cancelled' | 'completed'
+export type HiringInterviewFormat = 'online' | 'office'
+export type HiringInterviewOutcome = 'passed' | 'failed' | 'no_show'
+
+/** Talabaga ko'rinadigan qismi — kompaniyaning ichki izohisiz. */
+export interface MyHiringInterview {
+  id: string
+  application_id: string
+  round: number
+  slots: string[]
+  duration_minutes: number
+  format: HiringInterviewFormat
+  place: string
+  note: string | null
+  status: HiringInterviewStatus
+  starts_at: string | null
+  confirmed_at: string | null
+  decline_reason: string | null
+  outcome: HiringInterviewOutcome | null
+  /** taklif qilingan, lekin barcha variantlar o'tib ketgan */
+  expired: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface HiringInterview extends MyHiringInterview {
+  outcome_note: string | null
+  created_by: string | null
+}
+
+export interface UpcomingHiringInterview extends HiringInterview {
+  vacancy_id: string
+  vacancy_title: string
+  candidate_id: string
+  candidate_name: string
+}
+
+export interface HiringInterviewProposal {
+  slots: string[]
+  duration_minutes: number
+  format: HiringInterviewFormat
+  place: string
+  note: string | null
 }
 
 // ── AI suhbat mashqi (CONTRACT.md §24) ──────────────────────────────

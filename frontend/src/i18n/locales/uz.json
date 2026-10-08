@@ -1065,7 +1065,13 @@
       "offer_accepted": "Taklif qabul qilindi",
       "offer_declined": "Taklif rad etildi",
       "application_received": "Vakansiyaga yangi ariza",
-      "application_rejected": "Arizangiz rad etildi"
+      "application_rejected": "Arizangiz rad etildi",
+      "interview_proposed": "Suhbatga taklif",
+      "interview_cancelled": "Suhbat bekor qilindi",
+      "interview_confirmed": "Nomzod suhbat vaqtini tanladi",
+      "interview_declined": "Nomzod suhbatni rad etdi",
+      "interview_withdrawn": "Nomzod arizani qaytarib oldi",
+      "interview_reminder": "Suhbat soat {{time}} da"
     },
     "setting": {
       "task_delivered": "Yangi vazifa va vaziyatlar",
@@ -1075,7 +1081,12 @@
       "offer_received": "Ish takliflari",
       "offer_responded": "Nomzod taklifga javob berganda",
       "application_received": "Vakansiyaga ariza kelganda",
-      "application_rejected": "Ariza rad etilganda"
+      "application_rejected": "Ariza rad etilganda",
+      "interview_proposed": "Suhbatga taklif qilinganda",
+      "interview_cancelled": "Suhbat bekor qilinganda",
+      "interview_reminder": "Suhbatga 2 soat qolganda",
+      "interview_confirmed": "Nomzod suhbat vaqtini tanlaganda",
+      "interview_declined": "Nomzod suhbatni rad etganda"
     },
     "email": {
       "title": "Email orqali",
@@ -1271,7 +1282,8 @@
       "applied": "Ariza berilgan",
       "withdrawn": "Qaytarib olingan",
       "rejected": "Rad etilgan",
-      "offered": "Taklif yuborilgan"
+      "offered": "Taklif yuborilgan",
+      "interviewing": "Suhbat bosqichida"
     },
     "salary": {
       "range": "{{min}} – {{max}} so'm",
@@ -1426,6 +1438,93 @@
       "subtitle": "Vakansiyalar bo'yicha AI suhbatdosh bilan mashqlaringiz va ularning natijalari.",
       "empty": "Hali sinov suhbati o'tmagansiz. Vakansiyani oching va \"Sinov suhbatini boshlash\"ni bosing.",
       "toVacancies": "Vakansiyalarga o'tish"
+    }
+  },
+  "meeting": {
+    "round": "{{round}}-bosqich",
+    "minutes_one": "{{count}} daqiqa",
+    "minutes_other": "{{count}} daqiqa",
+    "minutesShort": "{{count}} daq",
+    "status": {
+      "proposed": "Vaqt tanlanmoqda",
+      "confirmed": "Belgilangan",
+      "declined": "Rad etilgan",
+      "cancelled": "Bekor qilingan",
+      "completed": "Yakunlangan",
+      "expired": "Vaqti o'tib ketgan",
+      "passed": "O'tdi",
+      "failed": "O'tmadi",
+      "no_show": "Kelmadi"
+    },
+    "format": {
+      "online": "Onlayn",
+      "office": "Ofisda"
+    },
+    "outcome": {
+      "passed": "O'tdi",
+      "failed": "O'tmadi",
+      "no_show": "Kelmadi"
+    },
+    "form": {
+      "title": "Suhbatga chaqirish",
+      "slots": "Vaqt variantlari ({{round}}-bosqich)",
+      "slot": "{{n}}-variant",
+      "addSlot": "Variant qo'shish",
+      "tzHint": "Vaqt Toshkent bo'yicha",
+      "duplicate": "Variantlar takrorlanmasin",
+      "duration": "Davomiyligi",
+      "format": "Format",
+      "link": "Havola",
+      "address": "Manzil",
+      "linkPlaceholder": "https://meet.example.uz/…",
+      "addressPlaceholder": "Toshkent, Amir Temur ko'chasi 1, 3-qavat",
+      "note": "Talabaga izoh (ixtiyoriy)",
+      "notePlaceholder": "Nimaga tayyorlanish kerak, kim qatnashadi…",
+      "send": "Vaqtlarni taklif qilish"
+    },
+    "company": {
+      "invite": "Suhbatga chaqirish",
+      "inviteAgain": "Yangi suhbat",
+      "waiting": "Talaba vaqtni tanlashini kutmoqda.",
+      "expired": "Barcha variantlar o'tib ketdi: bekor qiling va yangi vaqt taklif qiling.",
+      "declined": "Talaba rad etdi.",
+      "cancelled": "Suhbat bekor qilingan.",
+      "cancel": "Suhbatni bekor qilish",
+      "cancelConfirm": "{{name}} bilan suhbat bekor qilinsinmi? Talabaga xabar boradi.",
+      "outcomeTitle": "Suhbat natijasi",
+      "outcomeNote": "Ichki izoh (talabaga ko'rinmaydi)",
+      "rejectConfirm": "{{name}} arizasi rad etiladi va talabaga xabar boradi. Davom etasizmi?",
+      "upcoming": "Yaqin suhbatlar",
+      "waitingShort_one": "{{count}} ta variant, javob kutilmoqda",
+      "waitingShort_other": "{{count}} ta variant, javob kutilmoqda",
+      "needsOutcome": "Natijani belgilang"
+    },
+    "student": {
+      "title": "{{round}}-bosqich suhbati",
+      "pick": "Kompaniya quyidagi vaqtlarni taklif qildi, qulayini tanlang:",
+      "confirm": "Shu vaqtni tasdiqlash",
+      "noneFits": "Hech biri to'g'ri kelmaydi",
+      "cantAttend": "Qatnasha olmayman",
+      "reason": "Sabab",
+      "reasonPlaceholder": "Sababini yozing (ixtiyoriy): kompaniya yangi vaqt taklif qilishi mumkin",
+      "declineSend": "Rad etish",
+      "expired": "Taklif qilingan vaqtlar o'tib ketdi. Kompaniya yangi vaqt taklif qilishi mumkin.",
+      "declined": "Siz bu suhbatni rad etdingiz. Kompaniya yangi vaqt taklif qilishi mumkin.",
+      "cancelled": "Kompaniya suhbatni bekor qildi.",
+      "outcome": {
+        "passed": "Bu bosqichdan o'tdingiz! Kompaniya keyingi qadam haqida xabar beradi.",
+        "failed": "Afsuski, bu safar kompaniya boshqa nomzodni tanladi.",
+        "no_show": "Suhbatga kelmadingiz deb belgilandi."
+      },
+      "addToCalendar": "Kalendarga qo'shish",
+      "calendarTitle": "Suhbat: {{vacancy}} ({{company}})",
+      "on": "Suhbat: {{when}}",
+      "pickNeeded": "Suhbat vaqtini tanlang",
+      "withdrawConfirm": "Arizani qaytarib olsangiz, rejalashtirilgan suhbat ham bekor bo'ladi. Davom etasizmi?"
+    },
+    "errors": {
+      "conflict": "Holat o'zgargan, ma'lumot yangilandi. Qaytadan urinib ko'ring.",
+      "invalid": "Vaqtlarni tekshiring: kamida 1 soatdan keyin va 60 kun ichida bo'lsin."
     }
   }
 }

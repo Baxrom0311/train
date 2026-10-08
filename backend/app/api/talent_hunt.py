@@ -26,7 +26,7 @@ from app.models.talent import CandidateVisibility, TalentOffer, Vacancy, Vacancy
 from app.models.user import User
 from app.notifications.offers import offer_received, offer_responded
 from app.scenario.clock import WorkCalendar
-from app.talent import report
+from app.talent import meetings, report
 from app.talent.profile import Profile, build_profiles
 
 router = APIRouter(prefix="/api/v1/talents", tags=["Talent Hunt"])
@@ -492,7 +492,8 @@ async def create_talent_offer(offer_in: TalentOfferCreate, company: VerifiedComp
     """
     Faqat ko'rinadigan va profili bor nomzodga. Yo'q, yopiq yoki yashirilgan —
     barchasi 404 (leak yo'q). Javob kutilayotgan taklif turganda — 409.
-    Vakansiyadan: shu vakansiyaga `applied` ariza bergan nomzod ko'rinmasa ham bo'ladi (§23.3).
+    Vakansiyadan: shu vakansiyaga `applied | interviewing` ariza bergan nomzod ko'rinmasa ham
+    bo'ladi (§23.3); arizaning faol suhbati bekor qilinadi (§25.2).
     """
     application = None
     if offer_in.vacancy_id is not None:
@@ -503,7 +504,7 @@ async def create_talent_offer(offer_in: TalentOfferCreate, company: VerifiedComp
             select(VacancyApplication).where(
                 VacancyApplication.vacancy_id == vacancy.id,
                 VacancyApplication.user_id == offer_in.candidate_user_id,
-                VacancyApplication.status == ApplicationStatus.APPLIED,
+                VacancyApplication.status.in_((ApplicationStatus.APPLIED, ApplicationStatus.INTERVIEWING)),
             ).with_for_update()
         )).scalars().first()
     if application is None:
@@ -528,6 +529,8 @@ async def create_talent_offer(offer_in: TalentOfferCreate, company: VerifiedComp
     db.add(offer)
     if application is not None:
         application.status = ApplicationStatus.OFFERED
+        application.updated_at = now
+        await meetings.close_active(db, application.id, now)    # taklif xabari yetarli
     try:
         await db.flush()
         await offer_received(db, offer, company.name, now)   # §15.2

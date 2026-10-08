@@ -9,7 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 from app.models.rbac import GUID
 from app.models.enums import (
-    ApplicationStatus, Employment, OfferResponse, Sector, TalentOfferStatus, VacancyStatus, WorkFormat,
+    ApplicationInterviewFormat, ApplicationInterviewOutcome, ApplicationInterviewStatus, ApplicationStatus, Employment, OfferResponse, Sector, TalentOfferStatus, VacancyStatus, WorkFormat,
 )
 
 
@@ -138,5 +138,42 @@ class VacancyApplication(Base):
     note = mapped_column(String(1000), nullable=True)
     status = mapped_column(_str_enum(ApplicationStatus, "ck_vacancy_applications_status"), nullable=False,
                            default=ApplicationStatus.APPLIED)
+    created_at = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow)
+    updated_at = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow, onupdate=_utcnow)
+
+
+class ApplicationInterview(Base):
+    """Kompaniya arizachiga taklif qilgan haqiqiy suhbat (CONTRACT.md §25.1)."""
+    __tablename__ = "application_interviews"
+    __table_args__ = (
+        # bir arizada bitta faol suhbat (§25.1)
+        Index(
+            "uq_application_interviews_active",
+            "application_id",
+            unique=True,
+            postgresql_where=text("status IN ('proposed', 'confirmed')"),
+        ),
+        Index("ix_application_interviews_status_starts", "status", "starts_at"),
+    )
+
+    id = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    application_id = mapped_column(GUID, ForeignKey("vacancy_applications.id", ondelete="CASCADE"), nullable=False,
+                                   index=True)
+    created_by = mapped_column(GUID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    round = mapped_column(Integer, nullable=False, default=1)
+    # ISO (UTC) qatorlar, o'sish tartibida, 1–3 ta
+    slots = mapped_column(JSONB, nullable=False)
+    duration_minutes = mapped_column(Integer, nullable=False)
+    format = mapped_column(_str_enum(ApplicationInterviewFormat, "ck_application_interviews_format"), nullable=False)
+    place = mapped_column(String(300), nullable=False)
+    note = mapped_column(String(1000), nullable=True)
+    status = mapped_column(_str_enum(ApplicationInterviewStatus, "ck_application_interviews_status"), nullable=False,
+                           default=ApplicationInterviewStatus.PROPOSED)
+    starts_at = mapped_column(DateTime(timezone=True), nullable=True)
+    confirmed_at = mapped_column(DateTime(timezone=True), nullable=True)
+    decline_reason = mapped_column(String(500), nullable=True)
+    outcome = mapped_column(_str_enum(ApplicationInterviewOutcome, "ck_application_interviews_outcome"), nullable=True)
+    outcome_note = mapped_column(String(1000), nullable=True)   # faqat kompaniyaga
+    reminded_at = mapped_column(DateTime(timezone=True), nullable=True)
     created_at = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow)
     updated_at = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow, onupdate=_utcnow)

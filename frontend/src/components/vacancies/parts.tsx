@@ -67,6 +67,7 @@ export function VacancyStatusBadge({ status }: { status: VacancyStatus }) {
 
 const APPLICATION_TONE: Record<ApplicationStatus, string> = {
   applied: 'bg-primary/12 text-primary',
+  interviewing: 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
   offered: 'bg-success/15 text-success',
   rejected: 'bg-destructive/12 text-destructive',
   withdrawn: 'bg-muted text-muted-foreground',

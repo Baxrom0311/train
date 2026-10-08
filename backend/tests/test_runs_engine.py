@@ -437,6 +437,6 @@ def test_worker_settings_register_scenario_jobs():
         # §22.2: push
         "cron:send_push_notifications_job",
         # §24.4: suhbat baholari
-        "cron:requeue_stale_interviews",
+        "cron:requeue_stale_interviews", "cron:interview_reminders_job",
     }
     assert "interview_report_job" in names

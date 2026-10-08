@@ -1,9 +1,10 @@
 // /company/vacancies/:id (CONTRACT.md §23.8): vakansiya, arizalar va mos nomzodlar.
 // Ariza — talabaning roziligi: yopiq profil ham shu yerda ko'rinadi; email faqat taklif qabul qilinganda.
+// Suhbat bosqichlari (§25.6): arizachini suhbatga chaqirish, holat va natija ariza ostida.
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Inbox, Loader2, Pencil, Send, Sparkles, X } from 'lucide-react'
+import { ArrowLeft, CalendarPlus, Inbox, Loader2, Pencil, Send, Sparkles, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
@@ -11,6 +12,7 @@ import { Segmented } from '@/components/ui/segmented'
 import { CompetencyBars, ScoreRing } from '@/components/score'
 import Initials from '@/components/talent/Initials'
 import OfferForm from '@/components/talent/OfferForm'
+import { CompanyMeetingPanel, isActive, ScheduleForm } from '@/components/vacancies/meetings'
 import { ApplicationBadge, FitBadge, GapChips, VacancyMeta, VacancyStatusBadge } from '@/components/vacancies/parts'
 import { api, ApiError } from '@/lib/api'
 import { formatDateTime } from '@/lib/time'
@@ -28,6 +30,7 @@ export default function CompanyVacancyPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [offerTo, setOfferTo] = useState<CandidateCard | null>(null)
+  const [scheduleFor, setScheduleFor] = useState<CompanyApplication | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -128,9 +131,18 @@ export default function CompanyVacancyPage() {
             <CandidateRow key={a.id} candidate={a.candidate} fit={a.fit}
               aside={<><ApplicationBadge status={a.status} /><span className="text-xs text-muted-foreground">{formatDateTime(a.created_at)}</span></>}
               note={a.note}
-              actions={a.status === 'applied' && (
+              meeting={<CompanyMeetingPanel vacancyId={vacancy.id} applicationId={a.id} interviews={a.interviews}
+                candidateName={a.candidate.full_name} onChange={load} />}
+              actions={(a.status === 'applied' || a.status === 'interviewing') && (
                 <>
-                  <Button size="sm" onClick={() => setOfferTo(a.candidate)}><Send className="h-4 w-4" /> {t('vacancy.company.offer')}</Button>
+                  {!a.interviews.some(isActive) && (
+                    <Button size="sm" variant={a.status === 'applied' ? 'default' : 'outline'} onClick={() => setScheduleFor(a)}>
+                      <CalendarPlus className="h-4 w-4" /> {t(a.interviews.length ? 'meeting.company.inviteAgain' : 'meeting.company.invite')}
+                    </Button>
+                  )}
+                  <Button size="sm" variant={a.status === 'applied' ? 'outline' : 'default'} onClick={() => setOfferTo(a.candidate)}>
+                    <Send className="h-4 w-4" /> {t('vacancy.company.offer')}
+                  </Button>
                   <Button size="sm" variant="ghost" onClick={() => reject(a)}><X className="h-4 w-4" /> {t('vacancy.company.reject')}</Button>
                 </>
               )} />
@@ -147,6 +159,26 @@ export default function CompanyVacancyPage() {
           ))}
         </List>
       )}
+
+      <Dialog open={scheduleFor !== null} onOpenChange={(open) => !open && setScheduleFor(null)}>
+        <DialogContent closeLabel={t('common.close')} aria-describedby={undefined}>
+          <DialogTitle className="sr-only">{t('meeting.form.title')}</DialogTitle>
+          {scheduleFor && (
+            <div className="space-y-4 overflow-y-auto p-6">
+              <div className="flex items-center gap-3 pr-8">
+                <Initials name={scheduleFor.candidate.full_name} />
+                <div className="min-w-0">
+                  <p className="font-bold">{t('meeting.form.title')}</p>
+                  <p className="truncate text-sm text-muted-foreground">{scheduleFor.candidate.full_name} · {vacancy.title}</p>
+                </div>
+              </div>
+              <ScheduleForm vacancyId={vacancy.id} applicationId={scheduleFor.id}
+                round={scheduleFor.interviews.filter((m) => m.status === 'completed').length + 1}
+                onDone={() => { setScheduleFor(null); load() }} />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={offerTo !== null} onOpenChange={(open) => !open && setOfferTo(null)}>
         <DialogContent closeLabel={t('common.close')} aria-describedby={undefined}>
@@ -179,11 +211,12 @@ function List({ items, empty, Icon, children }: { items: unknown[] | null; empty
   return <div className="space-y-3">{children}</div>
 }
 
-function CandidateRow({ candidate: c, fit, aside, note, actions }: {
+function CandidateRow({ candidate: c, fit, aside, note, meeting, actions }: {
   candidate: CandidateCard
   fit: Fit
   aside?: React.ReactNode
   note?: string | null
+  meeting?: React.ReactNode
   actions?: React.ReactNode
 }) {
   const { t } = useTranslation()
@@ -209,6 +242,7 @@ function CandidateRow({ candidate: c, fit, aside, note, actions }: {
           </div>
           <GapChips gaps={fit.gaps} />
           {note && <p className="rounded-xl bg-muted/50 px-3 py-2 text-sm italic">“{note}”</p>}
+          {meeting}
           {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
         </div>
         <CompetencyBars scores={c.top_competencies} compact />

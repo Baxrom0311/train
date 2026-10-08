@@ -125,9 +125,13 @@ async def test_platform_overview(client, db_session, test_user_factory, admin, m
     db_session.add_all([e1, e2])
     await db_session.flush()
 
+    # navbat yoshi endpoint chaqirilgan haqiqiy vaqtdan hisoblanadi — modul importidagi NOW'dan emas
+    # (to'liq to'plamda import va shu test orasida bir necha daqiqa o'tadi)
+    submitted = datetime.now(UTC)
+
     def answer(run, event, attempt, status, ago=timedelta()):
         return Submission(user_id=run.user_id, run_id=run.id, run_event_id=event.id, attempt=attempt,
-                          content="javob", ai_eval_status=status, submitted_at=NOW - ago)
+                          content="javob", ai_eval_status=status, submitted_at=submitted - ago)
 
     db_session.add_all([
         answer(r1, e1, 1, AIEvalStatus.PENDING, timedelta(minutes=45)),

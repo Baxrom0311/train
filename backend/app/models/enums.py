@@ -67,9 +67,30 @@ class WorkFormat(str, enum.Enum):
 
 class ApplicationStatus(str, enum.Enum):
     APPLIED = "applied"
+    INTERVIEWING = "interviewing"   # §25 — kompaniya suhbatga chaqirdi
     WITHDRAWN = "withdrawn"
     REJECTED = "rejected"
     OFFERED = "offered"
+
+
+class ApplicationInterviewStatus(str, enum.Enum):
+    """Arizachi bilan haqiqiy suhbat (§25.2)."""
+    PROPOSED = "proposed"
+    CONFIRMED = "confirmed"
+    DECLINED = "declined"
+    CANCELLED = "cancelled"
+    COMPLETED = "completed"
+
+
+class ApplicationInterviewFormat(str, enum.Enum):
+    ONLINE = "online"
+    OFFICE = "office"
+
+
+class ApplicationInterviewOutcome(str, enum.Enum):
+    PASSED = "passed"
+    FAILED = "failed"
+    NO_SHOW = "no_show"
 
 
 class AIEvalStatus(str, enum.Enum):

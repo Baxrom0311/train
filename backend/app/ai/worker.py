@@ -22,7 +22,9 @@ from app.ai.guardrail import validate_submission_content
 from app.ai.router import run_ai_chain, _pick_persona, _build_user_prompt
 from app.interview.jobs import MAX_TRIES as INTERVIEW_TRIES, REPORT_JOB as INTERVIEW_REPORT_JOB
 from app.interview.jobs import interview_report_job, requeue_stale_interviews
-from app.notifications.jobs import deadline_reminders_job, send_notification_emails_job, send_push_notifications_job
+from app.notifications.jobs import (
+    deadline_reminders_job, interview_reminders_job, send_notification_emails_job, send_push_notifications_job,
+)
 from app.scenario.jobs import (
     DAY_REPORT_JOB,
     EVAL_JOB,
@@ -177,6 +179,8 @@ class WorkerSettings:
         cron(send_push_notifications_job, second=15, unique=True, timeout=50),
         # §24.4: navbatga tushmay qolgan suhbat baholari
         cron(requeue_stale_interviews, minute=set(range(2, 60, 5)), second=40, unique=True),
+        # §25.5: arizachi bilan suhbatga ≤ 2 soat qoldi
+        cron(interview_reminders_job, minute=set(range(0, 60, 5)), second=5, unique=True, timeout=50),
     ]
     redis_settings = RedisSettings.from_dsn(settings.REDIS_URL)
     # §18.1: `/api/v1/health` shu kalitni tekshiradi — worker o'lsa ~1 daqiqada ko'rinadi
