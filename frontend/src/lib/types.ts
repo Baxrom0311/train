@@ -280,6 +280,42 @@ export interface CompanyReport {
   by_month: { month: string; sent: number; accepted: number; declined: number }[]
 }
 
+// Ishga olish voronkasi (backend/app/talent/hiring.py, CONTRACT.md §27)
+
+export type HiringStage = 'applied' | 'assessment' | 'interview' | 'offer' | 'hired'
+export type HiringOutcome = 'hired' | 'offer_pending' | 'offer_declined' | 'rejected' | 'withdrawn' | 'in_progress' | 'waiting'
+
+export interface HiringReport {
+  generated_at: string
+  days: number | null
+  vacancy_id: string | null
+  vacancies: { id: string; title: string; status: VacancyStatus }[]
+  stages: { stage: HiringStage; count: number; rate: number | null; step_rate: number | null }[]
+  outcomes: Record<HiringOutcome, number> & { stale: number }
+  dropoff: { stage: 'applied' | 'assessment' | 'interview'; rejected: number; withdrawn: number }[]
+  assessments: {
+    sent: number
+    started: number
+    completed: number
+    cancelled: number
+    completion_rate: number | null
+    avg_score: number | null
+  }
+  interviews: {
+    proposed: number
+    confirmed: number
+    declined: number
+    held: number
+    passed: number
+    failed: number
+    no_show: number
+    pass_rate: number | null
+    show_rate: number | null
+  }
+  timing: { first_action_hours: number | null; offer_days: number | null; hire_days: number | null }
+  by_vacancy: ({ vacancy_id: string; title: string; status: VacancyStatus; hire_rate: number | null } & Record<HiringStage, number>)[]
+}
+
 // Admin va invoice'lar (backend/app/api/admin.py, billing.py, CONTRACT.md §11)
 
 export type OrgType = 'company' | 'university'

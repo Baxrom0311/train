@@ -19,13 +19,13 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.talent_hunt import CandidateCard, candidate_card, company_of, visible_profiles
+from app.api.talent_hunt import CandidateCard, ReportDays, candidate_card, company_of, csv_response, visible_profiles
 from app.core.deps import require_permission
 from app.database import get_db
 from app.models.billing import Company
@@ -34,14 +34,14 @@ from app.models.enums import (
     ApplicationInterviewFormat, ApplicationInterviewOutcome, ApplicationInterviewStatus, ApplicationStatus,
     AssessmentStatus, Competency, Employment, Sector, VacancyStatus, WorkFormat,
 )
-from app.models.talent import ApplicationAssessment, ApplicationInterview, Vacancy, VacancyApplication
+from app.models.talent import ApplicationAssessment, ApplicationInterview, TalentOffer, Vacancy, VacancyApplication
 from app.models.user import User
 from app.notifications import meetings as meeting_events
 from app.notifications.assessments import assessment_assigned
 from app.scenario import notify as run_notify
 from app.scenario.engine import EngineError, advance_run, create_run
 from app.notifications.vacancies import application_received, application_rejected
-from app.talent import assessments, meetings
+from app.talent import assessments, hiring, meetings
 from app.talent import vacancies as matching
 from app.talent.profile import Profile, build_profiles
 
@@ -379,6 +379,93 @@ class MyApplicationOut(ApplicationOut):
     interview: MyInterviewOut | None
 
 
+# ── Ishga olish voronkasi (§27) ──────────────────────────────────────
+
+class HiringVacancyOut(BaseModel):
+    id: uuid.UUID
+    title: str
+    status: VacancyStatus
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class StageOut(BaseModel):
+    stage: Literal["applied", "assessment", "interview", "offer", "hired"]
+    count: int
+    rate: float | None
+    step_rate: float | None
+
+
+class OutcomesOut(BaseModel):
+    hired: int
+    offer_pending: int
+    offer_declined: int
+    rejected: int
+    withdrawn: int
+    in_progress: int
+    waiting: int
+    stale: int
+
+
+class DropoffOut(BaseModel):
+    stage: Literal["applied", "assessment", "interview"]
+    rejected: int
+    withdrawn: int
+
+
+class AssessmentStatsOut(BaseModel):
+    sent: int
+    started: int
+    completed: int
+    cancelled: int
+    completion_rate: float | None
+    avg_score: float | None
+
+
+class InterviewStatsOut(BaseModel):
+    proposed: int
+    confirmed: int
+    declined: int
+    held: int
+    passed: int
+    failed: int
+    no_show: int
+    pass_rate: float | None
+    show_rate: float | None
+
+
+class TimingOut(BaseModel):
+    first_action_hours: float | None
+    offer_days: float | None
+    hire_days: float | None
+
+
+class VacancyFunnelOut(BaseModel):
+    vacancy_id: uuid.UUID
+    title: str
+    status: VacancyStatus
+    applied: int
+    assessment: int
+    interview: int
+    offer: int
+    hired: int
+    hire_rate: float | None
+
+
+class HiringReport(BaseModel):
+    generated_at: datetime
+    days: int | None
+    vacancy_id: uuid.UUID | None
+    vacancies: list[HiringVacancyOut]
+    stages: list[StageOut]
+    outcomes: OutcomesOut
+    dropoff: list[DropoffOut]
+    assessments: AssessmentStatsOut
+    interviews: InterviewStatsOut
+    timing: TimingOut
+    by_vacancy: list[VacancyFunnelOut]
+
+
 # ---------------------------------------------------------------------------
 # Yordamchilar
 # ---------------------------------------------------------------------------
@@ -392,6 +479,56 @@ async def vacancy_company(
 
 Staff = Annotated[tuple[User, Company], Depends(vacancy_company)]
 Candidate = Annotated[User, Depends(require_permission("receive_offers"))]
+
+
+async def _hiring_tracks(
+    db: AsyncSession, company: Company, since: datetime | None, vacancy_id: uuid.UUID | None,
+) -> tuple[list[hiring.Track], dict[uuid.UUID, User]]:
+    """§27.1 kogortasi: davr ichida berilgan arizalar va ularning sinov, suhbat, takliflari."""
+    q = (
+        select(VacancyApplication, Vacancy, User)
+        .join(Vacancy, Vacancy.id == VacancyApplication.vacancy_id)
+        .join(User, User.id == VacancyApplication.user_id)
+        .where(Vacancy.company_id == company.id)
+        .order_by(VacancyApplication.created_at.desc())
+    )
+    if since is not None:
+        q = q.where(VacancyApplication.created_at >= since)
+    if vacancy_id is not None:
+        q = q.where(Vacancy.id == vacancy_id)
+    rows = (await db.execute(q)).all()
+    if not rows:
+        return [], {}
+    ids = [application.id for application, _, _ in rows]
+    tests = await assessments.items(db, ids)
+    interviews = await meetings.history(db, ids)
+    offers: dict[tuple[uuid.UUID, uuid.UUID], list[TalentOffer]] = {}
+    for offer in (await db.execute(
+        select(TalentOffer)
+        .where(
+            TalentOffer.company_id == company.id,
+            TalentOffer.vacancy_id.in_({vacancy.id for _, vacancy, _ in rows}),
+        )
+        .order_by(TalentOffer.created_at.desc())
+    )).scalars():
+        offers.setdefault((offer.vacancy_id, offer.candidate_user_id), []).append(offer)
+    tracks = [
+        hiring.Track(
+            application=application, vacancy=vacancy, assessments=tests[application.id],
+            interviews=interviews[application.id], offers=offers.get((vacancy.id, user.id), []),
+        )
+        for application, vacancy, user in rows
+    ]
+    return tracks, {user.id: user for _, _, user in rows}
+
+
+async def _hiring_scope(db: AsyncSession, company: Company, vacancy_id: uuid.UUID | None) -> None:
+    if vacancy_id is not None:
+        await _own_vacancy(db, company, vacancy_id)       # boshqa kompaniyaniki — 404
+
+
+def _since(now: datetime, days: int | None) -> datetime | None:
+    return now - timedelta(days=days) if days else None
 
 
 def _fit_out(f: matching.Fit) -> FitOut:
@@ -609,6 +746,52 @@ async def list_company_interviews(staff: Staff, db: AsyncSession = Depends(get_d
         )
         for interview, _, vacancy, user in rows
     ]
+
+
+@org_router.get("/report", response_model=HiringReport)
+async def get_hiring_report(
+    staff: Staff, days: ReportDays = None, vacancy_id: uuid.UUID | None = None, db: AsyncSession = Depends(get_db),
+):
+    """§27: ariza → sinov → suhbat → taklif → qabul voronkasi, kogorta bo'yicha."""
+    _, company = staff
+    await _hiring_scope(db, company, vacancy_id)
+    now = _now()
+    tracks, _ = await _hiring_tracks(db, company, _since(now, days), vacancy_id)
+    vacancies = (await db.execute(
+        select(Vacancy)
+        .where(Vacancy.company_id == company.id, Vacancy.status != VacancyStatus.DRAFT)
+        .order_by(Vacancy.published_at.desc().nulls_last(), Vacancy.created_at.desc())
+    )).scalars().all()
+    return HiringReport(
+        generated_at=now, days=days, vacancy_id=vacancy_id,
+        vacancies=[HiringVacancyOut.model_validate(v) for v in vacancies],
+        stages=[StageOut(**r) for r in hiring.stages(tracks)],
+        outcomes=OutcomesOut(**hiring.outcomes(tracks, now)),
+        dropoff=[DropoffOut(**r) for r in hiring.dropoff(tracks)],
+        assessments=AssessmentStatsOut(**hiring.assessment_stats(tracks, now)),
+        interviews=InterviewStatsOut(**hiring.interview_stats(tracks)),
+        timing=TimingOut(**hiring.timing(tracks)),
+        by_vacancy=[VacancyFunnelOut(**r) for r in hiring.by_vacancy(tracks)],
+    )
+
+
+@org_router.get("/report/applications.csv", response_class=Response)
+async def get_applications_csv(
+    staff: Staff, days: ReportDays = None, vacancy_id: uuid.UUID | None = None, db: AsyncSession = Depends(get_db),
+):
+    """Qaytarib olingan arizalar va faol bo'lmagan foydalanuvchilar kirmaydi (§23.3); email faqat qabulda."""
+    _, company = staff
+    await _hiring_scope(db, company, vacancy_id)
+    now = _now()
+    tracks, users = await _hiring_tracks(db, company, _since(now, days), vacancy_id)
+    rows = []
+    for t in tracks:
+        user = users[t.application.user_id]
+        if t.application.status == ApplicationStatus.WITHDRAWN or not user.is_active:
+            continue
+        hired = t.accepted_offer is not None
+        rows.append(hiring.CsvRow(track=t, candidate_name=user.full_name, candidate_email=user.email if hired else None))
+    return csv_response(hiring.applications_csv(rows, now), "applications", now)
 
 
 @org_router.get("/{vacancy_id}", response_model=CompanyVacancyOut)

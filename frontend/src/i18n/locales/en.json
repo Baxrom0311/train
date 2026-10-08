@@ -1186,7 +1186,10 @@
     "csv": {
       "offers": "Offers CSV",
       "candidates": "Candidates CSV"
-    }
+    },
+    "offersTitle": "Talent Hunt offers",
+    "offersSubtitle": "Offers sent from the candidates section and from vacancies.",
+    "lessThanDay": "under a day"
   },
   "platform": {
     "generated": "as of {{date}}",
@@ -1598,6 +1601,91 @@
       "evaluating": "The final report is being prepared.",
       "done": "Assessment finished, the result was sent to {{company}}.",
       "report": "View report"
+    }
+  },
+  "hiring": {
+    "title": "Hiring funnel",
+    "subtitle": "Applications to your vacancies in the period and how far each one got.",
+    "vacancy": "Vacancy",
+    "allVacancies": "All vacancies",
+    "csv": "Applications CSV",
+    "empty": "No applications to your vacancies in this period. Publish a vacancy and matching students will apply.",
+    "toVacancies": "Go to vacancies",
+    "stats": {
+      "applied": "Applications",
+      "hired": "Hired",
+      "firstAction": "First response (median)",
+      "timeToHire": "Time to hire (median)"
+    },
+    "stage": {
+      "applied": "Applied",
+      "assessment": "Test task",
+      "interview": "Interview",
+      "offer": "Offer",
+      "hired": "Accepted"
+    },
+    "stages": {
+      "title": "Stages",
+      "step": "{{rate}} of the previous stage moved on",
+      "skipped": "nobody reached the previous stage",
+      "note": "Percent of all applications. Test tasks and interviews are optional, so a stage can be larger than the one before it."
+    },
+    "outcomes": {
+      "title": "Application status"
+    },
+    "outcome": {
+      "hired": "Hired",
+      "offer_pending": "Offer awaiting reply",
+      "in_progress": "In selection",
+      "waiting": "Not reviewed",
+      "offer_declined": "Declined the offer",
+      "withdrawn": "Withdrew",
+      "rejected": "Rejected"
+    },
+    "dropoff": {
+      "title": "Where they stopped",
+      "at": {
+        "applied": "After applying",
+        "assessment": "After the test task",
+        "interview": "After an interview"
+      },
+      "rejected_one": "{{count}} rejected",
+      "rejected_other": "{{count}} rejected",
+      "withdrawn_one": "{{count}} withdrew",
+      "withdrawn_other": "{{count}} withdrew"
+    },
+    "stale": {
+      "title_one": "{{count}} application unanswered for over 7 days",
+      "title_other": "{{count}} applications unanswered for over 7 days",
+      "body": "Candidates are waiting: send a test task, an interview invite or a rejection.",
+      "action": "Open applications"
+    },
+    "assessments": {
+      "title": "Test tasks",
+      "none": "No test tasks were sent for these applications.",
+      "sent": "Sent",
+      "started": "Started",
+      "completed": "Finished",
+      "completionRate": "Completion rate",
+      "avgScore": "Average score"
+    },
+    "interviews": {
+      "title": "Interviews",
+      "none": "No interviews were proposed for these applications.",
+      "proposed": "Proposed",
+      "held": "Held",
+      "passRate": "Passed",
+      "showRate": "Showed up",
+      "confirmed_one": "time picked for {{count}}",
+      "confirmed_other": "time picked for {{count}}",
+      "declined_one": "{{count}} declined by the student",
+      "declined_other": "{{count}} declined by the student",
+      "noShow_one": "{{count}} no-show",
+      "noShow_other": "{{count}} no-shows"
+    },
+    "byVacancy": {
+      "title": "By vacancy",
+      "hireRate": "Conversion"
     }
   }
 }

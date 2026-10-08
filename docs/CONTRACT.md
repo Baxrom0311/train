@@ -160,7 +160,7 @@ schema / endpoint shakli) orqali gaplashadi.
 | 1 | **Core & Auth & RBAC** | `backend/app/core/`, `backend/app/models/user.py`, `backend/app/models/rbac.py`, `backend/app/api/auth.py` | Yo'q (birinchi quriladi) |
 | 2 | **Simulations & AI Mentor** | `backend/app/models/simulation.py`, `backend/app/models/ai_usage.py`, `backend/app/api/simulations.py`, `backend/app/api/submissions.py`, `backend/app/ai/` | (1)ga bog'liq |
 | 3 | **Billing & Admin approval** | `backend/app/models/billing.py`, `backend/app/api/billing.py`, `backend/app/api/admin.py` | (1)ga bog'liq |
-| 4 | **Talent Hunt** | `backend/app/models/talent.py`, `backend/app/api/talent_hunt.py`, `backend/app/api/vacancies.py`, `backend/app/talent/` | (1),(3),(9)ga bog'liq — ball Run natijalaridan (§10); vakansiya, ariza va suhbat bosqichlari (§23, §25) |
+| 4 | **Talent Hunt** | `backend/app/models/talent.py`, `backend/app/api/talent_hunt.py`, `backend/app/api/vacancies.py`, `backend/app/talent/` | (1),(3),(9)ga bog'liq — ball Run natijalaridan (§10); vakansiya, ariza, suhbat bosqichlari va ishga olish voronkasi (§23, §25, §27) |
 | 5 | **Case Cup** | `backend/app/api/case_cups.py` | (1),(2)ga bog'liq |
 | 6 | **University Portal** | `backend/app/api/university_portal.py` | (1),(3),(9)ga bog'liq — natijalar Run'lardan (§12) |
 | 7 | **Frontend (React+shadcn)** | `frontend/` | Har modul backend API'si tayyor bo'lgach, mos ekranlar — vertical slice, lekin alohida agent/task |
@@ -2204,3 +2204,102 @@ bilan bir tranzaksiyada chaqiradi (`assessment_finished(db, run, now)`).
 - Talaba: vakansiya sahifasida sinov kartasi (ssenariy, davomiyligi,
   boshlash muddati, izoh), "Boshlash" → Run sahifasi; boshlangan — "Davom
   etish", tugagan — "Hisobot".
+
+## 27. Ishga olish voronkasi (Modul 4 + 7)
+
+§20 hisobotidagi takliflar voronkasi Talent Hunt takliflarini (§10.2)
+sanaydi. Vakansiya orqali ishga olishda esa nomzod bosqichma-bosqich
+o'tadi: ariza (§23) → sinov topshirig'i (§26) → suhbat (§25) → taklif →
+qabul. Kompaniya har vakansiya bo'yicha qayerda nomzod "yo'qolayotganini",
+qaysi bosqich qancha vaqt olayotganini va javobsiz qolgan arizalarni ko'radi.
+
+Yangi jadval yoki migratsiya yo'q: hamma narsa mavjud yozuvlardan
+(`vacancy_applications`, `application_assessments`, `application_interviews`,
+`talent_offers.vacancy_id`) hisoblanadi. Sof funksiyalar —
+`talent/hiring.py`, endpointlar — `api/vacancies.py`.
+
+### 27.1 Kogorta va bosqichlar
+
+- **Kogorta** — kompaniya vakansiyalariga davr ichida (`created_at ≥ hozir −
+  days`) berilgan arizalar, qaytarib olinganlari ham (son sifatida; ism
+  hech qayerda chiqmaydi, §23.3). `days` berilmasa — butun tarix;
+  `vacancy_id` berilsa — faqat shu vakansiya (boshqa kompaniyaniki — 404).
+  Arizaning keyingi bosqichlari qachon bo'lganidan qat'i nazar shu arizaga
+  sanaladi — konversiya kogorta bo'yicha.
+- **Bosqichlar** (ariza shu bosqichga *o'tkazilgan* bo'lsa sanaladi —
+  kompaniya qadami; natija bosqich kartalarida):
+  - `applied` — hammasi;
+  - `assessment` — kamida bitta sinov topshirig'i yuborilgan (keyin bekor
+    qilingani ham);
+  - `interview` — kamida bitta suhbat taklif qilingan;
+  - `offer` — shu vakansiyadan shu nomzodga taklif yuborilgan
+    (`talent_offers.vacancy_id`);
+  - `hired` — o'sha taklif `accepted`.
+- Sinov va suhbat ixtiyoriy, tartibi ham erkin. Shuning uchun har bosqich
+  uchun ikki nisbat: `rate = count / applied` va `step_rate` — oldingi
+  bosqichga yetganlarning qanchasi shu bosqichga ham yetgan (`prev ∧ this /
+  prev`, doim ≤ 100). Foiz 1 xona, maxraj 0 — `null`.
+- **Eng uzoq bosqich** (`furthest`) — `applied < assessment < interview <
+  offer < hired` tartibida arizaning yetgan eng oxirgisi.
+
+### 27.2 Ko'rsatkichlar
+
+- `outcomes` (kogortadagi arizalar, har biri bittasida):
+  `hired`; `offer_pending` (oxirgi taklif `sent | viewed`);
+  `offer_declined`; `rejected`; `withdrawn`; `in_progress` (`applied |
+  interviewing` va kompaniya kamida bitta qadam qilgan); `waiting`
+  (`applied`, hali hech qanday qadam yo'q). `stale` — `waiting`dan
+  **7 kundan** ko'p turganlari (javobsiz arizalar ogohlantirishi).
+- `dropoff: [{stage, rejected, withdrawn}]` — rad etilgan va qaytarib
+  olingan arizalar `furthest` bosqich bo'yicha (`applied`, `assessment`,
+  `interview`).
+- `assessments` (kogorta arizalarining topshiriqlari): `sent`, `started`,
+  `completed` (§26.2 `completed | incomplete`), `cancelled` (boshlanmay bekor
+  qilingan), `completion_rate = completed / started`, `avg_score` (yakuniy
+  hisobot `overall_score` o'rtachasi).
+- `interviews`: `proposed` (hammasi), `confirmed` (talaba vaqt tanlagan —
+  `confirmed_at` bor), `declined` (talaba rad etgan), `held` (`completed`,
+  `passed | failed`), `passed`, `failed`, `no_show`, `pass_rate = passed / held`,
+  `show_rate = held / (held + no_show)`.
+- `timing` (median, kalendar vaqti, 1 xona; ma'lumot yo'q — `null`):
+  `first_action_hours` — arizadan kompaniyaning birinchi qadamigacha (sinov,
+  suhbat yoki taklif; rad etish qadam hisoblanmaydi — u voronkani yopadi),
+  `offer_days` — arizadan birinchi taklifgacha, `hire_days` — arizadan
+  taklif qabul qilingunicha.
+- `by_vacancy: [{vacancy_id, title, status, applied, assessment, interview,
+  offer, hired, hire_rate}]` — `applied` kamayishi bo'yicha, teng bo'lsa
+  nom bo'yicha; kogortada arizasi yo'q vakansiyalar kirmaydi.
+- `vacancies: [{id, title, status}]` — tanlov uchun kompaniyaning `draft`
+  bo'lmagan barcha vakansiyalari (yangilari tepada).
+
+Vakansiyadan arizasiz (mos nomzodga, §23.3) yuborilgan taklif ariza
+voronkasiga kirmaydi — u §20 takliflar voronkasida.
+
+### 27.3 API (`api/vacancies.py`, `manage_vacancies`, §23.5 sharti)
+
+```
+GET /api/v1/company/vacancies/report               ?days=1..3650&vacancy_id=
+    → {generated_at, days, vacancy_id, vacancies, stages, outcomes, dropoff,
+       assessments, interviews, timing, by_vacancy}
+GET /api/v1/company/vacancies/report/applications.csv   ?days=&vacancy_id=
+    applied_at, vacancy, candidate_name, status, furthest_stage,
+    assessment_score, interviews_held, offer_status, first_action_at,
+    hired_at, candidate_email (faqat taklif accepted)
+```
+
+CSV qoidalari §20.3 bilan bir xil (BOM, Toshkent vaqti, formula
+injection himoyasi). Qaytarib olingan arizalar va faol bo'lmagan foydalanuvchilar CSV'ga
+**kirmaydi** (§23.3: kompaniya ularni ariza ro'yxatida ham ko'rmaydi). `assessment_score` — oxirgi
+tugallangan sinov balli, `offer_status` — oxirgi taklif `status` yoki
+javobi (`accepted | declined`), `hired_at` — taklif qabul qilingan vaqt.
+
+### 27.4 Frontend
+
+`/talents/report` (§20.4) sahifasida, foydalanuvchida `manage_vacancies`
+bo'lsa, "Ishga olish voronkasi" bo'limi: vakansiya tanlovi (davr sahifaniki
+bilan umumiy), asosiy raqamlar (arizalar, ishga olindi, birinchi javob
+vaqti, ishga olish muddati), bosqichlar voronkasi (`rate` va `step_rate`),
+holatlar va "javobsiz arizalar" ogohlantirishi (vakansiya sahifasiga
+havola), bosqichlar bo'yicha yo'qotishlar, sinov va suhbat kartalari,
+vakansiyalar jadvali va arizalar CSV'si. Bo'sh kogortada — vakansiyalarga
+havola.

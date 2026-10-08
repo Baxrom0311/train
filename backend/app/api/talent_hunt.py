@@ -416,7 +416,7 @@ def _since(now: datetime, days: int | None) -> datetime | None:
     return now - timedelta(days=days) if days else None
 
 
-def _csv_response(body: str, name: str, now: datetime) -> Response:
+def csv_response(body: str, name: str, now: datetime) -> Response:
     filename = f"tryjob-{name}-{now.astimezone(report.TASHKENT):%Y-%m-%d}.csv"
     return Response(
         content=body.encode("utf-8"),
@@ -447,7 +447,7 @@ async def get_company_report(company: VerifiedCompany, days: ReportDays = None, 
 async def get_offers_csv(company: VerifiedCompany, days: ReportDays = None, db: AsyncSession = Depends(get_db)):
     now = _now()
     rows = await _company_offers(db, company, _since(now, days))
-    return _csv_response(report.offers_csv(rows), "offers", now)
+    return csv_response(report.offers_csv(rows), "offers", now)
 
 
 @router.get("/report/candidates.csv", response_class=Response)
@@ -456,7 +456,7 @@ async def get_candidates_csv(company: VerifiedCompany, db: AsyncSession = Depend
     users, profiles = await visible_profiles(db, company)
     profiles.sort(key=lambda p: (p.overall_score if p.overall_score is not None else -1, p.last_completed_at), reverse=True)
     rows = [(users[p.user_id].full_name, p) for p in profiles]
-    return _csv_response(report.candidates_csv(rows), "candidates", _now())
+    return csv_response(report.candidates_csv(rows), "candidates", _now())
 
 
 @router.get("/offers/my", response_model=list[ReceivedOfferOut])
