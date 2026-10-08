@@ -11,12 +11,13 @@ from collections import Counter
 from dataclasses import dataclass
 from statistics import fmean
 
-from sqlalchemy import select
+from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.enums import ScenarioVersionStatus
+from app.models.billing import Company
+from app.models.enums import ScenarioVersionStatus, VacancyStatus
 from app.models.scenario import Scenario, ScenarioVersion
-from app.models.talent import Vacancy
+from app.models.talent import Vacancy, VacancyApplication
 from app.scenario.engine import definition_for
 from app.talent.profile import Profile
 
@@ -63,6 +64,35 @@ def fit(profile: Profile, vacancy: Vacancy) -> Fit:
     ]
     meets = not gaps and (vacancy.min_score is None or (overall is not None and overall >= vacancy.min_score))
     return Fit(fit=value, meets=meets, gaps=gaps, sector_match=vacancy.sector.value in profile.sectors)
+
+
+def student_visible():
+    """Tasdiqlangan kompaniyalarning vakansiyalari (holat filtri chaqiruvchida)."""
+    return select(Vacancy, Company).join(Company, Company.id == Vacancy.company_id).where(Company.is_verified.is_(True))
+
+
+async def student_vacancy(
+    db: AsyncSession, user_id: uuid.UUID, vacancy_id: uuid.UUID, *, lock: bool = False,
+) -> tuple[Vacancy, Company] | None:
+    """
+    §23.6: talabaga ko'rinadigan vakansiya — ochiq yoki talaba ariza bergan
+    yopilgani; qoralama va boshqasi — `None`. Suhbat mashqi (§24.2) ham shu qoidada.
+    """
+    q = student_visible().where(Vacancy.id == vacancy_id)
+    if lock:
+        q = q.with_for_update(of=Vacancy)
+    row = (await db.execute(q)).first()
+    if row is None:
+        return None
+    vacancy, company = row
+    if vacancy.status == VacancyStatus.OPEN:
+        return vacancy, company
+    if vacancy.status == VacancyStatus.DRAFT:
+        return None
+    applied = await db.scalar(select(exists().where(
+        VacancyApplication.vacancy_id == vacancy.id, VacancyApplication.user_id == user_id,
+    )))
+    return (vacancy, company) if applied else None
 
 
 @dataclass(frozen=True)

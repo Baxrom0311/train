@@ -693,3 +693,56 @@ export interface MyApplication extends VacancyApplication {
   company_name: string
   sector: Sector
 }
+
+// ── AI suhbat mashqi (CONTRACT.md §24) ──────────────────────────────
+
+export type InterviewStatus = 'active' | 'evaluating' | 'completed' | 'failed' | 'abandoned'
+
+export interface InterviewMessage {
+  id: string
+  seq: number
+  role: 'interviewer' | 'candidate'
+  kind: 'question' | 'follow_up' | 'answer' | 'closing'
+  question_index: number
+  body: string
+  created_at: string
+}
+
+export interface InterviewCard {
+  id: string
+  vacancy_id: string | null
+  position: string
+  company_name: string
+  sector: Sector
+  status: InterviewStatus
+  score: number | null
+  created_at: string
+  finished_at: string | null
+}
+
+export interface InterviewAnswerFeedback {
+  index: number
+  competency: string
+  question: string
+  score: number
+  comment: string
+  better: string
+}
+
+export interface InterviewFeedback {
+  summary: string
+  strengths: string[]
+  improvements: string[]
+  answers: InterviewAnswerFeedback[]
+}
+
+export interface InterviewDetail extends InterviewCard {
+  lang: string
+  focus: string[]
+  requirements: Record<string, number>
+  total_questions: number
+  current: number
+  messages: InterviewMessage[]
+  competency_scores: Record<string, number> | null
+  feedback: InterviewFeedback | null
+}

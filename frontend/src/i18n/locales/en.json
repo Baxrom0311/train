@@ -16,7 +16,8 @@
     "portfolio": "Portfolio",
     "scenarios": "Scenarios",
     "companyReport": "Report",
-    "vacancies": "Vacancies"
+    "vacancies": "Vacancies",
+    "interviews": "Interviews"
   },
   "auth": {
     "login": {
@@ -1110,6 +1111,7 @@
       "mentor": "Mentor notes",
       "day_report": "Daily report",
       "final_report": "Final report",
+      "interview": "Interview practice",
       "other": "Other"
     },
     "provider": "Provider",
@@ -1247,6 +1249,79 @@
       "practiceHint": "Scenarios the company recommends and ones that train the competencies you're missing.",
       "done": "Completed",
       "start": "Start"
+    }
+  },
+  "interview": {
+    "kicker": "Practice interview",
+    "notFound": "Interview not found",
+    "dailyLimit": "You've reached today's practice interview limit (3 per day). Try again tomorrow.",
+    "status": {
+      "active": "In progress",
+      "evaluating": "Evaluating",
+      "completed": "Evaluated",
+      "failed": "Not evaluated",
+      "abandoned": "Stopped"
+    },
+    "prepare": {
+      "title": "Prepare for the interview",
+      "hint": "An AI interviewer asks 5 questions based on this vacancy's requirements and comments on every answer. Only you see the result.",
+      "last": "Latest practice interview",
+      "best": "Your best result: {{score}}"
+    },
+    "start": "Start a practice interview",
+    "again": "Practice again",
+    "continue": "Continue the interview",
+    "reading": "The interviewer is reading your answer…",
+    "placeholder": "Write your answer. Give a concrete example: what was the situation, what did you do, and what was the result?",
+    "answerLabel": "Your answer",
+    "minLength_one": "At least {{count}} character",
+    "minLength_other": "At least {{count}} characters",
+    "shortcut": "Ctrl + Enter to send",
+    "abandon": "End",
+    "send": "Answer",
+    "abandonConfirm": "Stop the interview? It won't be evaluated.",
+    "evaluating": "Your answers are being evaluated",
+    "evaluatingHint": "This usually takes less than a minute. You can close the page — the result will be saved here.",
+    "failed": "Couldn't evaluate yet",
+    "failedHint": "The AI service didn't respond. Your answers are saved — press Evaluate again.",
+    "retry": "Evaluate again",
+    "abandoned": "This interview was stopped and not evaluated.",
+    "questionOf": "Question {{n}} of {{total}}",
+    "followUp": "Follow-up question",
+    "progress": "Progress",
+    "focus": "Focus areas",
+    "tips": {
+      "title": "Shape of a strong answer",
+      "situation": "Situation",
+      "situationHint": "where, when, what the problem was",
+      "task": "Task",
+      "taskHint": "what your role was",
+      "action": "Action",
+      "actionHint": "what exactly you did",
+      "result": "Result",
+      "resultHint": "what changed — numbers are even better",
+      "private": "This is practice: companies don't see the result and it doesn't affect your profile."
+    },
+    "verdict": {
+      "strong": "Strong interview",
+      "solid": "Solid foundation",
+      "practice": "Needs practice"
+    },
+    "summary": "Overall impression",
+    "byCompetency": "By competency",
+    "strengths": "Your strengths",
+    "improvements": "What to improve",
+    "perQuestion": "Question by question",
+    "transcript": "Full interview transcript",
+    "all": "All interviews",
+    "showAnswer": "Show my answer",
+    "hideAnswer": "Hide answer",
+    "better": "A stronger answer would:",
+    "list": {
+      "title": "Practice interviews",
+      "subtitle": "Your practice sessions with the AI interviewer and their results.",
+      "empty": "You haven't taken a practice interview yet. Open a vacancy and press \"Start a practice interview\".",
+      "toVacancies": "Go to vacancies"
     }
   }
 }

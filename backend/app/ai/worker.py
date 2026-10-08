@@ -20,6 +20,8 @@ from app.models.simulation import Submission, SimulationTask, Simulation
 from app.models.enums import AIEvalStatus
 from app.ai.guardrail import validate_submission_content
 from app.ai.router import run_ai_chain, _pick_persona, _build_user_prompt
+from app.interview.jobs import MAX_TRIES as INTERVIEW_TRIES, REPORT_JOB as INTERVIEW_REPORT_JOB
+from app.interview.jobs import interview_report_job, requeue_stale_interviews
 from app.notifications.jobs import deadline_reminders_job, send_notification_emails_job, send_push_notifications_job
 from app.scenario.jobs import (
     DAY_REPORT_JOB,
@@ -158,6 +160,8 @@ class WorkerSettings:
         # natija saqlanmaydi — hisobot hali yozilmagan bo'lsa cron shu _job_id bilan qayta qo'ya oladi
         func(day_report_job, name=DAY_REPORT_JOB, keep_result=0, max_tries=1),
         func(final_report_job, name=FINAL_REPORT_JOB, keep_result=0, max_tries=1),
+        # §24.4: AI ishlamasa o'zi qayta urinadi; natija saqlanmaydi — cron qayta qo'ya oladi
+        func(interview_report_job, name=INTERVIEW_REPORT_JOB, keep_result=0, max_tries=INTERVIEW_TRIES),
     ]
     cron_jobs = [
         # §9.8: har daqiqa — yetkazish, dedlaynlar, Run yopilishi
@@ -171,6 +175,8 @@ class WorkerSettings:
         cron(send_notification_emails_job, second=20, unique=True, timeout=50),
         # §22.2: push — yetkazish (0) va eslatmadan (10) keyin; VAPID bo'lmasa no-op
         cron(send_push_notifications_job, second=15, unique=True, timeout=50),
+        # §24.4: navbatga tushmay qolgan suhbat baholari
+        cron(requeue_stale_interviews, minute=set(range(2, 60, 5)), second=40, unique=True),
     ]
     redis_settings = RedisSettings.from_dsn(settings.REDIS_URL)
     # §18.1: `/api/v1/health` shu kalitni tekshiradi — worker o'lsa ~1 daqiqada ko'rinadi

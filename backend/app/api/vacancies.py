@@ -457,11 +457,6 @@ async def reject_application(vacancy_id: uuid.UUID, application_id: uuid.UUID, s
 # Talaba
 # ---------------------------------------------------------------------------
 
-def _student_visible():
-    """Tasdiqlangan kompaniyalarning vakansiyalari (holat filtri chaqiruvchida)."""
-    return select(Vacancy, Company).join(Company, Company.id == Vacancy.company_id).where(Company.is_verified.is_(True))
-
-
 def _vacancy_card(vacancy: Vacancy, company: Company, profile: Profile | None, application: VacancyApplication | None) -> dict:
     return {
         **VacancyOut.model_validate(vacancy).model_dump(),
@@ -477,27 +472,16 @@ async def _my_applications(db: AsyncSession, user_id: uuid.UUID) -> dict[uuid.UU
 
 
 async def _student_vacancy(db: AsyncSession, user: User, vacancy_id: uuid.UUID, *, lock: bool = False) -> tuple[Vacancy, Company]:
-    """Ochiq vakansiya yoki talaba ariza bergan yopilgani; qoralama va boshqalar — 404 (§23.6)."""
-    q = _student_visible().where(Vacancy.id == vacancy_id)
-    if lock:
-        q = q.with_for_update(of=Vacancy)
-    row = (await db.execute(q)).first()
-    if row is None:
+    found = await matching.student_vacancy(db, user.id, vacancy_id, lock=lock)
+    if found is None:
         raise HTTPException(status_code=404, detail="Vacancy not found")
-    vacancy, company = row
-    if vacancy.status != VacancyStatus.OPEN:
-        applied = await db.scalar(select(func.count()).select_from(VacancyApplication).where(
-            VacancyApplication.vacancy_id == vacancy.id, VacancyApplication.user_id == user.id,
-        ))
-        if vacancy.status == VacancyStatus.DRAFT or not applied:
-            raise HTTPException(status_code=404, detail="Vacancy not found")
-    return vacancy, company
+    return found
 
 
 @router.get("", response_model=list[VacancyCard])
 async def list_vacancies(current_user: Candidate, db: AsyncSession = Depends(get_db), sector: Sector | None = None):
     """Ochiq vakansiyalar: mosligi yuqorilari tepada (profil yo'q bo'lsa — yangilari)."""
-    q = _student_visible().where(Vacancy.status == VacancyStatus.OPEN)
+    q = matching.student_visible().where(Vacancy.status == VacancyStatus.OPEN)
     if sector is not None:
         q = q.where(Vacancy.sector == sector)
     rows = (await db.execute(q)).all()

@@ -151,3 +151,26 @@ class ChatSender(str, enum.Enum):
     STUDENT = "student"
     PERSONA = "persona"
     SYSTEM = "system"
+
+
+# ── AI suhbat mashqi (CONTRACT.md §24) ───────────────────────────────
+
+
+class InterviewStatus(str, enum.Enum):
+    ACTIVE = "active"
+    EVALUATING = "evaluating"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    ABANDONED = "abandoned"
+
+
+class InterviewRole(str, enum.Enum):
+    INTERVIEWER = "interviewer"
+    CANDIDATE = "candidate"
+
+
+class InterviewMessageKind(str, enum.Enum):
+    QUESTION = "question"
+    FOLLOW_UP = "follow_up"
+    ANSWER = "answer"
+    CLOSING = "closing"

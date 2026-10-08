@@ -1,5 +1,5 @@
 // /vacancies/:id (CONTRACT.md §23.8): talaba vakansiyani ko'radi — talablar va o'z ballari,
-// mashq qilish uchun ssenariylar, ariza berish yoki qaytarib olish.
+// mashq qilish uchun ssenariylar, ariza berish yoki qaytarib olish, sinov suhbati (§24.7).
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -7,7 +7,9 @@ import { ArrowLeft, CalendarDays, CheckCircle2, Loader2, Play, Send, Undo2 } fro
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { ScoreRing } from '@/components/score'
+import { PrepareCard } from '@/components/interviews/parts'
 import { ApplicationBadge, FitBadge, VacancyMeta } from '@/components/vacancies/parts'
+import { useAuth } from '@/context/AuthContext'
 import { api, ApiError } from '@/lib/api'
 import type { PracticeScenario, RunCreated, VacancyDetail } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -15,6 +17,7 @@ import { cn } from '@/lib/utils'
 export default function VacancyPage() {
   const { id = '' } = useParams()
   const { t } = useTranslation()
+  const { can } = useAuth()
   const [v, setV] = useState<VacancyDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -95,6 +98,7 @@ export default function VacancyPage() {
 
         <aside className="h-fit space-y-4 lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1">
           <ApplyCard v={v} onChange={load} />
+          {can('practice_interviews') && <PrepareCard vacancyId={v.id} />}
         </aside>
 
         {v.practice.length > 0 && <div className="min-w-0 lg:col-start-1"><Practice items={v.practice} /></div>}

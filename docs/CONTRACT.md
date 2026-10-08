@@ -170,6 +170,7 @@ schema / endpoint shakli) orqali gaplashadi.
 | 11 | **Notifications** | `backend/app/models/notification.py`, `backend/app/api/notifications.py`, `backend/app/notifications/`, `tools/gen_vapid_keys.py` | (1),(4),(9),(10)ga bog'liq — manbalar §15.2 |
 | 12 | **Analytics** | `backend/app/api/analytics.py`, `backend/app/analytics/` | (9),(10)ga bog'liq — Run natijalarini faqat o'qiydi (§17); platforma statistikasi hisobi `analytics/platform.py` (§21), endpointi Modul 3 `api/admin.py`da |
 | 13 | **Sandbox runner** | `sandbox/`, `deploy/sandbox.Dockerfile` | Tashqi bog'liqliksiz (faqat stdlib); backend `core/sandbox.py` orqali chaqiradi (§19) |
+| 14 | **Interview practice** | `backend/app/models/interview.py`, `backend/app/api/interviews.py`, `backend/app/interview/` | (1),(2),(4)ga bog'liq — vakansiya va moslik §23 interfeysidan, AI `ai/interviewer.py`dan (§24) |
 
 Qurish ketma-ketligi: **1 → (2,3 parallel) → (4,5,6 parallel) → 7 har
 bosqichda mos ravishda**. Modul 9: avval (1),(2),(8)dagi §9.10
@@ -225,6 +226,7 @@ POST   /api/v1/talents/offers             counts against subscription's "intervi
 # Platforma statistikasi va AI sarfi (admin) — §21
 # Push obunalari va PWA — §22
 # Kompaniya vakansiyalari, moslik, arizalar — §23
+# AI suhbat mashqi — §24
 # Universitet portali (talabalar natijalari, bog'lanish) — §12.2
 ```
 
@@ -1541,7 +1543,8 @@ baholash navbati tiqilmaganmi va AI qancha token/pul sarflayapti. Mavjud
   `(day, provider, model, purpose)`. Bir kun-provayder-model-maqsad uchun bitta
   qator, `INSERT … ON CONFLICT DO UPDATE` bilan oshiriladi.
 - `ai/llm.py` `chat(..., purpose=)`: `evaluation` (rubrika), `persona`
-  (personaj javobi), `mentor`, `day_report`, `final_report`; berilmasa
+  (personaj javobi), `mentor`, `day_report`, `final_report`, `interview`
+  (§24); berilmasa
   `other`. Muvaffaqiyatli javob — `calls + 1` va tokenlar; provayder xatosi
   yoki yaroqsiz javob — shu provayderga `failures + 1` (keyingi provayderga
   o'tiladi, §9.10).
@@ -1816,3 +1819,135 @@ ko'rinadi.
   vakansiya sahifasi — tavsif, talablar va o'z ballari solishtirmasi,
   mashq qilish uchun ssenariylar ("Boshlash"), ariza / qaytarib olish.
   Profil yo'q bo'lsa — "avval bitta ssenariyni tugating".
+
+## 24. AI suhbat mashqi (Modul 14 + 2 + 7)
+
+Vakansiya (§23) talabaga nimani mashq qilishni ko'rsatadi, lekin ishga
+kirishning oxirgi bosqichi — suhbat. Talaba vakansiya bo'yicha AI
+suhbatdoshi bilan **sinov intervyusi**dan o'tadi: savollar vakansiya
+talablari va talabaning zaif kompetensiyalariga qaratilgan, javob noaniq
+bo'lsa aniqlashtiruvchi savol beriladi, oxirida har javobga baho va izoh,
+kompetensiyalar bo'yicha natija va keyingi qadamlar. Mashq **shaxsiy**:
+natijani faqat talaba ko'radi.
+
+### 24.1 Ma'lumot (Modul 14, `models/interview.py`)
+
+`interviews`:
+- `id, user_id (FK, CASCADE), vacancy_id (FK vacancies, SET NULL)`;
+- boshlanishdagi nusxa (vakansiya keyin o'zgarsa yoki o'chsa ham natija
+  o'qiladi): `position` (vakansiya nomi), `company_name`, `sector`,
+  `requirements` JSONB `{competency: min_score}`;
+- `focus` JSONB — savollar qaratilgan kompetensiyalar (≤ 3, §24.2);
+- `lang` (`uz | ru | en`) — suhbat tili (talaba interfeysi tili);
+- `plan` JSONB `[{competency, text}]` — asosiy savollar (5 ta); talabaga
+  faqat navbati kelgani ko'rinadi;
+- `current` — joriy asosiy savol indeksi (0…4), `follow_ups` — berilgan
+  aniqlashtiruvchi savollar soni;
+- `status`: `active | evaluating | completed | failed | abandoned`;
+- natija: `score` (0–100, 1 xona), `competency_scores` JSONB
+  `{competency: score}`, `feedback` JSONB (§24.4);
+- `tokens_used`, `eval_attempts`, `created_at`, `finished_at`, `evaluated_at`.
+- Indeks: `(user_id, created_at)`; bir talabada bir vaqtda ko'pi bilan
+  bitta `active` (partial unique index).
+
+`interview_messages`:
+- `id, interview_id (FK, CASCADE), seq` (`UNIQUE(interview_id, seq)`),
+  `role` (`interviewer | candidate`), `kind` (`question | follow_up | answer
+  | closing`), `question_index` (0…4), `body` (≤ 3000), `generated`
+  (AI yozdimi), `created_at`.
+
+### 24.2 Boshlash (`interview/flow.py`)
+
+- `POST /interviews {vacancy_id, lang}` — vakansiya talabaga ko'rinadigan
+  bo'lishi shart (§23.6 qoidasi: `open` yoki talaba ariza bergan `closed`;
+  aks holda 404).
+- Talabada `active` suhbat bor — 409 (`detail` ichida uning `id`si).
+  24 soatdan eski `active` suhbat avval `abandoned` qilinadi.
+- Kunlik limit: Toshkent kuni bo'yicha **3** ta boshlangan suhbat (4-si —
+  429).
+- `focus`: talabaning §23.2 `gaps` kompetensiyalari (talab tartibida),
+  so'ng qolgan talablar, bo'sh qolsa — `communication`; ko'pi bilan 3 ta.
+- `plan` — LLM (`purpose=interview`, §24.5): 5 savol — 1-si tanishuv va
+  motivatsiya (`communication`), keyingi uchtasi `focus` kompetensiyalari
+  bo'yicha (kam bo'lsa `prioritization`, `stress_handling`, `initiative`
+  tartibida to'ldiriladi; xulq-atvor — "qachondir … bo'lganmi, nima qildingiz" yoki
+  vaziyat), oxirgisi soha bo'yicha amaliy vaziyat (`technical`). LLM
+  ishlamasa yoki javob yaroqsiz bo'lsa — `interview/bank.py`dagi savollar
+  bazasi (har kompetensiya va soha uchun, uch tilda), `generated=false`.
+- Birinchi xabar: salomlashuv (shablon, lavozim va kompaniya nomi bilan) +
+  1-savol.
+
+### 24.3 Javob va aniqlashtiruvchi savol
+
+- `POST /interviews/{id}/answer {text}` — 10–3000 belgi; faqat `active`
+  suhbatga (aks holda 409). Redis rate-limit: 10 ta / 60 s.
+- Talaba javobi — ma'lumot: promptda `<answer>` ichida, undagi
+  ko'rsatmalar bajarilmaydi (§9.4 kabi). Guardrail (§9.4) ishlatilmaydi —
+  IT suhbatida "system prompt" kabi atamalar oddiy javob.
+- LLM `interviewer_turn` (`{ack, follow_up}`): `ack` — 1 gaplik betaraf
+  reaksiya (bahosiz), `follow_up` — javob umumiy, misolsiz yoki natijasiz
+  bo'lsa bitta aniqlashtiruvchi savol. Cheklov: har asosiy savolga ko'pi
+  bilan 1 ta, butun suhbatga ko'pi bilan 2 ta `follow_up`.
+- `follow_up` bo'lsa — `kind=follow_up` xabar (`ack` + savol). Aks holda
+  keyingi asosiy savol (`ack` + savol). Oxirgi javobdan keyin — yakuniy
+  xabar (shablon, `kind=closing`), `status=evaluating`, `finished_at`,
+  baholash navbatga qo'yiladi.
+- LLM ishlamasa yoki `tokens_used` ≥ **40 000** — `ack`siz va
+  `follow_up`siz keyingi savol (suhbat to'xtamaydi).
+- `POST /interviews/{id}/abandon` — `active` → `abandoned` (baholanmaydi).
+
+### 24.4 Baholash (arq `interview_report_job`)
+
+- LLM (`purpose=interview`, JSON): har asosiy savol uchun (aniqlashtiruvchi
+  savol-javob shu savolga qo'shiladi) `score` (0–100), `comment` (nima
+  yaxshi / nima yetishmadi), `better` (kuchliroq javob qanday tuzilardi —
+  tayyor matn emas, yo'nalish); umumiy `summary`, `strengths` (≤ 3),
+  `improvements` (≤ 3). Javoblar soni savollar soniga teng bo'lmasa —
+  yaroqsiz.
+- `score` — asosiy savollar ballarining o'rtachasi; `competency_scores` —
+  har kompetensiya bo'yicha o'z savollari ballarining o'rtachasi (server
+  hisoblaydi, LLM emas).
+- `feedback`: `{summary, strengths[], improvements[], answers: [{index,
+  competency, score, comment, better}]}`.
+- Muvaffaqiyatsiz — arq qayta urinadi (3 marta); keyin `failed`.
+  `POST /interviews/{id}/retry` — `failed` → `evaluating`, qayta navbat.
+  Cron (5 daqiqada): 10 daqiqadan beri `evaluating` turganlar qayta navbatga
+  (`_job_id=interview:{id}` — takrorlanmaydi).
+- Natija talaba profiliga (§10.1), moslikka (§23.2) va kompaniyaga
+  ta'sir qilmaydi.
+
+### 24.5 AI (Modul 2, `ai/interviewer.py`)
+
+`plan_questions`, `interviewer_turn`, `evaluate_interview` — prompt va
+Pydantic sxemalar; `purpose="interview"` (§21.1 `PURPOSES`ga qo'shiladi).
+Suhbatdosh — o'ylab topilgan kompaniyaning HR mutaxassisi, suhbat `lang`
+tilida; haqiqiy kompaniya nomlari ishlatilmaydi.
+
+### 24.6 Ruxsat va API (`api/interviews.py`)
+
+`practice_interviews` (**yangi**, `student`).
+
+```
+POST   /api/v1/interviews                  {vacancy_id, lang} → 201 InterviewDetail
+GET    /api/v1/interviews                  → [InterviewCard] (yangilari tepada, ≤ 50)
+GET    /api/v1/interviews/{id}             → InterviewDetail
+POST   /api/v1/interviews/{id}/answer      {text} → InterviewDetail
+POST   /api/v1/interviews/{id}/abandon     → InterviewDetail
+POST   /api/v1/interviews/{id}/retry       → InterviewDetail
+```
+
+`InterviewCard`: `id, vacancy_id, position, company_name, sector, status,
+score, created_at, finished_at`. `InterviewDetail`: karta + `focus`,
+`requirements`, `total_questions`, `current`, `messages`, `competency_scores`,
+`feedback` (faqat `completed`da; `answers[]`ga savol matni `question` qo'shiladi).
+`plan` qaytarilmaydi. Boshqa talabaning suhbati — 404.
+
+### 24.7 Frontend
+
+- Vakansiya sahifasida (§23.8) "Suhbatga tayyorlanish" kartasi: oxirgi
+  natija va "Sinov suhbatini boshlash".
+- `/interviews/:id` — chat ko'rinishidagi suhbat (savol raqami, progress,
+  javob maydoni, "Yakunlash"), baholanayotganda kutish holati (so'rov
+  3 s'da), natija: umumiy ball, kompetensiyalar, har savol bo'yicha izoh,
+  kuchli tomonlar va o'sish nuqtalari, "Yana mashq qilish".
+- `/interviews` — o'tgan suhbatlar ro'yxati; navbarda talabaga "Suhbatlar".
