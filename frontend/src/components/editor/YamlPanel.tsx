@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { api } from '@/lib/api'
 import { ErrorNote } from './fields'
+import { useEditorScope } from './scope'
 import { normalize, type FieldError, type ScenarioDef } from './model'
 
 const describe = (e: FieldError) => (e.path.length ? `${e.path.join('.')}: ${e.message}` : e.message)
 
 export default function YamlPanel({ defn, onApply }: { defn: ScenarioDef; onApply: (d: ScenarioDef) => void }) {
   const { t } = useTranslation()
+  const { base } = useEditorScope()
   const [text, setText] = useState<string | null>(null)
   const [edited, setEdited] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -21,7 +23,7 @@ export default function YamlPanel({ defn, onApply }: { defn: ScenarioDef; onAppl
 
   const load = () => {
     setBusy(true)
-    api<{ text: string }>('/admin/scenarios/to-yaml', { method: 'POST', json: { definition: defn } })
+    api<{ text: string }>(`${base}/to-yaml`, { method: 'POST', json: { definition: defn } })
       .then((r) => { setText(r.text); setEdited(false); setErrors([]) })
       .catch((e) => setErrors([e.message]))
       .finally(() => setBusy(false))
@@ -33,7 +35,7 @@ export default function YamlPanel({ defn, onApply }: { defn: ScenarioDef; onAppl
     setBusy(true)
     setApplied(false)
     try {
-      const r = await api<{ definition: unknown; errors: FieldError[] }>('/admin/scenarios/yaml', { method: 'POST', json: { text: source } })
+      const r = await api<{ definition: unknown; errors: FieldError[] }>(`${base}/yaml`, { method: 'POST', json: { text: source } })
       setErrors(r.errors.map(describe))
       if (r.definition) {
         onApply(normalize(r.definition))

@@ -1,4 +1,4 @@
-// Ssenariy muharriri (CONTRACT.md §16.3): forma ↔ ta'rif, jonli tekshiruv, qoralama va nashr.
+// Ssenariy muharriri (CONTRACT.md §16.3; kompaniya — §26.1): forma ↔ ta'rif, jonli tekshiruv, qoralama va nashr.
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import NodeEditor from '@/components/editor/NodeEditor'
 import NodeTimeline from '@/components/editor/NodeTimeline'
 import YamlPanel from '@/components/editor/YamlPanel'
+import { ADMIN_SCOPE, EditorScopeContext, type EditorScope } from '@/components/editor/scope'
 import { DocumentsSection, GeneralSection, PersonasSection, type Located } from '@/components/editor/sections'
 import {
   blankNode, locate, normalize, templateScenario, uniqueKey,
@@ -38,8 +39,9 @@ function structuredErrors(e: unknown): FieldError[] | null {
   return Array.isArray(detail?.errors) ? detail.errors : null
 }
 
-export default function ScenarioEditorPage() {
+export default function ScenarioEditorPage({ scope = ADMIN_SCOPE }: { scope?: EditorScope }) {
   const { t } = useTranslation()
+  const { base } = scope
   const { id } = useParams()
   const [params] = useSearchParams()
   const navigate = useNavigate()
@@ -67,11 +69,11 @@ export default function ScenarioEditorPage() {
 
   // ── Yuklash ─────────────────────────────────────────────────────
   const loadInfo = useCallback(async () => {
-    const list = await api<ScenarioAdmin[]>('/admin/scenarios')
+    const list = await api<ScenarioAdmin[]>(base)
     const found = list.find((s) => s.id === id) ?? null
     setInfo(found)
     return found
-  }, [id])
+  }, [id, base])
 
   useEffect(() => {
     if (isNew) return
@@ -81,7 +83,7 @@ export default function ScenarioEditorPage() {
         const found = await loadInfo()
         if (!found) throw new ApiError(404, t('editor.notFound'))
         const number = Number(params.get('v')) || found.versions[0].version
-        const v = await api<VersionOut>(`/admin/scenarios/${id}/versions/${number}`)
+        const v = await api<VersionOut>(`${base}/${id}/versions/${number}`)
         if (cancelled) return
         const d = normalize(v.definition)
         setVersion(v)
@@ -100,7 +102,7 @@ export default function ScenarioEditorPage() {
     setValidating(true)
     const ctrl = new AbortController()
     const timer = setTimeout(() => {
-      api<Validation>('/admin/scenarios/validate', { method: 'POST', json: { definition: defn }, signal: ctrl.signal })
+      api<Validation>(`${base}/validate`, { method: 'POST', json: { definition: defn }, signal: ctrl.signal })
         .then(setValidation)
         .catch(() => {})
         .finally(() => !ctrl.signal.aborted && setValidating(false))
@@ -143,14 +145,14 @@ export default function ScenarioEditorPage() {
     setNotice('')
     try {
       const v = isNew
-        ? await api<VersionOut>('/admin/scenarios', { method: 'POST', json: { definition: defn } })
-        : await api<VersionOut>(`/admin/scenarios/${id}/draft`, { method: 'PUT', json: { definition: defn } })
+        ? await api<VersionOut>(base, { method: 'POST', json: { definition: defn } })
+        : await api<VersionOut>(`${base}/${id}/draft`, { method: 'PUT', json: { definition: defn } })
       const d = normalize(v.definition)
       setVersion(v)
       setDefn(d)
       setSaved(serialize(d))
       setNotice(t('editor.saved', { version: v.version }))
-      if (isNew) navigate(`/admin/scenarios/${v.scenario_id}/edit`, { replace: true, state: { notice: t('editor.saved', { version: v.version }) } })
+      if (isNew) navigate(`${base}/${v.scenario_id}/edit`, { replace: true, state: { notice: t('editor.saved', { version: v.version }) } })
       else await loadInfo()
       return v
     } catch (e) {
@@ -177,7 +179,7 @@ export default function ScenarioEditorPage() {
     if (!target) return
     setBusy('publish')
     try {
-      const v = await api<VersionOut>(`/admin/scenarios/${target.scenario_id}/versions/${target.version}/publish`, { method: 'POST' })
+      const v = await api<VersionOut>(`${base}/${target.scenario_id}/versions/${target.version}/publish`, { method: 'POST' })
       setVersion(v)
       setNotice(t('editor.published', { version: v.version }))
       await loadInfo()
@@ -205,7 +207,7 @@ export default function ScenarioEditorPage() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 text-center">
         <p className="text-lg font-semibold">{loadError}</p>
-        <Link to="/admin/scenarios" className="mt-4 inline-block text-primary hover:underline">{t('editor.backToList')}</Link>
+        <Link to={base} className="mt-4 inline-block text-primary hover:underline">{t('editor.backToList')}</Link>
       </div>
     )
   }
@@ -216,10 +218,11 @@ export default function ScenarioEditorPage() {
   const nextVersion = editingPublished ? (info?.versions[0]?.version ?? version.version) + 1 : version?.version
 
   return (
+    <EditorScopeContext.Provider value={scope}>
     <div id="editor-top" className="mx-auto max-w-7xl scroll-mt-28 space-y-5 px-4 py-6">
       {/* Sarlavha va amallar */}
       <div className="glass-strong sticky top-[4.75rem] z-30 flex flex-wrap items-center gap-3 rounded-2xl px-4 py-3">
-        <Link to="/admin/scenarios" aria-label={t('editor.backToList')} title={t('editor.backToList')}
+        <Link to={base} aria-label={t('editor.backToList')} title={t('editor.backToList')}
           className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
           <ArrowLeft className="h-4 w-4" />
         </Link>
@@ -301,7 +304,7 @@ export default function ScenarioEditorPage() {
           <DialogTitle className="pr-8 text-lg font-bold">{t('editor.confirm.title')}</DialogTitle>
           <DialogDescription asChild>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <p>{t('editor.confirm.body', { title: defn.title })}</p>
+              <p>{t(scope.company ? 'editor.confirm.bodyCompany' : 'editor.confirm.body', { title: defn.title })}</p>
               {info?.versions.some((v) => v.status === 'published') && <p>{t('editor.confirm.archive')}</p>}
               {dirty && <p className="font-medium text-foreground">{t('editor.confirm.saveFirst')}</p>}
             </div>
@@ -314,6 +317,7 @@ export default function ScenarioEditorPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </EditorScopeContext.Provider>
   )
 }
 

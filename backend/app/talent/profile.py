@@ -78,6 +78,8 @@ def completed_runs(user_ids: Select | list[uuid.UUID]) -> Select:
             Run.user_id.in_(user_ids),
             Run.status == RunStatus.COMPLETED,
             Run.final_report.is_not(None),
+            # kompaniya sinovi natijasi faqat talaba va shu kompaniyaga (§26.1)
+            Scenario.owner_company_id.is_(None),
             # bekor qilingan sertifikatli ish profilga kirmaydi (§13.1)
             ~exists().where(Certificate.run_id == Run.id, Certificate.revoked_at.is_not(None)),
         )

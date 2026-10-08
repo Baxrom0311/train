@@ -27,6 +27,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.reports import final_report as ai_final_report, summarize_day
 from app.credentials.issue import issue_for_run
+from app.notifications.assessments import assessment_finished
 from app.notifications.run_events import report_ready
 from app.models.enums import (
     AIEvalStatus,
@@ -36,7 +37,7 @@ from app.models.enums import (
     RunEventStatus,
     RunStatus,
 )
-from app.models.scenario import ChatMessage, Run, RunEvent, ScenarioVersion
+from app.models.scenario import ChatMessage, Run, RunEvent, Scenario, ScenarioVersion
 from app.models.simulation import Submission
 from app.scenario.engine import REPORT_DUE, definition_for
 from app.scenario.evaluation import public_checks
@@ -252,11 +253,17 @@ async def write_final_report(db: AsyncSession, run_id: uuid.UUID, now: datetime,
     tasks = [r.public() for r in results]
     summary = await summarize(tasks, base, [m for m in messages if m], completed)
     scores = competency_scores(results, initiative=summary.initiative_score if summary else None)
+    # kompaniya sinovi (§26.1) — sertifikatsiz: natija faqat talaba va shu kompaniyaga
+    company_owned = await db.scalar(
+        select(Scenario.owner_company_id.is_not(None))
+        .join(ScenarioVersion, ScenarioVersion.scenario_id == Scenario.id)
+        .where(ScenarioVersion.id == run.scenario_version_id)
+    )
 
     report = {
         "generated_at": now.isoformat(),
         "incomplete": not completed,
-        "certificate": completed,
+        "certificate": completed and not company_owned,
         "overall_score": _weighted(results),
         "on_time_rate": on_time_rate(results),
         "competency_scores": scores,
@@ -269,6 +276,7 @@ async def write_final_report(db: AsyncSession, run_id: uuid.UUID, now: datetime,
         run.competency_scores = scores
         code = await issue_for_run(db, run)   # §13.1 — shu tranzaksiyada
         await report_ready(db, run, code, now)   # §15.2
+        await assessment_finished(db, run, now)  # §26.5 — sinov bo'lsa kompaniyaga
     await db.commit()
     return True
 

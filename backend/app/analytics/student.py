@@ -165,7 +165,11 @@ async def _candidates(db: AsyncSession) -> list[Candidate]:
     rows = (await db.execute(
         select(Scenario, ScenarioVersion)
         .join(ScenarioVersion, ScenarioVersion.scenario_id == Scenario.id)
-        .where(Scenario.is_active.is_(True), ScenarioVersion.status == ScenarioVersionStatus.PUBLISHED)
+        .where(
+            Scenario.is_active.is_(True),
+            ScenarioVersion.status == ScenarioVersionStatus.PUBLISHED,
+            Scenario.owner_company_id.is_(None),    # §26.1
+        )
     )).all()
     out = []
     for scenario, version in rows:

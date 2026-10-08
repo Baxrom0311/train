@@ -165,7 +165,7 @@ schema / endpoint shakli) orqali gaplashadi.
 | 6 | **University Portal** | `backend/app/api/university_portal.py` | (1),(3),(9)ga bog'liq — natijalar Run'lardan (§12) |
 | 7 | **Frontend (React+shadcn)** | `frontend/` | Har modul backend API'si tayyor bo'lgach, mos ekranlar — vertical slice, lekin alohida agent/task |
 | 8 | **Deploy** | `deploy/` | Docker-compose, nginx, Dockerfile'lar — backend/frontend tuzilishi barqarorlashgach yangilanadi |
-| 9 | **Scenario Engine** | §9.10 ro'yxati (`backend/app/scenario/`, `models/scenario.py`, `api/scenarios.py`, `api/runs.py`, `api/files.py`, `backend/content/scenarios/`, `tools/import_scenario.py`) | (1),(2) interfeyslari — §9.10 |
+| 9 | **Scenario Engine** | §9.10 ro'yxati (`backend/app/scenario/`, `models/scenario.py`, `api/scenarios.py`, `api/runs.py`, `api/files.py`, `backend/content/scenarios/`, `tools/import_scenario.py`), kompaniya muharriri `api/company_scenarios.py` (§26) | (1),(2) interfeyslari — §9.10 |
 | 10 | **Credentials** | `backend/app/models/credential.py`, `backend/app/api/credentials.py`, `backend/app/credentials/` | (1),(6),(9)ga bog'liq — sertifikat Run'dan, portfolio §10.1 profilidan (§13) |
 | 11 | **Notifications** | `backend/app/models/notification.py`, `backend/app/api/notifications.py`, `backend/app/notifications/`, `tools/gen_vapid_keys.py` | (1),(4),(9),(10)ga bog'liq — manbalar §15.2 |
 | 12 | **Analytics** | `backend/app/api/analytics.py`, `backend/app/analytics/` | (9),(10)ga bog'liq — Run natijalarini faqat o'qiydi (§17); platforma statistikasi hisobi `analytics/platform.py` (§21), endpointi Modul 3 `api/admin.py`da |
@@ -228,6 +228,7 @@ POST   /api/v1/talents/offers             counts against subscription's "intervi
 # Kompaniya vakansiyalari, moslik, arizalar — §23
 # AI suhbat mashqi — §24
 # Suhbat bosqichlari (arizachi bilan haqiqiy suhbat) — §25
+# Kompaniya ssenariylari va arizachiga sinov topshirig'i — §26
 # Universitet portali (talabalar natijalari, bog'lanish) — §12.2
 ```
 
@@ -2092,3 +2093,114 @@ va `reminded_at = hozir` (bir marta).
   birini tanlash, rad etish (sabab), tasdiqlangan suhbat — vaqt, format,
   joy, "Kalendarga qo'shish" (`.ics` brauzerda yaratiladi). `/vacancies`dagi
   "Arizalarim"da suhbat sanasi.
+
+## 26. Kompaniya ssenariylari va sinov topshirig'i (Modul 9 + 4 + 11 + 7)
+
+Platforma katalogidagi ssenariylar umumiy mashq uchun. Kompaniya esa
+o'z ish kunini aynan o'z jarayoni bilan ko'rsatmoqchi va arizachini
+shu ishda sinamoqchi. Kompaniya §16 muharriri bilan **shaxsiy ssenariy**
+yaratadi, nashr qiladi va vakansiya arizachisiga **sinov topshirig'i**
+sifatida yuboradi. Talaba uni oddiy Run kabi real vaqtda bajaradi
+(mentor, baholash, hisobot — §9 o'zgarmaydi), kompaniya natijani ariza
+ostida ko'radi.
+
+### 26.1 Ma'lumot
+
+- `scenarios.owner_company_id` (FK companies, CASCADE, null — platforma
+  ssenariysi). Kompaniya ssenariysi:
+  - katalog, landing (`/showcase`), vakansiya mashq tavsiyalari (§23.4),
+    talaba tavsiyalari (§17.1) va admin muharriri ro'yxatida **ko'rinmaydi**;
+    `POST /runs` bilan boshlab bo'lmaydi (404) — faqat sinov topshirig'i orqali;
+  - Run natijasi profilga (§10.1, demak portfolio, moslik, kompaniya
+    hisobotlari va talaba analitikasi), universitet portaliga (§12) kirmaydi,
+    sertifikat berilmaydi (§13.1) — natija faqat talaba va shu kompaniyaga;
+  - `company_name` ta'rifda saqlashda kompaniya nomi bilan almashtiriladi;
+    `duration_days ≤ 5` (aks holda 422, `path: ["duration_days"]`);
+  - bir kompaniyada ko'pi bilan **20** ta ssenariy (21-si — 409).
+  - `slug` umumiy fazoda noyob (band — 409, §16.1).
+- `application_assessments`: `id, application_id (FK, CASCADE), scenario_id
+  (FK), scenario_version_id (FK — yuborilgan paytdagi nashr versiyasi),
+  run_id (FK runs, SET NULL), note (≤ 1000), start_by` (shu vaqtgacha
+  boshlash kerak: yuborilgandan 1–14 kun, default 5), `status`
+  (`assigned | started | cancelled`), `created_by, created_at, started_at,
+  updated_at`. Bir arizada bir vaqtda bitta `assigned` (qisman unique indeks).
+
+### 26.2 Holat va natija
+
+`state` (hisoblanadi): `assigned` (kutmoqda), `overdue` (`assigned`,
+`start_by` o'tdi), `in_progress` (Run `scheduled | active`), `completed`
+(Run `completed`, hisobot yozilgan), `incomplete` (Run `expired`,
+hisobot yozilgan), `evaluating` (Run yopilgan, hisobot hali yo'q),
+`abandoned` (talaba Run'ni tashlab ketdi), `cancelled`.
+
+- **Yuborish** (kompaniya): ariza `applied | interviewing`; ssenariy
+  kompaniyaniki, faol va nashr qilingan; arizada `assigned` yoki tugamagan
+  (`in_progress`) topshiriq yo'q (aks holda 409). Ariza holati o'zgarmaydi.
+- **Boshlash** (talaba): `assigned`, `hozir ≤ start_by`, ariza `applied |
+  interviewing` (aks holda 409) → Run darhol (`start_at = hozir`, §9.2
+  ogohlantirishi bilan), `status = started`, `run_id`. Ochiq Run bor
+  bo'lsa (§9.7) — 409.
+- **Bekor qilish** (kompaniya): faqat `assigned`. Taklif, rad etish va
+  qaytarib olish (§25.2) `assigned` topshiriqni ham bekor qiladi;
+  boshlangan Run talabaniki — davom etadi.
+- **Natija** (faqat kompaniyaga, `completed | incomplete`da):
+  `overall_score, on_time_rate, competency_scores, summary, strengths,
+  improvements` (Run yakuniy hisobotidan, §9.6). Talaba o'z hisobotini
+  Run sahifasida ko'radi.
+
+### 26.3 Ruxsatlar
+
+`manage_company_scenarios` (**yangi**, `company_hr`): o'z kompaniyasi
+ssenariylari (§10.3 sharti: tasdiqlangan kompaniya, aks holda 403; boshqa
+kompaniyaniki — 404). Sinov yuborish — `manage_vacancies` (§23.5),
+boshlash — `receive_offers`.
+
+### 26.4 API
+
+```
+# api/company_scenarios.py — manage_company_scenarios; §16.2 bilan bir xil shakl
+GET    /api/v1/company/scenarios                          → [ScenarioAdminOut]
+POST   /api/v1/company/scenarios                          {definition} → 201
+GET    /api/v1/company/scenarios/{id}/versions/{v}
+PUT    /api/v1/company/scenarios/{id}/draft               {definition}
+POST   /api/v1/company/scenarios/{id}/versions/{v}/publish
+PATCH  /api/v1/company/scenarios/{id}                     {is_active}
+POST   /api/v1/company/scenarios/validate | yaml | to-yaml   (kompaniya cheklovlari bilan)
+
+# api/vacancies.py
+POST   /api/v1/company/vacancies/{id}/applications/{app_id}/assessments
+         {scenario_id, start_within_days: 1–14, note?} → 201 AssessmentOut
+POST   /api/v1/company/vacancies/{id}/applications/{app_id}/assessments/{aid}/cancel
+POST   /api/v1/vacancies/{id}/assessments/{aid}/start     → {run_id, warning}
+```
+
+`AssessmentOut`: `id, application_id, scenario_id, scenario_title,
+duration_days, note, status, state, start_by, run_id, started_at,
+created_at, result | null` (talabaga `result`siz — `MyAssessmentOut`).
+`CompanyApplicationOut` + `assessments`, `VacancyDetail` + `assessments`
+(yangilari tepada).
+
+### 26.5 Bildirishnomalar (Modul 11, `notifications/assessments.py`)
+
+| kind | Kimga | Qachon | params | Email default |
+|---|---|---|---|---|
+| `assessment_assigned` | talaba | kompaniya sinov yubordi | vacancy_id, vacancy, company, scenario, start_by | ha |
+| `assessment_completed` | kompaniyaning faol xodimlari | sinov Run'ining yakuniy hisoboti yozildi | vacancy_id, vacancy, candidate, scenario, score, incomplete | ha |
+
+`dedupe_key`: `assessment:{id}:assigned`, `assessment:{id}:completed`.
+`assessment_completed` — `scenario/reports.py: write_final_report` hisobot
+bilan bir tranzaksiyada chaqiradi (`assessment_finished(db, run, now)`).
+`available`: `receive_offers` — `assessment_assigned`, `manage_vacancies` —
+`assessment_completed`.
+
+### 26.6 Frontend
+
+- Kompaniya: navbarda "Ssenariylar" (`/company/scenarios`) — ro'yxat va §16.3
+  muharriri (`/company/scenarios/new`, `/company/scenarios/{id}/edit`,
+  kompaniya API'si bilan; `company_name` maydoni o'zgarmas).
+- Vakansiya arizasida "Sinov topshirig'i" (ssenariy, muddat, izoh), ariza
+  ostida holat va natija (ball, kompetensiyalar, kuchli tomonlar, o'sish
+  nuqtalari), `assigned`ni bekor qilish.
+- Talaba: vakansiya sahifasida sinov kartasi (ssenariy, davomiyligi,
+  boshlash muddati, izoh), "Boshlash" → Run sahifasi; boshlangan — "Davom
+  etish", tugagan — "Hisobot".

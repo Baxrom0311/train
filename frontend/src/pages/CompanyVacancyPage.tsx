@@ -1,10 +1,11 @@
 // /company/vacancies/:id (CONTRACT.md §23.8): vakansiya, arizalar va mos nomzodlar.
 // Ariza — talabaning roziligi: yopiq profil ham shu yerda ko'rinadi; email faqat taklif qabul qilinganda.
 // Suhbat bosqichlari (§25.6): arizachini suhbatga chaqirish, holat va natija ariza ostida.
+// Sinov topshirig'i (§26.2): arizachiga kompaniya ssenariysini yuborish, natija ariza ostida.
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, CalendarPlus, Inbox, Loader2, Pencil, Send, Sparkles, X } from 'lucide-react'
+import { ArrowLeft, CalendarPlus, FlaskConical, Inbox, Loader2, Pencil, Send, Sparkles, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
@@ -12,6 +13,7 @@ import { Segmented } from '@/components/ui/segmented'
 import { CompetencyBars, ScoreRing } from '@/components/score'
 import Initials from '@/components/talent/Initials'
 import OfferForm from '@/components/talent/OfferForm'
+import { AssignForm, CompanyAssessmentPanel, hasUnfinished } from '@/components/vacancies/assessments'
 import { CompanyMeetingPanel, isActive, ScheduleForm } from '@/components/vacancies/meetings'
 import { ApplicationBadge, FitBadge, GapChips, VacancyMeta, VacancyStatusBadge } from '@/components/vacancies/parts'
 import { api, ApiError } from '@/lib/api'
@@ -31,6 +33,7 @@ export default function CompanyVacancyPage() {
   const [error, setError] = useState<string | null>(null)
   const [offerTo, setOfferTo] = useState<CandidateCard | null>(null)
   const [scheduleFor, setScheduleFor] = useState<CompanyApplication | null>(null)
+  const [assessFor, setAssessFor] = useState<CompanyApplication | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -131,13 +134,22 @@ export default function CompanyVacancyPage() {
             <CandidateRow key={a.id} candidate={a.candidate} fit={a.fit}
               aside={<><ApplicationBadge status={a.status} /><span className="text-xs text-muted-foreground">{formatDateTime(a.created_at)}</span></>}
               note={a.note}
-              meeting={<CompanyMeetingPanel vacancyId={vacancy.id} applicationId={a.id} interviews={a.interviews}
-                candidateName={a.candidate.full_name} onChange={load} />}
+              meeting={<>
+                <CompanyAssessmentPanel vacancyId={vacancy.id} applicationId={a.id} assessments={a.assessments}
+                  candidateName={a.candidate.full_name} onChange={load} />
+                <CompanyMeetingPanel vacancyId={vacancy.id} applicationId={a.id} interviews={a.interviews}
+                  candidateName={a.candidate.full_name} onChange={load} />
+              </>}
               actions={(a.status === 'applied' || a.status === 'interviewing') && (
                 <>
                   {!a.interviews.some(isActive) && (
                     <Button size="sm" variant={a.status === 'applied' ? 'default' : 'outline'} onClick={() => setScheduleFor(a)}>
                       <CalendarPlus className="h-4 w-4" /> {t(a.interviews.length ? 'meeting.company.inviteAgain' : 'meeting.company.invite')}
+                    </Button>
+                  )}
+                  {!hasUnfinished(a.assessments) && (
+                    <Button size="sm" variant="outline" onClick={() => setAssessFor(a)}>
+                      <FlaskConical className="h-4 w-4" /> {t(a.assessments.some((x) => x.state !== 'cancelled') ? 'assessment.company.assignAgain' : 'assessment.company.assign')}
                     </Button>
                   )}
                   <Button size="sm" variant={a.status === 'applied' ? 'outline' : 'default'} onClick={() => setOfferTo(a.candidate)}>
@@ -175,6 +187,24 @@ export default function CompanyVacancyPage() {
               <ScheduleForm vacancyId={vacancy.id} applicationId={scheduleFor.id}
                 round={scheduleFor.interviews.filter((m) => m.status === 'completed').length + 1}
                 onDone={() => { setScheduleFor(null); load() }} />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={assessFor !== null} onOpenChange={(open) => !open && setAssessFor(null)}>
+        <DialogContent closeLabel={t('common.close')} aria-describedby={undefined}>
+          <DialogTitle className="sr-only">{t('assessment.form.title')}</DialogTitle>
+          {assessFor && (
+            <div className="space-y-4 overflow-y-auto p-6">
+              <div className="flex items-center gap-3 pr-8">
+                <Initials name={assessFor.candidate.full_name} />
+                <div className="min-w-0">
+                  <p className="font-bold">{t('assessment.form.title')}</p>
+                  <p className="truncate text-sm text-muted-foreground">{assessFor.candidate.full_name} · {vacancy.title}</p>
+                </div>
+              </div>
+              <AssignForm vacancyId={vacancy.id} applicationId={assessFor.id} onDone={() => { setAssessFor(null); load() }} />
             </div>
           )}
         </DialogContent>

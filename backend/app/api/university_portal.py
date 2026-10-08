@@ -148,7 +148,7 @@ async def _in_progress(db: AsyncSession, user_ids) -> dict[uuid.UUID, list[InPro
         select(Run.user_id, Run.status, Run.ends_at, Scenario.title, Scenario.sector)
         .join(ScenarioVersion, Run.scenario_version_id == ScenarioVersion.id)
         .join(Scenario, ScenarioVersion.scenario_id == Scenario.id)
-        .where(Run.user_id.in_(user_ids), Run.status.in_(IN_PROGRESS))
+        .where(Run.user_id.in_(user_ids), Run.status.in_(IN_PROGRESS), Scenario.owner_company_id.is_(None))
         .order_by(Run.ends_at)
     )
     result: dict[uuid.UUID, list[InProgressRun]] = defaultdict(list)

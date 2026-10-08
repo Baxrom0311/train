@@ -62,6 +62,10 @@ class Scenario(Base):
     difficulty: Mapped[str] = mapped_column(String(20), nullable=False)
     duration_days: Mapped[int] = mapped_column(Integer, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default=text("true"))
+    # §26: kompaniyaning shaxsiy ssenariysi (katalogda yo'q); null — platforma ssenariysi
+    owner_company_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("companies.id", ondelete="CASCADE"), nullable=True, index=True,
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
     versions = relationship("ScenarioVersion", back_populates="scenario", cascade="all, delete-orphan")

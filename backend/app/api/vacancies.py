@@ -11,9 +11,12 @@ ariza ro'yxatida chiqadi; email baribir faqat taklif qabul qilinganda (§10.2).
 Suhbat bosqichlari (§25): kompaniya arizachiga 1–3 vaqt taklif qiladi, talaba
 birini tanlaydi yoki rad etadi, kompaniya natijani belgilaydi. Qulflash
 tartibi — avval ariza, keyin suhbat.
+
+Sinov topshirig'i (§26): kompaniya o'z ssenariysini arizachiga yuboradi, talaba
+uni Run sifatida bajaradi, natija (yakuniy hisobotdan) faqat kompaniyaga.
 """
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -26,15 +29,19 @@ from app.api.talent_hunt import CandidateCard, candidate_card, company_of, visib
 from app.core.deps import require_permission
 from app.database import get_db
 from app.models.billing import Company
+from app.models.scenario import ScenarioVersion
 from app.models.enums import (
     ApplicationInterviewFormat, ApplicationInterviewOutcome, ApplicationInterviewStatus, ApplicationStatus,
-    Competency, Employment, Sector, VacancyStatus, WorkFormat,
+    AssessmentStatus, Competency, Employment, Sector, VacancyStatus, WorkFormat,
 )
-from app.models.talent import ApplicationInterview, Vacancy, VacancyApplication
+from app.models.talent import ApplicationAssessment, ApplicationInterview, Vacancy, VacancyApplication
 from app.models.user import User
 from app.notifications import meetings as meeting_events
+from app.notifications.assessments import assessment_assigned
+from app.scenario import notify as run_notify
+from app.scenario.engine import EngineError, advance_run, create_run
 from app.notifications.vacancies import application_received, application_rejected
-from app.talent import meetings
+from app.talent import assessments, meetings
 from app.talent import vacancies as matching
 from app.talent.profile import Profile, build_profiles
 
@@ -256,6 +263,56 @@ class UpcomingInterviewOut(InterviewOut):
     candidate_name: str
 
 
+class AssessmentIn(BaseModel):
+    scenario_id: uuid.UUID
+    start_within_days: int = Field(default=assessments.DEFAULT_DAYS, ge=assessments.MIN_DAYS, le=assessments.MAX_DAYS)
+    note: str | None = Field(default=None, max_length=1000)
+
+    @field_validator("note")
+    @classmethod
+    def _note(cls, v: str | None) -> str | None:
+        return (v or "").strip() or None
+
+
+class AssessmentResult(BaseModel):
+    overall_score: float | None
+    on_time_rate: float | None
+    competency_scores: dict[str, float]
+    summary: str | None
+    strengths: list[str]
+    improvements: list[str]
+
+
+AssessmentState = Literal[
+    "assigned", "overdue", "in_progress", "evaluating", "completed", "incomplete", "abandoned", "cancelled",
+]
+
+
+class MyAssessmentOut(BaseModel):
+    """Talabaga: natija o'z Run hisobotida (§26.2)."""
+    id: uuid.UUID
+    application_id: uuid.UUID
+    scenario_id: uuid.UUID
+    scenario_title: str
+    duration_days: int
+    note: str | None
+    status: AssessmentStatus
+    state: AssessmentState
+    start_by: datetime
+    run_id: uuid.UUID | None
+    started_at: datetime | None
+    created_at: datetime
+
+
+class AssessmentOut(MyAssessmentOut):
+    result: AssessmentResult | None
+
+
+class AssessmentStarted(BaseModel):
+    run_id: uuid.UUID
+    warning: str | None
+
+
 class CompanyApplicationOut(BaseModel):
     id: uuid.UUID
     status: ApplicationStatus
@@ -265,6 +322,7 @@ class CompanyApplicationOut(BaseModel):
     candidate: CandidateCard
     fit: FitOut
     interviews: list[InterviewOut]
+    assessments: list[AssessmentOut]
 
 
 class CompanyBrief(BaseModel):
@@ -295,6 +353,7 @@ class VacancyDetail(VacancyCard):
     my_competencies: dict[str, float]
     practice: list[PracticeOut]
     interviews: list[MyInterviewOut]
+    assessments: list[MyAssessmentOut]
 
 
 class ApplyIn(BaseModel):
@@ -370,6 +429,24 @@ def _interview_out(interview: ApplicationInterview, now: datetime) -> InterviewO
     )
 
 
+def _my_assessment_out(item: assessments.Item, now: datetime) -> MyAssessmentOut:
+    a = item.assessment
+    return MyAssessmentOut(
+        id=a.id, application_id=a.application_id, scenario_id=a.scenario_id, scenario_title=item.scenario.title,
+        duration_days=item.scenario.duration_days, note=a.note, status=a.status,
+        state=assessments.state(item, now), start_by=a.start_by, run_id=a.run_id, started_at=a.started_at,
+        created_at=a.created_at,
+    )
+
+
+def _assessment_out(item: assessments.Item, now: datetime) -> AssessmentOut:
+    found = assessments.result(item)
+    return AssessmentOut(
+        **_my_assessment_out(item, now).model_dump(),
+        result=AssessmentResult(**found) if found else None,
+    )
+
+
 async def _company_application(
     db: AsyncSession, company: Company, vacancy_id: uuid.UUID, application_id: uuid.UUID,
 ) -> tuple[Vacancy, VacancyApplication]:
@@ -397,6 +474,20 @@ async def _application_interview(
     if interview is None:
         raise HTTPException(status_code=404, detail="Interview not found")
     return interview
+
+
+async def _application_assessment(
+    db: AsyncSession, application: VacancyApplication, assessment_id: uuid.UUID,
+) -> ApplicationAssessment:
+    assessment = (await db.execute(
+        select(ApplicationAssessment)
+        .where(ApplicationAssessment.id == assessment_id, ApplicationAssessment.application_id == application.id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )).scalars().first()
+    if assessment is None:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    return assessment
 
 
 async def _check_scenarios(db: AsyncSession, ids: list[uuid.UUID]) -> None:
@@ -593,6 +684,7 @@ async def get_applications(vacancy_id: uuid.UUID, staff: Staff, db: AsyncSession
     )).all()
     profiles = await build_profiles(db, [user.id for _, user in rows]) if rows else {}
     interviews = await meetings.history(db, [application.id for application, _ in rows])
+    tests = await assessments.items(db, [application.id for application, _ in rows])
     order = {
         ApplicationStatus.APPLIED: 0, ApplicationStatus.INTERVIEWING: 1,
         ApplicationStatus.OFFERED: 2, ApplicationStatus.REJECTED: 3,
@@ -608,6 +700,7 @@ async def get_applications(vacancy_id: uuid.UUID, staff: Staff, db: AsyncSession
             created_at=application.created_at, updated_at=application.updated_at,
             candidate=candidate_card(user, p), fit=_fit_out(f),
             interviews=[_interview_out(i, now) for i in interviews[application.id]],
+            assessments=[_assessment_out(i, now) for i in tests[application.id]],
         )))
     out.sort(key=lambda x: (x[0], x[1], x[2].created_at))
     return [x[2] for x in out]
@@ -623,6 +716,7 @@ async def reject_application(vacancy_id: uuid.UUID, application_id: uuid.UUID, s
     application.status = ApplicationStatus.REJECTED
     application.updated_at = now
     await meetings.close_active(db, application.id, now)        # §25.2: rad xabari yetarli
+    await assessments.cancel_assigned(db, application.id, now)  # §26.2
     await application_rejected(db, application, vacancy, company.name, now)    # §23.7
     await db.commit()
     await db.refresh(application)
@@ -710,9 +804,66 @@ async def record_interview_outcome(
     if body.outcome != ApplicationInterviewOutcome.PASSED:
         application.status = ApplicationStatus.REJECTED
         application.updated_at = now
+        await assessments.cancel_assigned(db, application.id, now)  # §26.2
         await application_rejected(db, application, vacancy, company.name, now)    # §23.7
     await db.commit()
     return _interview_out(interview, now)
+
+
+@org_router.post(
+    "/{vacancy_id}/applications/{application_id}/assessments",
+    response_model=AssessmentOut, status_code=status.HTTP_201_CREATED,
+)
+async def assign_assessment(
+    vacancy_id: uuid.UUID, application_id: uuid.UUID, body: AssessmentIn, staff: Staff,
+    db: AsyncSession = Depends(get_db),
+):
+    """§26.2: kompaniyaning faol, nashr qilingan ssenariysi; kutayotgan yoki tugamagan sinov bo'lmasa."""
+    user, company = staff
+    vacancy, application = await _company_application(db, company, vacancy_id, application_id)
+    if application.status not in PENDING_APPLICATIONS:
+        raise HTTPException(status_code=409, detail="Only a pending application can get an assessment")
+    found = await assessments.company_version(db, company.id, body.scenario_id)
+    if found is None:
+        raise HTTPException(status_code=404, detail="Scenario not found")
+    scenario, version = found
+    if await assessments.unfinished(db, application.id):
+        raise HTTPException(status_code=409, detail="This application already has an unfinished assessment")
+    now = _now()
+    assessment = ApplicationAssessment(
+        application_id=application.id, scenario_id=scenario.id, scenario_version_id=version.id,
+        note=body.note, start_by=now + timedelta(days=body.start_within_days),
+        status=AssessmentStatus.ASSIGNED, created_by=user.id, created_at=now, updated_at=now,
+    )
+    db.add(assessment)
+    try:
+        await db.flush()
+        await assessment_assigned(db, assessment, application, vacancy, company.name, scenario.title, now)
+        await db.commit()
+    except IntegrityError:      # ariza qulflangan — amalda faqat himoya
+        await db.rollback()
+        raise HTTPException(status_code=409, detail="This application already has an unfinished assessment")
+    return _assessment_out(assessments.Item(assessment, scenario, None), now)
+
+
+@org_router.post(
+    "/{vacancy_id}/applications/{application_id}/assessments/{assessment_id}/cancel", response_model=AssessmentOut,
+)
+async def cancel_assessment(
+    vacancy_id: uuid.UUID, application_id: uuid.UUID, assessment_id: uuid.UUID, staff: Staff,
+    db: AsyncSession = Depends(get_db),
+):
+    """Faqat boshlanmagan; boshlangan Run talabaniki — davom etadi (§26.2)."""
+    _, company = staff
+    _, application = await _company_application(db, company, vacancy_id, application_id)
+    assessment = await _application_assessment(db, application, assessment_id)
+    if assessment.status != AssessmentStatus.ASSIGNED:
+        raise HTTPException(status_code=409, detail="Only an assessment that has not started can be cancelled")
+    now = _now()
+    assessment.status = AssessmentStatus.CANCELLED
+    assessment.updated_at = now
+    await db.commit()
+    return _assessment_out(await assessments.item(db, assessment), now)
 
 
 # ---------------------------------------------------------------------------
@@ -764,6 +915,7 @@ async def get_vacancy(vacancy_id: uuid.UUID, current_user: Candidate, db: AsyncS
     completed = {r.scenario_id for r in profile.runs} if profile else set()
     practice = matching.practice(vacancy, gaps, await matching.published_scenarios(db), completed)
     interviews = (await meetings.history(db, [application.id]))[application.id] if application else []
+    tests = (await assessments.items(db, [application.id]))[application.id] if application else []
     now = _now()
     return VacancyDetail(
         **_vacancy_card(vacancy, company, profile, application),
@@ -777,6 +929,7 @@ async def get_vacancy(vacancy_id: uuid.UUID, current_user: Candidate, db: AsyncS
             for o, done, practices in practice
         ],
         interviews=[_my_interview_out(i, now) for i in interviews],
+        assessments=[_my_assessment_out(i, now) for i in tests],
     )
 
 
@@ -835,6 +988,7 @@ async def withdraw(vacancy_id: uuid.UUID, current_user: Candidate, db: AsyncSess
     application.status = ApplicationStatus.WITHDRAWN
     application.updated_at = now
     closed = await meetings.close_active(db, application.id, now)
+    await assessments.cancel_assigned(db, application.id, now)   # §26.2
     if closed is not None:      # §25.2: kompaniya rejalashtirgan suhbatdan xabar topsin
         vacancy = await db.get(Vacancy, vacancy_id)
         await meeting_events.declined(db, closed, vacancy, current_user.full_name, now, withdrawn=True)
@@ -892,6 +1046,41 @@ async def decline_interview(
     await meeting_events.declined(db, interview, vacancy, current_user.full_name, now)
     await db.commit()
     return _my_interview_out(interview, now)
+
+
+@router.post("/{vacancy_id}/assessments/{assessment_id}/start", response_model=AssessmentStarted)
+async def start_assessment(
+    vacancy_id: uuid.UUID, assessment_id: uuid.UUID, current_user: Candidate, db: AsyncSession = Depends(get_db),
+):
+    """§26.2: Run darhol boshlanadi — yuborilgan paytdagi nashr versiyasi bilan."""
+    application = await _my_application(db, current_user, vacancy_id)
+    if application.status == ApplicationStatus.WITHDRAWN:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    assessment = await _application_assessment(db, application, assessment_id)
+    now = _now()
+    if assessment.status != AssessmentStatus.ASSIGNED:
+        raise HTTPException(status_code=409, detail="This assessment has already been started or cancelled")
+    if application.status not in PENDING_APPLICATIONS:
+        raise HTTPException(status_code=409, detail="The application is already decided")
+    if now > assessment.start_by:
+        raise HTTPException(status_code=409, detail="The start deadline has passed")
+    version = await db.get(ScenarioVersion, assessment.scenario_version_id)
+    try:
+        run, info = await create_run(db, current_user.id, version, now)
+        notes = await advance_run(db, run, now)
+        assessment.status = AssessmentStatus.STARTED
+        assessment.run_id = run.id
+        assessment.started_at = now
+        assessment.updated_at = now
+        await db.commit()
+    except EngineError as exc:
+        await db.rollback()
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
+    except IntegrityError:      # shu versiyada ochiq Run bor (§9.7)
+        await db.rollback()
+        raise HTTPException(status_code=409, detail="You already have an open run of this scenario")
+    await run_notify.publish(notes)
+    return AssessmentStarted(run_id=run.id, warning=info.warning)
 
 
 @users_router.get("/me/applications", response_model=list[MyApplicationOut])

@@ -12,6 +12,7 @@ import {
   DIFFICULTIES, blankPersona, renameDocument, renamePersona, uniqueKey,
   type ErrorTarget, type FieldError, type ScenarioDef,
 } from './model'
+import { useEditorScope } from './scope'
 
 export type Located = FieldError & ErrorTarget
 type Update = (f: (d: ScenarioDef) => ScenarioDef) => void
@@ -30,6 +31,7 @@ const loose = (errors: Located[], index?: number) =>
 
 export function GeneralSection({ defn, update, errors, isNew }: SectionProps) {
   const { t } = useTranslation()
+  const scope = useEditorScope()
   const set = <K extends keyof ScenarioDef>(key: K, value: ScenarioDef[K]) => update((d) => ({ ...d, [key]: value }))
   return (
     <div className="glass space-y-5 rounded-3xl p-5 sm:p-6">
@@ -44,8 +46,11 @@ export function GeneralSection({ defn, update, errors, isNew }: SectionProps) {
               placeholder="kompaniya-lavozim-day1" onChange={(e) => set('slug', e.target.value.toLowerCase())} />
           )}
         </Field>
-        <Field label={t('editor.general.company')} error={fieldError(errors, 'company_name')} hint={t('editor.general.companyHint')}>
-          {(id) => <Input id={id} value={defn.company_name} maxLength={120} onChange={(e) => set('company_name', e.target.value)} />}
+        <Field label={t('editor.general.company')} error={fieldError(errors, 'company_name')}
+          hint={t(scope.company ? 'editor.general.companyOwn' : 'editor.general.companyHint')}>
+          {(id) => scope.company
+            ? <Input id={id} value={defn.company_name} disabled placeholder={t('editor.general.companyAuto')} />
+            : <Input id={id} value={defn.company_name} maxLength={120} onChange={(e) => set('company_name', e.target.value)} />}
         </Field>
         <Field label={t('editor.general.sector')} error={fieldError(errors, 'sector')}>
           {(id) => (
@@ -61,8 +66,8 @@ export function GeneralSection({ defn, update, errors, isNew }: SectionProps) {
             </select>
           )}
         </Field>
-        <Field label={t('editor.general.days')} error={fieldError(errors, 'duration_days')} hint={t('editor.general.daysHint')}>
-          {(id) => <NumberInput id={id} min={1} max={10} value={defn.duration_days} onChange={(v) => set('duration_days', v ?? 1)} />}
+        <Field label={t('editor.general.days')} error={fieldError(errors, 'duration_days')} hint={t(scope.company ? 'editor.general.daysHintCompany' : 'editor.general.daysHint', { count: scope.maxDays })}>
+          {(id) => <NumberInput id={id} min={1} max={scope.maxDays} value={defn.duration_days} onChange={(v) => set('duration_days', v ?? 1)} />}
         </Field>
       </div>
       <ErrorNote messages={loose(errors)} />

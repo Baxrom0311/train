@@ -26,7 +26,7 @@ from app.models.talent import CandidateVisibility, TalentOffer, Vacancy, Vacancy
 from app.models.user import User
 from app.notifications.offers import offer_received, offer_responded
 from app.scenario.clock import WorkCalendar
-from app.talent import meetings, report
+from app.talent import assessments, meetings, report
 from app.talent.profile import Profile, build_profiles
 
 router = APIRouter(prefix="/api/v1/talents", tags=["Talent Hunt"])
@@ -531,6 +531,7 @@ async def create_talent_offer(offer_in: TalentOfferCreate, company: VerifiedComp
         application.status = ApplicationStatus.OFFERED
         application.updated_at = now
         await meetings.close_active(db, application.id, now)    # taklif xabari yetarli
+        await assessments.cancel_assigned(db, application.id, now)   # §26.2
     try:
         await db.flush()
         await offer_received(db, offer, company.name, now)   # §15.2

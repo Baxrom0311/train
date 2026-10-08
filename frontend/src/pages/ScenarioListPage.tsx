@@ -1,4 +1,4 @@
-// Ssenariylar ro'yxati (CONTRACT.md §16.3): versiyalar holati, faollik, muharrirga o'tish.
+// Ssenariylar ro'yxati (CONTRACT.md §16.3; kompaniya — §26.1): versiyalar holati, faollik, muharrirga o'tish.
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { SECTOR_ART } from '@/components/sectorArt'
 import type { ScenarioAdmin, VersionInfo } from '@/components/editor/model'
+import { ADMIN_SCOPE, type EditorScope } from '@/components/editor/scope'
 import { api } from '@/lib/api'
 import { formatDateTime } from '@/lib/time'
 import { cn } from '@/lib/utils'
@@ -17,19 +18,20 @@ const BADGE: Record<VersionInfo['status'], string> = {
   archived: 'bg-muted text-muted-foreground',
 }
 
-export default function ScenarioListPage() {
+export default function ScenarioListPage({ scope = ADMIN_SCOPE }: { scope?: EditorScope }) {
   const { t } = useTranslation()
+  const { base, company } = scope
   const [items, setItems] = useState<ScenarioAdmin[] | null>(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    api<ScenarioAdmin[]>('/admin/scenarios').then(setItems).catch((e) => setError(e.message))
-  }, [])
+    api<ScenarioAdmin[]>(base).then(setItems).catch((e) => setError(e.message))
+  }, [base])
 
   const toggle = async (s: ScenarioAdmin, is_active: boolean) => {
     setItems((list) => list?.map((x) => (x.id === s.id ? { ...x, is_active } : x)) ?? null)
     try {
-      await api(`/admin/scenarios/${s.id}`, { method: 'PATCH', json: { is_active } })
+      await api(`${base}/${s.id}`, { method: 'PATCH', json: { is_active } })
     } catch (e) {
       setItems((list) => list?.map((x) => (x.id === s.id ? { ...x, is_active: !is_active } : x)) ?? null)
       setError((e as Error).message)
@@ -40,11 +42,11 @@ export default function ScenarioListPage() {
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
       <div className="flex flex-wrap items-end justify-between gap-4 animate-rise">
         <div className="space-y-2">
-          <h1 className="text-4xl font-extrabold tracking-tight">{t('editor.list.title')}</h1>
-          <p className="text-muted-foreground">{t('editor.list.subtitle')}</p>
+          <h1 className="text-4xl font-extrabold tracking-tight">{t(company ? 'editor.list.companyTitle' : 'editor.list.title')}</h1>
+          <p className="text-muted-foreground">{t(company ? 'editor.list.companySubtitle' : 'editor.list.subtitle')}</p>
         </div>
         <Button asChild>
-          <Link to="/admin/scenarios/new"><Plus className="h-4 w-4" /> {t('editor.list.new')}</Link>
+          <Link to={`${base}/new`}><Plus className="h-4 w-4" /> {t('editor.list.new')}</Link>
         </Button>
       </div>
 
@@ -67,13 +69,13 @@ export default function ScenarioListPage() {
                 <art.Icon className="h-6 w-6 text-foreground/70" />
               </span>
               <div className="min-w-0 flex-1 space-y-1">
-                <Link to={`/admin/scenarios/${s.id}/edit`} className="block truncate font-bold hover:text-primary">{s.title}</Link>
+                <Link to={`${base}/${s.id}/edit`} className="block truncate font-bold hover:text-primary">{s.title}</Link>
                 <p className="truncate text-xs text-muted-foreground">
-                  <span className="font-mono">{s.slug}</span> · {t(`catalog.sector.${s.sector}`)} · {s.company_name} · {t('catalog.days', { count: s.duration_days })}
+                  <span className="font-mono">{s.slug}</span> · {t(`catalog.sector.${s.sector}`)} · {!company && <>{s.company_name} · </>}{t('catalog.days', { count: s.duration_days })}
                 </p>
                 <div className="flex flex-wrap items-center gap-1.5">
                   {s.versions.slice(0, 4).map((v) => (
-                    <Link key={v.version} to={`/admin/scenarios/${s.id}/edit?v=${v.version}`}
+                    <Link key={v.version} to={`${base}/${s.id}/edit?v=${v.version}`}
                       title={formatDateTime(v.published_at ?? v.created_at)}
                       className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold transition-opacity hover:opacity-80', BADGE[v.status])}>
                       v{v.version} · {t(`editor.status.${v.status}`)}
@@ -88,7 +90,7 @@ export default function ScenarioListPage() {
                 {s.is_active ? t('editor.list.active') : t('editor.list.hidden')}
               </label>
               <Button variant="outline" size="sm" asChild>
-                <Link to={`/admin/scenarios/${s.id}/edit`}>
+                <Link to={`${base}/${s.id}/edit`}>
                   <Pencil className="h-4 w-4" /> {latest?.status === 'draft' ? t('editor.list.continueDraft') : t('editor.list.edit')}
                 </Link>
               </Button>

@@ -75,6 +75,15 @@ def render(n: Notification) -> tuple[str, str]:
         return (f"Suhbat yaqin: {p['vacancy']}",
                 f"«{p['vacancy']}» bo'yicha suhbat ({p['company']}, {p['candidate']}) {_when(p['starts_at'])} da, "
                 f"{where}: {p['place']}.")
+    if kind == Kind.ASSESSMENT_ASSIGNED:
+        return (f"Sinov topshirig'i: {p['vacancy']}",
+                f"{p['company']} «{p['vacancy']}» arizangiz bo'yicha «{p['scenario']}» sinov topshirig'ini yubordi. "
+                f"{_when(p['start_by'])} gacha (Toshkent vaqti) boshlang.")
+    if kind == Kind.ASSESSMENT_COMPLETED:
+        score = f" Ball: {round(p['score'])}." if p.get("score") is not None else ""
+        state = "qisman bajardi (muddat tugadi)" if p.get("incomplete") else "yakunladi"
+        return (f"Sinov natijasi: {p['candidate']}",
+                f"{p['candidate']} «{p['vacancy']}» bo'yicha «{p['scenario']}» sinov topshirig'ini {state}.{score}")
     answer = "qabul qildi" if p.get("accepted") else "rad etdi"
     return f"Taklifga javob: {p['position']}", f"{p['candidate']} «{p['position']}» taklifingizni {answer}."
 
