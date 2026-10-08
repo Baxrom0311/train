@@ -1,5 +1,6 @@
 // /vacancies/:id (CONTRACT.md §23.8): talaba vakansiyani ko'radi — talablar va o'z ballari,
-// mashq qilish uchun ssenariylar, ariza berish yoki qaytarib olish, sinov suhbati (§24.7).
+// mashq qilish uchun ssenariylar, ariza berish yoki qaytarib olish, sinov suhbati (§24.7),
+// kompaniya chaqirgan suhbat vaqtini tanlash (§25.6).
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -8,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { ScoreRing } from '@/components/score'
 import { PrepareCard } from '@/components/interviews/parts'
+import { StudentMeetingCard } from '@/components/vacancies/meetings'
 import { ApplicationBadge, FitBadge, VacancyMeta } from '@/components/vacancies/parts'
 import { useAuth } from '@/context/AuthContext'
 import { api, ApiError } from '@/lib/api'
@@ -97,6 +99,9 @@ export default function VacancyPage() {
         </div>
 
         <aside className="h-fit space-y-4 lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+          {v.application_status !== 'withdrawn' && v.interviews.length > 0 && (
+            <StudentMeetingCard vacancyId={v.id} vacancyTitle={v.title} company={v.company.name} interviews={v.interviews} onChange={load} />
+          )}
           <ApplyCard v={v} onChange={load} />
           {can('practice_interviews') && <PrepareCard vacancyId={v.id} />}
         </aside>
@@ -159,8 +164,9 @@ function ApplyCard({ v, onChange }: { v: VacancyDetail; onChange: () => void }) 
           <p className="text-xs text-muted-foreground">{v.my_fit ? t('vacancy.student.consent') : t('vacancy.student.noProfile')}</p>
         </div>
       )}
-      {status === 'applied' && (
-        <Button variant="ghost" className="w-full" disabled={busy} onClick={() => act('withdraw')}>
+      {(status === 'applied' || status === 'interviewing') && (
+        <Button variant="ghost" className="w-full" disabled={busy}
+          onClick={() => (status === 'applied' || window.confirm(t('meeting.student.withdrawConfirm'))) && act('withdraw')}>
           <Undo2 className="h-4 w-4" /> {t('vacancy.student.withdraw')}
         </Button>
       )}

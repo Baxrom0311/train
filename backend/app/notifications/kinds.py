@@ -11,18 +11,27 @@ class Kind(str, Enum):
     OFFER_RESPONDED = "offer_responded"
     APPLICATION_RECEIVED = "application_received"    # §23.7
     APPLICATION_REJECTED = "application_rejected"
+    INTERVIEW_PROPOSED = "interview_proposed"        # §25.5
+    INTERVIEW_CANCELLED = "interview_cancelled"
+    INTERVIEW_CONFIRMED = "interview_confirmed"
+    INTERVIEW_DECLINED = "interview_declined"
+    INTERVIEW_REMINDER = "interview_reminder"
 
 
 STUDENT_KINDS = (
     Kind.TASK_DELIVERED, Kind.DEADLINE_SOON, Kind.MENTOR_REVIEW, Kind.REPORT_READY, Kind.OFFER_RECEIVED,
-    Kind.APPLICATION_REJECTED,
+    Kind.APPLICATION_REJECTED, Kind.INTERVIEW_PROPOSED, Kind.INTERVIEW_CANCELLED, Kind.INTERVIEW_REMINDER,
 )
 COMPANY_KINDS = (Kind.OFFER_RESPONDED,)
-VACANCY_KINDS = (Kind.APPLICATION_RECEIVED,)
+VACANCY_KINDS = (
+    Kind.APPLICATION_RECEIVED, Kind.INTERVIEW_CONFIRMED, Kind.INTERVIEW_DECLINED, Kind.INTERVIEW_REMINDER,
+)
 
 # Qator yo'q bo'lsa emailga ketadiganlar; vazifa va izoh — saytda yetarli
 EMAIL_DEFAULT = frozenset({
     Kind.DEADLINE_SOON, Kind.REPORT_READY, Kind.OFFER_RECEIVED, Kind.OFFER_RESPONDED, Kind.APPLICATION_RECEIVED,
+    Kind.INTERVIEW_PROPOSED, Kind.INTERVIEW_CANCELLED, Kind.INTERVIEW_CONFIRMED, Kind.INTERVIEW_DECLINED,
+    Kind.INTERVIEW_REMINDER,
 })
 
 
@@ -35,4 +44,4 @@ def available_for(permissions: set[str]) -> list[Kind]:
         kinds += COMPANY_KINDS
     if "manage_vacancies" in permissions:
         kinds += VACANCY_KINDS
-    return kinds
+    return list(dict.fromkeys(kinds))     # `interview_reminder` ikkala tomonda

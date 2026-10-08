@@ -961,7 +961,13 @@
       "offer_accepted": "Offer accepted",
       "offer_declined": "Offer declined",
       "application_received": "New application to a vacancy",
-      "application_rejected": "Your application was declined"
+      "application_rejected": "Your application was declined",
+      "interview_proposed": "Interview invitation",
+      "interview_cancelled": "Interview cancelled",
+      "interview_confirmed": "Candidate picked an interview time",
+      "interview_declined": "Candidate declined the interview",
+      "interview_withdrawn": "Candidate withdrew the application",
+      "interview_reminder": "Interview at {{time}}"
     },
     "setting": {
       "task_delivered": "New tasks and incidents",
@@ -971,7 +977,12 @@
       "offer_received": "Job offers",
       "offer_responded": "Candidate replies to offers",
       "application_received": "New application to a vacancy",
-      "application_rejected": "Application declined"
+      "application_rejected": "Application declined",
+      "interview_proposed": "Interview invitations",
+      "interview_cancelled": "Interview cancellations",
+      "interview_reminder": "2 hours before an interview",
+      "interview_confirmed": "Candidate picked an interview time",
+      "interview_declined": "Candidate declined an interview"
     },
     "email": {
       "title": "By email",
@@ -1167,7 +1178,8 @@
       "applied": "Applied",
       "withdrawn": "Withdrawn",
       "rejected": "Declined",
-      "offered": "Offer sent"
+      "offered": "Offer sent",
+      "interviewing": "Interviewing"
     },
     "salary": {
       "range": "{{min}} – {{max}} UZS",
@@ -1322,6 +1334,93 @@
       "subtitle": "Your practice sessions with the AI interviewer and their results.",
       "empty": "You haven't taken a practice interview yet. Open a vacancy and press \"Start a practice interview\".",
       "toVacancies": "Go to vacancies"
+    }
+  },
+  "meeting": {
+    "round": "Round {{round}}",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "minutesShort": "{{count}} min",
+    "status": {
+      "proposed": "Picking a time",
+      "confirmed": "Scheduled",
+      "declined": "Declined",
+      "cancelled": "Cancelled",
+      "completed": "Completed",
+      "expired": "Times passed",
+      "passed": "Passed",
+      "failed": "Not passed",
+      "no_show": "No-show"
+    },
+    "format": {
+      "online": "Online",
+      "office": "In office"
+    },
+    "outcome": {
+      "passed": "Passed",
+      "failed": "Not passed",
+      "no_show": "No-show"
+    },
+    "form": {
+      "title": "Invite to an interview",
+      "slots": "Time options (round {{round}})",
+      "slot": "Option {{n}}",
+      "addSlot": "Add option",
+      "tzHint": "Times are in Tashkent time",
+      "duplicate": "Options must not repeat",
+      "duration": "Duration",
+      "format": "Format",
+      "link": "Link",
+      "address": "Address",
+      "linkPlaceholder": "https://meet.example.uz/…",
+      "addressPlaceholder": "Tashkent, 1 Amir Temur st., 3rd floor",
+      "note": "Note for the candidate (optional)",
+      "notePlaceholder": "What to prepare, who will join…",
+      "send": "Propose times"
+    },
+    "company": {
+      "invite": "Invite to interview",
+      "inviteAgain": "New interview",
+      "waiting": "Waiting for the candidate to pick a time.",
+      "expired": "All options have passed: cancel and propose new times.",
+      "declined": "The candidate declined.",
+      "cancelled": "The interview was cancelled.",
+      "cancel": "Cancel interview",
+      "cancelConfirm": "Cancel the interview with {{name}}? They will be notified.",
+      "outcomeTitle": "Interview result",
+      "outcomeNote": "Internal note (not visible to the candidate)",
+      "rejectConfirm": "{{name}}'s application will be rejected and they will be notified. Continue?",
+      "upcoming": "Upcoming interviews",
+      "waitingShort_one": "{{count}} option, awaiting reply",
+      "waitingShort_other": "{{count}} options, awaiting reply",
+      "needsOutcome": "Record the result"
+    },
+    "student": {
+      "title": "Interview, round {{round}}",
+      "pick": "The company proposed these times, pick one that suits you:",
+      "confirm": "Confirm this time",
+      "noneFits": "None of these work",
+      "cantAttend": "I can't attend",
+      "reason": "Reason",
+      "reasonPlaceholder": "Add a reason (optional): the company may propose new times",
+      "declineSend": "Decline",
+      "expired": "The proposed times have passed. The company may propose new ones.",
+      "declined": "You declined this interview. The company may propose new times.",
+      "cancelled": "The company cancelled the interview.",
+      "outcome": {
+        "passed": "You passed this round! The company will tell you the next step.",
+        "failed": "Unfortunately, the company chose another candidate this time.",
+        "no_show": "You were marked as a no-show."
+      },
+      "addToCalendar": "Add to calendar",
+      "calendarTitle": "Interview: {{vacancy}} ({{company}})",
+      "on": "Interview: {{when}}",
+      "pickNeeded": "Pick an interview time",
+      "withdrawConfirm": "Withdrawing the application also cancels the scheduled interview. Continue?"
+    },
+    "errors": {
+      "conflict": "Something changed, the data was refreshed. Please try again.",
+      "invalid": "Check the times: at least 1 hour from now and within 60 days."
     }
   }
 }

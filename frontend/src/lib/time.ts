@@ -13,6 +13,19 @@ const dateTimeFmt = new Intl.DateTimeFormat('en-GB', {
 export const formatTime = (iso: string | Date) => timeFmt.format(new Date(iso))
 export const formatDateTime = (iso: string | Date) => dateTimeFmt.format(new Date(iso))
 
+// Toshkentda yozgi vaqt yo'q — doim UTC+5
+const TASHKENT_OFFSET_MS = 5 * 60 * 60 * 1000
+
+/** `<input type="datetime-local">` qiymati Toshkent vaqtida: "2026-10-13T13:00". */
+export function toTashkentInput(at: Date): string {
+  return new Date(at.getTime() + TASHKENT_OFFSET_MS).toISOString().slice(0, 16)
+}
+
+/** datetime-local qiymati Toshkent vaqti deb o'qiladi (talaba/HR boshqa zonada bo'lsa ham) → ISO "+05:00" bilan. */
+export function fromTashkentInput(value: string): string {
+  return `${value}:00+05:00`
+}
+
 /** Dedlaynga qolgan vaqt (devor soati): "1:25" yoki "25 daq"; o'tgan bo'lsa null. */
 export function remaining(dueIso: string, now: number): { minutes: number; label: string } | null {
   const minutes = Math.floor((new Date(dueIso).getTime() - now) / 60000)

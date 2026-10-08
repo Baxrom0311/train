@@ -1,21 +1,25 @@
-// /company/vacancies (CONTRACT.md §23.8): kompaniya vakansiyalari — holat, arizalar, mos nomzodlar.
+// /company/vacancies (CONTRACT.md §23.8): kompaniya vakansiyalari — holat, arizalar, mos nomzodlar;
+// tepada yaqin suhbatlar (§25.6).
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { BriefcaseBusiness, Inbox, Loader2, Plus, Sparkles } from 'lucide-react'
+import { BriefcaseBusiness, CalendarCheck2, Inbox, Loader2, Plus, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { MeetingBadge, useWhen } from '@/components/vacancies/meetings'
 import { VacancyMeta, VacancyStatusBadge } from '@/components/vacancies/parts'
 import { api, ApiError } from '@/lib/api'
 import { formatDateTime } from '@/lib/time'
-import type { CompanyVacancy } from '@/lib/types'
+import type { CompanyVacancy, UpcomingHiringInterview } from '@/lib/types'
 
 export default function CompanyVacanciesPage() {
   const { t } = useTranslation()
   const [items, setItems] = useState<CompanyVacancy[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [meetings, setMeetings] = useState<UpcomingHiringInterview[]>([])
 
   useEffect(() => {
+    api<UpcomingHiringInterview[]>('/company/vacancies/interviews').then(setMeetings).catch(() => setMeetings([]))
     api<CompanyVacancy[]>('/company/vacancies')
       .then(setItems)
       .catch((err) => setError(err instanceof ApiError && err.status === 403 ? t('talent.notVerified') : t('common.error')))
@@ -34,6 +38,7 @@ export default function CompanyVacanciesPage() {
       </div>
 
       {error && <p className="glass rounded-2xl px-4 py-3 text-sm text-destructive">{error}</p>}
+      {meetings.length > 0 && <UpcomingMeetings items={meetings} />}
       {items === null && !error && <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />}
       {items?.length === 0 && (
         <div className="glass flex flex-col items-center gap-3 rounded-2xl px-6 py-16 text-center">
@@ -71,6 +76,38 @@ export default function CompanyVacanciesPage() {
         ))}
       </div>
     </div>
+  )
+}
+
+function UpcomingMeetings({ items }: { items: UpcomingHiringInterview[] }) {
+  const { t } = useTranslation()
+  const when = useWhen()
+  const now = Date.now()
+  return (
+    <section className="glass space-y-3 rounded-3xl p-5 animate-rise">
+      <h2 className="flex items-center gap-2 font-bold"><CalendarCheck2 className="h-5 w-5 text-primary" /> {t('meeting.company.upcoming')}</h2>
+      <ul className="divide-y">
+        {items.map((m) => {
+          const started = m.starts_at !== null && new Date(m.starts_at).getTime() <= now
+          return (
+            <li key={m.id}>
+              <Link to={`/company/vacancies/${m.vacancy_id}`} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5 hover:text-primary">
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-semibold">{m.candidate_name}</span>
+                  <span className="text-xs text-muted-foreground">{m.vacancy_title} · {t('meeting.round', { round: m.round })}</span>
+                </span>
+                <span className="text-sm font-semibold tabular-nums">
+                  {m.starts_at ? when(m.starts_at) : t('meeting.company.waitingShort', { count: m.slots.length })}
+                </span>
+                {started ? (
+                  <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-300">{t('meeting.company.needsOutcome')}</span>
+                ) : <MeetingBadge m={m} />}
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
+    </section>
   )
 }
 

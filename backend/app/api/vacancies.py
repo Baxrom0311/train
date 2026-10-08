@@ -7,6 +7,10 @@ nomzodlar (faqat §10 bo'yicha ko'rinadiganlar), arizalar. Talaba
 
 Ariza — rozilik: ariza bergan talaba shu vakansiya egasiga ko'rinmasa ham
 ariza ro'yxatida chiqadi; email baribir faqat taklif qabul qilinganda (§10.2).
+
+Suhbat bosqichlari (§25): kompaniya arizachiga 1–3 vaqt taklif qiladi, talaba
+birini tanlaydi yoki rad etadi, kompaniya natijani belgilaydi. Qulflash
+tartibi — avval ariza, keyin suhbat.
 """
 import uuid
 from datetime import datetime, timezone
@@ -15,16 +19,22 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.talent_hunt import CandidateCard, candidate_card, company_of, visible_profiles
 from app.core.deps import require_permission
 from app.database import get_db
 from app.models.billing import Company
-from app.models.enums import ApplicationStatus, Competency, Employment, Sector, VacancyStatus, WorkFormat
-from app.models.talent import Vacancy, VacancyApplication
+from app.models.enums import (
+    ApplicationInterviewFormat, ApplicationInterviewOutcome, ApplicationInterviewStatus, ApplicationStatus,
+    Competency, Employment, Sector, VacancyStatus, WorkFormat,
+)
+from app.models.talent import ApplicationInterview, Vacancy, VacancyApplication
 from app.models.user import User
+from app.notifications import meetings as meeting_events
 from app.notifications.vacancies import application_received, application_rejected
+from app.talent import meetings
 from app.talent import vacancies as matching
 from app.talent.profile import Profile, build_profiles
 
@@ -37,7 +47,12 @@ MAX_REQUIREMENTS = 6
 MAX_SCENARIOS = 5
 SALARY_MAX = 1_000_000_000
 # kompaniya ko'radigan arizalar; withdrawn — talaba rozilikni qaytarib oldi
-VISIBLE_APPLICATIONS = (ApplicationStatus.APPLIED, ApplicationStatus.OFFERED, ApplicationStatus.REJECTED)
+VISIBLE_APPLICATIONS = (
+    ApplicationStatus.APPLIED, ApplicationStatus.INTERVIEWING, ApplicationStatus.OFFERED, ApplicationStatus.REJECTED,
+)
+# hali hal qilinmagan ariza: taklif, rad etish, suhbat va qaytarib olish mumkin (§25.2)
+PENDING_APPLICATIONS = (ApplicationStatus.APPLIED, ApplicationStatus.INTERVIEWING)
+UPCOMING_LIMIT = 100
 
 
 def _now() -> datetime:
@@ -152,6 +167,95 @@ class MatchOut(CandidateCard):
     applied: bool
 
 
+class InterviewProposeIn(BaseModel):
+    slots: list[datetime] = Field(min_length=1, max_length=meetings.MAX_SLOTS)
+    duration_minutes: int = Field(ge=15, le=120)
+    format: ApplicationInterviewFormat
+    place: str = Field(min_length=2, max_length=300)
+    note: str | None = Field(default=None, max_length=1000)
+
+    @field_validator("slots")
+    @classmethod
+    def _slots(cls, v: list[datetime]) -> list[datetime]:
+        slots = sorted(meetings.normalize_slot(s) for s in v)
+        if len(set(slots)) != len(slots):
+            raise ValueError("slots must be distinct")
+        return slots
+
+    @field_validator("place")
+    @classmethod
+    def _place(cls, v: str) -> str:
+        v = v.strip()
+        if len(v) < 2:
+            raise ValueError("too short")
+        return v
+
+    @field_validator("note")
+    @classmethod
+    def _note(cls, v: str | None) -> str | None:
+        return (v or "").strip() or None
+
+
+class InterviewOutcomeIn(BaseModel):
+    outcome: ApplicationInterviewOutcome
+    note: str | None = Field(default=None, max_length=1000)
+
+    @field_validator("note")
+    @classmethod
+    def _note(cls, v: str | None) -> str | None:
+        return (v or "").strip() or None
+
+
+class InterviewConfirmIn(BaseModel):
+    starts_at: datetime
+
+    @field_validator("starts_at")
+    @classmethod
+    def _aware(cls, v: datetime) -> datetime:
+        return meetings.normalize_slot(v)
+
+
+class InterviewDeclineIn(BaseModel):
+    reason: str | None = Field(default=None, max_length=500)
+
+    @field_validator("reason")
+    @classmethod
+    def _reason(cls, v: str | None) -> str | None:
+        return (v or "").strip() or None
+
+
+class MyInterviewOut(BaseModel):
+    """Talabaga: kompaniyaning ichki izohi (`outcome_note`) va muallifisiz (§25.4)."""
+    id: uuid.UUID
+    application_id: uuid.UUID
+    round: int
+    slots: list[datetime]
+    duration_minutes: int
+    format: ApplicationInterviewFormat
+    place: str
+    note: str | None
+    status: ApplicationInterviewStatus
+    starts_at: datetime | None
+    confirmed_at: datetime | None
+    decline_reason: str | None
+    outcome: ApplicationInterviewOutcome | None
+    expired: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+class InterviewOut(MyInterviewOut):
+    outcome_note: str | None
+    created_by: uuid.UUID | None
+
+
+class UpcomingInterviewOut(InterviewOut):
+    vacancy_id: uuid.UUID
+    vacancy_title: str
+    candidate_id: uuid.UUID
+    candidate_name: str
+
+
 class CompanyApplicationOut(BaseModel):
     id: uuid.UUID
     status: ApplicationStatus
@@ -160,6 +264,7 @@ class CompanyApplicationOut(BaseModel):
     updated_at: datetime
     candidate: CandidateCard
     fit: FitOut
+    interviews: list[InterviewOut]
 
 
 class CompanyBrief(BaseModel):
@@ -189,6 +294,7 @@ class VacancyDetail(VacancyCard):
     my_overall: float | None
     my_competencies: dict[str, float]
     practice: list[PracticeOut]
+    interviews: list[MyInterviewOut]
 
 
 class ApplyIn(BaseModel):
@@ -211,6 +317,7 @@ class MyApplicationOut(ApplicationOut):
     vacancy_status: VacancyStatus
     company_name: str
     sector: Sector
+    interview: MyInterviewOut | None
 
 
 # ---------------------------------------------------------------------------
@@ -243,6 +350,53 @@ async def _own_vacancy(db: AsyncSession, company: Company, vacancy_id: uuid.UUID
     if vacancy is None or vacancy.company_id != company.id:     # boshqa kompaniyaniki — "yo'q"
         raise HTTPException(status_code=404, detail="Vacancy not found")
     return vacancy
+
+
+def _my_interview_out(interview: ApplicationInterview, now: datetime) -> MyInterviewOut:
+    return MyInterviewOut(
+        id=interview.id, application_id=interview.application_id, round=interview.round,
+        slots=meetings.slot_times(interview), duration_minutes=interview.duration_minutes,
+        format=interview.format, place=interview.place, note=interview.note, status=interview.status,
+        starts_at=interview.starts_at, confirmed_at=interview.confirmed_at, decline_reason=interview.decline_reason,
+        outcome=interview.outcome, expired=meetings.is_expired(interview, now),
+        created_at=interview.created_at, updated_at=interview.updated_at,
+    )
+
+
+def _interview_out(interview: ApplicationInterview, now: datetime) -> InterviewOut:
+    return InterviewOut(
+        **_my_interview_out(interview, now).model_dump(),
+        outcome_note=interview.outcome_note, created_by=interview.created_by,
+    )
+
+
+async def _company_application(
+    db: AsyncSession, company: Company, vacancy_id: uuid.UUID, application_id: uuid.UUID,
+) -> tuple[Vacancy, VacancyApplication]:
+    """Kompaniyaning o'z vakansiyasidagi ariza, qulflangan; qaytarib olingani — "yo'q"."""
+    vacancy = await _own_vacancy(db, company, vacancy_id)
+    application = (await db.execute(
+        select(VacancyApplication)
+        .where(VacancyApplication.id == application_id, VacancyApplication.vacancy_id == vacancy.id)
+        .with_for_update()
+    )).scalars().first()
+    if application is None or application.status == ApplicationStatus.WITHDRAWN:
+        raise HTTPException(status_code=404, detail="Application not found")
+    return vacancy, application
+
+
+async def _application_interview(
+    db: AsyncSession, application: VacancyApplication, interview_id: uuid.UUID,
+) -> ApplicationInterview:
+    interview = (await db.execute(
+        select(ApplicationInterview)
+        .where(ApplicationInterview.id == interview_id, ApplicationInterview.application_id == application.id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )).scalars().first()
+    if interview is None:
+        raise HTTPException(status_code=404, detail="Interview not found")
+    return interview
 
 
 async def _check_scenarios(db: AsyncSession, ids: list[uuid.UUID]) -> None:
@@ -288,7 +442,7 @@ async def _application_counts(db: AsyncSession, vacancy_ids: list[uuid.UUID]) ->
     out: dict[uuid.UUID, tuple[int, int]] = {}
     for vacancy_id, state, n in rows:
         total, new = out.get(vacancy_id, (0, 0))
-        if state in (ApplicationStatus.APPLIED, ApplicationStatus.OFFERED):
+        if state in (ApplicationStatus.APPLIED, ApplicationStatus.INTERVIEWING, ApplicationStatus.OFFERED):
             total += n
         if state == ApplicationStatus.APPLIED:
             new += n
@@ -342,6 +496,28 @@ async def create_vacancy(body: VacancyCreate, staff: Staff, db: AsyncSession = D
     await db.commit()
     await db.refresh(vacancy)
     return (await _with_counts(db, company, [vacancy]))[0]
+
+
+@org_router.get("/interviews", response_model=list[UpcomingInterviewOut])
+async def list_company_interviews(staff: Staff, db: AsyncSession = Depends(get_db)):
+    """§25.4: faol (`proposed | confirmed`) suhbatlar, vaqti bo'yicha; boshlangan `confirmed` — natija kutmoqda."""
+    _, company = staff
+    rows = (await db.execute(
+        select(ApplicationInterview, VacancyApplication, Vacancy, User)
+        .join(VacancyApplication, VacancyApplication.id == ApplicationInterview.application_id)
+        .join(Vacancy, Vacancy.id == VacancyApplication.vacancy_id)
+        .join(User, User.id == VacancyApplication.user_id)
+        .where(Vacancy.company_id == company.id, ApplicationInterview.status.in_(meetings.ACTIVE))
+    )).all()
+    rows = sorted(rows, key=lambda r: meetings.sort_key(r[0]))[:UPCOMING_LIMIT]
+    now = _now()
+    return [
+        UpcomingInterviewOut(
+            **_interview_out(interview, now).model_dump(),
+            vacancy_id=vacancy.id, vacancy_title=vacancy.title, candidate_id=user.id, candidate_name=user.full_name,
+        )
+        for interview, _, vacancy, user in rows
+    ]
 
 
 @org_router.get("/{vacancy_id}", response_model=CompanyVacancyOut)
@@ -403,7 +579,7 @@ async def get_matches(vacancy_id: uuid.UUID, staff: Staff, db: AsyncSession = De
 
 @org_router.get("/{vacancy_id}/applications", response_model=list[CompanyApplicationOut])
 async def get_applications(vacancy_id: uuid.UUID, staff: Staff, db: AsyncSession = Depends(get_db)):
-    """Kutayotganlar tepada, keyin taklif yuborilgan va rad etilganlar; har biri moslik bo'yicha."""
+    """Kutayotganlar tepada, keyin suhbatdagilar, taklif yuborilgan va rad etilganlar; har biri moslik bo'yicha."""
     _, company = staff
     vacancy = await _own_vacancy(db, company, vacancy_id)
     rows = (await db.execute(
@@ -416,7 +592,12 @@ async def get_applications(vacancy_id: uuid.UUID, staff: Staff, db: AsyncSession
         )
     )).all()
     profiles = await build_profiles(db, [user.id for _, user in rows]) if rows else {}
-    order = {ApplicationStatus.APPLIED: 0, ApplicationStatus.OFFERED: 1, ApplicationStatus.REJECTED: 2}
+    interviews = await meetings.history(db, [application.id for application, _ in rows])
+    order = {
+        ApplicationStatus.APPLIED: 0, ApplicationStatus.INTERVIEWING: 1,
+        ApplicationStatus.OFFERED: 2, ApplicationStatus.REJECTED: 3,
+    }
+    now = _now()
     out = []
     for application, user in rows:
         # profil yo'qolishi mumkin (sertifikat bekor qilingan) — bo'sh profil bilan ko'rsatiladi
@@ -426,6 +607,7 @@ async def get_applications(vacancy_id: uuid.UUID, staff: Staff, db: AsyncSession
             id=application.id, status=application.status, note=application.note,
             created_at=application.created_at, updated_at=application.updated_at,
             candidate=candidate_card(user, p), fit=_fit_out(f),
+            interviews=[_interview_out(i, now) for i in interviews[application.id]],
         )))
     out.sort(key=lambda x: (x[0], x[1], x[2].created_at))
     return [x[2] for x in out]
@@ -434,23 +616,103 @@ async def get_applications(vacancy_id: uuid.UUID, staff: Staff, db: AsyncSession
 @org_router.post("/{vacancy_id}/applications/{application_id}/reject", response_model=ApplicationOut)
 async def reject_application(vacancy_id: uuid.UUID, application_id: uuid.UUID, staff: Staff, db: AsyncSession = Depends(get_db)):
     _, company = staff
-    vacancy = await _own_vacancy(db, company, vacancy_id)
-    application = (await db.execute(
-        select(VacancyApplication)
-        .where(VacancyApplication.id == application_id, VacancyApplication.vacancy_id == vacancy.id)
-        .with_for_update()
-    )).scalars().first()
-    if application is None or application.status == ApplicationStatus.WITHDRAWN:
-        raise HTTPException(status_code=404, detail="Application not found")
-    if application.status != ApplicationStatus.APPLIED:
+    vacancy, application = await _company_application(db, company, vacancy_id, application_id)
+    if application.status not in PENDING_APPLICATIONS:
         raise HTTPException(status_code=409, detail="Only a pending application can be rejected")
     now = _now()
     application.status = ApplicationStatus.REJECTED
     application.updated_at = now
+    await meetings.close_active(db, application.id, now)        # §25.2: rad xabari yetarli
     await application_rejected(db, application, vacancy, company.name, now)    # §23.7
     await db.commit()
     await db.refresh(application)
     return application
+
+
+@org_router.post(
+    "/{vacancy_id}/applications/{application_id}/interviews",
+    response_model=InterviewOut, status_code=status.HTTP_201_CREATED,
+)
+async def propose_interview(
+    vacancy_id: uuid.UUID, application_id: uuid.UUID, body: InterviewProposeIn, staff: Staff,
+    db: AsyncSession = Depends(get_db),
+):
+    """§25.2: `applied | interviewing` arizaga, faol suhbat yo'q bo'lsa; ariza → `interviewing`."""
+    user, company = staff
+    vacancy, application = await _company_application(db, company, vacancy_id, application_id)
+    if application.status not in PENDING_APPLICATIONS:
+        raise HTTPException(status_code=409, detail="Only a pending application can be invited to an interview")
+    now = _now()
+    problem = meetings.slot_problem(body.slots, now)
+    if problem:
+        raise HTTPException(status_code=422, detail=problem)
+    if await meetings.active(db, application.id) is not None:
+        raise HTTPException(status_code=409, detail="This application already has an active interview")
+    interview = ApplicationInterview(
+        application_id=application.id, created_by=user.id, round=await meetings.next_round(db, application.id),
+        slots=[slot.isoformat() for slot in body.slots], duration_minutes=body.duration_minutes,
+        format=body.format, place=body.place, note=body.note, status=ApplicationInterviewStatus.PROPOSED,
+        created_at=now, updated_at=now,
+    )
+    db.add(interview)
+    application.status = ApplicationStatus.INTERVIEWING
+    application.updated_at = now
+    try:
+        await db.flush()
+        await meeting_events.proposed(db, interview, application, vacancy, company.name, now)
+        await db.commit()
+    except IntegrityError:      # ariza qulflangan — amalda faqat himoya
+        await db.rollback()
+        raise HTTPException(status_code=409, detail="This application already has an active interview")
+    return _interview_out(interview, now)
+
+
+@org_router.post(
+    "/{vacancy_id}/applications/{application_id}/interviews/{interview_id}/cancel", response_model=InterviewOut,
+)
+async def cancel_interview(
+    vacancy_id: uuid.UUID, application_id: uuid.UUID, interview_id: uuid.UUID, staff: Staff,
+    db: AsyncSession = Depends(get_db),
+):
+    _, company = staff
+    vacancy, application = await _company_application(db, company, vacancy_id, application_id)
+    interview = await _application_interview(db, application, interview_id)
+    if interview.status not in meetings.ACTIVE:
+        raise HTTPException(status_code=409, detail="Only an active interview can be cancelled")
+    now = _now()
+    interview.status = ApplicationInterviewStatus.CANCELLED
+    interview.updated_at = now
+    await meeting_events.cancelled(db, interview, application, vacancy, company.name, now)
+    await db.commit()
+    return _interview_out(interview, now)
+
+
+@org_router.post(
+    "/{vacancy_id}/applications/{application_id}/interviews/{interview_id}/outcome", response_model=InterviewOut,
+)
+async def record_interview_outcome(
+    vacancy_id: uuid.UUID, application_id: uuid.UUID, interview_id: uuid.UUID, body: InterviewOutcomeIn,
+    staff: Staff, db: AsyncSession = Depends(get_db),
+):
+    """§25.2: faqat `confirmed` va boshlangan suhbat; o'tmadi/kelmadi — ariza rad etiladi."""
+    _, company = staff
+    vacancy, application = await _company_application(db, company, vacancy_id, application_id)
+    interview = await _application_interview(db, application, interview_id)
+    now = _now()
+    if interview.status != ApplicationInterviewStatus.CONFIRMED:
+        raise HTTPException(status_code=409, detail="Only a confirmed interview can be completed")
+    if now < interview.starts_at:
+        raise HTTPException(status_code=409, detail="The interview has not started yet")
+    interview.status = ApplicationInterviewStatus.COMPLETED
+    interview.outcome = body.outcome
+    interview.outcome_note = body.note
+    interview.updated_at = now
+    if body.outcome != ApplicationInterviewOutcome.PASSED:
+        application.status = ApplicationStatus.REJECTED
+        application.updated_at = now
+        await application_rejected(db, application, vacancy, company.name, now)    # §23.7
+    await db.commit()
+    return _interview_out(interview, now)
 
 
 # ---------------------------------------------------------------------------
@@ -501,6 +763,8 @@ async def get_vacancy(vacancy_id: uuid.UUID, current_user: Candidate, db: AsyncS
     gaps = matching.fit(profile or Profile(current_user.id), vacancy).gaps
     completed = {r.scenario_id for r in profile.runs} if profile else set()
     practice = matching.practice(vacancy, gaps, await matching.published_scenarios(db), completed)
+    interviews = (await meetings.history(db, [application.id]))[application.id] if application else []
+    now = _now()
     return VacancyDetail(
         **_vacancy_card(vacancy, company, profile, application),
         my_overall=profile.overall_score if profile else None,
@@ -512,6 +776,7 @@ async def get_vacancy(vacancy_id: uuid.UUID, current_user: Candidate, db: AsyncS
             )
             for o, done, practices in practice
         ],
+        interviews=[_my_interview_out(i, now) for i in interviews],
     )
 
 
@@ -550,22 +815,83 @@ async def apply(vacancy_id: uuid.UUID, body: ApplyIn, current_user: Candidate, d
     return application
 
 
-@router.post("/{vacancy_id}/withdraw", response_model=ApplicationOut)
-async def withdraw(vacancy_id: uuid.UUID, current_user: Candidate, db: AsyncSession = Depends(get_db)):
+async def _my_application(db: AsyncSession, user: User, vacancy_id: uuid.UUID) -> VacancyApplication:
     application = (await db.execute(
         select(VacancyApplication)
-        .where(VacancyApplication.vacancy_id == vacancy_id, VacancyApplication.user_id == current_user.id)
+        .where(VacancyApplication.vacancy_id == vacancy_id, VacancyApplication.user_id == user.id)
         .with_for_update()
     )).scalars().first()
     if application is None:
         raise HTTPException(status_code=404, detail="Application not found")
-    if application.status != ApplicationStatus.APPLIED:
+    return application
+
+
+@router.post("/{vacancy_id}/withdraw", response_model=ApplicationOut)
+async def withdraw(vacancy_id: uuid.UUID, current_user: Candidate, db: AsyncSession = Depends(get_db)):
+    application = await _my_application(db, current_user, vacancy_id)
+    if application.status not in PENDING_APPLICATIONS:
         raise HTTPException(status_code=409, detail="Only a pending application can be withdrawn")
+    now = _now()
     application.status = ApplicationStatus.WITHDRAWN
-    application.updated_at = _now()
+    application.updated_at = now
+    closed = await meetings.close_active(db, application.id, now)
+    if closed is not None:      # §25.2: kompaniya rejalashtirgan suhbatdan xabar topsin
+        vacancy = await db.get(Vacancy, vacancy_id)
+        await meeting_events.declined(db, closed, vacancy, current_user.full_name, now, withdrawn=True)
     await db.commit()
     await db.refresh(application)
     return application
+
+
+async def _my_interview(
+    db: AsyncSession, user: User, vacancy_id: uuid.UUID, interview_id: uuid.UUID,
+) -> tuple[Vacancy, ApplicationInterview]:
+    """O'z arizasi (qaytarib olinmagan) suhbati; boshqasi — 404 (§25.3)."""
+    application = await _my_application(db, user, vacancy_id)
+    if application.status == ApplicationStatus.WITHDRAWN:
+        raise HTTPException(status_code=404, detail="Interview not found")
+    interview = await _application_interview(db, application, interview_id)
+    return await db.get(Vacancy, vacancy_id), interview
+
+
+@router.post("/{vacancy_id}/interviews/{interview_id}/confirm", response_model=MyInterviewOut)
+async def confirm_interview(
+    vacancy_id: uuid.UUID, interview_id: uuid.UUID, body: InterviewConfirmIn, current_user: Candidate,
+    db: AsyncSession = Depends(get_db),
+):
+    """§25.2: taklif qilingan variantlardan biri va hali kelmagan bo'lsa."""
+    vacancy, interview = await _my_interview(db, current_user, vacancy_id, interview_id)
+    now = _now()
+    if interview.status != ApplicationInterviewStatus.PROPOSED:
+        raise HTTPException(status_code=409, detail="Only a proposed interview can be confirmed")
+    if body.starts_at not in meetings.slot_times(interview):
+        raise HTTPException(status_code=409, detail="Pick one of the proposed times")
+    if body.starts_at <= now:
+        raise HTTPException(status_code=409, detail="This time has already passed")
+    interview.status = ApplicationInterviewStatus.CONFIRMED
+    interview.starts_at = body.starts_at
+    interview.confirmed_at = now
+    interview.updated_at = now
+    await meeting_events.confirmed(db, interview, vacancy, current_user.full_name, now)
+    await db.commit()
+    return _my_interview_out(interview, now)
+
+
+@router.post("/{vacancy_id}/interviews/{interview_id}/decline", response_model=MyInterviewOut)
+async def decline_interview(
+    vacancy_id: uuid.UUID, interview_id: uuid.UUID, body: InterviewDeclineIn, current_user: Candidate,
+    db: AsyncSession = Depends(get_db),
+):
+    vacancy, interview = await _my_interview(db, current_user, vacancy_id, interview_id)
+    if interview.status not in meetings.ACTIVE:
+        raise HTTPException(status_code=409, detail="Only an active interview can be declined")
+    now = _now()
+    interview.status = ApplicationInterviewStatus.DECLINED
+    interview.decline_reason = body.reason
+    interview.updated_at = now
+    await meeting_events.declined(db, interview, vacancy, current_user.full_name, now)
+    await db.commit()
+    return _my_interview_out(interview, now)
 
 
 @users_router.get("/me/applications", response_model=list[MyApplicationOut])
@@ -577,10 +903,20 @@ async def my_applications(current_user: Candidate, db: AsyncSession = Depends(ge
         .where(VacancyApplication.user_id == current_user.id)
         .order_by(VacancyApplication.created_at.desc())
     )).all()
+    active = {
+        i.application_id: i for i in (await db.execute(
+            select(ApplicationInterview).where(
+                ApplicationInterview.application_id.in_([a.id for a, _, _ in rows]),
+                ApplicationInterview.status.in_(meetings.ACTIVE),
+            )
+        )).scalars()
+    } if rows else {}
+    now = _now()
     return [
         MyApplicationOut(
             **ApplicationOut.model_validate(a).model_dump(),
             vacancy_title=v.title, vacancy_status=v.status, company_name=c.name, sector=v.sector,
+            interview=_my_interview_out(active[a.id], now) if a.id in active else None,
         )
         for a, v, c in rows
     ]

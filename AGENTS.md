@@ -44,6 +44,9 @@ va mashq ssenariylarini ko'radi, ariza beradi (ariza — rozilik: yopiq profil h
 AI suhbat mashqi (`CONTRACT.md` §24, `/interviews`, Modul 14 `backend/app/interview/`): talaba vakansiya bo'yicha
 AI suhbatdosh bilan 5 savollik sinov suhbatidan o'tadi (aniqlashtiruvchi savollar, AI'siz — `bank.py` savollari),
 arq `interview_report_job` har javobga baho va izoh yozadi; natija shaxsiy, profilga ta'sir qilmaydi.
+Suhbat bosqichlari (`CONTRACT.md` §25): kompaniya arizachiga 1–3 suhbat vaqtini taklif qiladi, talaba birini
+tanlaydi yoki rad etadi (`.ics` kalendar fayli), kompaniya natijani belgilaydi (o'tdi — keyingi bosqich yoki taklif,
+o'tmadi/kelmadi — rad); ≤ 2 soat qolganda eslatma (`interview_reminders` cron'i).
 
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da

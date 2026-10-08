@@ -1,10 +1,11 @@
 // Bildirishnoma matni: backend matn saqlamaydi — `kind` + `params`dan interfeys tilida (CONTRACT.md §15.1).
 import type { TFunction } from 'i18next'
 import {
-  AlarmClock, Award, BriefcaseBusiness, ClipboardList, FileX2, GitBranch, GraduationCap, Handshake, Siren, UserCheck, UserX,
+  AlarmClock, Award, BriefcaseBusiness, CalendarCheck2, CalendarClock, CalendarPlus, CalendarX2, ClipboardList, FileX2,
+  GitBranch, GraduationCap, Handshake, Siren, UserCheck, UserX,
   type LucideIcon,
 } from 'lucide-react'
-import { formatTime } from '@/lib/time'
+import { formatDateTime, formatTime } from '@/lib/time'
 import type { AppNotification } from '@/lib/types'
 
 export interface Described {
@@ -47,6 +48,26 @@ export function describe(n: AppNotification, t: TFunction): Described {
       return { Icon: BriefcaseBusiness, title: t('notifications.kind.application_received'), body: `${str('candidate')} — ${str('vacancy')}`, urgent: false }
     case 'application_rejected':
       return { Icon: FileX2, title: t('notifications.kind.application_rejected'), body: `${str('company')} — ${str('vacancy')}`, urgent: false }
+    case 'interview_proposed':
+      return { Icon: CalendarPlus, title: t('notifications.kind.interview_proposed'), body: `${str('company')} — ${str('vacancy')}`, urgent: false }
+    case 'interview_cancelled':
+      return { Icon: CalendarX2, title: t('notifications.kind.interview_cancelled'), body: `${str('company')} — ${str('vacancy')}`, urgent: false }
+    case 'interview_confirmed':
+      return {
+        Icon: CalendarCheck2, title: t('notifications.kind.interview_confirmed'), urgent: false,
+        body: [`${str('candidate')} — ${str('vacancy')}`, p.starts_at ? formatDateTime(str('starts_at')) : ''].filter(Boolean).join(' · '),
+      }
+    case 'interview_declined':
+      return {
+        Icon: CalendarX2, urgent: false,
+        title: t(p.withdrawn ? 'notifications.kind.interview_withdrawn' : 'notifications.kind.interview_declined'),
+        body: [`${str('candidate')} — ${str('vacancy')}`, str('reason')].filter(Boolean).join(' · '),
+      }
+    case 'interview_reminder':
+      return {
+        Icon: CalendarClock, title: t('notifications.kind.interview_reminder', { time: formatTime(str('starts_at')) }), urgent: true,
+        body: `${str('vacancy')} · ${str('place')}`,
+      }
   }
 }
 

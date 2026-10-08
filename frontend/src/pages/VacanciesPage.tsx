@@ -1,18 +1,21 @@
 // /vacancies (CONTRACT.md §23.8): talabaga ochiq vakansiyalar — moslik foizi bo'yicha,
-// soha filtri; tepada o'z arizalari.
+// soha filtri; tepada o'z arizalari (suhbat bo'lsa — vaqti, §25.6).
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { BriefcaseBusiness, Loader2, Trophy } from 'lucide-react'
+import { BriefcaseBusiness, CalendarCheck2, Loader2, Trophy } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Segmented } from '@/components/ui/segmented'
+import { useWhen } from '@/components/vacancies/meetings'
 import { ApplicationBadge, FitBadge, VacancyMeta } from '@/components/vacancies/parts'
 import { api } from '@/lib/api'
 import { formatDateTime } from '@/lib/time'
 import { SECTORS, type MyApplication, type Sector, type VacancyCard } from '@/lib/types'
+import { cn } from '@/lib/utils'
 
 export default function VacanciesPage() {
   const { t } = useTranslation()
+  const when = useWhen()
   const [sector, setSector] = useState<Sector | ''>('')
   const [items, setItems] = useState<VacancyCard[] | null>(null)
   const [mine, setMine] = useState<MyApplication[]>([])
@@ -51,6 +54,15 @@ export default function VacanciesPage() {
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-semibold">{a.vacancy_title}</span>
                     <span className="text-xs text-muted-foreground">{a.company_name} · {formatDateTime(a.created_at)}</span>
+                    {a.interview && (
+                      <span className={cn('mt-1 flex items-center gap-1.5 text-xs font-semibold',
+                        a.interview.status === 'proposed' && !a.interview.expired ? 'text-amber-700 dark:text-amber-300' : 'text-primary')}>
+                        <CalendarCheck2 className="h-3.5 w-3.5" />
+                        {a.interview.status === 'confirmed' && a.interview.starts_at
+                          ? t('meeting.student.on', { when: when(a.interview.starts_at) })
+                          : t(a.interview.expired ? 'meeting.status.expired' : 'meeting.student.pickNeeded')}
+                      </span>
+                    )}
                   </span>
                   {a.vacancy_status === 'closed' && <span className="text-xs text-muted-foreground">{t('vacancy.student.closed')}</span>}
                   <ApplicationBadge status={a.status} />

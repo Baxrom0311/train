@@ -160,7 +160,7 @@ schema / endpoint shakli) orqali gaplashadi.
 | 1 | **Core & Auth & RBAC** | `backend/app/core/`, `backend/app/models/user.py`, `backend/app/models/rbac.py`, `backend/app/api/auth.py` | Yo'q (birinchi quriladi) |
 | 2 | **Simulations & AI Mentor** | `backend/app/models/simulation.py`, `backend/app/models/ai_usage.py`, `backend/app/api/simulations.py`, `backend/app/api/submissions.py`, `backend/app/ai/` | (1)ga bog'liq |
 | 3 | **Billing & Admin approval** | `backend/app/models/billing.py`, `backend/app/api/billing.py`, `backend/app/api/admin.py` | (1)ga bog'liq |
-| 4 | **Talent Hunt** | `backend/app/models/talent.py`, `backend/app/api/talent_hunt.py`, `backend/app/api/vacancies.py`, `backend/app/talent/` | (1),(3),(9)ga bog'liq — ball Run natijalaridan (§10) |
+| 4 | **Talent Hunt** | `backend/app/models/talent.py`, `backend/app/api/talent_hunt.py`, `backend/app/api/vacancies.py`, `backend/app/talent/` | (1),(3),(9)ga bog'liq — ball Run natijalaridan (§10); vakansiya, ariza va suhbat bosqichlari (§23, §25) |
 | 5 | **Case Cup** | `backend/app/api/case_cups.py` | (1),(2)ga bog'liq |
 | 6 | **University Portal** | `backend/app/api/university_portal.py` | (1),(3),(9)ga bog'liq — natijalar Run'lardan (§12) |
 | 7 | **Frontend (React+shadcn)** | `frontend/` | Har modul backend API'si tayyor bo'lgach, mos ekranlar — vertical slice, lekin alohida agent/task |
@@ -227,6 +227,7 @@ POST   /api/v1/talents/offers             counts against subscription's "intervi
 # Push obunalari va PWA — §22
 # Kompaniya vakansiyalari, moslik, arizalar — §23
 # AI suhbat mashqi — §24
+# Suhbat bosqichlari (arizachi bilan haqiqiy suhbat) — §25
 # Universitet portali (talabalar natijalari, bog'lanish) — §12.2
 ```
 
@@ -1146,7 +1147,7 @@ email_kinds JSONB` — qator yo'q bo'lsa default'lar.
 | `offer_received` | talaba | kompaniya taklif yubordi (§10.2) | offer_id, company, position | ha |
 | `offer_responded` | kompaniyaning faol xodimlari (taklifni kim yuborgani saqlanmaydi) | talaba javob berdi | offer_id, candidate, position, accepted | ha |
 
-Vakansiya arizalari turlari — §23.7.
+Vakansiya arizalari turlari — §23.7, suhbat bosqichlari — §25.5.
 
 `dedupe_key`: `event:{run_id}:{node_id}:delivered`, `event:{run_id}:{node_id}:deadline`,
 `review:{submission_id}`, `final:{run_id}`, `offer:{id}`, `offer:{id}:response`.
@@ -1716,7 +1717,7 @@ CV yo'q — ariza = talabaning Run natijalari (profil).
 
 `vacancy_applications`:
 - `id, vacancy_id (FK, CASCADE), user_id (FK), note` (≤ 1000, ixtiyoriy),
-  `status` (`applied | withdrawn | rejected | offered`), `created_at`,
+  `status` (`applied | interviewing | withdrawn | rejected | offered`; `interviewing` — §25), `created_at`,
   `updated_at`; `UNIQUE(vacancy_id, user_id)`.
 - `talent_offers.vacancy_id` (FK, SET NULL, ixtiyoriy) — taklif qaysi
   vakansiyadan.
@@ -1749,9 +1750,10 @@ Nomzod profili (§10.1, eng yaxshi Run'lar) va vakansiya talablaridan:
   qayta `applied` mumkin, `rejected`/`offered`dan — yo'q (409).
 - Kompaniya ariza beruvchiga vakansiyadan taklif yuborsa (`POST
   /talents/offers` + `vacancy_id`), §10 ko'rinish sharti o'rniga "shu
-  vakansiyaga `applied` ariza bor" sharti tekshiriladi; ariza — `offered`.
+  vakansiyaga `applied | interviewing` ariza bor" sharti tekshiriladi; ariza — `offered`.
   Ko'rinadigan (mos) nomzodga `vacancy_id` bilan taklif — oddiy §10 qoidasi.
-- Rad etish: `applied` → `rejected`, talabaga bildirishnoma. Vakansiya
+- Rad etish: `applied | interviewing` → `rejected`, talabaga bildirishnoma
+  (suhbat bosqichlari va qaytarib olish — §25.2). Vakansiya
   yopilsa arizalar holati o'zgarmaydi (talaba "yopilgan" ko'radi).
 - Talaba vakansiyalarni ko'rinish sozlamasidan qat'i nazar ko'radi
   (faqat tasdiqlangan kompaniyalarning `open` vakansiyalari).
@@ -1951,3 +1953,132 @@ score, created_at, finished_at`. `InterviewDetail`: karta + `focus`,
   3 s'da), natija: umumiy ball, kompetensiyalar, har savol bo'yicha izoh,
   kuchli tomonlar va o'sish nuqtalari, "Yana mashq qilish".
 - `/interviews` — o'tgan suhbatlar ro'yxati; navbarda talabaga "Suhbatlar".
+
+## 25. Suhbat bosqichlari (Modul 4 + 11 + 7)
+
+Ariza (§23) va taklif (§10.2) orasida haqiqiy ishga qabulda doim suhbat
+bo'ladi. Kompaniya arizachiga suhbat vaqtlarini (1–3 variant) taklif qiladi,
+talaba qulayini tanlaydi yoki sabab bilan rad etadi, suhbatdan keyin kompaniya
+natijani belgilaydi: o'tdi — keyingi bosqich yoki taklif, o'tmadi/kelmadi —
+ariza rad etiladi. AI suhbat mashqi (§24) bilan aralashmaydi: u shaxsiy
+mashq, bu esa kompaniya bilan uchrashuv.
+
+### 25.1 Ma'lumot (Modul 4, `models/talent.py`)
+
+`application_interviews`:
+- `id, application_id (FK vacancy_applications, CASCADE), created_by (FK users, SET NULL)`;
+- `round` — bosqich raqami: shu arizaning `completed` suhbatlari soni + 1
+  (rad etilgan/bekor qilinganlar hisoblanmaydi);
+- `slots` JSONB — 1–3 ta vaqt varianti (ISO, UTC, daqiqagacha; takrorsiz,
+  o'sish tartibida). Har biri yaratilganda `≥ hozir + 1 soat` va
+  `≤ hozir + 60 kun`; vaqt mintaqasisiz qiymat — 422;
+- `duration_minutes` (15–120), `format` (`online | office`), `place`
+  (2–300: havola yoki manzil), `note` (≤ 1000, ixtiyoriy — talabaga);
+- `status` (`proposed | confirmed | declined | cancelled | completed`),
+  `starts_at` (talaba tanlagan variant), `confirmed_at`, `decline_reason`
+  (≤ 500), `outcome` (`passed | failed | no_show`), `outcome_note` (≤ 1000,
+  **faqat kompaniyaga**), `reminded_at`, `created_at`, `updated_at`.
+- Bir arizada bir vaqtda ko'pi bilan bitta faol (`proposed | confirmed`)
+  suhbat — qisman unique indeks.
+
+`vacancy_applications.status`ga `interviewing` qo'shiladi.
+
+### 25.2 Holatlar
+
+```
+ariza:  applied → interviewing → offered | rejected
+        applied → offered | rejected;   applied | interviewing → withdrawn
+suhbat: proposed → confirmed → completed (passed | failed | no_show)
+        proposed | confirmed → declined (talaba) | cancelled (kompaniya yoki ariza yopildi)
+```
+
+- **Taklif qilish** (kompaniya): ariza `applied | interviewing`, faol suhbat
+  yo'q (aks holda 409). Vakansiya yopilgan bo'lsa ham mumkin (tanlov davom
+  etadi). Ariza → `interviewing`.
+- **Tanlash** (talaba): suhbat `proposed`, `starts_at` — `slots`dan biri va
+  hali kelmagan (aks holda 409) → `confirmed`.
+- **Rad etish** (talaba): `proposed | confirmed` → `declined`, sabab ixtiyoriy.
+  Ariza `interviewing`da qoladi: kompaniya yangi vaqt taklif qilishi, taklif
+  yuborishi yoki rad etishi mumkin.
+- **Bekor qilish** (kompaniya): `proposed | confirmed` → `cancelled`.
+- **Natija** (kompaniya): faqat `confirmed` va `hozir ≥ starts_at` (aks holda
+  409) → `completed`. `failed | no_show` — ariza `rejected` va
+  `application_rejected` (§23.7). `passed` — ariza `interviewing`da: keyingi
+  bosqich yoki taklif.
+- Barcha `proposed` variantlari o'tib ketgan suhbat — `expired: true`
+  (hisoblanadi, saqlanmaydi): talaba tanlay olmaydi, kompaniya bekor qilib
+  yangisini taklif qiladi.
+- **Ariza yopilsa** — taklif (`POST /talents/offers` + `vacancy_id`,
+  `applied | interviewing` ariza bo'yicha), rad etish (`applied |
+  interviewing` → `rejected`) yoki talaba qaytarib olishi (`applied |
+  interviewing` → `withdrawn`) — faol suhbat `cancelled` bo'ladi.
+  Taklif/rad etishda talabaga alohida `interview_cancelled` yuborilmaydi
+  (taklif yoki rad xabari yetarli); talaba qaytarib olsa va faol suhbat bor
+  edi — kompaniyaga `interview_declined` (`withdrawn: true`).
+- Qulflash tartibi: avval ariza, keyin suhbat qatori (`FOR UPDATE`).
+  Umumiy qoidalar (vaqt variantlari, faol suhbatni yopish) — `talent/meetings.py`.
+
+### 25.3 Ruxsatlar
+
+Yangi ruxsat yo'q: kompaniya — `manage_vacancies` (§23.5, o'z vakansiyasi;
+boshqasiniki 404), talaba — `receive_offers` (faqat o'z arizasi; boshqasiniki
+yoki qaytarib olingan ariza suhbati — 404).
+
+### 25.4 API (`api/vacancies.py`)
+
+```
+GET  /api/v1/company/vacancies/interviews        manage_vacancies → [faol suhbatlar: InterviewOut + vacancy, candidate]
+POST /api/v1/company/vacancies/{id}/applications/{app_id}/interviews
+       {slots: [iso], duration_minutes, format, place, note?} → 201 InterviewOut
+POST /api/v1/company/vacancies/{id}/applications/{app_id}/interviews/{iid}/cancel   → InterviewOut
+POST /api/v1/company/vacancies/{id}/applications/{app_id}/interviews/{iid}/outcome
+       {outcome: passed|failed|no_show, note?} → InterviewOut
+
+POST /api/v1/vacancies/{id}/interviews/{iid}/confirm   {starts_at} → MyInterviewOut
+POST /api/v1/vacancies/{id}/interviews/{iid}/decline   {reason?}   → MyInterviewOut
+```
+
+- `InterviewOut` (kompaniya): barcha maydonlar + `expired`.
+  `MyInterviewOut` (talaba): `outcome_note`, `created_by`siz.
+- `GET /company/vacancies/interviews`: kompaniyaning `proposed | confirmed`
+  suhbatlari (`starts_at`, bo'lmasa birinchi variant bo'yicha), ≤ 100;
+  `confirmed` va boshlangan — "natijani belgilang".
+- `CompanyApplicationOut` (§23.6) + `interviews` (shu ariza suhbatlari,
+  yangilari tepada); arizalar tartibi: `applied`, `interviewing`, `offered`,
+  `rejected`. `counts.applications` — `applied | interviewing | offered`.
+- `VacancyDetail` (talaba) + `interviews` (o'z arizasi suhbatlari, `MyInterviewOut`),
+  `/users/me/applications` qatoriga `interview` — faol suhbat (yo'q — `null`).
+
+### 25.5 Bildirishnomalar (Modul 11, `notifications/meetings.py`)
+
+| kind | Kimga | Qachon | params | Email default |
+|---|---|---|---|---|
+| `interview_proposed` | talaba | kompaniya vaqt taklif qildi | vacancy_id, vacancy, company, round, slots | ha |
+| `interview_cancelled` | talaba | kompaniya suhbatni bekor qildi | vacancy_id, vacancy, company, starts_at? | ha |
+| `interview_confirmed` | kompaniyaning faol xodimlari | talaba vaqtni tanladi | vacancy_id, vacancy, candidate, starts_at | ha |
+| `interview_declined` | kompaniyaning faol xodimlari | talaba rad etdi / arizani qaytarib oldi | vacancy_id, vacancy, candidate, reason?, withdrawn | ha |
+| `interview_reminder` | talaba va kompaniya xodimlari | `confirmed` suhbatga ≤ 2 soat qoldi (cron) | vacancy_id, vacancy, company, candidate, starts_at, format, place | ha |
+
+`dedupe_key`: `meeting:{id}:proposed|cancelled|confirmed|declined|reminder`.
+Havola: talabaga `/vacancies/{vacancy_id}`, kompaniyaga
+`/company/vacancies/{vacancy_id}`. `available`: `receive_offers` —
+`interview_proposed`, `interview_cancelled`, `interview_reminder`;
+`manage_vacancies` — `interview_confirmed`, `interview_declined`,
+`interview_reminder`. Email/push matnida vaqt Toshkent bo'yicha
+(`dd.mm HH:MM`).
+
+Cron `interview_reminders` (arq, har 5 daqiqada): `confirmed`,
+`reminded_at IS NULL`, `hozir < starts_at ≤ hozir + 2 soat` — bildirishnoma
+va `reminded_at = hozir` (bir marta).
+
+### 25.6 Frontend
+
+- Kompaniya, vakansiya sahifasi (§23.8) arizalarida: "Suhbatga chaqirish"
+  (1–3 vaqt, davomiylik, format, joy/havola, izoh; kiritilgan vaqt —
+  Toshkent vaqti), ariza ostida suhbat holati (variantlar / tanlangan vaqt /
+  rad sababi), "Bekor qilish", boshlangan suhbatga "O'tdi / O'tmadi /
+  Kelmadi". `/company/vacancies`da "Yaqin suhbatlar" ro'yxati.
+- Talaba, vakansiya sahifasidagi ariza kartasida: taklif qilingan vaqtlardan
+  birini tanlash, rad etish (sabab), tasdiqlangan suhbat — vaqt, format,
+  joy, "Kalendarga qo'shish" (`.ics` brauzerda yaratiladi). `/vacancies`dagi
+  "Arizalarim"da suhbat sanasi.

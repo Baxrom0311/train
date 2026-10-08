@@ -29,6 +29,10 @@ def _hhmm(iso: str | None) -> str:
     return datetime.fromisoformat(iso).astimezone(TASHKENT).strftime("%H:%M") if iso else ""
 
 
+def _when(iso: str | None) -> str:
+    return datetime.fromisoformat(iso).astimezone(TASHKENT).strftime("%d.%m %H:%M") if iso else ""
+
+
 def render(n: Notification) -> tuple[str, str]:
     """(mavzu, birinchi abzas) — havola va imzo `compose`da qo'shiladi."""
     p = n.params
@@ -49,6 +53,28 @@ def render(n: Notification) -> tuple[str, str]:
         return f"Yangi ariza: {p['vacancy']}", f"{p['candidate']} «{p['vacancy']}» vakansiyangizga ariza berdi."
     if kind == Kind.APPLICATION_REJECTED:
         return f"Ariza javobi: {p['vacancy']}", f"{p['company']} «{p['vacancy']}» vakansiyasi bo'yicha arizangizni rad etdi."
+    if kind == Kind.INTERVIEW_PROPOSED:
+        times = ", ".join(_when(s) for s in p["slots"])
+        return (f"Suhbatga taklif: {p['vacancy']}",
+                f"{p['company']} «{p['vacancy']}» bo'yicha {p['round']}-bosqich suhbatiga chaqirdi. "
+                f"Vaqt variantlari: {times} (Toshkent vaqti) — qulayini tanlang.")
+    if kind == Kind.INTERVIEW_CANCELLED:
+        when = f" ({_when(p['starts_at'])})" if p.get("starts_at") else ""
+        return f"Suhbat bekor qilindi: {p['vacancy']}", f"{p['company']} «{p['vacancy']}» bo'yicha suhbatni{when} bekor qildi."
+    if kind == Kind.INTERVIEW_CONFIRMED:
+        return (f"Suhbat vaqti tanlandi: {p['vacancy']}",
+                f"{p['candidate']} «{p['vacancy']}» bo'yicha suhbatga {_when(p['starts_at'])} (Toshkent vaqti) ni tanladi.")
+    if kind == Kind.INTERVIEW_DECLINED:
+        if p.get("withdrawn"):
+            return (f"Ariza qaytarib olindi: {p['vacancy']}",
+                    f"{p['candidate']} «{p['vacancy']}» arizasini qaytarib oldi — suhbat bekor qilindi.")
+        reason = f" Sabab: {p['reason']}" if p.get("reason") else ""
+        return f"Suhbat rad etildi: {p['vacancy']}", f"{p['candidate']} «{p['vacancy']}» bo'yicha suhbatni rad etdi.{reason}"
+    if kind == Kind.INTERVIEW_REMINDER:
+        where = "onlayn" if p.get("format") == "online" else "ofisda"
+        return (f"Suhbat yaqin: {p['vacancy']}",
+                f"«{p['vacancy']}» bo'yicha suhbat ({p['company']}, {p['candidate']}) {_when(p['starts_at'])} da, "
+                f"{where}: {p['place']}.")
     answer = "qabul qildi" if p.get("accepted") else "rad etdi"
     return f"Taklifga javob: {p['position']}", f"{p['candidate']} «{p['position']}» taklifingizni {answer}."
 
