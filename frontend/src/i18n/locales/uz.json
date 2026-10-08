@@ -1186,7 +1186,10 @@
     "csv": {
       "offers": "Takliflar CSV",
       "candidates": "Nomzodlar CSV"
-    }
+    },
+    "offersTitle": "Talent Hunt takliflari",
+    "offersSubtitle": "Nomzodlar bo'limidan to'g'ridan-to'g'ri yuborilgan takliflar va vakansiyadan yuborilganlari.",
+    "lessThanDay": "1 kundan kam"
   },
   "platform": {
     "generated": "{{date}} holatiga",
@@ -1598,6 +1601,91 @@
       "evaluating": "Yakuniy hisobot tayyorlanmoqda.",
       "done": "Sinov tugadi, natija {{company}}ga yuborildi.",
       "report": "Hisobotni ko'rish"
+    }
+  },
+  "hiring": {
+    "title": "Ishga olish voronkasi",
+    "subtitle": "Davr ichida vakansiyalaringizga kelgan arizalar va ular qaysi bosqichgacha yetgani.",
+    "vacancy": "Vakansiya",
+    "allVacancies": "Barcha vakansiyalar",
+    "csv": "Arizalar CSV",
+    "empty": "Bu davrda vakansiyalaringizga ariza kelmagan. Vakansiya e'lon qiling — mos talabalar unga ariza beradi.",
+    "toVacancies": "Vakansiyalarga o'tish",
+    "stats": {
+      "applied": "Arizalar",
+      "hired": "Ishga olindi",
+      "firstAction": "Birinchi javob (mediana)",
+      "timeToHire": "Ishga olish muddati (mediana)"
+    },
+    "stage": {
+      "applied": "Ariza",
+      "assessment": "Sinov topshirig'i",
+      "interview": "Suhbat",
+      "offer": "Taklif",
+      "hired": "Qabul qildi"
+    },
+    "stages": {
+      "title": "Bosqichlar",
+      "step": "oldingi bosqichdagilarning {{rate}} qismi o'tdi",
+      "skipped": "oldingi bosqichga hech kim yetmagan",
+      "note": "Foiz — barcha arizalarga nisbatan. Sinov va suhbat ixtiyoriy, shuning uchun bosqich soni oldingisidan ko'p bo'lishi mumkin."
+    },
+    "outcomes": {
+      "title": "Arizalar holati"
+    },
+    "outcome": {
+      "hired": "Ishga olindi",
+      "offer_pending": "Taklif javobi kutilmoqda",
+      "in_progress": "Tanlovda",
+      "waiting": "Ko'rib chiqilmagan",
+      "offer_declined": "Taklifni rad etdi",
+      "withdrawn": "Qaytarib oldi",
+      "rejected": "Rad etildi"
+    },
+    "dropoff": {
+      "title": "Qayerda to'xtadi",
+      "at": {
+        "applied": "Arizadan keyin",
+        "assessment": "Sinovdan keyin",
+        "interview": "Suhbatdan keyin"
+      },
+      "rejected_one": "{{count}} ta rad etildi",
+      "rejected_other": "{{count}} ta rad etildi",
+      "withdrawn_one": "{{count}} ta qaytarib oldi",
+      "withdrawn_other": "{{count}} ta qaytarib oldi"
+    },
+    "stale": {
+      "title_one": "{{count}} ta ariza 7 kundan beri javobsiz",
+      "title_other": "{{count}} ta ariza 7 kundan beri javobsiz",
+      "body": "Nomzodlar javob kutmoqda — sinov, suhbat yoki rad javobini yuboring.",
+      "action": "Arizalarni ochish"
+    },
+    "assessments": {
+      "title": "Sinov topshiriqlari",
+      "none": "Bu arizalarga sinov topshirig'i yuborilmagan.",
+      "sent": "Yuborildi",
+      "started": "Boshlandi",
+      "completed": "Tugatildi",
+      "completionRate": "Tugatish darajasi",
+      "avgScore": "O'rtacha ball"
+    },
+    "interviews": {
+      "title": "Suhbatlar",
+      "none": "Bu arizalar bo'yicha suhbat taklif qilinmagan.",
+      "proposed": "Taklif qilindi",
+      "held": "O'tkazildi",
+      "passRate": "O'tganlar",
+      "showRate": "Kelganlar",
+      "confirmed_one": "{{count}} tasida vaqt tanlandi",
+      "confirmed_other": "{{count}} tasida vaqt tanlandi",
+      "declined_one": "{{count}} tasini talaba rad etdi",
+      "declined_other": "{{count}} tasini talaba rad etdi",
+      "noShow_one": "{{count}} tasiga kelmadi",
+      "noShow_other": "{{count}} tasiga kelmadi"
+    },
+    "byVacancy": {
+      "title": "Vakansiyalar bo'yicha",
+      "hireRate": "Konversiya"
     }
   }
 }

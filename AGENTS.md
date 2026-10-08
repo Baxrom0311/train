@@ -51,6 +51,8 @@ Suhbat bosqichlari (`CONTRACT.md` §25): kompaniya arizachiga 1–3 suhbat vaqti
 tanlaydi yoki rad etadi (`.ics` kalendar fayli), kompaniya natijani belgilaydi (o'tdi — keyingi bosqich yoki taklif,
 o'tmadi/kelmadi — rad); ≤ 2 soat qolganda eslatma (`interview_reminders` cron'i).
 
+Ishga olish voronkasi (`CONTRACT.md` §27, `/talents/report`): vakansiya arizalari kogortasi bo'yicha ariza → sinov → suhbat →
+taklif → qabul konversiyasi, yo'qotishlar, javobsiz arizalar ogohlantirishi va arizalar CSV'si (`talent/hiring.py`).
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da
 sandbox/                            # kod runner'i (§19), faqat stdlib

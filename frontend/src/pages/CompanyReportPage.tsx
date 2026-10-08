@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react'
-import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { AlarmClock, CheckCircle2, Download, Loader2, MessageSquareReply, Send, Timer, Trophy, Users, Zap } from 'lucide-react'
+import { AlarmClock, CheckCircle2, Loader2, MessageSquareReply, Send, Timer, Trophy, Users, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Segmented } from '@/components/ui/segmented'
 import { Stat } from '@/components/ui/stat'
 import { CompetencyBars, ScoreRing } from '@/components/score'
-import { api, ApiError, download } from '@/lib/api'
+import { HiringFunnel } from '@/components/report/HiringFunnel'
+import { CsvButton, hours, pct } from '@/components/report/shared'
+import { useAuth } from '@/context/AuthContext'
+import { api, ApiError } from '@/lib/api'
 import { formatDateTime, formatMonth } from '@/lib/time'
 import type { CompanyReport } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -17,10 +19,9 @@ import { cn } from '@/lib/utils'
 const PERIODS = [30, 90, 365, null] as const
 type Period = (typeof PERIODS)[number]
 
-const pct = (v: number | null) => (v === null ? '—' : `${Math.round(v)}%`)
-
 export default function CompanyReportPage() {
   const { t } = useTranslation()
+  const { can } = useAuth()
   const [days, setDays] = useState<Period>(90)
   const [report, setReport] = useState<CompanyReport | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -57,28 +58,36 @@ export default function CompanyReportPage() {
       </div>
       {error && <p className="glass rounded-2xl px-4 py-3 text-sm text-destructive">{error}</p>}
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 animate-rise">
-        <Stat Icon={Send} label={t('companyReport.stats.sent')} value={offers.sent} />
-        <Stat Icon={MessageSquareReply} label={t('companyReport.stats.responseRate')} value={pct(offers.response_rate)} />
-        <Stat Icon={CheckCircle2} label={t('companyReport.stats.acceptanceRate')} value={pct(offers.acceptance_rate)} />
-        <Stat Icon={Timer} label={t('companyReport.stats.medianResponse')} value={hours(offers.median_response_hours, t)} />
-      </div>
+      {can('manage_vacancies') && <HiringFunnel days={days} />}
 
-      {offers.sent === 0 ? (
-        <div className="glass flex flex-col items-center gap-3 rounded-2xl px-6 py-12 text-center animate-rise">
-          <Send className="h-8 w-8 text-muted-foreground" />
-          <p className="max-w-md text-sm text-muted-foreground">{t('companyReport.noOffers')}</p>
-          <Button asChild variant="outline" size="sm"><Link to="/talents">{t('companyReport.toTalents')}</Link></Button>
+      <section className="space-y-4">
+        <div className="animate-rise">
+          <h2 className="text-2xl font-extrabold tracking-tight">{t('companyReport.offersTitle')}</h2>
+          <p className="text-sm text-muted-foreground">{t('companyReport.offersSubtitle')}</p>
         </div>
-      ) : (
-        <>
-          <div className="grid gap-4 lg:grid-cols-5">
-            <Funnel report={report} className="lg:col-span-2" />
-            <Months report={report} className="lg:col-span-3" />
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 animate-rise">
+          <Stat Icon={Send} label={t('companyReport.stats.sent')} value={offers.sent} />
+          <Stat Icon={MessageSquareReply} label={t('companyReport.stats.responseRate')} value={pct(offers.response_rate)} />
+          <Stat Icon={CheckCircle2} label={t('companyReport.stats.acceptanceRate')} value={pct(offers.acceptance_rate)} />
+          <Stat Icon={Timer} label={t('companyReport.stats.medianResponse')} value={hours(offers.median_response_hours, t)} />
+        </div>
+
+        {offers.sent === 0 ? (
+          <div className="glass flex flex-col items-center gap-3 rounded-2xl px-6 py-12 text-center animate-rise">
+            <Send className="h-8 w-8 text-muted-foreground" />
+            <p className="max-w-md text-sm text-muted-foreground">{t('companyReport.noOffers')}</p>
+            <Button asChild variant="outline" size="sm"><Link to="/talents">{t('companyReport.toTalents')}</Link></Button>
           </div>
-          <Positions report={report} />
-        </>
-      )}
+        ) : (
+          <>
+            <div className="grid gap-4 lg:grid-cols-5">
+              <Funnel report={report} className="lg:col-span-2" />
+              <Months report={report} className="lg:col-span-3" />
+            </div>
+            <Positions report={report} />
+          </>
+        )}
+      </section>
 
       <section className="space-y-4">
         <div className="animate-rise">
@@ -96,33 +105,10 @@ export default function CompanyReportPage() {
   )
 }
 
-function hours(value: number | null, t: TFunction): string {
-  if (value === null) return '—'
-  if (value < 1) return t('companyReport.lessThanHour')
-  if (value < 48) return t('companyReport.hours', { count: Math.round(value) })
-  return t('companyReport.days', { count: Math.round(value / 24) })
-}
-
 function PeriodPicker({ value, onChange, busy }: { value: Period; onChange: (p: Period) => void; busy: boolean }) {
   const { t } = useTranslation()
   const options = PERIODS.map((p) => ({ value: p, label: p ? t('companyReport.period.days', { count: p }) : t('companyReport.period.all') }))
   return <Segmented options={options} value={value} onChange={onChange} busy={busy} label={t('companyReport.period.label')} />
-}
-
-function CsvButton({ path, name, label }: { path: string; name: string; label: string }) {
-  const { t } = useTranslation()
-  const [state, setState] = useState<'idle' | 'busy' | 'error'>('idle')
-  const run = () => {
-    setState('busy')
-    download(path, name).then(() => setState('idle'), () => setState('error'))
-  }
-  return (
-    <Button variant="outline" size="sm" onClick={run} disabled={state === 'busy'} title={state === 'error' ? t('common.error') : undefined}
-      className={cn(state === 'error' && 'border-destructive text-destructive')}>
-      {state === 'busy' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-      {label}
-    </Button>
-  )
 }
 
 /** Voronka: har bosqich yuborilganlarga nisbatan (CONTRACT.md §20.2). */

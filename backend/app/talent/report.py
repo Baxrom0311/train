@@ -33,7 +33,7 @@ class OfferRow:
     candidate_email: str | None
 
 
-def _pct(part: int, whole: int) -> float | None:
+def percent(part: int, whole: int) -> float | None:
     return round(part * 100 / whole, 1) if whole else None
 
 
@@ -96,8 +96,8 @@ def offer_stats(offers: list[TalentOffer], now: datetime) -> dict:
         "overdue": sum(
             1 for o in offers if o.status in PENDING and o.respond_due_at is not None and o.respond_due_at < now
         ),
-        "response_rate": _pct(responded, sent),
-        "acceptance_rate": _pct(response[OfferResponse.ACCEPTED], responded),
+        "response_rate": percent(responded, sent),
+        "acceptance_rate": percent(response[OfferResponse.ACCEPTED], responded),
         "median_response_hours": round(median(hours), 1) if hours else None,
     }
 
@@ -165,7 +165,7 @@ def _cell(value) -> str:
     return "'" + text if text.startswith(FORMULA_PREFIXES) else text
 
 
-def _csv(header: list[str], rows: Iterable[list]) -> str:
+def write_csv(header: list[str], rows: Iterable[list]) -> str:
     buf = io.StringIO()
     buf.write("﻿")   # Excel UTF-8'ni shu belgi bilan taniydi
     writer = csv.writer(buf, lineterminator="\r\n")
@@ -176,7 +176,7 @@ def _csv(header: list[str], rows: Iterable[list]) -> str:
 
 
 def offers_csv(rows: list[OfferRow]) -> str:
-    return _csv(
+    return write_csv(
         ["created_at", "position_title", "candidate_name", "status", "response",
          "respond_due_at", "responded_at", "response_hours", "candidate_email"],
         (
@@ -190,7 +190,7 @@ def offers_csv(rows: list[OfferRow]) -> str:
 
 def candidates_csv(rows: list[tuple[str, Profile]]) -> str:
     keys = [c.value for c in Competency]
-    return _csv(
+    return write_csv(
         ["full_name", "overall_score", "runs_completed", "sectors", *keys, "last_completed_at"],
         (
             [name, p.overall_score, len(p.runs), ", ".join(p.sectors),
