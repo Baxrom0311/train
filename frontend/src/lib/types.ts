@@ -517,6 +517,7 @@ export type NotificationKind =
   | 'task_delivered' | 'deadline_soon' | 'mentor_review' | 'report_ready' | 'offer_received' | 'offer_responded'
   | 'application_received' | 'application_rejected'
   | 'interview_proposed' | 'interview_cancelled' | 'interview_confirmed' | 'interview_declined' | 'interview_reminder'
+  | 'assessment_assigned' | 'assessment_completed'
 
 export interface AppNotification {
   id: string
@@ -655,6 +656,7 @@ export interface CompanyApplication {
   candidate: CandidateCard
   fit: Fit
   interviews: HiringInterview[]
+  assessments: Assessment[]
 }
 
 export interface VacancyCard extends Vacancy {
@@ -679,6 +681,7 @@ export interface VacancyDetail extends VacancyCard {
   my_competencies: Record<string, number>
   practice: PracticeScenario[]
   interviews: MyHiringInterview[]
+  assessments: MyAssessment[]
 }
 
 export interface VacancyApplication {
@@ -746,6 +749,39 @@ export interface HiringInterviewProposal {
 }
 
 // ── AI suhbat mashqi (CONTRACT.md §24) ──────────────────────────────
+
+// ── Sinov topshirig'i (CONTRACT.md §26.2) ─────────────────────────
+
+export type AssessmentState =
+  | 'assigned' | 'overdue' | 'in_progress' | 'evaluating' | 'completed' | 'incomplete' | 'abandoned' | 'cancelled'
+
+export interface MyAssessment {
+  id: string
+  application_id: string
+  scenario_id: string
+  scenario_title: string
+  duration_days: number
+  note: string | null
+  status: 'assigned' | 'started' | 'cancelled'
+  state: AssessmentState
+  start_by: string
+  run_id: string | null
+  started_at: string | null
+  created_at: string
+}
+
+export interface AssessmentResult {
+  overall_score: number | null
+  on_time_rate: number | null
+  competency_scores: Record<string, number>
+  summary: string | null
+  strengths: string[]
+  improvements: string[]
+}
+
+export interface Assessment extends MyAssessment {
+  result: AssessmentResult | null
+}
 
 export type InterviewStatus = 'active' | 'evaluating' | 'completed' | 'failed' | 'abandoned'
 

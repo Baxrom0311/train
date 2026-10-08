@@ -4,6 +4,9 @@ Ssenariy muharriri API (CONTRACT.md §16, Modul 9) — `manage_simulations`.
 Ta'rif har doim §9.3 sxemasi bilan tekshiriladi; xatolar `{path, message}`
 ko'rinishida qaytadi, muharrir ularni tegishli maydonga bog'laydi.
 Versiyalash `scenario/importer.py`da (§16.1).
+
+Admin faqat platforma ssenariylarini ko'radi; kompaniya ssenariylari (§26)
+shu yordamchilar bilan `api/company_scenarios.py`da, egasi bo'yicha ajratilgan.
 """
 import uuid
 from datetime import datetime
@@ -107,7 +110,7 @@ def _errors(exc: ValidationError) -> list[FieldError]:
     return out
 
 
-def _parse(definition: dict) -> ScenarioDefinition:
+def parse_definition(definition: dict) -> ScenarioDefinition:
     try:
         return ScenarioDefinition.model_validate(definition)
     except ValidationError as exc:
@@ -131,20 +134,22 @@ def _info(v: ScenarioVersion) -> VersionInfo:
     return VersionInfo(version=v.version, status=v.status, created_at=v.created_at, published_at=v.published_at)
 
 
-def _version_out(v: ScenarioVersion) -> VersionOut:
+def version_out(v: ScenarioVersion) -> VersionOut:
     defn = ScenarioDefinition.model_validate(v.definition)
     return VersionOut(**_info(v).model_dump(), scenario_id=v.scenario_id, definition=v.definition,
                       warnings=scenario_warnings(defn))
 
 
-async def _scenario(db: AsyncSession, scenario_id: uuid.UUID) -> Scenario:
+async def owned_scenario(db: AsyncSession, scenario_id: uuid.UUID, owner: uuid.UUID | None) -> Scenario:
+    """Egasi mos kelmasa — "yo'q" (admin kompaniya ssenariysini, kompaniya boshqasinikini ko'rmaydi)."""
     scenario = await db.get(Scenario, scenario_id)
-    if scenario is None:
+    if scenario is None or scenario.owner_company_id != owner:
         raise HTTPException(status_code=404, detail="Scenario not found")
     return scenario
 
 
-async def _version(db: AsyncSession, scenario_id: uuid.UUID, number: int) -> ScenarioVersion:
+async def owned_version(db: AsyncSession, scenario_id: uuid.UUID, number: int, owner: uuid.UUID | None) -> ScenarioVersion:
+    await owned_scenario(db, scenario_id, owner)
     v = (await db.execute(
         select(ScenarioVersion).where(ScenarioVersion.scenario_id == scenario_id, ScenarioVersion.version == number)
     )).scalars().first()
@@ -171,16 +176,23 @@ def to_yaml(defn: ScenarioDefinition) -> str:
     return yaml.dump(data, Dumper=_BlockDumper, allow_unicode=True, sort_keys=False, width=100)
 
 
-# ── Endpointlar ─────────────────────────────────────────────────────
+# ── Umumiy amallar (admin va kompaniya, §26.4) ──────────────────────
 
 
-@router.get("", response_model=list[ScenarioAdminOut])
-async def list_scenarios(admin: Admin, db: AsyncSession = Depends(get_db)):
-    scenarios = (await db.execute(select(Scenario).order_by(Scenario.title))).scalars().all()
-    versions = (await db.execute(select(ScenarioVersion).order_by(ScenarioVersion.version.desc()))).scalars().all()
+async def list_owned(db: AsyncSession, owner: uuid.UUID | None) -> list[ScenarioAdminOut]:
+    scenarios = (await db.execute(
+        select(Scenario).where(
+            Scenario.owner_company_id.is_(None) if owner is None else Scenario.owner_company_id == owner,
+        ).order_by(Scenario.title)
+    )).scalars().all()
+    ids = [s.id for s in scenarios]
+    versions = (await db.execute(
+        select(ScenarioVersion).where(ScenarioVersion.scenario_id.in_(ids)).order_by(ScenarioVersion.version.desc())
+    )).scalars().all()
     runs = dict((await db.execute(
         select(ScenarioVersion.scenario_id, func.count(Run.id))
         .join(Run, Run.scenario_version_id == ScenarioVersion.id)
+        .where(ScenarioVersion.scenario_id.in_(ids))
         .group_by(ScenarioVersion.scenario_id)
     )).all())
     by_scenario: dict[uuid.UUID, list[VersionInfo]] = {}
@@ -196,20 +208,19 @@ async def list_scenarios(admin: Admin, db: AsyncSession = Depends(get_db)):
     ]
 
 
-@router.post("/validate", response_model=ValidationOut)
-async def validate(body: DefinitionIn, admin: Admin):
-    try:
-        defn = ScenarioDefinition.model_validate(body.definition)
-    except ValidationError as exc:
-        return ValidationOut(ok=False, errors=_errors(exc), warnings=[], summary=None)
-    return ValidationOut(ok=True, errors=[], warnings=scenario_warnings(defn), summary=_summary(defn))
+def validation(defn_or_exc: ScenarioDefinition | ValidationError, extra: list[FieldError] = ()) -> ValidationOut:
+    if isinstance(defn_or_exc, ValidationError):
+        return ValidationOut(ok=False, errors=[*_errors(defn_or_exc), *extra], warnings=[], summary=None)
+    if extra:
+        return ValidationOut(ok=False, errors=list(extra), warnings=scenario_warnings(defn_or_exc),
+                             summary=_summary(defn_or_exc))
+    return ValidationOut(ok=True, errors=[], warnings=scenario_warnings(defn_or_exc), summary=_summary(defn_or_exc))
 
 
-@router.post("/yaml", response_model=YamlOut)
-async def parse_yaml(body: YamlIn, admin: Admin):
+def parse_yaml_text(text: str) -> YamlOut:
     """YAML → ta'rif. Sxema xatolari bo'lsa ham (muharrirda tuzatish uchun) ta'rif qaytadi."""
     try:
-        data = yaml.safe_load(body.text)
+        data = yaml.safe_load(text)
     except yaml.YAMLError as exc:
         mark = getattr(exc, "problem_mark", None)
         where = f" ({mark.line + 1}-qator)" if mark else ""
@@ -224,33 +235,89 @@ async def parse_yaml(body: YamlIn, admin: Admin):
     return YamlOut(definition=defn.model_dump(mode="json", by_alias=True), errors=[])
 
 
-@router.post("/to-yaml", response_model=YamlText)
-async def definition_to_yaml(body: DefinitionIn, admin: Admin):
+def definition_yaml(definition: dict[str, Any]) -> YamlText:
     """Muharrir holati → YAML (saqlanmagan bo'lsa ham). Noto'g'ri ta'rif — xom holicha, tuzatish uchun."""
     try:
-        return YamlText(text=to_yaml(ScenarioDefinition.model_validate(body.definition)))
+        return YamlText(text=to_yaml(ScenarioDefinition.model_validate(definition)))
     except ValidationError:
-        return YamlText(text=yaml.dump(body.definition, Dumper=_BlockDumper, allow_unicode=True, sort_keys=False, width=100))
+        return YamlText(text=yaml.dump(definition, Dumper=_BlockDumper, allow_unicode=True, sort_keys=False, width=100))
+
+
+async def create_owned(db: AsyncSession, defn: ScenarioDefinition, owner: uuid.UUID | None) -> VersionOut:
+    if await db.scalar(select(Scenario.id).where(Scenario.slug == defn.slug)):
+        raise HTTPException(status_code=409, detail="Slug already taken")
+    version = await save_draft(db, defn, owner_company_id=owner)
+    await db.commit()
+    return version_out(version)
+
+
+async def draft_owned(db: AsyncSession, scenario_id: uuid.UUID, defn: ScenarioDefinition, owner: uuid.UUID | None) -> VersionOut:
+    scenario = await owned_scenario(db, scenario_id, owner)
+    if defn.slug != scenario.slug:
+        raise HTTPException(status_code=422, detail={"errors": [
+            FieldError(path=["slug"], message="Mavjud ssenariyning slug'i o'zgarmaydi").model_dump()]})
+    version = await save_draft(db, defn, owner_company_id=owner)
+    await db.commit()
+    return version_out(version)
+
+
+async def publish_owned(db: AsyncSession, scenario_id: uuid.UUID, number: int, owner: uuid.UUID | None,
+                        check=lambda defn: None) -> VersionOut:
+    v = await owned_version(db, scenario_id, number, owner)
+    if v.status == ScenarioVersionStatus.ARCHIVED:
+        raise HTTPException(status_code=409, detail="Archived version cannot be published again")
+    check(parse_definition(v.definition))   # eski sxema bilan saqlangan bo'lsa — 422, nashr qilinmaydi
+    await publish_version(db, v)
+    await db.commit()
+    return version_out(v)
+
+
+async def set_active_owned(db: AsyncSession, scenario_id: uuid.UUID, is_active: bool, owner: uuid.UUID | None) -> ScenarioAdminOut:
+    scenario = await owned_scenario(db, scenario_id, owner)
+    scenario.is_active = is_active
+    await db.commit()
+    return next(s for s in await list_owned(db, owner) if s.id == scenario_id)
+
+
+# ── Endpointlar ─────────────────────────────────────────────────────
+
+
+@router.get("", response_model=list[ScenarioAdminOut])
+async def list_scenarios(admin: Admin, db: AsyncSession = Depends(get_db)):
+    return await list_owned(db, None)
+
+
+@router.post("/validate", response_model=ValidationOut)
+async def validate(body: DefinitionIn, admin: Admin):
+    try:
+        return validation(ScenarioDefinition.model_validate(body.definition))
+    except ValidationError as exc:
+        return validation(exc)
+
+
+@router.post("/yaml", response_model=YamlOut)
+async def parse_yaml(body: YamlIn, admin: Admin):
+    return parse_yaml_text(body.text)
+
+
+@router.post("/to-yaml", response_model=YamlText)
+async def definition_to_yaml(body: DefinitionIn, admin: Admin):
+    return definition_yaml(body.definition)
 
 
 @router.post("", response_model=VersionOut, status_code=status.HTTP_201_CREATED)
 async def create_scenario(body: DefinitionIn, admin: Admin, db: AsyncSession = Depends(get_db)):
-    defn = _parse(body.definition)
-    if await db.scalar(select(Scenario.id).where(Scenario.slug == defn.slug)):
-        raise HTTPException(status_code=409, detail="Slug already taken")
-    version = await save_draft(db, defn)
-    await db.commit()
-    return _version_out(version)
+    return await create_owned(db, parse_definition(body.definition), None)
 
 
 @router.get("/{scenario_id}/versions/{number}", response_model=VersionOut)
 async def get_version(scenario_id: uuid.UUID, number: int, admin: Admin, db: AsyncSession = Depends(get_db)):
-    return _version_out(await _version(db, scenario_id, number))
+    return version_out(await owned_version(db, scenario_id, number, None))
 
 
 @router.get("/{scenario_id}/versions/{number}/yaml")
 async def export_yaml(scenario_id: uuid.UUID, number: int, admin: Admin, db: AsyncSession = Depends(get_db)):
-    v = await _version(db, scenario_id, number)
+    v = await owned_version(db, scenario_id, number, None)
     defn = ScenarioDefinition.model_validate(v.definition)
     return Response(
         content=to_yaml(defn), media_type="text/yaml; charset=utf-8",
@@ -260,30 +327,14 @@ async def export_yaml(scenario_id: uuid.UUID, number: int, admin: Admin, db: Asy
 
 @router.put("/{scenario_id}/draft", response_model=VersionOut)
 async def put_draft(scenario_id: uuid.UUID, body: DefinitionIn, admin: Admin, db: AsyncSession = Depends(get_db)):
-    scenario = await _scenario(db, scenario_id)
-    defn = _parse(body.definition)
-    if defn.slug != scenario.slug:
-        raise HTTPException(status_code=422, detail={"errors": [
-            FieldError(path=["slug"], message="Mavjud ssenariyning slug'i o'zgarmaydi").model_dump()]})
-    version = await save_draft(db, defn)
-    await db.commit()
-    return _version_out(version)
+    return await draft_owned(db, scenario_id, parse_definition(body.definition), None)
 
 
 @router.post("/{scenario_id}/versions/{number}/publish", response_model=VersionOut)
 async def publish(scenario_id: uuid.UUID, number: int, admin: Admin, db: AsyncSession = Depends(get_db)):
-    v = await _version(db, scenario_id, number)
-    if v.status == ScenarioVersionStatus.ARCHIVED:
-        raise HTTPException(status_code=409, detail="Archived version cannot be published again")
-    _parse(v.definition)   # eski sxema bilan saqlangan bo'lsa — 422, nashr qilinmaydi
-    await publish_version(db, v)
-    await db.commit()
-    return _version_out(v)
+    return await publish_owned(db, scenario_id, number, None)
 
 
 @router.patch("/{scenario_id}", response_model=ScenarioAdminOut)
 async def set_active(scenario_id: uuid.UUID, body: ActiveIn, admin: Admin, db: AsyncSession = Depends(get_db)):
-    scenario = await _scenario(db, scenario_id)
-    scenario.is_active = body.is_active
-    await db.commit()
-    return next(s for s in await list_scenarios(admin, db) if s.id == scenario_id)
+    return await set_active_owned(db, scenario_id, body.is_active, None)

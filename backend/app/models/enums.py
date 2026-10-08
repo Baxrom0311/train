@@ -93,6 +93,13 @@ class ApplicationInterviewOutcome(str, enum.Enum):
     NO_SHOW = "no_show"
 
 
+class AssessmentStatus(str, enum.Enum):
+    """Arizachiga yuborilgan sinov topshirig'i (§26.1); natija holati Run'dan hisoblanadi."""
+    ASSIGNED = "assigned"
+    STARTED = "started"
+    CANCELLED = "cancelled"
+
+
 class AIEvalStatus(str, enum.Enum):
     PENDING = "pending"  # §9.7 — Run submission'i arq job'da baholanishini kutmoqda
     COMPLETED = "completed"

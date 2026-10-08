@@ -14,6 +14,7 @@ Hujjatlar shu yerda bo'laklanadi (`rag.build_chunks`); embedding'lar fon
 job'ida to'ldiriladi (`rag.embed_pending_chunks`), import tashqi API'ga bog'liq emas.
 """
 
+import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import delete, select
@@ -33,13 +34,14 @@ def dump_definition(defn: ScenarioDefinition) -> dict:
 
 async def import_scenario(
     db: AsyncSession, defn: ScenarioDefinition, *, update_catalog: bool = True,
+    owner_company_id: uuid.UUID | None = None,
 ) -> tuple[ScenarioVersion, bool]:
-    """`(versiya, yangi_yaratildimi)` qaytaradi. Commit chaqiruvchida."""
+    """`(versiya, yangi_yaratildimi)` qaytaradi. Commit chaqiruvchida. Egasi faqat yangi ssenariyga yoziladi (§26.1)."""
     definition = dump_definition(defn)
 
     scenario = (await db.execute(select(Scenario).where(Scenario.slug == defn.slug))).scalars().first()
     if scenario is None:
-        scenario = Scenario(slug=defn.slug)
+        scenario = Scenario(slug=defn.slug, owner_company_id=owner_company_id)
         db.add(scenario)
         update_catalog = True   # yangi qator — maydonlar baribir kerak
     if update_catalog:
@@ -69,7 +71,9 @@ async def import_scenario(
     return version, True
 
 
-async def save_draft(db: AsyncSession, defn: ScenarioDefinition) -> ScenarioVersion:
+async def save_draft(
+    db: AsyncSession, defn: ScenarioDefinition, *, owner_company_id: uuid.UUID | None = None,
+) -> ScenarioVersion:
     """
     Muharrirdan saqlash (§16.1). Commit chaqiruvchida. Katalog maydonlari
     (sarlavha, soha...) qoralamada emas, nashrda yangilanadi.
@@ -82,7 +86,7 @@ async def save_draft(db: AsyncSession, defn: ScenarioDefinition) -> ScenarioVers
             .order_by(ScenarioVersion.version.desc()).limit(1).with_for_update()
         )).scalars().first()
     if latest is None or latest.status != ScenarioVersionStatus.DRAFT:
-        version, _ = await import_scenario(db, defn, update_catalog=False)
+        version, _ = await import_scenario(db, defn, update_catalog=False, owner_company_id=owner_company_id)
         return version
 
     definition = dump_definition(defn)

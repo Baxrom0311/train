@@ -24,6 +24,7 @@ import PortfolioPage from './pages/PortfolioPage'
 import ScenarioListPage from './pages/ScenarioListPage'
 import NotificationsPage from './pages/NotificationsPage'
 import ScenarioEditorPage from './pages/ScenarioEditorPage'
+import { COMPANY_SCOPE } from './components/editor/scope'
 import CompanyVacanciesPage from './pages/CompanyVacanciesPage'
 import CompanyVacancyPage from './pages/CompanyVacancyPage'
 import VacancyEditorPage from './pages/VacancyEditorPage'
@@ -67,6 +68,9 @@ export default function App() {
               <Route path="/company/vacancies/new" element={<RequirePermission permission="manage_vacancies"><VacancyEditorPage key="new" /></RequirePermission>} />
               <Route path="/company/vacancies/:id" element={<RequirePermission permission="manage_vacancies"><CompanyVacancyPage /></RequirePermission>} />
               <Route path="/company/vacancies/:id/edit" element={<RequirePermission permission="manage_vacancies"><VacancyEditorPage /></RequirePermission>} />
+              <Route path="/company/scenarios" element={<RequirePermission permission="manage_company_scenarios"><ScenarioListPage key="company" scope={COMPANY_SCOPE} /></RequirePermission>} />
+              <Route path="/company/scenarios/new" element={<RequirePermission permission="manage_company_scenarios"><ScenarioEditorPage key="company-new" scope={COMPANY_SCOPE} /></RequirePermission>} />
+              <Route path="/company/scenarios/:id/edit" element={<RequirePermission permission="manage_company_scenarios"><ScenarioEditorPage key="company" scope={COMPANY_SCOPE} /></RequirePermission>} />
               <Route path="/talents" element={<RequirePermission permission="view_candidates"><TalentsPage /></RequirePermission>} />
               <Route path="/talents/offers" element={<RequirePermission permission="view_candidates"><SentOffersPage /></RequirePermission>} />
               <Route path="/talents/report" element={<RequirePermission permission="view_candidates"><CompanyReportPage /></RequirePermission>} />

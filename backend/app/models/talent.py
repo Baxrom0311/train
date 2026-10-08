@@ -9,7 +9,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 from app.models.rbac import GUID
 from app.models.enums import (
-    ApplicationInterviewFormat, ApplicationInterviewOutcome, ApplicationInterviewStatus, ApplicationStatus, Employment, OfferResponse, Sector, TalentOfferStatus, VacancyStatus, WorkFormat,
+    ApplicationInterviewFormat, ApplicationInterviewOutcome, ApplicationInterviewStatus, ApplicationStatus,
+    AssessmentStatus, Employment, OfferResponse, Sector, TalentOfferStatus, VacancyStatus, WorkFormat,
 )
 
 
@@ -176,4 +177,34 @@ class ApplicationInterview(Base):
     outcome_note = mapped_column(String(1000), nullable=True)   # faqat kompaniyaga
     reminded_at = mapped_column(DateTime(timezone=True), nullable=True)
     created_at = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow)
+    updated_at = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow, onupdate=_utcnow)
+
+
+class ApplicationAssessment(Base):
+    """Arizachiga yuborilgan sinov topshirig'i — kompaniya ssenariysi bo'yicha Run (CONTRACT.md §26.1)."""
+    __tablename__ = "application_assessments"
+    __table_args__ = (
+        # bir arizada bitta kutayotgan topshiriq
+        Index(
+            "uq_application_assessments_assigned",
+            "application_id",
+            unique=True,
+            postgresql_where=text("status = 'assigned'"),
+        ),
+    )
+
+    id = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    application_id = mapped_column(GUID, ForeignKey("vacancy_applications.id", ondelete="CASCADE"), nullable=False,
+                                   index=True)
+    scenario_id = mapped_column(GUID, ForeignKey("scenarios.id", ondelete="CASCADE"), nullable=False)
+    # yuborilgan paytdagi nashr versiyasi — keyingi tahrirlar talabaning sinoviga ta'sir qilmaydi
+    scenario_version_id = mapped_column(GUID, ForeignKey("scenario_versions.id", ondelete="CASCADE"), nullable=False)
+    run_id = mapped_column(GUID, ForeignKey("runs.id", ondelete="SET NULL"), nullable=True, unique=True)
+    note = mapped_column(String(1000), nullable=True)
+    start_by = mapped_column(DateTime(timezone=True), nullable=False)
+    status = mapped_column(_str_enum(AssessmentStatus, "ck_application_assessments_status"), nullable=False,
+                           default=AssessmentStatus.ASSIGNED)
+    created_by = mapped_column(GUID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow)
+    started_at = mapped_column(DateTime(timezone=True), nullable=True)
     updated_at = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow, onupdate=_utcnow)

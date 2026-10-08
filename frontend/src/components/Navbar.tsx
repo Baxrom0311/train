@@ -55,6 +55,7 @@ export default function Navbar() {
     ...(can('receive_offers') ? [{ to: '/offers', label: t('nav.offers'), Icon: Handshake }] : []),
     ...(can('manage_portfolio') ? [{ to: '/portfolio', label: t('nav.portfolio'), Icon: Award }] : []),
     ...(can('manage_vacancies') ? [{ to: '/company/vacancies', label: t('nav.vacancies'), Icon: BriefcaseBusiness }] : []),
+    ...(can('manage_company_scenarios') ? [{ to: '/company/scenarios', label: t('nav.scenarios'), Icon: Clapperboard }] : []),
     ...(can('view_candidates') ? [
       { to: '/talents', label: t('nav.talents'), Icon: Users },
       { to: '/talents/offers', label: t('nav.sentOffers'), Icon: Handshake },

@@ -1,7 +1,7 @@
 // Bildirishnoma matni: backend matn saqlamaydi — `kind` + `params`dan interfeys tilida (CONTRACT.md §15.1).
 import type { TFunction } from 'i18next'
 import {
-  AlarmClock, Award, BriefcaseBusiness, CalendarCheck2, CalendarClock, CalendarPlus, CalendarX2, ClipboardList, FileX2,
+  AlarmClock, Award, BriefcaseBusiness, CalendarCheck2, CalendarClock, CalendarPlus, CalendarX2, ClipboardList, FileX2, FlaskConical,
   GitBranch, GraduationCap, Handshake, Siren, UserCheck, UserX,
   type LucideIcon,
 } from 'lucide-react'
@@ -67,6 +67,17 @@ export function describe(n: AppNotification, t: TFunction): Described {
       return {
         Icon: CalendarClock, title: t('notifications.kind.interview_reminder', { time: formatTime(str('starts_at')) }), urgent: true,
         body: `${str('vacancy')} · ${str('place')}`,
+      }
+    case 'assessment_assigned':
+      return {
+        Icon: FlaskConical, title: t('notifications.kind.assessment_assigned'), urgent: false,
+        body: [`${str('company')} — ${str('scenario')}`, p.start_by ? t('notifications.startBy', { time: formatDateTime(str('start_by')) }) : ''].filter(Boolean).join(' · '),
+      }
+    case 'assessment_completed':
+      return {
+        Icon: FlaskConical, urgent: false,
+        title: t(p.incomplete ? 'notifications.kind.assessment_incomplete' : 'notifications.kind.assessment_completed'),
+        body: [`${str('candidate')} — ${str('scenario')}`, p.score == null ? '' : t('notifications.score', { score: Math.round(Number(p.score)) })].filter(Boolean).join(' · '),
       }
   }
 }

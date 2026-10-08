@@ -1,6 +1,6 @@
 // /vacancies/:id (CONTRACT.md §23.8): talaba vakansiyani ko'radi — talablar va o'z ballari,
 // mashq qilish uchun ssenariylar, ariza berish yoki qaytarib olish, sinov suhbati (§24.7),
-// kompaniya chaqirgan suhbat vaqtini tanlash (§25.6).
+// kompaniya chaqirgan suhbat vaqtini tanlash (§25.6), kompaniya yuborgan sinov topshirig'i (§26.2).
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { ScoreRing } from '@/components/score'
 import { PrepareCard } from '@/components/interviews/parts'
+import { StudentAssessmentCard } from '@/components/vacancies/assessments'
 import { StudentMeetingCard } from '@/components/vacancies/meetings'
 import { ApplicationBadge, FitBadge, VacancyMeta } from '@/components/vacancies/parts'
 import { useAuth } from '@/context/AuthContext'
@@ -99,6 +100,9 @@ export default function VacancyPage() {
         </div>
 
         <aside className="h-fit space-y-4 lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+          {v.application_status !== 'withdrawn' && v.assessments.length > 0 && (
+            <StudentAssessmentCard vacancyId={v.id} company={v.company.name} assessments={v.assessments} onChange={load} />
+          )}
           {v.application_status !== 'withdrawn' && v.interviews.length > 0 && (
             <StudentMeetingCard vacancyId={v.id} vacancyTitle={v.title} company={v.company.name} interviews={v.interviews} onChange={load} />
           )}

@@ -1,6 +1,6 @@
 from .user import User
 from .rbac import Role, Permission, role_permissions
-from .talent import ApplicationInterview, CandidateVisibility, TalentOffer, Vacancy, VacancyApplication
+from .talent import ApplicationAssessment, ApplicationInterview, CandidateVisibility, TalentOffer, Vacancy, VacancyApplication
 from .billing import Company, University, Invoice
 from .simulation import Simulation, SimulationTask, Submission
 from .case_cup import CaseCup, CaseCupSubmission
@@ -22,6 +22,7 @@ __all__ = [
     "CandidateVisibility",
     "TalentOffer",
     "ApplicationInterview",
+    "ApplicationAssessment",
     "Company",
     "University",
     "Invoice",

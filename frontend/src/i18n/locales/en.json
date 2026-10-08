@@ -818,7 +818,9 @@
       "edit": "Edit",
       "continueDraft": "Continue draft",
       "runs_one": "{{count}} run",
-      "runs_other": "{{count}} runs"
+      "runs_other": "{{count}} runs",
+      "companyTitle": "Company scenarios",
+      "companySubtitle": "Workdays you send to applicants as an assessment. Not shown in the catalog."
     },
     "tabs": {
       "general": "General",
@@ -865,7 +867,11 @@
       "sector": "Sector",
       "difficulty": "Level",
       "days": "Length (work days)",
-      "daysHint": "1–10 days; each day needs one end-of-day node"
+      "daysHint": "1–10 days; each day needs one end-of-day node",
+      "companyOwn": "Your company name is filled in automatically",
+      "companyAuto": "Filled in on save",
+      "daysHintCompany_one": "1–{{count}} day; each day needs one end-of-day node",
+      "daysHintCompany_other": "1–{{count}} days; each day needs one end-of-day node"
     },
     "personas": {
       "intro": "Colleagues the student chats with. One mentor at most: they see the student's work and comment on it.",
@@ -1011,7 +1017,8 @@
       "title": "Publish this scenario?",
       "body": "“{{title}}” will appear in the student catalog.",
       "archive": "The current published version will be archived; runs already started continue on it.",
-      "saveFirst": "Unsaved changes are saved to the draft first."
+      "saveFirst": "Unsaved changes are saved to the draft first.",
+      "bodyCompany": "«{{title}}» won't appear in the catalog — you'll send it to vacancy applicants as an assessment."
     },
     "key": "Key",
     "none": "None yet",
@@ -1071,7 +1078,10 @@
       "interview_confirmed": "Candidate picked an interview time",
       "interview_declined": "Candidate declined the interview",
       "interview_withdrawn": "Candidate withdrew the application",
-      "interview_reminder": "Interview at {{time}}"
+      "interview_reminder": "Interview at {{time}}",
+      "assessment_assigned": "You received an assessment",
+      "assessment_completed": "A candidate finished the assessment",
+      "assessment_incomplete": "A candidate didn't fully finish the assessment"
     },
     "setting": {
       "task_delivered": "New tasks and incidents",
@@ -1086,7 +1096,9 @@
       "interview_cancelled": "Interview cancellations",
       "interview_reminder": "2 hours before an interview",
       "interview_confirmed": "Candidate picked an interview time",
-      "interview_declined": "Candidate declined an interview"
+      "interview_declined": "Candidate declined an interview",
+      "assessment_assigned": "When a company sends an assessment",
+      "assessment_completed": "When a candidate finishes an assessment"
     },
     "email": {
       "title": "By email",
@@ -1104,7 +1116,9 @@
       "hours_other": "{{count}} hours ago",
       "days_one": "{{count}} day ago",
       "days_other": "{{count}} days ago"
-    }
+    },
+    "startBy": "start by {{time}}",
+    "score": "{{score}} points"
   },
   "checks": {
     "title": "Automated tests",
@@ -1525,6 +1539,65 @@
     "errors": {
       "conflict": "Something changed, the data was refreshed. Please try again.",
       "invalid": "Check the times: at least 1 hour from now and within 60 days."
+    }
+  },
+  "assessment": {
+    "state": {
+      "assigned": "Waiting",
+      "overdue": "Expired",
+      "in_progress": "In progress",
+      "evaluating": "Evaluating",
+      "completed": "Completed",
+      "incomplete": "Incomplete",
+      "abandoned": "Stopped",
+      "cancelled": "Cancelled"
+    },
+    "errors": {
+      "conflict": "The status changed — the page was refreshed.",
+      "gone": "The assessment was not found or is no longer available."
+    },
+    "form": {
+      "title": "Assessment",
+      "scenario": "Scenario",
+      "startWithin": "Start within",
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days",
+      "note": "Note to the candidate (optional)",
+      "notePlaceholder": "E.g.: the test is close to our real tasks, write if you have questions.",
+      "privacy": "The candidate goes through the scenario like a normal workday. Only you see the result, and it doesn't affect their profile.",
+      "send": "Send",
+      "noScenarios": "No published, active scenario to send.",
+      "create": "Create a scenario"
+    },
+    "company": {
+      "assign": "Send assessment",
+      "assignAgain": "Send another assessment",
+      "waiting": "The candidate must start by {{when}}",
+      "overdue": "The candidate didn't start by {{when}}",
+      "started": "Started {{when}}",
+      "evaluating": "Work finished, the final report is being prepared.",
+      "abandoned": "The candidate stopped the assessment.",
+      "result": "Assessment result",
+      "strengths": "Strengths",
+      "improvements": "Growth areas",
+      "cancel": "Cancel assessment",
+      "cancelConfirm": "Cancel the assessment for {{name}}?"
+    },
+    "student": {
+      "title": "Assessment",
+      "privacy": "Only {{company}} sees the result; it doesn't affect your profile or certificates.",
+      "startBy": "Start by {{when}}",
+      "howItWorks": "Once started it runs like a normal Run in real time: tasks arrive during work hours, deadlines count in work minutes.",
+      "start": "Start assessment",
+      "startConfirm_one": "The assessment lasts {{count}} workday and can't be paused. Start now?",
+      "startConfirm_other": "The assessment lasts {{count}} workdays and can't be paused. Start now?",
+      "overdue": "The start window has passed. The company can send it again if needed.",
+      "cancelled": "The company cancelled this assessment.",
+      "abandoned": "The assessment was stopped.",
+      "continue": "Go to the desk",
+      "evaluating": "The final report is being prepared.",
+      "done": "Assessment finished, the result was sent to {{company}}.",
+      "report": "View report"
     }
   }
 }

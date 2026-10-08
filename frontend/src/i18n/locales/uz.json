@@ -818,7 +818,9 @@
       "edit": "Tahrirlash",
       "continueDraft": "Qoralamani davom ettirish",
       "runs_one": "{{count}} ta Run",
-      "runs_other": "{{count}} ta Run"
+      "runs_other": "{{count}} ta Run",
+      "companyTitle": "Kompaniya ssenariylari",
+      "companySubtitle": "Arizachilarga sinov topshirig'i sifatida yuboriladigan ish kunlari. Katalogda ko'rinmaydi."
     },
     "tabs": {
       "general": "Umumiy",
@@ -865,7 +867,11 @@
       "sector": "Soha",
       "difficulty": "Daraja",
       "days": "Davomiyligi (ish kuni)",
-      "daysHint": "1–10 kun; har kun uchun bitta kun yakuni kerak"
+      "daysHint": "1–10 kun; har kun uchun bitta kun yakuni kerak",
+      "companyOwn": "Kompaniyangiz nomi avtomatik qo'yiladi",
+      "companyAuto": "Saqlanganda qo'yiladi",
+      "daysHintCompany_one": "1–{{count}} kun; har kun uchun bitta kun yakuni kerak",
+      "daysHintCompany_other": "1–{{count}} kun; har kun uchun bitta kun yakuni kerak"
     },
     "personas": {
       "intro": "Talaba chatda yozishadigan hamkasblar. Mentor — bitta, u talaba ishini ko'radi va izoh yozadi.",
@@ -1011,7 +1017,8 @@
       "title": "Ssenariyni nashr qilasizmi?",
       "body": "«{{title}}» katalogda talabalarga ko'rinadi.",
       "archive": "Hozirgi nashr arxivlanadi; boshlangan Run'lar eski versiyada davom etadi.",
-      "saveFirst": "Saqlanmagan o'zgarishlar avval qoralamaga saqlanadi."
+      "saveFirst": "Saqlanmagan o'zgarishlar avval qoralamaga saqlanadi.",
+      "bodyCompany": "«{{title}}» katalogda ko'rinmaydi — uni vakansiya arizachilariga sinov topshirig'i sifatida yuborasiz."
     },
     "key": "Kalit",
     "none": "Hali yo'q",
@@ -1071,7 +1078,10 @@
       "interview_confirmed": "Nomzod suhbat vaqtini tanladi",
       "interview_declined": "Nomzod suhbatni rad etdi",
       "interview_withdrawn": "Nomzod arizani qaytarib oldi",
-      "interview_reminder": "Suhbat soat {{time}} da"
+      "interview_reminder": "Suhbat soat {{time}} da",
+      "assessment_assigned": "Sizga sinov topshirig'i yuborildi",
+      "assessment_completed": "Nomzod sinov topshirig'ini tugatdi",
+      "assessment_incomplete": "Nomzod sinovni to'liq tugatmadi"
     },
     "setting": {
       "task_delivered": "Yangi vazifa va vaziyatlar",
@@ -1086,7 +1096,9 @@
       "interview_cancelled": "Suhbat bekor qilinganda",
       "interview_reminder": "Suhbatga 2 soat qolganda",
       "interview_confirmed": "Nomzod suhbat vaqtini tanlaganda",
-      "interview_declined": "Nomzod suhbatni rad etganda"
+      "interview_declined": "Nomzod suhbatni rad etganda",
+      "assessment_assigned": "Kompaniya sinov topshirig'i yuborganda",
+      "assessment_completed": "Nomzod sinovni tugatganda"
     },
     "email": {
       "title": "Email orqali",
@@ -1104,7 +1116,9 @@
       "hours_other": "{{count}} soat oldin",
       "days_one": "{{count}} kun oldin",
       "days_other": "{{count}} kun oldin"
-    }
+    },
+    "startBy": "{{time}} gacha boshlang",
+    "score": "{{score}} ball"
   },
   "checks": {
     "title": "Avtomatik testlar",
@@ -1525,6 +1539,65 @@
     "errors": {
       "conflict": "Holat o'zgargan, ma'lumot yangilandi. Qaytadan urinib ko'ring.",
       "invalid": "Vaqtlarni tekshiring: kamida 1 soatdan keyin va 60 kun ichida bo'lsin."
+    }
+  },
+  "assessment": {
+    "state": {
+      "assigned": "Kutilmoqda",
+      "overdue": "Muddati o'tdi",
+      "in_progress": "Bajarilmoqda",
+      "evaluating": "Baholanmoqda",
+      "completed": "Tugadi",
+      "incomplete": "To'liq emas",
+      "abandoned": "To'xtatildi",
+      "cancelled": "Bekor qilindi"
+    },
+    "errors": {
+      "conflict": "Holat o'zgargan — sahifa yangilandi.",
+      "gone": "Sinov topilmadi yoki endi mavjud emas."
+    },
+    "form": {
+      "title": "Sinov topshirig'i",
+      "scenario": "Ssenariy",
+      "startWithin": "Boshlash muddati",
+      "days_one": "{{count}} kun",
+      "days_other": "{{count}} kun",
+      "note": "Nomzodga izoh (ixtiyoriy)",
+      "notePlaceholder": "Masalan: sinov bizdagi real vazifalarga yaqin, savollar bo'lsa yozing.",
+      "privacy": "Nomzod ssenariyni oddiy ish kuni kabi o'tadi. Natija faqat sizga ko'rinadi va uning profiliga ta'sir qilmaydi.",
+      "send": "Yuborish",
+      "noScenarios": "Yuborish uchun nashr qilingan faol ssenariy yo'q.",
+      "create": "Ssenariy yaratish"
+    },
+    "company": {
+      "assign": "Sinov yuborish",
+      "assignAgain": "Yana sinov yuborish",
+      "waiting": "Nomzod {{when}} gacha boshlashi kerak",
+      "overdue": "Nomzod {{when}} gacha boshlamadi",
+      "started": "{{when}} da boshlandi",
+      "evaluating": "Ish tugadi, yakuniy hisobot tayyorlanmoqda.",
+      "abandoned": "Nomzod sinovni to'xtatdi.",
+      "result": "Sinov natijasi",
+      "strengths": "Kuchli tomonlari",
+      "improvements": "O'sish nuqtalari",
+      "cancel": "Sinovni bekor qilish",
+      "cancelConfirm": "{{name}} uchun sinov topshirig'i bekor qilinsinmi?"
+    },
+    "student": {
+      "title": "Sinov topshirig'i",
+      "privacy": "Natija faqat {{company}}ga ko'rinadi, profilingiz va sertifikatlarga ta'sir qilmaydi.",
+      "startBy": "{{when}} gacha boshlang",
+      "howItWorks": "Boshlaganingizdan so'ng oddiy Run kabi real vaqtda davom etadi: vazifalar ish vaqtida keladi, dedlaynlar ish daqiqalarida.",
+      "start": "Sinovni boshlash",
+      "startConfirm_one": "Sinov {{count}} ish kuni davom etadi va to'xtatib bo'lmaydi. Boshlaymizmi?",
+      "startConfirm_other": "Sinov {{count}} ish kuni davom etadi va to'xtatib bo'lmaydi. Boshlaymizmi?",
+      "overdue": "Boshlash muddati o'tdi. Kompaniya kerak bo'lsa qayta yuboradi.",
+      "cancelled": "Kompaniya bu sinovni bekor qildi.",
+      "abandoned": "Sinov to'xtatildi.",
+      "continue": "Ish stoliga o'tish",
+      "evaluating": "Yakuniy hisobot tayyorlanmoqda.",
+      "done": "Sinov tugadi, natija {{company}}ga yuborildi.",
+      "report": "Hisobotni ko'rish"
     }
   }
 }
