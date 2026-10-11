@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../assets/style.css?v=1791727356">
+  <link rel="stylesheet" href="../assets/style.css?v=1791727457">
 </head>
 <body>
   <div class="aurora"><i></i><i></i><i></i></div>
@@ -103,18 +103,20 @@
     <div class="api glass rv" id="api">
       <div>
         <h3>API Access</h3>
-        <p>Loyiha ma'lumotlari ochiq JSON ko'rinishida. Platformaning o'zida REST API: ssenariylar, natijalar, nomzodlar.</p>
+        <p>Platformaning ochiq REST API'si: ssenariylar, Run'lar, natijalar, sertifikatlar va nomzodlar. Barcha endpointlar interaktiv hujjatda.</p>
         <div class="cta" style="margin-top:18px">
-          <a href="../api/v1/project.json" target="_blank" class="btn btn-ghost" style="height:44px"><svg class="ico"><use href="#i-terminal"/></svg>project.json</a>
+          <a href="https://guli.b-code.uz/docs" target="_blank" rel="noopener" class="btn btn-primary" style="height:46px"><svg class="ico"><use href="#i-terminal"/></svg>API hujjati</a>
+          <a href="../api/v1/project.json" target="_blank" class="btn btn-ghost" style="height:46px">project.json</a>
         </div>
       </div>
-<pre><span class="c"># Ochiq loyiha ma'lumoti</span>
-<span class="k">curl</span> <span class="s" id="api-url">https://…/api/v1/project.json</span>
+<pre><span class="c"># Ochiq katalog (auth shart emas)</span>
+<span class="k">curl</span> <span class="s">https://guli.b-code.uz/api/v1/showcase</span>
 
-<span class="c"># Platforma API (namuna)</span>
-<span class="k">GET</span>  /api/v1/showcase
+<span class="c"># Asosiy endpointlar</span>
 <span class="k">GET</span>  /api/v1/scenarios
 <span class="k">POST</span> /api/v1/runs
+<span class="k">GET</span>  /api/v1/runs/{id}/report
+<span class="k">GET</span>  /api/v1/certificates/{code}
 <span class="k">GET</span>  /api/v1/talents</pre>
     </div>
   </main>
@@ -126,10 +128,7 @@
     </div>
   </footer>
 
-  <script src="../assets/ai-key.js?v=1791727356"></script>
-  <script src="../assets/app.js?v=1791727356"></script>
-  <script>
-    document.getElementById("api-url").textContent = new URL("../api/v1/project.json", location.href).href;
-  </script>
+  <script src="../assets/ai-key.js?v=1791727457"></script>
+  <script src="../assets/app.js?v=1791727457"></script>
 </body>
 </html>
