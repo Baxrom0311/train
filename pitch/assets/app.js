@@ -293,7 +293,16 @@ function answer(text) {
 (function bot() {
   const wrap = document.createElement("div");
   wrap.innerHTML = `
-    <button class="bot-fab" aria-label="AI yordamchi">${icon("msg")}</button>
+    <button class="bot-fab" aria-label="AI yordamchi">
+      <svg class="laptop" viewBox="0 -3 50 42" aria-hidden="true">
+        <rect x="7" y="5" width="34" height="23" rx="3" class="lp-body"/>
+        <rect x="10" y="8" width="28" height="17" rx="1.5" class="lp-screen"/>
+        <circle cx="18" cy="16.5" r="2" class="lp-dot"/><circle cx="24" cy="16.5" r="2" class="lp-dot"/><circle cx="30" cy="16.5" r="2" class="lp-dot"/>
+        <path d="M3 31h42l-3 4H6z" class="lp-body"/>
+        <path d="M44 -2l1.4 3.6 3.6 1.4-3.6 1.4L44 8l-1.4-3.6L39 3l3.6-1.4z" class="lp-spark"/>
+      </svg>
+      <span class="bot-tip">Savol bering</span>
+    </button>
     <div class="bot glass" role="dialog" aria-label="TryJob AI yordamchi">
       <div class="bot-head">
         <span class="logo-mark">T</span>
@@ -383,9 +392,10 @@ function answer(text) {
   let greeted = false;
   $(".bot-fab", wrap).addEventListener("click", () => {
     panel.classList.toggle("open");
+    document.body.classList.toggle("bot-open", panel.classList.contains("open"));
     if (!greeted) { greeted = true; add("ai", "Salom! Men TryJob yordamchisiman. Loyiha haqida so'rang 👇"); renderSugg(); }
     if (panel.classList.contains("open")) input.focus({ preventScroll: true });
   });
-  $(".bot-head button", wrap).addEventListener("click", () => panel.classList.remove("open"));
+  $(".bot-head button", wrap).addEventListener("click", () => { panel.classList.remove("open"); document.body.classList.remove("bot-open"); });
   $(".bot-form", wrap).addEventListener("submit", (e) => { e.preventDefault(); ask(input.value); input.value = ""; });
 })();
