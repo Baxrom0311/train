@@ -12,14 +12,37 @@ const CONFIG = {
   // Ishlayotgan prototip manzili (bo'lsa)
   prototype: "",
   repo: "https://github.com/Baxrom0311/train",
+  // photo: "assets/img/team/guli.webp" kabi — rasm qo'yilsa avatar o'rniga chiqadi
   team: [
     {
-      name: "Bahrom",
-      role: "Asoschi · Full-stack & AI",
-      initials: "B",
+      name: "Guli Salayeva",
+      role: "Asoschi · Team Lead · Biznes-analitik",
+      exp: "3+ yil",
+      colors: ["#8b7bff", "#c25cf0"],
       photo: "",
-      skills: ["Product", "FastAPI", "React", "LLM", "DevOps"],
-      links: { github: "https://github.com/Baxrom0311" },
+      did: ["Mahsulot strategiyasi va B2B2C model", "Ssenariy kontenti va baholash rubrikalari", "Universitet va kompaniyalar bilan hamkorlik"],
+      skills: ["Product", "Biznes-tahlil", "Jamoa boshqaruvi"],
+      links: {},
+    },
+    {
+      name: "Muhayyo Normatova",
+      role: "Backend · AI/ML Engineer",
+      exp: "4+ yil",
+      colors: ["#6d7bff", "#2ed3e6"],
+      photo: "",
+      did: ["FastAPI va ssenariy dvigateli", "AI baho, AI mentor va RAG", "Kod sandbox va xavfsizlik"],
+      skills: ["Python", "FastAPI", "LLM", "PostgreSQL"],
+      links: {},
+    },
+    {
+      name: "Sarvara Eshchanova",
+      role: "Frontend · UI/UX dizayner",
+      exp: "4+ yil",
+      colors: ["#2ed3e6", "#34d399"],
+      photo: "",
+      did: ["Liquid glass dizayn tizimi", "Ish stoli, hisobot va sertifikat", "PWA va mobil tajriba"],
+      skills: ["React", "TypeScript", "Figma", "UX"],
+      links: {},
     },
   ],
 };
@@ -79,19 +102,33 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
 // ---------- jamoa ----------
+const avatar = (m, i) => {
+  if (m.photo) return `<img src="${m.photo}" alt="${m.name}">`;
+  const [a, b] = m.colors;
+  return `<svg viewBox="0 0 88 88" aria-hidden="true">
+    <defs><linearGradient id="av${i}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs>
+    <rect width="88" height="88" fill="url(#av${i})"/>
+    <path d="M44 17c-13 0-20 9-20 22v20c0 6-2 10-5 13h50c-3-3-5-7-5-13V39c0-13-7-22-20-22z" fill="#1b1640" opacity=".55"/>
+    <path d="M12 88c2-14 15-22 32-22s30 8 32 22z" fill="#fff" opacity=".95"/>
+    <rect x="38" y="52" width="12" height="14" rx="5" fill="#fff"/>
+    <ellipse cx="44" cy="41" rx="13" ry="15" fill="#fff"/>
+    <path d="M30 40c1-11 7-17 15-17 9 0 14 6 14 14-9 0-17-3-22-9-1 5-3 9-7 12z" fill="#1b1640" opacity=".7"/>
+  </svg>`;
+};
 const teamEl = $("#team");
 if (teamEl) {
   teamEl.innerHTML = CONFIG.team
     .map(
       (m, i) => `
     <div class="member glass rv d${i % 4}">
-      <div class="avatar">${m.photo ? `<img src="${m.photo}" alt="${m.name}">` : m.initials}</div>
+      <div class="avatar" style="--a:${m.colors[0]};--b:${m.colors[1]}">${avatar(m, i)}<span class="exp">${m.exp}</span></div>
       <h3>${m.name}</h3>
       <div class="role">${m.role}</div>
+      <ul class="did">${m.did.map((d) => `<li>${icon("check")}${d}</li>`).join("")}</ul>
       <div class="tags">${m.skills.map((s) => `<span>${s}</span>`).join("")}</div>
-      <div class="links">${Object.entries(m.links)
+      ${Object.keys(m.links).length ? `<div class="links">${Object.entries(m.links)
         .map(([k, u]) => `<a href="${u}" target="_blank" rel="noopener" aria-label="${k}">${icon(k)}</a>`)
-        .join("")}</div>
+        .join("")}</div>` : ""}
     </div>`
     )
     .join("");
@@ -225,7 +262,7 @@ const QA = [
   { k: ["forage", "farq", "raqobat", "kurs"], q: "Kurslardan farqi?", a: "Kurs — video va test. TryJob — real ish kuni: vaqt bosimi, kutilmagan vaziyatlar, hamkasblar bilan muloqot. Natija — kompaniya ko'radigan isbot." },
   { k: ["texnolog", "stack", "react", "fastapi"], q: "Qaysi texnologiyalar?", a: "React + TypeScript, FastAPI, PostgreSQL + pgvector, Redis + arq, LLM, Docker. PWA — telefonga o'rnatiladi." },
   { k: ["bosqich", "holat", "mvp", "qachon", "reja"], q: "Hozir qaysi bosqichda?", a: "Prototip tayyor, MVP bosqichidamiz: noyabrda pilot universitetlar, 2027-yil boshida ochiq ishga tushirish." },
-  { k: ["jamoa", "kim qildi", "asoschi"], q: "Jamoa kim?", a: "Kichik AI-first jamoa: AI agentlar yordamida 28+ modulni qisqa vaqtda qurdik. Batafsil — «Jamoa» bo'limida." },
+  { k: ["jamoa", "kim qildi", "asoschi"], q: "Jamoa kim?", a: "3 mutaxassis, jami 11+ yil tajriba: Guli Salayeva — asoschi, team lead va biznes-analitik; Muhayyo Normatova — backend va AI/ML muhandis; Sarvara Eshchanova — frontend va UI/UX dizayner." },
 ];
 const AI_SYSTEM = `Sen TryJob loyihasining AI yordamchisisan (Pitch Day 3.0 sayti). Faqat o'zbek tilida (lotin), qisqa javob ber: 1–3 jumla. Loyihadan tashqari mavzularda muloyimlik bilan TryJob'ga qaytar.
 Faktlar: ${QA.map((x) => x.a).join(" ")} Ssenariylardagi kompaniyalar to'qima. Manba kodi: github.com/Baxrom0311/train.`;
