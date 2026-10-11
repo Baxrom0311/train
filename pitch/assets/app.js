@@ -227,6 +227,8 @@ const QA = [
   { k: ["bosqich", "holat", "mvp", "qachon", "reja"], q: "Hozir qaysi bosqichda?", a: "Prototip tayyor, MVP bosqichidamiz: noyabrda pilot universitetlar, 2027-yil boshida ochiq ishga tushirish." },
   { k: ["jamoa", "kim qildi", "asoschi"], q: "Jamoa kim?", a: "Kichik AI-first jamoa: AI agentlar yordamida 28+ modulni qisqa vaqtda qurdik. Batafsil — «Jamoa» bo'limida." },
 ];
+const AI_SYSTEM = `Sen TryJob loyihasining AI yordamchisisan (Pitch Day 3.0 sayti). Faqat o'zbek tilida (lotin), qisqa javob ber: 1–3 jumla. Loyihadan tashqari mavzularda muloyimlik bilan TryJob'ga qaytar.
+Faktlar: ${QA.map((x) => x.a).join(" ")} Ssenariylardagi kompaniyalar to'qima. Manba kodi: github.com/Baxrom0311/train.`;
 const SUGG = ["TryJob nima?", "AI nima qiladi?", "Qanday pul topadi?", "Kurslardan farqi?"];
 
 function answer(text) {
@@ -269,7 +271,35 @@ function answer(text) {
   };
   const history = [];
   const api = CONFIG.chatApi || new URL("../api/chat", document.currentScript.src).href;
+  // Kalit faqat nashr nusxasida (assets/ai-key.js, gh-pages) bo'ladi — bo'lsa, DeepSeek'ga to'g'ridan-to'g'ri
+  const dsKey = window.TJ_AI ? atob(String(window.TJ_AI).split("").reverse().join("")) : "";
   let aiOff = false;
+  const callAI = async (signal) => {
+    if (dsKey && !CONFIG.chatApi) {
+      const r = await fetch("https://api.deepseek.com/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${dsKey}` },
+        body: JSON.stringify({
+          model: "deepseek-chat",
+          messages: [{ role: "system", content: AI_SYSTEM }, ...history.slice(-8)],
+          max_tokens: 300,
+          temperature: 0.5,
+        }),
+        signal,
+      });
+      if (!r.ok) return { reply: "", off: r.status === 401 || r.status === 402 };
+      const d = await r.json();
+      return { reply: d?.choices?.[0]?.message?.content?.trim() || "" };
+    }
+    const r = await fetch(api, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: history }),
+      signal,
+    });
+    if (r.ok) return { reply: (await r.json()).reply || "" };
+    return { reply: "", off: [404, 405, 501, 503].includes(r.status) };
+  };
   const ask = async (q) => {
     q = q.trim();
     if (!q) return;
@@ -285,15 +315,10 @@ function answer(text) {
       try {
         const ctl = new AbortController();
         const timer = setTimeout(() => ctl.abort(), 20000);
-        const r = await fetch(api, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: history }),
-          signal: ctl.signal,
-        });
+        const res = await callAI(ctl.signal);
         clearTimeout(timer);
-        if (r.ok) reply = (await r.json()).reply || "";
-        else if ([404, 405, 501, 503].includes(r.status)) aiOff = true;
+        reply = res.reply;
+        if (res.off) aiOff = true;
       } catch {
         /* tarmoq xatosi — namunaviy javob */
       }
