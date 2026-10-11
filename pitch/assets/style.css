@@ -158,47 +158,44 @@ h2 { font-size: clamp(32px, 5vw, 54px); margin: 16px 0 14px; }
   border-radius: 999px; font-size: 13.5px; color: var(--muted); font-weight: 600;
 }
 .pill b { padding: 3px 10px; border-radius: 999px; background: var(--grad); color: var(--on-grad); font-size: 12px; }
-.hero h1 { font-size: clamp(44px, 6.6vw, 82px); margin: 24px 0 22px; }
+.hero h1 { font-size: clamp(40px, 5.2vw, 68px); margin: 24px 0 22px; }
 .hero .lead { margin-bottom: 34px; }
 .cta { display: flex; flex-wrap: wrap; gap: 12px; }
 .ticks { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 30px; color: var(--muted); font-size: 14px; font-weight: 600; }
 .ticks span { display: inline-flex; align-items: center; gap: 8px; }
 .ticks .ico { width: 17px; height: 17px; color: var(--green); }
 
-.stage { position: relative; }
-.frame { padding: 8px; border-radius: 20px; }
+.stage { position: relative; margin-right: -40px; }
+.person { width: 100%; height: auto; display: block; }
+.mini { position: absolute; left: -6%; bottom: -8%; width: 52%; padding: 6px; border-radius: 16px; transform: rotate(-2deg); box-shadow: 0 30px 70px -25px var(--shadow); }
+.mini .frame-bar { padding: 4px 6px 7px; }
+.mini .frame-bar i { width: 7px; height: 7px; }
+.mini img { border-radius: 10px; width: 100%; }
 .frame-bar { display: flex; gap: 6px; padding: 6px 8px 10px; }
 .frame-bar i { width: 10px; height: 10px; border-radius: 50%; background: rgb(var(--tint) / 0.14); }
-.frame img { border-radius: 12px; width: 100%; }
-.stage .frame { transform: perspective(1600px) rotateY(-9deg) rotateX(3deg); transition: transform 0.8s cubic-bezier(.2,.8,.2,1); }
-.stage:hover .frame { transform: perspective(1600px) rotateY(-3deg) rotateX(1deg); }
-.phone {
-  position: absolute; right: -14px; bottom: -48px; width: 31%; padding: 6px; border-radius: 30px;
-  background: #0c1030; border: 1px solid var(--line-2);
-  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.9), 0 0 0 6px rgb(var(--tint) / 0.02);
-}
-.phone img { border-radius: 24px; }
 .chip {
   position: absolute; display: flex; align-items: center; gap: 12px;
   padding: 10px 16px 10px 10px; border-radius: 16px; font-size: 13px; line-height: 1.3;
-  animation: float 6s ease-in-out infinite;
+  animation: float 6s ease-in-out infinite; background: var(--glass-strong);
 }
 .chip small { display: block; color: var(--muted); font-size: 11.5px; }
 .chip .dot { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; flex: none; }
-.chip-1 { top: -26px; left: 8%; }
-.chip-2 { bottom: -22px; left: 14%; animation-delay: -2s; }
-.chip-3 { top: 40%; left: -48px; animation-delay: -4s; }
+.chip-1 { top: 10%; left: 4%; }
+.chip-2 { top: 44%; right: 2%; animation-delay: -2s; }
+.chip-3 { bottom: 6%; right: 10%; animation-delay: -4s; }
 @keyframes float { 50% { transform: translateY(-10px); } }
 .ring { width: 40px; height: 40px; }
 
 @media (max-width: 980px) {
   .hero-grid { grid-template-columns: 1fr; }
-  .stage { margin: 30px 8px 40px; }
-  .chip-2 { left: 4%; } .chip-3 { left: -6px; }
+  .stage { margin: 10px 0 50px; }
+  .mini { left: 0; width: 56%; }
+  .chip { transform: scale(.88); }
+  .chip-1 { left: 0; top: 2%; } .chip-2 { right: 0; } .chip-3 { right: 0; bottom: -4%; }
 }
 
 /* ---------- raqamlar ---------- */
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); padding: 8px; margin-top: 90px; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); padding: 8px; margin-top: 40px; }
 .stat { padding: 22px 26px; }
 .stat + .stat { border-left: 1px solid var(--line); }
 .stat b { display: block; font-size: clamp(30px, 4vw, 42px); font-weight: 800; letter-spacing: -0.03em; }
@@ -493,3 +490,11 @@ footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; g
 :root[data-theme="light"] .phase .n { background: rgba(15, 157, 110, 0.1); border-color: rgba(15, 157, 110, 0.28); }
 :root[data-theme="light"] .card .bubble { background: linear-gradient(140deg, rgba(15, 157, 110, 0.14), rgba(22, 179, 168, 0.1)); }
 :root[data-theme="light"] .ai-grid div, :root[data-theme="light"] .tech div { background: rgba(255, 255, 255, 0.7); }
+
+/* sohalar lentasi */
+.sectors { margin-top: 70px; text-align: center; }
+.sectors > span { display: block; font-weight: 800; font-size: 15px; margin-bottom: 18px; }
+.sectors div { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 40px; }
+.sectors b { display: inline-flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; color: var(--muted); letter-spacing: -0.01em; }
+.sectors .ico { width: 24px; height: 24px; color: var(--violet); }
+@media (max-width: 560px) { .nav-demo { display: none; } .nav .btn { padding: 0 14px; } }

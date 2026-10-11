@@ -10,7 +10,7 @@ const CONFIG = {
   // Ishlamasa, yordamchi tayyor savol-javob namunalari bilan javob beradi.
   chatApi: "",
   // Ishlayotgan prototip manzili (bo'lsa)
-  prototype: "",
+  prototype: "https://guli.b-code.uz/",
   repo: "https://github.com/Baxrom0311/train",
   // photo: "assets/img/team/guli.webp" kabi — rasm qo'yilsa avatar o'rniga chiqadi
   team: [
@@ -273,7 +273,7 @@ const QA = [
   { k: ["forage", "farq", "raqobat", "kurs"], q: "Kurslardan farqi?", a: "Kurs — video va test. TryJob — real ish kuni: vaqt bosimi, kutilmagan vaziyatlar, hamkasblar bilan muloqot. Natija — kompaniya ko'radigan isbot." },
   { k: ["texnolog", "stack", "react", "fastapi"], q: "Qaysi texnologiyalar?", a: "React + TypeScript, FastAPI, PostgreSQL + pgvector, Redis + arq, LLM, Docker. PWA — telefonga o'rnatiladi." },
   { k: ["bosqich", "holat", "mvp", "qachon", "reja"], q: "Hozir qaysi bosqichda?", a: "Prototip tayyor, MVP bosqichidamiz: noyabrda pilot universitetlar, 2027-yil boshida ochiq ishga tushirish." },
-  { k: ["jamoa", "kim qildi", "asoschi"], q: "Jamoa kim?", a: "3 mutaxassis, jami 11+ yil tajriba: Guli Salayeva — asoschi, team lead va biznes-analitik; Muhayyo Normatova — backend va AI/ML muhandis; Sarvara Eshchanova — frontend va UI/UX dizayner." },
+  { k: ["jamoa", "kim qildi", "asoschi"], q: "Jamoa kim?", a: "3 mutaxassis: Guli Salayeva — asoschi, team lead va biznes-analitik; Muhayyo Normatova — backend va AI/ML muhandis; Sarvara Eshchanova — frontend va UI/UX dizayner." },
 ];
 const AI_SYSTEM = `Sen TryJob loyihasining AI yordamchisisan (Pitch Day 3.0 sayti). Faqat o'zbek tilida (lotin), qisqa javob ber: 1–3 jumla. Loyihadan tashqari mavzularda muloyimlik bilan TryJob'ga qaytar.
 Faktlar: ${QA.map((x) => x.a).join(" ")} Ssenariylardagi kompaniyalar to'qima. Manba kodi: github.com/Baxrom0311/train.`;
