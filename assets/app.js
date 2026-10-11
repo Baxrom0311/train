@@ -132,9 +132,10 @@ if (teamEl) {
     .map(
       (m, i) => `
     <div class="member glass rv d${i % 4}">
-      <div class="avatar" style="--a:${m.colors[0]};--b:${m.colors[1]}">${avatar(m, i)}<span class="exp">${m.exp}</span></div>
+      <div class="avatar" style="--a:${m.colors[0]};--b:${m.colors[1]}">${avatar(m, i)}</div>
       <h3>${m.name}</h3>
       <div class="role">${m.role}</div>
+      <span class="exp">${icon("award")}${m.exp} tajriba</span>
       <ul class="did">${m.did.map((d) => `<li>${icon("check")}${d}</li>`).join("")}</ul>
       <div class="tags">${m.skills.map((s) => `<span>${s}</span>`).join("")}</div>
       ${Object.keys(m.links).length ? `<div class="links">${Object.entries(m.links)
