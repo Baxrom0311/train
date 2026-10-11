@@ -8,7 +8,7 @@ from .scenario import (
     Scenario, ScenarioVersion, ScenarioDocument, DocumentChunk,
     Run, RunEvent, UploadedFile, ChatMessage, WorkHoliday,
 )
-from .credential import Certificate, Portfolio
+from .credential import Certificate, CvSettings, Portfolio
 from .notification import Notification, NotificationSettings, PushSubscription
 from .ai_usage import AIUsage
 from .interview import Interview, InterviewMessage
@@ -42,6 +42,7 @@ __all__ = [
     "WorkHoliday",
     "Certificate",
     "Portfolio",
+    "CvSettings",
     "Notification",
     "NotificationSettings",
     "PushSubscription",

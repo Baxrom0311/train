@@ -21,6 +21,7 @@ import UniversityPage from './pages/UniversityPage'
 import CertificatePage from './pages/CertificatePage'
 import PortfolioPublicPage from './pages/PortfolioPublicPage'
 import PortfolioPage from './pages/PortfolioPage'
+import CvPage from './pages/CvPage'
 import ScenarioListPage from './pages/ScenarioListPage'
 import NotificationsPage from './pages/NotificationsPage'
 import ScenarioEditorPage from './pages/ScenarioEditorPage'
@@ -80,6 +81,7 @@ export default function App() {
               <Route path="/admin/scenarios/:id/edit" element={<RequirePermission permission="manage_simulations"><ScenarioEditorPage /></RequirePermission>} />
               <Route path="/university" element={<RequirePermission permission="manage_universities"><UniversityPage /></RequirePermission>} />
               <Route path="/portfolio" element={<RequirePermission permission="manage_portfolio"><PortfolioPage /></RequirePermission>} />
+              <Route path="/cv" element={<RequirePermission permission="manage_portfolio"><CvPage /></RequirePermission>} />
               <Route path="/c/:code" element={<CertificatePage />} />
               <Route path="/p/:slug" element={<PortfolioPublicPage />} />
               <Route path="/billing" element={<RequirePermission permission="view_org_invoices"><BillingPage /></RequirePermission>} />
