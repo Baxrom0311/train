@@ -363,7 +363,7 @@ footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; g
 .desc h3, .proto h3, .api h3 { font-size: 15px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
 .desc > p { font-size: 17px; margin-bottom: 20px; }
 .chapters { list-style: none; display: grid; gap: 4px; }
-.chapters li { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 12px; cursor: pointer; transition: background 0.2s; }
+.chapters li { display: grid; grid-template-columns: 58px 1fr; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 12px; cursor: pointer; transition: background 0.2s; }
 .chapters li:hover { background: rgba(255, 255, 255, 0.05); }
 .chapters time { font-family: ui-monospace, monospace; font-size: 13px; color: var(--cyan); font-weight: 700; padding: 3px 8px; border-radius: 8px; background: rgba(46, 211, 230, 0.1); text-align: center; }
 .chapters b { font-size: 15px; }
