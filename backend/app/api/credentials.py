@@ -4,7 +4,10 @@ Sertifikat va portfolio (CONTRACT.md §13). Modul 10 egaligi.
 Ochiq endpointlar (`/certificates/{code}`, `/portfolios/{slug}`) faqat
 sertifikat suratini va talaba o'zi ochgan portfolioni qaytaradi — email,
 javoblar, chat va fayllar hech qachon chiqmaydi.
+
+CV (§28) — talabaning shaxsiy hujjati: ochiq endpointi yo'q.
 """
+import re
 import uuid
 from datetime import datetime, timezone
 from typing import Annotated, Literal
@@ -16,11 +19,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import require_permission
+from app.credentials.cv import experience, own_run_ids
 from app.credentials.issue import normalize_code
 from app.credentials.slug import SLUG, from_name
 from app.database import get_db
 from app.models.billing import University
-from app.models.credential import Certificate, Portfolio
+from app.models.credential import Certificate, CvSettings, Portfolio
 from app.models.user import User
 from app.talent.profile import build_profiles
 
@@ -28,6 +32,10 @@ router = APIRouter(prefix="/api/v1", tags=["Credentials"])
 users_router = APIRouter(prefix="/api/v1/users", tags=["Credentials - me"])
 
 MAX_LINKS = 3
+MAX_LANGUAGES = 5
+MAX_HIDDEN_RUNS = 50
+PHONE = re.compile(r"^\+?[0-9 ()-]+$")
+PHONE_MIN_DIGITS = 7
 
 
 # ---------------------------------------------------------------------------
@@ -115,6 +123,81 @@ class PortfolioPublic(BaseModel):
     certificates: list[CertificatePublic]
 
 
+class CvSettingsIn(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    phone: str | None = Field(default=None, max_length=20)
+    city: str | None = Field(default=None, max_length=80)
+    languages: list[str] = Field(default_factory=list, max_length=MAX_LANGUAGES)
+    hidden_run_ids: list[uuid.UUID] = Field(default_factory=list, max_length=MAX_HIDDEN_RUNS)
+
+    @field_validator("phone", "city")
+    @classmethod
+    def _blank_is_none(cls, v: str | None) -> str | None:
+        v = " ".join((v or "").split())
+        return v or None
+
+    @field_validator("phone")
+    @classmethod
+    def _phone(cls, v: str | None) -> str | None:
+        if v and (not PHONE.match(v) or sum(c.isdigit() for c in v) < PHONE_MIN_DIGITS):
+            raise ValueError("telefon: raqamlar, '+', bo'shliq, '-', '()'; kamida 7 raqam")
+        return v
+
+    @field_validator("languages")
+    @classmethod
+    def _languages(cls, v: list[str]) -> list[str]:
+        out: dict[str, str] = {}
+        for raw in v:
+            line = " ".join(raw.split())
+            if not 1 <= len(line) <= 40:
+                raise ValueError("til qatori 1–40 belgi")
+            out.setdefault(line.casefold(), line)
+        return list(out.values())
+
+
+class CvSettingsOut(BaseModel):
+    phone: str | None
+    city: str | None
+    languages: list[str]
+    hidden_run_ids: list[uuid.UUID]
+
+
+class CvExperience(BaseModel):
+    run_id: uuid.UUID
+    scenario_title: str
+    company_name: str
+    sector: str
+    difficulty: str
+    duration_days: int
+    started_at: datetime
+    completed_at: datetime
+    overall_score: float | None
+    on_time_rate: float | None
+    tasks_submitted: int
+    tasks_total: int
+    top_competencies: dict[str, float]
+    strengths: list[str]
+    certificate_code: str | None
+    hidden: bool
+
+
+class Cv(BaseModel):
+    generated_at: datetime
+    full_name: str
+    email: str
+    headline: str
+    about: str
+    links: list[Link]
+    portfolio_slug: str | None
+    university: UniversityRef | None
+    overall_score: float | None
+    competencies: dict[str, float]
+    sectors: list[str]
+    experience: list[CvExperience]
+    settings: CvSettingsOut
+
+
 class RevokeIn(BaseModel):
     reason: str = Field(min_length=3, max_length=300)
 
@@ -164,6 +247,12 @@ async def _free_slug(db: AsyncSession, base: str, user_id: uuid.UUID) -> str:
     return f"{base[:31].rstrip('-')}-{uuid.uuid4().hex[:8]}"
 
 
+async def _university(db: AsyncSession, user: User) -> UniversityRef | None:
+    """Faqat bog'langan va tasdiqlangan universitet (§13.2)."""
+    university = await db.get(University, user.university_id) if user.university_id else None
+    return UniversityRef(name=university.name, city=university.city) if university and university.is_verified else None
+
+
 def _settings(p: Portfolio) -> PortfolioSettings:
     return PortfolioSettings(
         slug=p.slug, is_public=p.is_public, headline=p.headline, about=p.about,
@@ -189,7 +278,6 @@ async def get_portfolio(slug: str, db: AsyncSession = Depends(get_db)):
     if user is None or not user.is_active:
         raise HTTPException(status_code=404, detail="Portfolio not found")
 
-    university = await db.get(University, user.university_id) if user.university_id else None
     profile = (await build_profiles(db, [user.id])).get(user.id)
     certificates = (await db.execute(
         select(Certificate)
@@ -202,8 +290,7 @@ async def get_portfolio(slug: str, db: AsyncSession = Depends(get_db)):
         headline=portfolio.headline,
         about=portfolio.about,
         links=[Link(**link) for link in portfolio.links],
-        university=UniversityRef(name=university.name, city=university.city)
-        if university and university.is_verified else None,
+        university=await _university(db, user),
         overall_score=profile.overall_score if profile else None,
         competencies=profile.competencies if profile else {},
         sectors=profile.sectors if profile else [],
@@ -254,6 +341,52 @@ async def save_portfolio(data: PortfolioIn, user: Owner, db: AsyncSession = Depe
         await db.rollback()
         raise HTTPException(status_code=409, detail="Slug is taken")
     return _settings(portfolio)
+
+
+async def _cv(db: AsyncSession, user: User) -> Cv:
+    portfolio = await db.get(Portfolio, user.id)
+    settings = await db.get(CvSettings, user.id)
+    hidden = [uuid.UUID(i) for i in settings.hidden_run_ids] if settings else []
+    profile = (await build_profiles(db, [user.id])).get(user.id)
+    entries = await experience(db, profile, set(hidden))
+    return Cv(
+        generated_at=datetime.now(timezone.utc),
+        full_name=user.full_name,
+        email=user.email,
+        headline=portfolio.headline if portfolio else "",
+        about=portfolio.about if portfolio else "",
+        links=[Link(**link) for link in portfolio.links] if portfolio else [],
+        portfolio_slug=portfolio.slug if portfolio and portfolio.is_public else None,
+        university=await _university(db, user),
+        overall_score=profile.overall_score if profile else None,
+        competencies=dict(sorted(profile.competencies.items(), key=lambda kv: (-kv[1], kv[0]))) if profile else {},
+        sectors=profile.sectors if profile else [],
+        experience=[CvExperience(**vars(e)) for e in entries],
+        settings=CvSettingsOut(
+            phone=settings.phone if settings else None,
+            city=settings.city if settings else None,
+            languages=list(settings.languages) if settings else [],
+            hidden_run_ids=hidden,
+        ),
+    )
+
+
+@users_router.get("/me/cv", response_model=Cv)
+async def my_cv(user: Owner, db: AsyncSession = Depends(get_db)):
+    return await _cv(db, user)
+
+
+@users_router.put("/me/cv/settings", response_model=Cv)
+async def save_cv_settings(data: CvSettingsIn, user: Owner, db: AsyncSession = Depends(get_db)):
+    settings = await db.get(CvSettings, user.id) or CvSettings(user_id=user.id)
+    settings.phone = data.phone
+    settings.city = data.city
+    settings.languages = data.languages
+    settings.hidden_run_ids = [str(i) for i in await own_run_ids(db, user.id, data.hidden_run_ids)]
+    settings.updated_at = datetime.now(timezone.utc)
+    db.add(settings)
+    await db.commit()
+    return await _cv(db, user)
 
 
 # ---------------------------------------------------------------------------

@@ -261,3 +261,24 @@
     box-shadow: none !important;
   }
 }
+
+/*
+ * CV varag'i (CONTRACT.md §28.4): sertifikat kabi doim "qog'oz"; chop etishda A4 kitob,
+ * bir necha betga bo'linishi mumkin — yozuvlar bet chegarasida bo'linmaydi.
+ */
+@page cv {
+  size: A4 portrait;
+  margin: 12mm 0;
+}
+
+@media print {
+  .cv-sheet {
+    page: cv;
+    width: auto;
+    max-width: none !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+}

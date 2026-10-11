@@ -59,3 +59,17 @@ class Portfolio(Base):
     about: Mapped[str] = mapped_column(String(1000), nullable=False, default="", server_default="")
     links: Mapped[list] = mapped_column(JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb"))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow, onupdate=_utcnow)
+
+
+class CvSettings(Base):
+    """CV'ga talaba o'zi qo'shadigan narsalar (§28.2) — hech qachon ochiq emas."""
+    __tablename__ = "cv_settings"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    city: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    languages: Mapped[list] = mapped_column(JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb"))
+    hidden_run_ids: Mapped[list] = mapped_column(JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb"))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow, onupdate=_utcnow)

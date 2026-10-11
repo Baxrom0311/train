@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import {
-  Activity, ArrowRight, Award, BookOpenCheck, Briefcase, CalendarDays, Clock, Loader2, Minus, Play,
+  Activity, ArrowRight, Award, BookOpenCheck, Briefcase, CalendarDays, Clock, FileText, Loader2, Minus, Play,
   Sparkles, Target, TrendingDown, TrendingUp, Trophy, type LucideIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -51,10 +51,18 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-8">
-      <div className="animate-rise space-y-2">
-        <p className="text-sm font-semibold text-primary">{user && t('dashboard.welcomeName', { name: user.full_name })}</p>
-        <h1 className="text-4xl font-extrabold tracking-tight">{t('growth.title')}</h1>
-        <p className="max-w-2xl text-muted-foreground">{t('growth.subtitle')}</p>
+      <div className="animate-rise flex flex-wrap items-end justify-between gap-4">
+        <div className="space-y-2">
+          <p className="text-sm font-semibold text-primary">{user && t('dashboard.welcomeName', { name: user.full_name })}</p>
+          <h1 className="text-4xl font-extrabold tracking-tight">{t('growth.title')}</h1>
+          <p className="max-w-2xl text-muted-foreground">{t('growth.subtitle')}</p>
+        </div>
+        {/* §28.4 — CV'ga tezkor havola: kamida bitta tugallangan ish bo'lsa */}
+        {can('manage_portfolio') && Boolean(s?.completed) && (
+          <Button variant="outline" asChild>
+            <Link to="/cv"><FileText className="h-4 w-4" /> {t('cv.cta')}</Link>
+          </Button>
+        )}
       </div>
 
       {openRun && (
