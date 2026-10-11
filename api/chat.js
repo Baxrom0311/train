@@ -14,8 +14,8 @@ Faktlar:
 - Model B2B2C: talaba bepul, kompaniya va universitet to'laydi (invoice orqali).
 - Stack: React + TypeScript, FastAPI, PostgreSQL + pgvector (RAG), Redis + arq, LLM, Docker + Caddy.
 - Bosqich: Idea va Prototype bajarildi, hozir MVP (noyabr 2026 — pilot universitetlar), Launch — 2027 1-chorak.
-- Jamoa (3 kishi, 11+ yil tajriba): Guli Salayeva — asoschi, team lead, biznes-analitik (3+ yil); Muhayyo Normatova — backend va AI/ML muhandis (4+ yil); Sarvara Eshchanova — frontend va UI/UX dizayner (4+ yil).
-- Ssenariylardagi kompaniyalar to'qima (fictional). Manba kodi: github.com/Baxrom0311/train.`;
+- Jamoa (3 kishi): Guli Salayeva — asoschi, team lead, biznes-analitik (3+ yil); Muhayyo Normatova — backend va AI/ML muhandis (4+ yil); Sarvara Eshchanova — frontend va UI/UX dizayner (4+ yil).
+- Ssenariylardagi kompaniyalar to'qima (fictional). Manba kodi: github.com/Baxrom0311/train. Ishlayotgan prototip: https://guli.b-code.uz/`;
 
 const hits = new Map(); // oddiy IP limit: daqiqasiga 8 ta so'rov
 
