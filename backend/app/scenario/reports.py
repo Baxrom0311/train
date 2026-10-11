@@ -7,6 +7,8 @@ Kunlik va yakuniy hisobotlar (CONTRACT.md §9.6).
 - **Yakuniy** — Run `completed` yoki `expired` bo'lganda: task natijalari,
   kompetensiya ballari (0–100) → `runs.final_report`, `runs.competency_scores`.
   `expired` — `"incomplete": true`, sertifikat yo'q; `completed` — sertifikat (§13.1).
+  Jamoaviy Run (§29.4): har task'da `role` va `by`, `team.members` — a'zolar
+  bo'yicha ko'rsatkichlar; sertifikat yo'q.
 
 Ballar faqat kodda hisoblanadi; AI faqat matn va `initiative` bahosini beradi
 (AI ishlamasa — hisobot matnsiz, `initiative` task'lardan). Baholash hali
@@ -42,6 +44,7 @@ from app.models.simulation import Submission
 from app.scenario.engine import REPORT_DUE, definition_for
 from app.scenario.evaluation import public_checks
 from app.scenario.schema import Node, ScenarioDefinition
+from app.scenario.team import TeamView, team_view
 
 EVAL_WAIT = timedelta(minutes=15)
 AWAITING = (AIEvalStatus.PENDING, AIEvalStatus.QUEUED_RETRY)
@@ -63,6 +66,8 @@ class TaskResult:
     competencies: list[str] = field(default_factory=list)
     weight: float = 1.0
     checks: dict | None = None   # §19.4 — oxirgi testlangan urinish
+    role: str | None = None      # §29.4 — node roli (jamoaviy Run'da)
+    by: str | None = None        # §29.4 — kimga biriktirilgan (user_id)
 
     def public(self) -> dict:
         d = asdict(self)
@@ -102,9 +107,18 @@ def _event_day(e: RunEvent, bounds: list[datetime | None]) -> int:
     return len(bounds)
 
 
+def _assignee(node: Node, attempts: list[Submission], team: TeamView) -> str | None:
+    """§29.4: topshirilgan — oxirgi urinish muallifi; topshirilmagan rolli — hozirgi rol egasi."""
+    if attempts:
+        return str(attempts[-1].user_id)
+    holder = team.holder(node.role) if node.role else None
+    return str(holder) if holder else None
+
+
 async def load_results(db: AsyncSession, run: Run) -> tuple[ScenarioDefinition, list[TaskResult], list[Submission]]:
     version = await db.get(ScenarioVersion, run.scenario_version_id)
     defn = definition_for(version)
+    team = await team_view(db, run, defn)
     events = {
         e.node_id: e for e in (await db.execute(select(RunEvent).where(RunEvent.run_id == run.id))).scalars()
     }
@@ -137,6 +151,8 @@ async def load_results(db: AsyncSession, run: Run) -> tuple[ScenarioDefinition, 
             competencies=[c.value for c in node.competencies],
             weight=node.weight,
             checks=next((c for s in reversed(attempts) if (c := public_checks(s.check_results))), None),
+            role=node.role if team else None,
+            by=_assignee(node, attempts, team) if team else None,
         ))
     return defn, results, subs
 
@@ -178,6 +194,32 @@ def competency_scores(results: list[TaskResult], initiative: float | None = None
         if value is not None:
             out[c.value] = value
     return out
+
+
+def team_section(team: TeamView, results: list[TaskResult]) -> dict:
+    """
+    §29.4: har a'zo bo'yicha ko'rsatkichlar — faqat kodda. `share` — jamoa
+    topshirgan task'lar ichida shu a'zo topshirganlari ulushi.
+    """
+    submitted = [r for r in results if r.status == RunEventStatus.SUBMITTED.value]
+    members = []
+    for m in team.members:
+        mine = [r for r in results if r.by == str(m.user_id)]
+        done = [r for r in mine if r.status == RunEventStatus.SUBMITTED.value]
+        members.append({
+            "user_id": str(m.user_id),
+            "name": m.name,
+            "roles": list(m.roles),
+            "is_captain": m.user_id == team.captain_id,
+            "left": not m.active,
+            "assigned": len(mine),
+            "submitted": len(done),
+            "on_time_rate": on_time_rate(mine),
+            "overall_score": _weighted(mine),
+            "competency_scores": competency_scores(mine),
+            "share": round(100 * len(done) / len(submitted), 1) if submitted else None,
+        })
+    return {"members": members}
 
 
 def _evals_settled(subs: list[Submission], now: datetime) -> bool:
@@ -250,6 +292,7 @@ async def write_final_report(db: AsyncSession, run_id: uuid.UUID, now: datetime,
         .order_by(ChatMessage.created_at)
     )).scalars().all()
     completed = run.status == RunStatus.COMPLETED
+    team = await team_view(db, run, defn)
     tasks = [r.public() for r in results]
     summary = await summarize(tasks, base, [m for m in messages if m], completed)
     scores = competency_scores(results, initiative=summary.initiative_score if summary else None)
@@ -263,13 +306,16 @@ async def write_final_report(db: AsyncSession, run_id: uuid.UUID, now: datetime,
     report = {
         "generated_at": now.isoformat(),
         "incomplete": not completed,
-        "certificate": completed and not company_owned,
+        # §26.1, §29.4: kompaniya sinovi va jamoaviy Run — sertifikatsiz
+        "certificate": completed and not company_owned and team is None,
         "overall_score": _weighted(results),
         "on_time_rate": on_time_rate(results),
         "competency_scores": scores,
         "tasks": tasks,
         "summary": summary.model_dump() if summary else None,
     }
+    if team is not None:
+        report["team"] = team_section(team, results)
     await db.refresh(run, with_for_update=True)
     if run.final_report is None:
         run.final_report = report

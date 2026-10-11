@@ -33,6 +33,19 @@ class PersonaPublic(BaseModel):
     kind: str
 
 
+class TeamRolePublic(BaseModel):
+    key: str
+    title: str
+    summary: str
+
+
+class TeamPublic(BaseModel):
+    """§29.1: jamoaviy ssenariy — 2–4 kishi, rollar."""
+    min_size: int
+    max_size: int
+    roles: list[TeamRolePublic]
+
+
 class ScenarioOut(BaseModel):
     id: uuid.UUID
     slug: str
@@ -42,6 +55,7 @@ class ScenarioOut(BaseModel):
     difficulty: str
     duration_days: int
     version: int
+    team: TeamPublic | None = None
 
 
 class ScenarioDetailOut(ScenarioOut):
@@ -94,6 +108,16 @@ class HolidayOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+def team_public(defn: ScenarioDefinition) -> TeamPublic | None:
+    if defn.team is None:
+        return None
+    return TeamPublic(
+        min_size=defn.team.min_size,
+        max_size=defn.team.max_size,
+        roles=[TeamRolePublic(key=r.key, title=r.title, summary=r.summary) for r in defn.team.roles],
+    )
+
+
 def _out(scenario: Scenario, version: ScenarioVersion) -> dict:
     return {
         "id": scenario.id,
@@ -104,6 +128,7 @@ def _out(scenario: Scenario, version: ScenarioVersion) -> dict:
         "difficulty": scenario.difficulty,
         "duration_days": scenario.duration_days,
         "version": version.version,
+        "team": team_public(definition_for(version)),
     }
 
 

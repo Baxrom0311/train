@@ -165,7 +165,7 @@ schema / endpoint shakli) orqali gaplashadi.
 | 6 | **University Portal** | `backend/app/api/university_portal.py` | (1),(3),(9)ga bog'liq — natijalar Run'lardan (§12) |
 | 7 | **Frontend (React+shadcn)** | `frontend/` | Har modul backend API'si tayyor bo'lgach, mos ekranlar — vertical slice, lekin alohida agent/task |
 | 8 | **Deploy** | `deploy/` | Docker-compose, nginx, Dockerfile'lar — backend/frontend tuzilishi barqarorlashgach yangilanadi |
-| 9 | **Scenario Engine** | §9.10 ro'yxati (`backend/app/scenario/`, `models/scenario.py`, `api/scenarios.py`, `api/runs.py`, `api/files.py`, `backend/content/scenarios/`, `tools/import_scenario.py`), kompaniya muharriri `api/company_scenarios.py` (§26) | (1),(2) interfeyslari — §9.10 |
+| 9 | **Scenario Engine** | §9.10 ro'yxati (`backend/app/scenario/`, `models/scenario.py`, `api/scenarios.py`, `api/runs.py`, `api/files.py`, `backend/content/scenarios/`, `tools/import_scenario.py`), kompaniya muharriri `api/company_scenarios.py` (§26), jamoaviy Run `api/teams.py`, `scenario/team.py` (§29) | (1),(2) interfeyslari — §9.10 |
 | 10 | **Credentials** | `backend/app/models/credential.py`, `backend/app/api/credentials.py`, `backend/app/credentials/` | (1),(6),(9)ga bog'liq — sertifikat Run'dan, portfolio §10.1 profilidan (§13) |
 | 11 | **Notifications** | `backend/app/models/notification.py`, `backend/app/api/notifications.py`, `backend/app/notifications/`, `tools/gen_vapid_keys.py` | (1),(4),(9),(10)ga bog'liq — manbalar §15.2 |
 | 12 | **Analytics** | `backend/app/api/analytics.py`, `backend/app/analytics/` | (9),(10)ga bog'liq — Run natijalarini faqat o'qiydi (§17); platforma statistikasi hisobi `analytics/platform.py` (§21), endpointi Modul 3 `api/admin.py`da |
@@ -229,6 +229,7 @@ POST   /api/v1/talents/offers             counts against subscription's "intervi
 # AI suhbat mashqi — §24
 # Suhbat bosqichlari (arizachi bilan haqiqiy suhbat) — §25
 # Kompaniya ssenariylari va arizachiga sinov topshirig'i — §26
+# Jamoaviy Run (lobby, rollar, jamoa chati) — §29
 # Universitet portali (talabalar natijalari, bog'lanish) — §12.2
 ```
 
@@ -2303,3 +2304,180 @@ holatlar va "javobsiz arizalar" ogohlantirishi (vakansiya sahifasiga
 havola), bosqichlar bo'yicha yo'qotishlar, sinov va suhbat kartalari,
 vakansiyalar jadvali va arizalar CSV'si. Bo'sh kogortada — vakansiyalarga
 havola.
+
+## 29. Jamoaviy Run (Modul 9 + 11 + 7)
+
+Real ishda vazifa bitta odamga emas, jamoaga keladi: backend tuzatadi,
+analitik ta'sirni o'lchaydi, mijozlar bilan ishlovchi odam xabar yozadi —
+va ular bir-birini kutadi. Jamoaviy Run'da **2–4 talaba** bitta ssenariyni
+birga, rollarga bo'linib o'tadi. Vaqt modeli §9.2 bilan bir xil (real vaqt,
+pauza yo'q, Toshkent, du–ju 09:00–18:00): Run bitta, hodisalar bitta,
+dedlaynlar hamma uchun bir xil.
+
+### 29.1 Ssenariy: `team` bloki va `role`
+
+```yaml
+team:
+  min_size: 2                 # 2..len(roles); standart 2
+  roles:                      # 2–4 ta
+    - key: backend
+      title: "Backend dasturchi"
+      summary: "Bug va incident'ni kod bilan hal qiladi"   # ≤ 300
+nodes:
+  - id: fix_promo
+    type: task
+    role: backend             # faqat shu rol egasi topshiradi
+```
+
+- `role` faqat `task | incident | decision`da, `team.roles` kalitlaridan
+  biri. `role`siz baholanadigan node — **umumiy**: jamoaning istalgan a'zosi
+  topshiradi (`day_end` doim umumiy — jamoa kun hisoboti).
+- Har rolda kamida bitta baholanadigan node bo'ladi; `team` yo'q ssenariyda
+  `role` yozilmaydi (sxema xatosi). Rol kaliti `_KEY` shaklida, takrorlanmaydi.
+- `team`li ssenariyni **yakka** ham o'tish mumkin (`POST /runs`) — unda
+  barcha rollar talabaniki, `role` e'tiborsiz qoldiriladi. `team`siz
+  ssenariydan jamoa tuzilmaydi (422).
+- Kompaniya ssenariylari (§26) jamoaviy bo'lmaydi: jamoa faqat katalog
+  ssenariysidan tuziladi (aks holda 404).
+- §16 muharriri `team` blokini va node `role`ini tahrirlaydi; YAML ikki
+  tomonlama, jonli tekshiruv shu qoidalar bilan.
+
+### 29.2 Jamoa yig'ish (lobby)
+
+`run_teams`: `id, scenario_id (FK), scenario_version_id (FK — tuzilgan
+paytdagi nashr versiyasi), captain_id (FK users), invite_code` (8 belgi,
+§13 alifbosi, UNIQUE), `status` (`forming | started | disbanded`),
+`created_at, started_at`.
+`run_team_members`: `team_id (FK, CASCADE), user_id (FK, CASCADE), role`
+(lobbyda tanlangan, null), `roles JSONB` (Run'dagi rollar), `joined_at,
+left_at`; PK `(team_id, user_id)`; UNIQUE `(team_id, role)` (null'dan tashqari).
+`runs.team_id` (FK, UNIQUE, null — yakka Run).
+
+- **Tuzish:** talaba katalogdagi `team`li ssenariy uchun jamoa ochadi va
+  kapitan bo'ladi. Havola: `/teams/join/{invite_code}` — kodni har bir a'zo
+  ko'radi va ulasha oladi. `forming` jamoa yaratilgandan **7 kun** o'tgach
+  yonadi (`state = expired`, qo'shilib/boshlab bo'lmaydi — 409).
+- **Qo'shilish:** jamoa `forming`, yonmagan, joy bor (`a'zolar <
+  len(roles)`), foydalanuvchi a'zo emas. Bir foydalanuvchi bir ssenariyda
+  bitta `forming` jamoada bo'ladi va shu ssenariy versiyasida ochiq Run'i
+  (yakka yoki jamoaviy) bo'lmaydi (409).
+- **Rol tanlash:** har a'zo ko'pi bilan bitta rolni band qiladi; band rol —
+  409. Rolni bo'shatish mumkin.
+- **Chiqish va chiqarish:** a'zo lobbydan chiqadi, kapitan a'zoni chiqaradi
+  yoki jamoani tarqatadi (`disbanded`). Kapitan lobbydan chiqmaydi — tarqatadi.
+- **Boshlash** (faqat kapitan; `{start_at?}` — §9.2 Q10 bilan bir xil):
+  a'zolar `≥ min_size`, har biri faol foydalanuvchi va shu ssenariy
+  versiyasida ochiq Run'i yo'q (aks holda 409, ism bilan). Band qilinmagan
+  rollar ssenariy tartibida **eng kam rolli a'zoga** taqsimlanadi (teng
+  bo'lsa — oldin qo'shilganga): har a'zoda kamida bitta rol bo'ladi, a'zolar
+  rollardan kam bo'lsa kimdir ikki rol oladi. Run `user_id = captain_id`,
+  `team_id` bilan yaratiladi, `status = started`.
+
+### 29.3 Jamoaviy Run'da ishlash
+
+- **Kirish:** barcha `runs/*` endpointlari Run'ning faol (chiqmagan)
+  a'zolariga; boshqalarga 404. Chiqib ketgan a'zo faqat hisobotni ko'radi.
+  `GET /runs/my` jamoaviy Run'larni ham qaytaradi. `last_activity_at` —
+  istalgan a'zoning so'rovida.
+- **Rolli harakatlar:** `submit`, `decide`, `hint` `role`li node'da faqat
+  shu rol egasiga (boshqalarga 403); umumiy node'ni istalgan a'zo
+  topshiradi, umumiy qarorni birinchi a'zo qabul qiladi (keyin 409).
+  `submissions.user_id` — topshirgan a'zo; fayl ham uniki bo'lishi shart.
+  Hamma a'zo barcha hodisalar, baholar va izohlarni ko'radi.
+- **Yakunlash:** Run'ni tashlab ketish (`abandon`) — faqat kapitan, Run
+  hamma uchun yopiladi. Boshqa a'zo `POST /runs/{id}/leave` bilan chiqadi:
+  rollari qolgan a'zolarga (kam rolliga, teng bo'lsa — qo'shilish tartibi)
+  o'tadi, topshirgan ishi saqlanadi, `left_at` yoziladi. Kapitan chiqmaydi.
+- **Personaj chatlari jamoaga umumiy:** hamma bir xil yozishmani ko'radi,
+  talaba xabarida `author_id` (`chat_messages.author_id`, FK users, null).
+  AI kontekstida xabar muallifi "Ism (rol):" bilan belgilanadi; Run kunlik
+  AI xabar limiti (§9.4) faol a'zolar soniga ko'paytiriladi, token byudjeti
+  — `× a'zolar soni`.
+- **Jamoa chati:** `GET/POST /runs/{id}/team-chat` — faqat a'zolar
+  orasida, AI javob bermaydi (`persona_key = "_team"`, shaxs kalitlari
+  harf bilan boshlanadi — to'qnashmaydi). Matn guardrail'dan o'tadi,
+  ≤ 2000 belgi, daqiqasiga 20 xabar. Mentor eslatmasi (§9.13) uchun "talaba
+  yozgan" hisoblanmaydi — faqat personajlarga yozilgan xabar.
+- **SSE:** a'zolar `run:{id}` kanaliga obuna; rollar o'zgarsa `event: team`.
+
+### 29.4 Hisobot va natija
+
+- Kunlik va yakuniy hisobot jamoa bo'yicha (§9.6 o'zgarmaydi); har task
+  natijasida `role` va `by` (topshirgan a'zo `user_id`si) bor.
+- `final_report.team.members[]` — kodda hisoblanadi: `user_id, name, roles,
+  is_captain, left, assigned, submitted, on_time_rate, overall_score,
+  competency_scores, share`. Task a'zoga shunday biriktiriladi: topshirilgan
+  — oxirgi urinish muallifiga; topshirilmagan rolli task — Run yopilgan
+  paytdagi rol egasiga; topshirilmagan umumiy task — hech kimga.
+  `share` — jamoa topshirgan task'larning shu a'zo topshirgan ulushi (%).
+- Jamoaviy Run **sertifikat bermaydi** (`certificate: false`) va profilga
+  (§10.1 — demak portfolio, CV, moslik, talaba analitikasi), universitet
+  portaliga (§12) kirmaydi: jamoadagi hissa — to'liq shaxsiy natija emas.
+  Jamoa natijasi faqat a'zolarning Run hisobotida.
+
+### 29.5 Bildirishnomalar (Modul 11, `notifications/teams.py`)
+
+| kind | Kimga | Qachon | params | Email default |
+|---|---|---|---|---|
+| `team_joined` | kapitan | a'zo jamoaga qo'shildi | team_id, member, scenario | yo'q |
+| `team_started` | kapitandan boshqa a'zolar | kapitan Run'ni boshladi | run_id, scenario, captain, start_at, roles | ha |
+
+`dedupe_key`: `team:{id}:joined:{user_id}`, `team:{id}:started`.
+Jamoaviy Run'da §15.2 turlari: `task_delivered`, `deadline_soon` — rol
+egasiga (umumiy node — barcha faol a'zolarga); `mentor_review` —
+topshirgan a'zoga; `report_ready` — barcha faol a'zolarga.
+
+### 29.6 API
+
+```
+# api/teams.py — kirgan faol foydalanuvchi
+POST   /api/v1/teams                           {scenario_id} → 201 TeamOut
+GET    /api/v1/teams/my                        → [TeamOut]  (forming, yonmagan)
+GET    /api/v1/teams/{id}                      a'zoga → TeamOut
+GET    /api/v1/teams/invite/{code}             → TeamInviteOut (ssenariy, kapitan, rollar, joy)
+POST   /api/v1/teams/invite/{code}/join        → TeamOut
+PUT    /api/v1/teams/{id}/role                 {role | null} → TeamOut
+POST   /api/v1/teams/{id}/leave                → 204
+POST   /api/v1/teams/{id}/members/{user_id}/remove   kapitan → TeamOut
+POST   /api/v1/teams/{id}/disband              kapitan → TeamOut
+POST   /api/v1/teams/{id}/start                kapitan {start_at?} → RunCreatedOut
+
+# api/runs.py
+POST   /api/v1/runs/{id}/leave                 a'zo (kapitan emas) → RunDetailOut
+GET    /api/v1/runs/{id}/team-chat             → [ChatMessageOut]
+POST   /api/v1/runs/{id}/team-chat             {text} → ChatMessageOut
+```
+
+`TeamOut`: `id, scenario, status, state, invite_code, expires_at,
+captain_id, is_captain, min_size, roles[{key, title, summary}],
+members[{user_id, name, role, is_captain, joined_at}], run_id, created_at`.
+`ScenarioOut` + `team: {min_size, roles} | null`. `RunOut` + `team_size,
+is_captain`; `RunDetailOut` + `team: {id, captain_id, me, my_roles,
+roles[{key, title, summary, holder_id}], members[{user_id, name, roles,
+is_captain}]} | null`; `EventOut` + `role, submitted_by {user_id, name} |
+null`; `ChatMessageOut` + `author_id, author_name`.
+
+### 29.7 Modul chegaralari
+
+Modul 9: `scenario/team.py` (lobby, rol taqsimoti, a'zolar statistikasi —
+sof funksiyalar), `api/teams.py`, `models/scenario.py` (`RunTeam`,
+`RunTeamMember`), dvigatelda `actor_id` va rol tekshiruvi. Modul 11:
+`notifications/teams.py`, `kinds.py`, `run_events.py` qabul qiluvchilari.
+Modul 4/6/10/12 faqat `runs.team_id IS NULL` filtrini qo'shadi.
+
+### 29.8 Frontend
+
+- Katalogda `team`li ssenariy "Jamoaviy · 2–4 kishi" belgisi bilan;
+  kartada "Jamoa tuzish" (va "Yakka boshlash"). "Jamoalarim" bo'limi —
+  yig'ilayotgan jamoalar.
+- `/teams/{id}` — lobby: taklif havolasi (nusxa olish), rollar kartalari
+  (band qilish/bo'shatish, egasi), a'zolar, kapitanga "Boshlash" (hozir yoki
+  vaqt), "Chiqarish", "Tarqatish"; a'zoga "Chiqish". Boshlangach — Run sahifasi.
+- `/teams/join/{code}` — taklif: ssenariy, kapitan, rollar, bo'sh joy,
+  "Qo'shilish" (kirmagan bo'lsa — login, keyin shu sahifa).
+- Run ish stoli: jamoa paneli (a'zolar va rollari), task kartasida rol
+  belgisi va "Sizning vazifangiz" / "{ism}ning vazifasi" (topshirish faqat
+  egasiga), kim topshirgani; chatda xabar muallifi; "Jamoa" chati;
+  a'zoga "Jamoadan chiqish", kapitanga "Tashlab ketish".
+- Hisobotda "Jamoa" bo'limi: har a'zo — rollari, ball, o'z vaqtida ulushi,
+  hissasi, kompetensiyalar; task jadvalida kim bajargani.

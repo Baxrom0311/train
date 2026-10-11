@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.credential import Certificate
 from app.models.enums import RunStatus, ScenarioVersionStatus
 from app.models.scenario import Run, Scenario, ScenarioVersion
-from app.scenario.engine import definition_for
+from app.scenario.engine import definition_for, participant_of
 from app.talent.profile import completed_runs
 
 RECENT = 3          # `current` — oxirgi shuncha qiymat o'rtachasi
@@ -190,7 +190,8 @@ async def load(db: AsyncSession, user_id: uuid.UUID) -> Analytics:
     points = sorted((_point(run, scenario) for run, scenario in rows), key=lambda p: p.completed_at)
     in_progress = await db.scalar(
         select(func.count()).select_from(Run)
-        .where(Run.user_id == user_id, Run.status.in_((RunStatus.SCHEDULED, RunStatus.ACTIVE)))
+        # jamoaviy Run'lar ham (§29.3) — ular profilga kirmasa ham talaba hozir shu ishda
+        .where(participant_of(user_id), Run.status.in_((RunStatus.SCHEDULED, RunStatus.ACTIVE)))
     ) or 0
     certificates = await db.scalar(
         select(func.count()).select_from(Certificate)

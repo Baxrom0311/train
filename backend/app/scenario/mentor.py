@@ -32,9 +32,9 @@ from app.models.simulation import Submission
 from app.notifications.run_events import review_posted
 from app.scenario.engine import Note, definition_for
 from app.scenario.evaluation import checks_line, public_checks
-from app.scenario.limits import RUN_AI_TOKEN_BUDGET
 from app.scenario.reports import task_title
 from app.scenario.schema import Node, Persona, ScenarioDefinition, short_title
+from app.scenario.team import ai_limits
 
 log = logging.getLogger(__name__)
 
@@ -146,7 +146,8 @@ async def post_review(
 
     attempts_left = can_resubmit(run, node, sub)
     body, generated, tokens = None, False, 0
-    if run.ai_tokens_used < RUN_AI_TOKEN_BUDGET:
+    _, token_budget = await ai_limits(db, run)
+    if run.ai_tokens_used < token_budget:
         ctx = ReviewContext(
             persona=profile(mentor),
             company_name=run.scenario_version.scenario.company_name,
@@ -176,7 +177,7 @@ async def post_review(
         generated=generated, created_at=now, purpose=CHAT_PURPOSE_REVIEW, node_id=node.id, submission_id=sub.id,
     )
     db.add(reply)
-    await review_posted(db, run, node.id, task_title(node), mentor.name, sub.id, now)   # §15.2
+    await review_posted(db, run, node.id, task_title(node), mentor.name, sub.id, now, sub.user_id)   # §15.2, §29.5
     if tokens:
         await db.execute(update(Run).where(Run.id == run.id).values(ai_tokens_used=Run.ai_tokens_used + tokens))
     try:

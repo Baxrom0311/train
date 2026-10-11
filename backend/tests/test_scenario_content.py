@@ -1,4 +1,4 @@
-"""`backend/content/scenarios/` kontenti: sxema, sifat qoidalari va to'liq kun o'tishi (CONTRACT.md §9.11)."""
+"""`backend/content/scenarios/` kontenti: sxema, sifat qoidalari va to'liq kun o'tishi (CONTRACT.md §9.11, §29)."""
 from pathlib import Path
 
 import pytest
@@ -22,9 +22,11 @@ def test_content_covers_every_sector():
     """§9.11: har sohada kamida bitta 1 kunlik ssenariy + IT haftaligi; har 1 kunlik `test_full_day`da."""
     defs = [_load(p) for p in FILES]
     assert sorted((d.sector.value, d.duration_days) for d in defs) == [
-        ("Banking", 1), ("Data", 1), ("HR", 1), ("IT", 1), ("IT", 5), ("Marketing", 1)]
+        ("Banking", 1), ("Data", 1), ("HR", 1), ("IT", 1), ("IT", 1), ("IT", 5), ("Marketing", 1)]
     assert {d.sector for d in defs} == set(Sector)
-    assert {d.slug for d in defs if d.duration_days == 1} == set(PATHS)
+    # jamoaviy ssenariy (§29) o'z to'liq kuni bilan — tests/test_team_runs.py
+    assert {d.slug for d in defs if d.duration_days == 1 and d.team is None} == set(PATHS)
+    assert [d.slug for d in defs if d.team is not None] == ["lazurit-go-express-team-day1"]
 
 
 @pytest.mark.parametrize("path", FILES, ids=lambda p: p.stem)
