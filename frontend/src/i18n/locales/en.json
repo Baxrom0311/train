@@ -221,7 +221,18 @@
     "history": "Past simulations",
     "report": "Report",
     "realTime": "Real time",
-    "noMatch": "No scenarios match this filter."
+    "noMatch": "No scenarios match this filter.",
+    "teamBadge": "Team · {{min}}–{{max}} people",
+    "formTeam": "Form a team",
+    "solo": "Solo",
+    "soloHint": "You take every role yourself",
+    "myTeams": "Teams being formed",
+    "toLobby": "Open lobby",
+    "teamMembers_one": "{{count}} member",
+    "teamMembers_other": "{{count}} members",
+    "teamRun": "Team",
+    "left": "You left the team",
+    "teamBusy": "You already have a team forming for this scenario"
   },
   "run": {
     "status": {
@@ -291,7 +302,22 @@
       "event": "Task",
       "chat": "Chat"
     },
-    "askMentor": "Discuss with {{name}}"
+    "askMentor": "Discuss with {{name}}",
+    "team": {
+      "title": "Team",
+      "chat": "Team chat",
+      "chatHint": "Only teammates see it; AI does not reply",
+      "chatEmpty": "No messages yet. Agree here on who does what.",
+      "yourTask": "Your task",
+      "theirTask": "Owner: {{name}}",
+      "roleFree": "Role has no owner",
+      "shared": "Shared task",
+      "by": "Submitted by {{name}}",
+      "leave": "Leave team",
+      "leaveConfirm": "Leave the run? Your roles pass to the others and you cannot rejoin.",
+      "abandonConfirm": "The run stops for the whole team. Continue?",
+      "captain": "Captain"
+    }
   },
   "report": {
     "title": "Report",
@@ -314,7 +340,15 @@
     "late": "late",
     "abandoned": "The simulation was abandoned — no report is generated",
     "certificateReady": "Your certificate is ready",
-    "openCertificate": "Open certificate"
+    "openCertificate": "Open certificate",
+    "team": {
+      "title": "Team result",
+      "noCertificate": "A team run gives no certificate and is not added to the profile.",
+      "submitted": "Submitted",
+      "share": "Share",
+      "left": "left",
+      "by": "Done by"
+    }
   },
   "competency": {
     "technical": "Technical skills",
@@ -960,7 +994,10 @@
       "latePenalty": "Late penalty (0–1)",
       "hintPenalty": "Hint penalty (0–1)",
       "checks": "Automated checks ({{keys}}) are edited in the YAML tab only",
-      "when": "Condition (optional)"
+      "when": "Condition (optional)",
+      "role": "Role",
+      "roleShared": "Shared — any member",
+      "roleHint": "Only this role's owner submits"
     },
     "when": {
       "mode": "Condition shape",
@@ -1042,7 +1079,20 @@
     "valid": "No errors",
     "errors_one": "{{count}} error",
     "errors_other": "{{count}} errors",
-    "hasErrors": "Has errors"
+    "hasErrors": "Has errors",
+    "team": {
+      "title": "Team mode",
+      "hint": "2–4 people play one scenario split into roles (it can still be played solo).",
+      "enable": "Make it a team scenario",
+      "disable": "Turn off team mode",
+      "minSize": "Minimum members",
+      "roleKey": "Role key",
+      "roleTitle": "Role title",
+      "roleSummary": "Short summary",
+      "addRole": "Add role",
+      "used_one": "{{count}} task",
+      "used_other": "{{count}} tasks"
+    }
   },
   "notifications": {
     "title": "Notifications",
@@ -1081,7 +1131,9 @@
       "interview_reminder": "Interview at {{time}}",
       "assessment_assigned": "You received an assessment",
       "assessment_completed": "A candidate finished the assessment",
-      "assessment_incomplete": "A candidate didn't fully finish the assessment"
+      "assessment_incomplete": "A candidate didn't fully finish the assessment",
+      "team_joined": "{{member}} joined your team",
+      "team_started": "Team run started"
     },
     "setting": {
       "task_delivered": "New tasks and incidents",
@@ -1098,7 +1150,9 @@
       "interview_confirmed": "Candidate picked an interview time",
       "interview_declined": "Candidate declined an interview",
       "assessment_assigned": "When a company sends an assessment",
-      "assessment_completed": "When a candidate finishes an assessment"
+      "assessment_completed": "When a candidate finishes an assessment",
+      "team_joined": "When someone joins my team",
+      "team_started": "When a team run starts"
     },
     "email": {
       "title": "By email",
@@ -1118,7 +1172,8 @@
       "days_other": "{{count}} days ago"
     },
     "startBy": "start by {{time}}",
-    "score": "{{score}} points"
+    "score": "{{score}} points",
+    "yourRoles": "your role: {{roles}}"
   },
   "checks": {
     "title": "Automated tests",
@@ -1731,6 +1786,55 @@
       "portfolio": "Portfolio",
       "footer": "Experience comes from TryJob virtual job simulations: companies are fictional, results are based on AI and mentor assessment. Certificates can be verified at {{host}}/c/…",
       "generated": "as of {{date}}"
+    }
+  },
+  "team": {
+    "title": "Team lobby",
+    "captain": "Captain",
+    "you": "you",
+    "invite": "Invite link",
+    "inviteHint": "Send the link to your teammates. Valid until {{date}}.",
+    "copy": "Copy",
+    "copied": "Copied",
+    "roles": "Roles",
+    "rolesHint": "Pick your role. Free roles go to the member with the fewest roles when the run starts.",
+    "take": "Take",
+    "release": "Release",
+    "free": "Free",
+    "members": "Members",
+    "membersCount": "{{count}} / {{max}}",
+    "remove": "Remove",
+    "removeConfirm": "Remove {{name}} from the team?",
+    "startNow": "Start now",
+    "startAt": "Start time",
+    "startAtHint": "Leave empty to start now. Outside working hours the start moves to 09:00 on the next workday.",
+    "start": "Start the run",
+    "needMore_one": "{{count}} more person needed to start",
+    "needMore_other": "{{count}} more people needed to start",
+    "waitCaptain": "Wait for the captain to start the run. You will get a notification.",
+    "leave": "Leave team",
+    "leaveConfirm": "Leave the team?",
+    "disband": "Disband team",
+    "disbandConfirm": "Disband the team? The invite link will stop working.",
+    "state": {
+      "forming": "Forming",
+      "expired": "Invite expired",
+      "started": "Run started",
+      "disbanded": "Team disbanded"
+    },
+    "openRun": "Go to run",
+    "back": "Simulations",
+    "notFound": "Team not found",
+    "join": {
+      "title": "Team invite",
+      "by": "{{name}} invites you to their team",
+      "members_one": "{{count}} member so far",
+      "members_other": "{{count}} members so far",
+      "join": "Join the team",
+      "already": "You are in this team",
+      "toLobby": "Open lobby",
+      "closed": "This invite is no longer active",
+      "notFound": "Invite not found or expired"
     }
   }
 }

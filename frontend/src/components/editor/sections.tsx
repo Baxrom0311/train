@@ -1,7 +1,7 @@
 // Muharrir bo'limlari: umumiy ma'lumot, personajlar, hujjatlar (CONTRACT.md §16.3).
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Eye, GraduationCap, Pencil, UserRound } from 'lucide-react'
+import { Eye, GraduationCap, Pencil, UserRound, UsersRound } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import RichText from '@/components/desk/RichText'
@@ -9,7 +9,7 @@ import { SECTORS } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { AddButton, Chips, ErrorNote, Field, KeyInput, NumberInput, RemoveButton, SELECT, TextList } from './fields'
 import {
-  DIFFICULTIES, blankPersona, renameDocument, renamePersona, uniqueKey,
+  DIFFICULTIES, blankPersona, removeRole, renameDocument, renamePersona, renameRole, setTeam, uniqueKey,
   type ErrorTarget, type FieldError, type ScenarioDef,
 } from './model'
 import { useEditorScope } from './scope'
@@ -71,7 +71,68 @@ export function GeneralSection({ defn, update, errors, isNew }: SectionProps) {
         </Field>
       </div>
       <ErrorNote messages={loose(errors)} />
+      {/* §26: kompaniya ssenariysi jamoaviy bo'lmaydi */}
+      {!scope.company && <TeamCard defn={defn} update={update} error={fieldError(errors, 'team')} />}
     </div>
+  )
+}
+
+/** §29.1: `team` bloki — rollar va eng kam a'zo; node'lardagi rollar bilan birga yangilanadi. */
+function TeamCard({ defn, update, error }: { defn: ScenarioDef; update: Update; error?: string }) {
+  const { t } = useTranslation()
+  const team = defn.team
+  const setRole = (i: number, patch: Partial<NonNullable<ScenarioDef['team']>['roles'][number]>) =>
+    update((d) => d.team ? { ...d, team: { ...d.team, roles: d.team.roles.map((r, j) => (j === i ? { ...r, ...patch } : r)) } } : d)
+  const used = (key: string) => defn.nodes.filter((n) => n.role === key).length
+  return (
+    <section className="space-y-4 rounded-2xl border bg-background/30 p-4">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary/12 text-primary"><UsersRound className="h-5 w-5" /></span>
+          <div>
+            <p className="font-bold">{t('editor.team.title')}</p>
+            <p className="text-xs text-muted-foreground">{t('editor.team.hint')}</p>
+          </div>
+        </div>
+        <button type="button" onClick={() => update((d) => setTeam(d, !team))}
+          className="rounded-full border px-3 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground">
+          {team ? t('editor.team.disable') : t('editor.team.enable')}
+        </button>
+      </header>
+      {team && (
+        <>
+          <Field label={t('editor.team.minSize')} className="max-w-[10rem]">
+            {(id) => (
+              <select id={id} className={SELECT} value={team.min_size}
+                onChange={(e) => update((d) => d.team ? { ...d, team: { ...d.team, min_size: Number(e.target.value) } } : d)}>
+                {[2, 3, 4].filter((n) => n <= Math.max(2, team.roles.length)).map((n) => <option key={n} value={n}>{n}</option>)}
+              </select>
+            )}
+          </Field>
+          {team.roles.map((r, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <div className="grid min-w-0 flex-1 gap-2 sm:grid-cols-[9rem_12rem_minmax(0,1fr)]">
+                <KeyInput value={r.key} aria-label={t('editor.team.roleKey')} onCommit={(v) => update((d) => renameRole(d, i, v))} />
+                <Input value={r.title} maxLength={80} placeholder={t('editor.team.roleTitle')} aria-label={t('editor.team.roleTitle')}
+                  onChange={(e) => setRole(i, { title: e.target.value })} />
+                <Input value={r.summary} maxLength={300} placeholder={t('editor.team.roleSummary')} aria-label={t('editor.team.roleSummary')}
+                  onChange={(e) => setRole(i, { summary: e.target.value })} />
+              </div>
+              <span className="mt-2.5 shrink-0 text-xs text-muted-foreground">{t('editor.team.used', { count: used(r.key) })}</span>
+              {team.roles.length > 2 && <RemoveButton label={t('editor.remove')} onClick={() => update((d) => removeRole(d, i))} />}
+            </div>
+          ))}
+          {team.roles.length < 4 && (
+            <AddButton onClick={() => update((d) => d.team
+              ? { ...d, team: { ...d.team, roles: [...d.team.roles, { key: uniqueKey('role', d.team.roles.map((x) => x.key)), title: '', summary: '' }] } }
+              : d)}>
+              {t('editor.team.addRole')}
+            </AddButton>
+          )}
+        </>
+      )}
+      {error && <p className="text-xs font-medium text-destructive">{error}</p>}
+    </section>
   )
 }
 

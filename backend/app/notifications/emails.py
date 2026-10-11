@@ -84,6 +84,14 @@ def render(n: Notification) -> tuple[str, str]:
         state = "qisman bajardi (muddat tugadi)" if p.get("incomplete") else "yakunladi"
         return (f"Sinov natijasi: {p['candidate']}",
                 f"{p['candidate']} «{p['vacancy']}» bo'yicha «{p['scenario']}» sinov topshirig'ini {state}.{score}")
+    if kind == Kind.TEAM_JOINED:
+        return (f"Jamoaga qo'shildi: {p['scenario']}",
+                f"{p['member']} «{p['scenario']}» bo'yicha jamoangizga qo'shildi.")
+    if kind == Kind.TEAM_STARTED:
+        roles = f" Sizning rolingiz: {', '.join(p['roles'])}." if p.get("roles") else ""
+        return (f"Jamoaviy Run boshlandi: {p['scenario']}",
+                f"{p['captain']} «{p['scenario']}» jamoaviy Run'ini {_when(p['start_at'])} ga (Toshkent vaqti) "
+                f"boshladi.{roles}")
     answer = "qabul qildi" if p.get("accepted") else "rad etdi"
     return f"Taklifga javob: {p['position']}", f"{p['candidate']} «{p['position']}» taklifingizni {answer}."
 

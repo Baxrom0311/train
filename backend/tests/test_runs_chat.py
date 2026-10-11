@@ -8,7 +8,7 @@ from app.ai.llm import LLMResult
 from app.config import settings
 from app.core.redis_client import redis_client
 from app.models.scenario import Run
-from app.scenario import notify, persona
+from app.scenario import notify, persona, team
 from app.scenario.engine import Note
 # test_runs_api fixture'lari (clock, queue, scenario) shu modulda ham ishlatiladi
 from tests.test_runs_api import _login, clock, queue, scenario  # noqa: F401,F811
@@ -91,7 +91,7 @@ async def test_chat_spoiler_and_ai_down(client, test_user_factory, scenario, clo
 
 
 async def test_chat_daily_limit(client, test_user_factory, scenario, clock, queue, ai, monkeypatch):
-    monkeypatch.setattr(persona, "DAILY_AI_MESSAGES", 1)
+    monkeypatch.setattr(team, "DAILY_AI_MESSAGES", 1)
     h, run_id = await _start(client, test_user_factory, scenario)
     await client.post(f"/api/v1/runs/{run_id}/chat/dilnoza", json={"text": "1"}, headers=h)
     r = await client.post(f"/api/v1/runs/{run_id}/chat/dilnoza", json={"text": "2"}, headers=h)

@@ -1,6 +1,6 @@
 """
-Run API (CONTRACT.md §9.9, Modul 9). Barcha `runs/*` — faqat Run egasi,
-boshqa foydalanuvchiga 404.
+Run API (CONTRACT.md §9.9, Modul 9). Barcha `runs/*` — faqat Run egasi
+yoki jamoaviy Run'ning faol a'zosi (§29.3), boshqa foydalanuvchiga 404.
 
 Har so'rov Run'ni qulflab `advance_run` qiladi (cron kechiksa ham talaba
 to'g'ri holatni ko'radi), keyin `last_activity_at` yangilanadi. Talabaga
@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import exists, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -24,12 +24,14 @@ from app.core.deps import get_current_active_user, rate_limit
 from app.core.redis_client import get_arq_pool, redis_client
 from app.database import get_db
 from app.models.enums import AIEvalStatus, ChatContentType, ChatSender, NodeType, RunEventStatus, RunStatus, Sector
-from app.models.scenario import Run, RunEvent, ScenarioVersion
+from app.models.scenario import ChatMessage, Run, RunEvent, RunTeamMember, ScenarioVersion
 from app.models.simulation import Submission
 from app.models.user import User
 from app.scenario import notify
+from app.ai.guardrail import validate_submission_content
 from app.scenario.engine import (
     OPEN_STATUSES,
+    TEAM_CHANNEL,
     Answer,
     EngineError,
     Note,
@@ -39,6 +41,7 @@ from app.scenario.engine import (
     decide,
     definition_for,
     lock_run,
+    participant_of,
     submit_answer,
     take_hint,
 )
@@ -52,6 +55,7 @@ from app.scenario.persona import (
     history,
     produce_reply,
 )
+from app.scenario.team import TeamView, leave_run, team_view
 
 router = APIRouter(tags=["runs"])
 
@@ -93,6 +97,11 @@ class ChecksOut(BaseModel):
     failed: list[str]
 
 
+class SubmittedBy(BaseModel):
+    user_id: uuid.UUID
+    name: str
+
+
 class EventOut(BaseModel):
     node_id: str
     type: NodeType
@@ -111,6 +120,9 @@ class EventOut(BaseModel):
     last_feedback: str | None
     last_eval_status: AIEvalStatus | None
     last_checks: ChecksOut | None = None
+    # §29.3: jamoaviy Run'da — node roli va oxirgi urinish muallifi
+    role: str | None = None
+    submitted_by: SubmittedBy | None = None
 
 
 class ScenarioBrief(BaseModel):
@@ -128,6 +140,33 @@ class RunOut(BaseModel):
     start_at: datetime
     ends_at: datetime
     scenario: ScenarioBrief
+    # §29: jamoaviy Run — a'zolar soni (yakka Run'da null), kapitanmi, jamoadan chiqqanmi
+    team_size: int | None = None
+    is_captain: bool = True
+    left: bool = False
+
+
+class TeamRoleOut(BaseModel):
+    key: str
+    title: str
+    summary: str
+    holder_id: uuid.UUID | None
+
+
+class TeamMemberOut(BaseModel):
+    user_id: uuid.UUID
+    name: str
+    roles: list[str]
+    is_captain: bool
+
+
+class RunTeamOut(BaseModel):
+    id: uuid.UUID
+    captain_id: uuid.UUID
+    me: uuid.UUID
+    my_roles: list[str]
+    roles: list[TeamRoleOut]
+    members: list[TeamMemberOut]      # faol a'zolar, qo'shilish tartibida
 
 
 class RunDetailOut(RunOut):
@@ -136,6 +175,7 @@ class RunDetailOut(RunOut):
     is_work_time: bool
     personas: list[PersonaPublic]
     events: list[EventOut]
+    team: RunTeamOut | None = None
 
 
 class RunCreatedOut(BaseModel):
@@ -179,6 +219,31 @@ def _scenario_brief(run: Run) -> ScenarioBrief:
     )
 
 
+def _member_or_owner(user_id: uuid.UUID):
+    """Hisobot va ro'yxat uchun: chiqib ketgan a'zo ham (§29.3)."""
+    return or_(
+        Run.user_id == user_id,
+        exists().where(RunTeamMember.team_id == Run.team_id, RunTeamMember.user_id == user_id),
+    )
+
+
+def _run_team(team: TeamView, me: uuid.UUID) -> RunTeamOut:
+    return RunTeamOut(
+        id=team.team_id,
+        captain_id=team.captain_id,
+        me=me,
+        my_roles=list(team.member(me).roles) if team.member(me) else [],
+        roles=[
+            TeamRoleOut(key=r.key, title=r.title, summary=r.summary, holder_id=team.holder(r.key))
+            for r in team.spec.roles
+        ],
+        members=[
+            TeamMemberOut(user_id=m.user_id, name=m.name, roles=list(m.roles), is_captain=m.user_id == team.captain_id)
+            for m in team.active
+        ],
+    )
+
+
 async def _locked(db: AsyncSession, run_id: uuid.UUID, user: User, now: datetime) -> tuple[Run, list[Note]]:
     try:
         run = await lock_run(db, run_id, user.id)
@@ -191,13 +256,14 @@ async def _locked(db: AsyncSession, run_id: uuid.UUID, user: User, now: datetime
     return run, notes
 
 
-async def _detail(db: AsyncSession, run: Run, now: datetime) -> RunDetailOut:
+async def _detail(db: AsyncSession, run: Run, now: datetime, me: uuid.UUID) -> RunDetailOut:
     run = (await db.execute(
         select(Run).where(Run.id == run.id).options(
             selectinload(Run.scenario_version).selectinload(ScenarioVersion.scenario)
         )
     )).scalars().one()
     defn = definition_for(run.scenario_version)
+    team = await team_view(db, run, defn)
     cal = await load_calendar(db)
     events = (await db.execute(
         select(RunEvent)
@@ -236,6 +302,11 @@ async def _detail(db: AsyncSession, run: Run, now: datetime) -> RunDetailOut:
             last_feedback=last.ai_feedback if last else None,
             last_eval_status=last.ai_eval_status if last else None,
             last_checks=public_checks(last.check_results) if last else None,
+            role=node.role if team else None,
+            submitted_by=(
+                SubmittedBy(user_id=last.user_id, name=team.name(last.user_id) or "")
+                if team and last else None
+            ),
         ))
     local = now.astimezone(cal.tz)
     return RunDetailOut(
@@ -251,6 +322,9 @@ async def _detail(db: AsyncSession, run: Run, now: datetime) -> RunDetailOut:
             PersonaPublic(key=p.key, name=p.name, role=p.role, kind=p.kind.value) for p in defn.personas
         ],
         events=out,
+        team_size=len(team.active) if team else None,
+        is_captain=run.user_id == me,
+        team=_run_team(team, me) if team else None,
     )
 
 
@@ -277,7 +351,7 @@ async def start_run(
         await db.rollback()
         raise HTTPException(status_code=409, detail="Bu ssenariyda tugallanmagan Run bor")
     await notify.publish(notes)
-    return RunCreatedOut(run=await _detail(db, run, now), warning=info.warning, day1_ends_at=info.day1_ends_at)
+    return RunCreatedOut(run=await _detail(db, run, now, user.id), warning=info.warning, day1_ends_at=info.day1_ends_at)
 
 
 @router.get("/runs/my", response_model=list[RunOut])
@@ -287,14 +361,26 @@ async def my_runs(
 ):
     runs = (await db.execute(
         select(Run)
-        .where(Run.user_id == user.id)
+        .where(_member_or_owner(user.id))
         .options(selectinload(Run.scenario_version).selectinload(ScenarioVersion.scenario))
         .order_by(Run.created_at.desc())
     )).scalars().all()
-    return [
-        RunOut(id=r.id, status=r.status, start_at=r.start_at, ends_at=r.ends_at, scenario=_scenario_brief(r))
-        for r in runs
-    ]
+    team_ids = [r.team_id for r in runs if r.team_id]
+    seats: dict[uuid.UUID, list[RunTeamMember]] = {}
+    if team_ids:
+        for m in (await db.execute(select(RunTeamMember).where(RunTeamMember.team_id.in_(team_ids)))).scalars():
+            seats.setdefault(m.team_id, []).append(m)
+    out = []
+    for r in runs:
+        members = seats.get(r.team_id, [])
+        me = next((m for m in members if m.user_id == user.id), None)
+        out.append(RunOut(
+            id=r.id, status=r.status, start_at=r.start_at, ends_at=r.ends_at, scenario=_scenario_brief(r),
+            team_size=sum(m.left_at is None for m in members) if r.team_id else None,
+            is_captain=r.user_id == user.id,
+            left=me is not None and me.left_at is not None,
+        ))
+    return out
 
 
 @router.get("/runs/{run_id}", response_model=RunDetailOut)
@@ -307,7 +393,7 @@ async def get_run(
     run, notes = await _locked(db, run_id, user, now)
     await db.commit()
     await notify.publish(notes)
-    return await _detail(db, run, now)
+    return await _detail(db, run, now, user.id)
 
 
 @router.post("/runs/{run_id}/events/{node_id}/submit", response_model=SubmissionResult)
@@ -322,7 +408,7 @@ async def submit(
 ):
     run, notes = await _locked(db, run_id, user, now)
     try:
-        sub, more = await submit_answer(db, run, node_id, Answer(**body.model_dump()), now)
+        sub, more = await submit_answer(db, run, node_id, Answer(**body.model_dump()), now, actor_id=user.id)
     except EngineError as exc:
         await db.commit()  # advance natijasi saqlansin
         await notify.publish(notes)
@@ -332,7 +418,7 @@ async def submit(
     await enqueue_evaluation(queue, sub.id)
     return SubmissionResult(
         submission_id=sub.id, attempt=sub.attempt, late=sub.late,
-        ai_eval_status=sub.ai_eval_status, score=sub.ai_score, run=await _detail(db, run, now),
+        ai_eval_status=sub.ai_eval_status, score=sub.ai_score, run=await _detail(db, run, now, user.id),
     )
 
 
@@ -347,7 +433,7 @@ async def decide_event(
 ):
     run, notes = await _locked(db, run_id, user, now)
     try:
-        sub, more = await decide(db, run, node_id, body.option, now)
+        sub, more = await decide(db, run, node_id, body.option, now, actor_id=user.id)
     except EngineError as exc:
         await db.commit()
         await notify.publish(notes)
@@ -356,7 +442,7 @@ async def decide_event(
     await notify.publish(notes + more)
     return SubmissionResult(
         submission_id=sub.id, attempt=sub.attempt, late=sub.late,
-        ai_eval_status=sub.ai_eval_status, score=sub.ai_score, run=await _detail(db, run, now),
+        ai_eval_status=sub.ai_eval_status, score=sub.ai_score, run=await _detail(db, run, now, user.id),
     )
 
 
@@ -369,14 +455,41 @@ async def abandon_run(
 ):
     run, notes = await _locked(db, run_id, user, now)
     try:
-        notes += await abandon(db, run, now)
+        notes += await abandon(db, run, now, actor_id=user.id if run.team_id else None)
     except EngineError as exc:
         await db.commit()
         await notify.publish(notes)
         raise _engine_error(exc)
     await db.commit()
     await notify.publish(notes)
-    return await _detail(db, run, now)
+    return await _detail(db, run, now, user.id)
+
+
+@router.post("/runs/{run_id}/leave", response_model=RunOut)
+async def leave_team_run(
+    run_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_active_user),
+    now: datetime = Depends(get_now),
+):
+    """§29.3: a'zo jamoadan chiqadi, rollari qolganlarga o'tadi. Shundan keyin faqat hisobot ochiq."""
+    run, notes = await _locked(db, run_id, user, now)
+    try:
+        notes += await leave_run(db, run, user.id, now)
+    except EngineError as exc:
+        await db.commit()
+        await notify.publish(notes)
+        raise _engine_error(exc)
+    await db.commit()
+    await notify.publish(notes)
+    run = (await db.execute(
+        select(Run).where(Run.id == run.id)
+        .options(selectinload(Run.scenario_version).selectinload(ScenarioVersion.scenario))
+    )).scalars().one()
+    return RunOut(
+        id=run.id, status=run.status, start_at=run.start_at, ends_at=run.ends_at, scenario=_scenario_brief(run),
+        is_captain=False, left=True,
+    )
 
 
 # ── Hint (§9.4) ───────────────────────────────────────────────────────
@@ -399,7 +512,7 @@ async def hint(
 ):
     run, notes = await _locked(db, run_id, user, now)
     try:
-        info, more = await take_hint(db, run, node_id, now)
+        info, more = await take_hint(db, run, node_id, now, actor_id=user.id)
     except EngineError as exc:
         await db.commit()
         await notify.publish(notes)
@@ -431,8 +544,21 @@ class ChatMessageOut(BaseModel):
     # mentorning o'zi boshlagan xabari (§9.13): review | nudge
     purpose: str | None = None
     node_id: str | None = None
+    # §29.3: talaba xabarining muallifi; ism faqat jamoaviy Run'da
+    author_id: uuid.UUID | None = None
+    author_name: str | None = None
 
     model_config = {"from_attributes": True}
+
+
+def _chat_out(messages: list[ChatMessage], team: TeamView | None) -> list[ChatMessageOut]:
+    out = []
+    for m in messages:
+        item = ChatMessageOut.model_validate(m)
+        if team is not None and m.author_id is not None:
+            item.author_name = team.name(m.author_id)
+        out.append(item)
+    return out
 
 
 class ChatExchangeOut(BaseModel):
@@ -449,13 +575,14 @@ async def get_chat(
     now: datetime = Depends(get_now),
 ):
     run, notes = await _locked(db, run_id, user, now)
+    defn = definition_for(run.scenario_version)
     try:
-        find_persona(definition_for(run.scenario_version), persona_key)
+        find_persona(defn, persona_key)
     except EngineError as exc:
         raise _engine_error(exc)
     await db.commit()
     await notify.publish(notes)
-    return await history(db, run.id, persona_key)
+    return _chat_out(await history(db, run.id, persona_key), await team_view(db, run, defn))
 
 
 @router.post("/runs/{run_id}/chat/{persona_key}", response_model=ChatExchangeOut)
@@ -469,7 +596,9 @@ async def post_chat(
 ):
     run, notes = await _locked(db, run_id, user, now)
     try:
-        message, plan = await accept_student_message(db, run, persona_key, StudentMessage(**body.model_dump()), now)
+        message, plan = await accept_student_message(
+            db, run, persona_key, StudentMessage(**body.model_dump()), now, author_id=user.id,
+        )
     except EngineError as exc:
         await db.commit()
         await notify.publish(notes)
@@ -478,9 +607,71 @@ async def post_chat(
     await notify.publish(notes)
     reply = await produce_reply(db, plan, now)
     await notify.publish([Note(run.id, "chat_message", {"persona_key": persona_key, "id": str(reply.id)})])
-    return ChatExchangeOut(
-        message=ChatMessageOut.model_validate(message), reply=ChatMessageOut.model_validate(reply)
+    message_out, reply_out = _chat_out([message, reply], await team_view(db, run))
+    return ChatExchangeOut(message=message_out, reply=reply_out)
+
+
+# ── Jamoa chati (§29.3) ───────────────────────────────────────────────
+
+TEAM_CHAT_MAX = 2000
+
+
+class TeamChatIn(BaseModel):
+    text: str = Field(min_length=1, max_length=TEAM_CHAT_MAX)
+
+
+async def _locked_team(db: AsyncSession, run_id: uuid.UUID, user: User, now: datetime) -> tuple[Run, list[Note]]:
+    run, notes = await _locked(db, run_id, user, now)
+    if run.team_id is None:
+        await db.commit()
+        await notify.publish(notes)
+        raise HTTPException(status_code=404, detail="Bu Run jamoaviy emas")
+    return run, notes
+
+
+@router.get("/runs/{run_id}/team-chat", response_model=list[ChatMessageOut])
+async def get_team_chat(
+    run_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_active_user),
+    now: datetime = Depends(get_now),
+):
+    run, notes = await _locked_team(db, run_id, user, now)
+    await db.commit()
+    await notify.publish(notes)
+    return _chat_out(await history(db, run.id, TEAM_CHANNEL), await team_view(db, run))
+
+
+@router.post("/runs/{run_id}/team-chat", response_model=ChatMessageOut, status_code=status.HTTP_201_CREATED)
+async def post_team_chat(
+    run_id: uuid.UUID,
+    body: TeamChatIn,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(rate_limit("team_chat", max_requests=20, window_seconds=60)),
+    now: datetime = Depends(get_now),
+):
+    """A'zolar orasida; AI javob bermaydi. Matn kun/yakuniy hisobot AI'siga ham boradi — guardrail shart."""
+    run, notes = await _locked_team(db, run_id, user, now)
+    text = body.text.strip()
+    error = None
+    if run.status != RunStatus.ACTIVE:
+        error = HTTPException(status_code=409, detail="Run faol emas")
+    elif not text:
+        error = HTTPException(status_code=422, detail="Xabar bo'sh")
+    elif not await validate_submission_content(text):
+        error = HTTPException(status_code=422, detail="Xabar qabul qilinmadi")
+    if error is not None:
+        await db.commit()
+        await notify.publish(notes)
+        raise error
+    message = ChatMessage(
+        run_id=run.id, persona_key=TEAM_CHANNEL, sender=ChatSender.STUDENT, body=text,
+        created_at=now, author_id=user.id,
     )
+    db.add(message)
+    await db.commit()
+    await notify.publish(notes + [Note(run.id, "chat_message", {"persona_key": TEAM_CHANNEL, "id": str(message.id)})])
+    return _chat_out([message], await team_view(db, run))[0]
 
 
 # ── SSE (§9.8) ────────────────────────────────────────────────────────
@@ -497,7 +688,7 @@ async def stream(
     `text/event-stream`. Auth — `Authorization` header (brauzerda
     `fetch` asosidagi SSE mijozi bilan; `EventSource` header yubora olmaydi).
     """
-    owned = await db.scalar(select(Run.id).where(Run.id == run_id, Run.user_id == user.id))
+    owned = await db.scalar(select(Run.id).where(Run.id == run_id, participant_of(user.id)))
     if owned is None:
         raise HTTPException(status_code=404, detail="Run topilmadi")
     await db.close()   # uzoq ulanish DB ulanishini ushlab turmasin
@@ -527,7 +718,7 @@ async def get_report(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_active_user),
 ):
-    run = (await db.execute(select(Run).where(Run.id == run_id, Run.user_id == user.id))).scalars().first()
+    run = (await db.execute(select(Run).where(Run.id == run_id, _member_or_owner(user.id)))).scalars().first()
     if run is None:
         raise HTTPException(status_code=404, detail="Run topilmadi")
     results = (await db.execute(select(RunEvent.result).where(RunEvent.run_id == run.id))).scalars().all()

@@ -6,7 +6,9 @@ Run dvigateli (CONTRACT.md §9.2, §9.8). Barcha holat o'tishlari shu yerda.
   (`when` tekshiruvi bilan), dedlayni o'tganlarni `missed` qiladi, Run'ni
   `active` / `completed` / `expired` holatiga o'tkazadi. Cron (hamma Run)
   va API (bitta Run) shu funksiyani chaqiradi.
-- `submit_answer`, `decide`, `abandon` — talaba harakatlari.
+- `submit_answer`, `decide`, `abandon` — talaba harakatlari. Jamoaviy Run'da
+  (§29) harakat qilgan a'zo `actor_id` bilan beriladi: `role`li node'ni faqat
+  shu rol egasi topshiradi, javob (`submissions.user_id`) uniki bo'ladi.
 
 `now` doim parametr. Run qatori `SELECT ... FOR UPDATE` bilan qulflanadi:
 cron band Run'ni o'tkazib yuboradi (`SKIP LOCKED`), API kutadi. Holatlar
@@ -28,7 +30,15 @@ from sqlalchemy.orm import selectinload
 
 from app.ai.guardrail import MAX_CONTENT_LENGTH
 from app.models.enums import AIEvalStatus, ChatSender, NodeType, RunEventStatus, RunStatus
-from app.models.scenario import CHAT_PURPOSE_NUDGE, ChatMessage, Run, RunEvent, ScenarioVersion, UploadedFile
+from app.models.scenario import (
+    CHAT_PURPOSE_NUDGE,
+    ChatMessage,
+    Run,
+    RunEvent,
+    RunTeamMember,
+    ScenarioVersion,
+    UploadedFile,
+)
 from app.models.simulation import Submission
 from app.scenario.clock import WorkCalendar
 from app.scenario.conditions import ConditionContext, evaluate, pending_scores
@@ -52,6 +62,9 @@ AWAITING_EVAL = (AIEvalStatus.PENDING, AIEvalStatus.QUEUED_RETRY)
 NUDGE_AT = "nudge_at"
 NUDGE_MIN_WINDOW = 45
 NUDGE_MAX_LEAD = 30
+# §29.3 — a'zolar orasidagi jamoa chati (AI javob bermaydi). Personaj kalitlari
+# harf bilan boshlanadi (`schema._KEY`), shuning uchun to'qnashmaydi.
+TEAM_CHANNEL = "_team"
 
 
 # ── Xatolar (API HTTP kodiga aylantiradi) ──────────────────────────────
@@ -63,6 +76,10 @@ class EngineError(Exception):
     def __init__(self, detail: str):
         super().__init__(detail)
         self.detail = detail
+
+
+class Forbidden(EngineError):
+    status_code = 403
 
 
 class NotFound(EngineError):
@@ -175,28 +192,54 @@ def mark_report_due(e: RunEvent, node: Node) -> None:
 # ── Run yaratish ──────────────────────────────────────────────────────
 
 
+def participant_of(user_id: uuid.UUID):
+    """Run'ning ishtirokchisi: egasi (kapitan) yoki chiqib ketmagan jamoa a'zosi (§29.3)."""
+    return or_(
+        Run.user_id == user_id,
+        exists().where(
+            RunTeamMember.team_id == Run.team_id,
+            RunTeamMember.user_id == user_id,
+            RunTeamMember.left_at.is_(None),
+        ),
+    )
+
+
+async def open_run_holders(db: AsyncSession, user_ids: list[uuid.UUID], version_id: uuid.UUID) -> set[uuid.UUID]:
+    """Shu versiyada ochiq (yakka yoki jamoaviy) Run'i bor foydalanuvchilar (§9.7, §29.2)."""
+    open_runs = select(Run.id, Run.user_id, Run.team_id).where(
+        Run.scenario_version_id == version_id, Run.status.in_(OPEN_STATUSES),
+    ).subquery()
+    owners = select(open_runs.c.user_id).where(open_runs.c.user_id.in_(user_ids))
+    members = (
+        select(RunTeamMember.user_id)
+        .join(open_runs, open_runs.c.team_id == RunTeamMember.team_id)
+        .where(RunTeamMember.user_id.in_(user_ids), RunTeamMember.left_at.is_(None))
+    )
+    return set((await db.execute(owners.union(members))).scalars())
+
+
 async def create_run(
     db: AsyncSession,
     user_id: uuid.UUID,
     version: ScenarioVersion,
     now: datetime,
     requested_start: datetime | None = None,
+    *,
+    team_id: uuid.UUID | None = None,
+    participants: list[uuid.UUID] | None = None,
 ) -> tuple[Run, StartInfo]:
-    """§9.2 Q10: istalgan payt boshlanadi; kech boshlansa ogohlantirish. Commit chaqiruvchida."""
+    """
+    §9.2 Q10: istalgan payt boshlanadi; kech boshlansa ogohlantirish. Commit chaqiruvchida.
+    Jamoaviy Run (§29.2): `user_id` — kapitan, `participants` — barcha a'zolar
+    (ochiq Run tekshiruvini `scenario/team.py` ism bilan oldinroq qiladi).
+    """
     if requested_start is not None:
         if requested_start.tzinfo is None:
             raise Invalid("start_at vaqt zonasi bilan berilishi kerak")
         if requested_start < now - timedelta(minutes=1):
             raise Invalid("start_at o'tgan vaqt bo'lmasin")
 
-    open_run = (await db.execute(
-        select(Run.id).where(
-            Run.user_id == user_id,
-            Run.scenario_version_id == version.id,
-            Run.status.in_(OPEN_STATUSES),
-        )
-    )).first()
-    if open_run is not None:
+    if await open_run_holders(db, participants or [user_id], version.id):
         raise Conflict("Bu ssenariyda tugallanmagan Run bor")
 
     cal = await load_calendar(db)
@@ -211,6 +254,7 @@ async def create_run(
         ends_at=start_at,  # pastda hisoblanadi
         last_activity_at=now,
         flags=[],
+        team_id=team_id,
     )
     run.scenario_version = version
     events = [
@@ -245,10 +289,10 @@ async def create_run(
 
 
 async def lock_run(db: AsyncSession, run_id: uuid.UUID, user_id: uuid.UUID) -> Run:
-    """Egasining Run'i, `FOR UPDATE` bilan. Boshqa foydalanuvchiga — 404 (§9.9)."""
+    """Ishtirokchining Run'i, `FOR UPDATE` bilan. Boshqa foydalanuvchiga — 404 (§9.9, §29.3)."""
     run = (await db.execute(
         select(Run)
-        .where(Run.id == run_id, Run.user_id == user_id)
+        .where(Run.id == run_id, participant_of(user_id))
         .options(selectinload(Run.scenario_version))
         .with_for_update(of=Run)
     )).scalars().first()
@@ -335,6 +379,7 @@ class RunState:
         events: list[RunEvent],
         submissions: list[Submission],
         defn: ScenarioDefinition,
+        role_holders: dict[str, uuid.UUID] | None = None,
     ):
         self.db = db
         self.run = run
@@ -344,6 +389,8 @@ class RunState:
         self._chat_seq = 0
         self.events = events
         self.submissions = submissions
+        # §29.3: rol → egasi; yakka Run'da None (barcha rollar talabaniki)
+        self.role_holders = role_holders
 
     @classmethod
     async def load(cls, db: AsyncSession, run: Run, cal: WorkCalendar) -> RunState:
@@ -351,7 +398,13 @@ class RunState:
         subs = (await db.execute(select(Submission).where(Submission.run_id == run.id))).scalars().all()
         # identity map'dan; relationship yuklanmagan bo'lsa ham lazy-load qilinmaydi
         version = await db.get(ScenarioVersion, run.scenario_version_id)
-        return cls(db, run, cal, list(events), list(subs), definition_for(version))
+        holders = None
+        if run.team_id is not None:
+            members = (await db.execute(
+                select(RunTeamMember).where(RunTeamMember.team_id == run.team_id, RunTeamMember.left_at.is_(None))
+            )).scalars().all()
+            holders = {role: m.user_id for m in members for role in m.roles}
+        return cls(db, run, cal, list(events), list(subs), definition_for(version), holders)
 
     def event(self, node_id: str) -> RunEvent | None:
         return next((e for e in self.events if e.node_id == node_id), None)
@@ -499,9 +552,11 @@ class RunState:
         return notes
 
     async def _student_wrote_since(self, since: datetime) -> bool:
+        """Personajlardan biriga yozganmi (jamoa chati hisoblanmaydi — §29.3)."""
         return bool(await self.db.scalar(select(exists().where(
             ChatMessage.run_id == self.run.id,
             ChatMessage.sender == ChatSender.STUDENT,
+            ChatMessage.persona_key != TEAM_CHANNEL,
             ChatMessage.created_at >= since,
         ))))
 
@@ -541,25 +596,31 @@ class RunState:
 
     # ── Talaba harakatlari ──
 
-    def open_event(self, node_id: str) -> tuple[RunEvent, Node]:
+    def open_event(self, node_id: str, actor_id: uuid.UUID) -> tuple[RunEvent, Node]:
         if self.run.status != RunStatus.ACTIVE:
             raise Conflict("Run faol emas")
         e = self.event(node_id)
         if e is None or e.status in (RunEventStatus.PENDING, RunEventStatus.SKIPPED):
             raise NotFound("Hodisa topilmadi")
-        return e, self.defn.node(node_id)
+        node = self.defn.node(node_id)
+        if node.role is not None and self.role_holders is not None and self.role_holders.get(node.role) != actor_id:
+            title = self.defn.team.role(node.role).title
+            raise Forbidden(f"Bu vazifa «{title}» roliga tegishli")
+        return e, node
 
 
 async def submit_answer(
-    db: AsyncSession, run: Run, node_id: str, answer: Answer, now: datetime
+    db: AsyncSession, run: Run, node_id: str, answer: Answer, now: datetime, actor_id: uuid.UUID | None = None,
 ) -> tuple[Submission, list[Note]]:
     """
     Task/incident/day_end javobi (§9.0 Q11): ko'pi bilan `max_attempts`,
     dedlayndan keyin — `late=true`. Baholash arq job'da (`ai_eval_status=pending`).
-    Run qulflangan va `advance_run` qilingan bo'lishi kerak.
+    Run qulflangan va `advance_run` qilingan bo'lishi kerak. `actor_id` — topshirgan
+    a'zo (§29.3), berilmasa Run egasi.
     """
+    actor_id = actor_id or run.user_id
     state = await RunState.load(db, run, await load_calendar(db))
-    e, node = state.open_event(node_id)
+    e, node = state.open_event(node_id, actor_id)
     if node.type not in ANSWER_TYPES and node.type != NodeType.DAY_END:
         raise Invalid("Bu hodisaga javob yuborilmaydi")
 
@@ -576,7 +637,7 @@ async def submit_answer(
         raise Invalid("Havola http(s):// bilan boshlansin")
     if answer.file_id is not None:
         f = await db.get(UploadedFile, answer.file_id)
-        if f is None or f.owner_user_id != run.user_id or f.run_id not in (None, run.id):
+        if f is None or f.owner_user_id != actor_id or f.run_id not in (None, run.id):
             raise Invalid("Fayl topilmadi")
 
     previous = state.attempts(e)
@@ -588,7 +649,7 @@ async def submit_answer(
         id=uuid.uuid4(),
         run_id=run.id,
         run_event_id=e.id,
-        user_id=run.user_id,
+        user_id=actor_id,
         attempt=len(previous) + 1,
         late=late,
         content=content,
@@ -612,11 +673,12 @@ async def submit_answer(
 
 
 async def decide(
-    db: AsyncSession, run: Run, node_id: str, option_key: str, now: datetime
+    db: AsyncSession, run: Run, node_id: str, option_key: str, now: datetime, actor_id: uuid.UUID | None = None,
 ) -> tuple[Submission, list[Note]]:
     """`decision` — bir marta; variant bahosi va `flag` darhol (AI kerak emas)."""
+    actor_id = actor_id or run.user_id
     state = await RunState.load(db, run, await load_calendar(db))
-    e, node = state.open_event(node_id)
+    e, node = state.open_event(node_id, actor_id)
     if node.type != NodeType.DECISION:
         raise Invalid("Bu hodisa qaror emas")
     if e.choice is not None:
@@ -635,7 +697,7 @@ async def decide(
         id=uuid.uuid4(),
         run_id=run.id,
         run_event_id=e.id,
-        user_id=run.user_id,
+        user_id=actor_id,
         attempt=1,
         late=late,
         content=option.label,
@@ -661,13 +723,15 @@ class HintInfo:
     penalty: float          # shu task'ning maksimal balidan jami ayirma (0..1)
 
 
-async def take_hint(db: AsyncSession, run: Run, node_id: str, now: datetime) -> tuple[HintInfo, list[Note]]:
+async def take_hint(
+    db: AsyncSession, run: Run, node_id: str, now: datetime, actor_id: uuid.UUID | None = None,
+) -> tuple[HintInfo, list[Note]]:
     """
     §9.4: navbatdagi hint; har biri task maksimal balini `hint_penalty`ga
     kamaytiradi. Mentor bo'lsa hint uning chatiga ham yoziladi.
     """
     state = await RunState.load(db, run, await load_calendar(db))
-    e, node = state.open_event(node_id)
+    e, node = state.open_event(node_id, actor_id or run.user_id)
     if not node.hints:
         raise NotFound("Bu task uchun hint yo'q")
     if e.hints_used >= len(node.hints):
@@ -690,7 +754,10 @@ async def take_hint(db: AsyncSession, run: Run, node_id: str, now: datetime) -> 
     return info, [Note(run.id, "hint", {"node_id": node_id, "hints_used": e.hints_used})]
 
 
-async def abandon(db: AsyncSession, run: Run, now: datetime) -> list[Note]:
+async def abandon(db: AsyncSession, run: Run, now: datetime, actor_id: uuid.UUID | None = None) -> list[Note]:
+    """Run hamma uchun yopiladi — jamoaviy Run'da faqat kapitan (§29.3)."""
+    if actor_id is not None and actor_id != run.user_id:
+        raise Forbidden("Jamoaviy Run'ni faqat kapitan to'xtatadi; siz jamoadan chiqishingiz mumkin")
     if run.status not in OPEN_STATUSES:
         raise Conflict("Run allaqachon yopilgan")
     state = await RunState.load(db, run, await load_calendar(db))

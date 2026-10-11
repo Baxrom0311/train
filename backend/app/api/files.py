@@ -1,7 +1,8 @@
 """
 Run fayllari (CONTRACT.md §9.5, §9.9). Fayllar nginx orqali to'g'ridan-to'g'ri
-berilmaydi — faqat shu auth'li endpoint orqali: egasi yoki
-`manage_simulations` ruxsati bor foydalanuvchi (admin). Boshqalarga 404.
+berilmaydi — faqat shu auth'li endpoint orqali: egasi, jamoaviy Run'da shu
+Run'ning faol a'zosi (§29.3 — chat umumiy) yoki `manage_simulations` ruxsati
+bor foydalanuvchi (admin). Boshqalarga 404.
 """
 
 import hashlib
@@ -12,6 +13,7 @@ import aiofiles
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -20,6 +22,7 @@ from app.core.file_validator import validate_and_save
 from app.database import get_db
 from app.models.scenario import Run, UploadedFile
 from app.models.user import User
+from app.scenario.engine import participant_of
 
 router = APIRouter(tags=["files"])
 
@@ -56,11 +59,16 @@ async def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _can_view(user: User, f: UploadedFile) -> bool:
+async def _can_view(db: AsyncSession, user: User, f: UploadedFile) -> bool:
     if f.owner_user_id == user.id:
         return True
     role = user.role
-    return bool(role and any(p.key == VIEW_PERMISSION for p in role.permissions))
+    if role and any(p.key == VIEW_PERMISSION for p in role.permissions):
+        return True
+    # jamoadoshi Run chatiga yoki javobiga biriktirgan fayl
+    return f.run_id is not None and bool(await db.scalar(
+        select(Run.id).where(Run.id == f.run_id, Run.team_id.is_not(None), participant_of(user.id))
+    ))
 
 
 @router.post("/files", response_model=FileOut, status_code=status.HTTP_201_CREATED)
@@ -71,8 +79,7 @@ async def upload_file(
     user: User = Depends(rate_limit("file_upload", max_requests=20, window_seconds=60)),
 ):
     if run_id is not None:
-        run = await db.get(Run, run_id)
-        if run is None or run.user_id != user.id:
+        if await db.scalar(select(Run.id).where(Run.id == run_id, participant_of(user.id))) is None:
             raise HTTPException(status_code=404, detail="Run topilmadi")
 
     async def chunks():
@@ -110,7 +117,7 @@ async def download_file(
     user: User = Depends(get_current_active_user),
 ):
     f = await db.get(UploadedFile, file_id)
-    if f is None or not _can_view(user, f):
+    if f is None or not await _can_view(db, user, f):
         raise HTTPException(status_code=404, detail="Fayl topilmadi")
     root = _upload_dir().resolve()
     path = (root / f.stored_path).resolve()

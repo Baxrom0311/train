@@ -1,0 +1,494 @@
+# CONTRACT.md §29 — jamoaviy ssenariy (2–3 talaba). Kompaniya, odamlar, kod va raqamlar o'ylab topilgan.
+slug: lazurit-go-express-team-day1
+title: "Lazurit Go — Express ishga tushirish jamoasi, 1 kun"
+sector: IT
+company_name: "Lazurit Go"           # fictional: oziq-ovqat yetkazib berish xizmati
+difficulty: junior
+duration_days: 1
+
+team:
+  min_size: 2
+  roles:
+    - key: backend
+      title: "Backend dasturchi"
+      summary: "Express narxi va hudud tekshiruvini kodda tuzatadi, incident'da ta'sirni to'xtatadi"
+    - key: analyst
+      title: "Data analitik"
+      summary: "Pilot metrikalarini hisoblaydi, incident ta'sirini raqamlarda baholaydi"
+    - key: support
+      title: "Mijozlar bilan ishlash"
+      summary: "Shikoyatlarni saralaydi, mijozlarga reliz va incident xabarlarini yozadi"
+
+personas:
+  - key: aziza
+    name: "Aziza Karimova"
+    role: "Product Manager, Express loyihasi egasi"
+    tone: "shoshqaloq, natijaga yo'naltirilgan, raqamlarni yaxshi ko'radi; marketing bosimini jamoaga o'tkazadi"
+    knows: [doc_team_charter, doc_express_spec, doc_pilot_data]
+    secrets:
+      - "Marketing ertangi reklama uchun 40 mln so'm to'lab qo'ygan, lekin sanani bir haftaga surish mumkin — buni faqat so'rasalar aytadi."
+    busy_reply: "Marketing bilan uchrashuvdaman, 20 daqiqadan keyin yozaman."
+  - key: sardor
+    name: "Sardor Qodirov"
+    role: "Engineering Lead"
+    tone: "qisqa va aniq yozadi, talabchan; ustuvorlikni o'zi belgilaydi, xavfli relizni yoqtirmaydi"
+    knows: [doc_team_charter, doc_express_spec, doc_delivery_code, doc_incident_runbook, doc_incident_logs]
+    secrets:
+      - "15:00 dagi v2.15.0 relizida to'lov xizmatiga so'rov qayta urinishda (retry) idempotency kalitisiz yuborilyapti — shuning uchun ikki marta yechilgan."
+      - "Express'ni express_enabled feature flag bilan darhol o'chirish mumkin; flag o'chsa standart yetkazish ishlayveradi."
+    busy_reply: "Kod review qilyapman, birozdan keyin javob beraman. Shoshilinch bo'lsa — runbook."
+    deflect_reply: "Tayyor yechimni bermayman — spec'dagi har bir bandni kodda qaysi qator bajarayotganini tekshiring."
+  - key: dilfuza
+    name: "Dilfuza Ergasheva"
+    role: "Customer Support Lead"
+    tone: "iliq, mijoz tomonida turadi, lekin siyosatdan chetga chiqmaydi; aniq shablonlarni yaxshi ko'radi"
+    knows: [doc_team_charter, doc_support_policy, doc_complaints]
+    secrets:
+      - "Sergeli'dagi mijoz (2-shikoyat) ijtimoiy tarmoqda yozib qo'ygan — tez va aniq javob muhim."
+    busy_reply: "Navbatdagi qo'ng'iroqlarni olyapman, keyinroq yozaman."
+  - key: nodir
+    name: "Nodir Rahimov"
+    role: "Senior Engineer, jamoa mentori"
+    kind: mentor
+    tone: "sabrli, savol bilan yo'naltiradi, jamoada kim nima qilishini aniq kelishishga undaydi"
+    knows: [doc_team_charter, doc_express_spec, doc_support_policy]
+    busy_reply: "Hozir boshqa jamoa bilan gaplashyapman, birozdan keyin yozaman."
+    deflect_reply: "Javobni o'zingiz topsangiz yaxshiroq. Jamoadoshlaringiz bilan qaysi raqam kimdan kelishini kelishib oling."
+
+documents:
+  - key: doc_team_charter
+    title: "Express jamoasi: kim nima qiladi"
+    content: |
+      Lazurit Go — Toshkentdagi oziq-ovqat yetkazib berish xizmati. "Express" — 45 daqiqada yetkazish,
+      ikki hafta pilot (Chilonzor va Yunusobod). Bugun pilot natijasi bo'yicha qaror va kichik reliz kuni.
+
+      Jamoa: backend dasturchi (narx va buyurtma xizmati), data analitik (metrikalar, ta'sir hisobi),
+      mijozlar bilan ishlovchi mutaxassis (shikoyatlar, mijozga xabarlar). Mahsulot egasi — Aziza (PM),
+      texnik qarorlar — Sardor (Engineering Lead), mijozlar xizmati — Dilfuza.
+
+      Kelishuvlar:
+      - Ertalabki standup jamoaga bitta: kim nima qiladi, kim kimni kutadi, nima to'sib turibdi.
+      - Raqamlar faqat analitikdan: mijozga yoki rahbarga raqam yozishdan oldin analitik bilan tekshiring.
+      - Mijozga ketadigan matnni support yozadi, texnik tafsilotni backend tasdiqlaydi.
+      - Relizlar har kuni 15:00 da. Reliz bloklovchi bug ustuvor.
+      - Kun oxirida jamoa bitta umumiy hisobot yozadi.
+
+  - key: doc_express_spec
+    title: "Express yetkazish: mahsulot talablari"
+    content: |
+      1. Standart yetkazish — 12 000 so'm. Mahsulotlar summasi (subtotal) 150 000 so'm va undan ko'p bo'lsa — bepul.
+      2. Express — standart narx + 9 000 so'm qo'shimcha. Qo'shimcha bepul yetkazish chegarasidan qat'i
+         nazar olinadi (150 000 dan yuqori buyurtmada express narxi 9 000 so'm).
+      3. Express faqat pilot hududlarida: Chilonzor, Yunusobod. Hudud nomi katta-kichik harfdan qat'i nazar
+         solishtiriladi. Boshqa hududda express so'ralsa — xato (ilova "Hududingizda hali yo'q" deydi).
+      4. Pullar butun so'mda.
+      5. Kengaytirish sharti: pilotda 45 daqiqada yetkazish ulushi ≥ 85% va bekor qilish ≤ 5%.
+
+  - key: doc_delivery_code
+    title: "orders-service: delivery.py"
+    content: |
+      LZ-301 ticket'i: express narxi ba'zan noto'g'ri, pilotdan tashqari hududlardan ham express buyurtmalar kelyapti.
+
+      ```python
+      STANDARD_FEE = 12_000
+      FREE_FROM = 150_000
+      EXPRESS_SURCHARGE = 9_000
+      PILOT_DISTRICTS = {"Chilonzor", "Yunusobod"}
+
+      class ExpressUnavailable(Exception):
+          pass
+
+      def delivery_fee(subtotal: int, express: bool, district: str) -> int:
+          fee = STANDARD_FEE
+          if express:
+              fee += EXPRESS_SURCHARGE
+          if subtotal >= FREE_FROM:
+              fee = 0
+          return fee
+      ```
+
+      Testlar: tests/test_delivery.py (pytest) — hozircha faqat standart yetkazish tekshiriladi.
+
+  - key: doc_pilot_data
+    title: "Express pilot: 1-hafta (Chilonzor + Yunusobod)"
+    content: |
+      kun | express buyurtmalar | 45 daqiqada yetkazilgan | subtotal ≥ 150 000 | bekor qilingan
+      Dushanba | 120 | 102 | 30 | 6
+      Seshanba | 140 | 115 | 38 | 9
+      Chorshanba | 160 | 128 | 41 | 12
+      Payshanba | 150 | 126 | 36 | 7
+      Juma | 180 | 135 | 55 | 16
+
+      Izoh: jadvalda faqat pilot hududlari. Kod xatosi tufayli pilotdan tashqari hududlardan yana 34 ta
+      express buyurtma kelgan (shundan 45 daqiqada yetkazilgani — 9 ta), ular jadvalga kirmagan.
+      "subtotal ≥ 150 000" buyurtmalarda express qo'shimchasi xato tufayli olinmagan.
+
+  - key: doc_support_policy
+    title: "Mijozlar xizmati: kompensatsiya va ohang"
+    content: |
+      Javob vaqti: shikoyatga 2 soat ichida birinchi javob.
+      Ohang: mijozni ismi bilan, aybni tan olib, bahonasiz; texnik jargon yo'q; nima qilinishi va qachonligi aniq.
+
+      Kompensatsiya:
+      - Express 45 daqiqadan 15 daqiqadan ko'proq kechiksa — express qo'shimchasi (9 000 so'm) qaytariladi.
+      - Xizmat ko'rsatilmaydigan hududda express sotilgan bo'lsa — qo'shimcha qaytariladi va uzr so'raladi.
+      - Ortiqcha yechilgan pul — to'liq qaytariladi, 3 bank kuni ichida kartaga.
+      - Kuryer xulqi — kuryerlar bo'limiga eskalatsiya, pul kompensatsiyasi yo'q.
+      - Kodda xato bo'lsa (mijoz foydasiga bo'lsa ham) — backend'ga ticket; mijozga kelajak uchun va'da berilmaydi.
+      Promo-kod savollari — umumiy navbatga (express jamoasiga tegishli emas).
+
+  - key: doc_complaints
+    title: "Bugungi shikoyatlar (Express)"
+    content: |
+      1. Kamola, Chilonzor: "Express uchun 21 000 so'm to'ladim, buyurtma 1 soat 20 daqiqada keldi."
+      2. Jasur, Sergeli: "Express tanladim, 2 soat kutdim! Pulimni qaytaring."
+      3. Nilufar, Yunusobod: "Kuryer qo'pol gapirdi, zinapoyaga ham chiqmadi."
+      4. Bekzod, Chilonzor: "200 000 so'mlik buyurtmada express bepul bo'ldi, rahmat! Doim shunday bo'ladimi?"
+      5. Shahzoda, Yashnobod: "SALE20 promo-kodi ishlamadi."
+      6. Otabek, Yunusobod: "Ilovada express tugmasi umuman ko'rinmayapti (Android 14)."
+
+  - key: doc_incident_runbook
+    title: "Prod incident runbook"
+    content: |
+      1. #incidents kanalida e'lon: nima buzildi, qachondan, ta'sir (qancha mijoz, qancha pul), SEV darajasi.
+         Pul noto'g'ri yechilsa — har doim SEV-1.
+      2. Muammo relizdan keyin boshlangan bo'lsa — avval ta'sirni to'xtating (feature flag yoki rollback),
+         sababni keyin qidiring.
+      3. Mijozlarga xabar — support yozadi, analitik raqamlarini tasdiqlaydi.
+      4. Har 30 daqiqada holat yangilanishi. Barqarorlashgach — postmortem 2 ish kuni ichida.
+      Taqiqlanadi: prod DB'ga qo'lda o'zgartirish, testlarsiz "tezkor fix".
+
+  - key: doc_incident_logs
+    title: "Monitoring: payments, bugun 15:00–15:30"
+    content: |
+      15:00  deploy orders-service v2.15.0 (LZ-301 tuzatishi, to'lov so'rovida retry qo'shilgan)
+      15:02  payments: express buyurtmalarda yetkazish to'lovi ikki marta yechilmoqda (charge + retry charge)
+      15:24  ikki marta yechilgan buyurtmalar: 64 ta express
+               subtotal < 150 000: 41 ta (har birida ortiqcha 21 000 so'm)
+               subtotal ≥ 150 000: 23 ta (har birida ortiqcha 9 000 so'm)
+      Standart yetkazishda muammo yo'q. To'lov xizmati javoblari: 200 va timeout'dan keyin qayta 200.
+
+nodes:
+  - id: welcome
+    type: message
+    day: 1
+    at: "09:00"
+    from: aziza
+    brief: |
+      Xayrli tong, Express jamoasi! Bugun muhim kun: pilot natijasini ko'rib, kengaytirish bo'yicha qaror
+      qilamiz. Jamoa hujjatini o'qing va standup'da kim nima qilishini kelishib oling.
+
+  - id: standup
+    type: task
+    day: 1
+    at: "09:00"
+    from: aziza
+    brief: |
+      Jamoa standup'i — bitta umumiy javob. Har rol bugun nima qiladi, kim kimdan nima kutadi va nima
+      to'sib turishi mumkin. Jamoa chatida kelishib, bittangiz yozing.
+    attachments: [doc_team_charter]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 0.5
+    competencies: [communication, prioritization]
+    rubric:
+      - {id: roles, description: "Har rolning bugungi ishi aniq yozilgan (backend — LZ-301, analitik — pilot metrikalari, support — shikoyatlar)", weight: 2}
+      - {id: dependencies, description: "Kim kimni kutishi ko'rsatilgan (masalan, support reliz xabarini backend tuzatishidan keyin yozadi, raqamlar analitikdan)", weight: 2}
+      - {id: blockers, description: "To'siq yoki ochiq savol aytilgan"}
+    hints:
+      - "Jamoa hujjatidagi kelishuvlarni qayta o'qing: raqamlar va mijoz matni kimdan keladi?"
+    reference_answer: |
+      Backend: LZ-301 — express narxi va hudud tekshiruvi, testlar bilan, 15:00 relizga.
+      Analitik: pilot metrikalari (45 daqiqa ulushi, bekor qilish, yo'qotilgan qo'shimcha), 11:30 qarorigacha.
+      Support: 6 shikoyatni saralash va javoblar; reliz xabarini backend tuzatishi tayyor bo'lgach yozadi.
+      Bog'liqlik: qaror uchun raqamlar analitikdan, mijoz matnidagi texnik tafsilot backend'dan.
+      To'siq: pilotdan tashqari buyurtmalar ma'lumoti to'liqmi — Aziza bilan aniqlashtiramiz.
+
+  - id: mentor_intro
+    type: message
+    day: 1
+    at: "09:15"
+    from: nodir
+    brief: |
+      Salom, jamoa! Men Nodir, bugun mentoringizman. Har biringizning vazifangiz alohida, lekin natija
+      umumiy: bir-biringizni kutadigan joylarni oldindan kelishing. Qiyin bo'lsa "hint" so'rang.
+
+  - id: fix_express
+    type: task
+    role: backend
+    day: 1
+    at: "09:30"
+    from: sardor
+    brief: |
+      LZ-301: express narxi va hudud tekshiruvi. Spec'ga mos qilib delivery_fee'ni tuzating va
+      regress testlar yozing. Javobda: kod (funksiya + testlar) va qisqa izoh — nima noto'g'ri edi.
+      Kod maydonidagi delivery_fee CI'dagi avtomatik testlardan ham o'tkaziladi.
+    attachments: [doc_delivery_code, doc_express_spec]
+    answer_types: [code, text]
+    due_in_minutes: 150
+    weight: 2
+    competencies: [technical]
+    checks:
+      module: solution
+      weight: 0.5
+      tests: |
+        import pytest
+        from solution import ExpressUnavailable, delivery_fee
+
+        def test_standard_fee():
+            assert delivery_fee(50_000, False, "Sergeli") == 12_000
+
+        def test_standard_free_from_threshold():
+            assert delivery_fee(150_000, False, "Chilonzor") == 0
+
+        def test_express_regular():
+            assert delivery_fee(50_000, True, "Chilonzor") == 21_000
+
+        def test_express_surcharge_kept_above_threshold():
+            assert delivery_fee(200_000, True, "Yunusobod") == 9_000
+
+        def test_district_case_insensitive():
+            assert delivery_fee(50_000, True, "yunusobod") == 21_000
+
+        def test_express_outside_pilot_rejected():
+            with pytest.raises(ExpressUnavailable):
+                delivery_fee(50_000, True, "Sergeli")
+    rubric:
+      - {id: root_cause, description: "Ikkala xatoni topgan: bepul chegara express qo'shimchasini ham nolga tushiradi; hudud tekshirilmaydi", weight: 2}
+      - {id: fix_correct, description: "Tuzatish spec'ning 1–4 bandlariga mos: qo'shimcha har doim, hudud katta-kichik harfsiz, xato — ExpressUnavailable", weight: 2}
+      - {id: tests, description: "Chegara holatlari uchun testlar: 150 000 aynan, express + chegara, pilotdan tashqari hudud, harf registri", weight: 1.5}
+      - {id: explanation, description: "Izoh qisqa: nima noto'g'ri edi va mijozga ta'siri (yo'qotilgan qo'shimcha, pilotdan tashqari buyurtmalar)"}
+    hints:
+      - "200 000 so'mlik express buyurtmani qo'lda hisoblang: kod nima qaytaradi, spec nima deydi?"
+      - "Bepul yetkazish faqat standart qismga tegishli. Standart qism va express qo'shimchasini alohida o'zgaruvchida hisoblang."
+      - "Hudud nomini solishtirishdan oldin bir xil ko'rinishga keltiring (masalan, .lower())."
+    reference_answer: |
+      Sabab: subtotal >= FREE_FROM bo'lsa fee butunlay 0 — express qo'shimchasi ham yo'qoladi; hudud umuman tekshirilmaydi.
+      PILOT_DISTRICTS = {"chilonzor", "yunusobod"}
+      def delivery_fee(subtotal, express, district):
+          base = 0 if subtotal >= FREE_FROM else STANDARD_FEE
+          if not express:
+              return base
+          if district.strip().lower() not in PILOT_DISTRICTS:
+              raise ExpressUnavailable(district)
+          return base + EXPRESS_SURCHARGE
+      Testlar: 150 000 standart → 0; 200 000 express → 9 000; 50 000 express → 21 000; "yunusobod" → ishlaydi; Sergeli express → xato.
+
+  - id: pilot_metrics
+    type: task
+    role: analyst
+    day: 1
+    at: "09:30"
+    from: aziza
+    brief: |
+      11:30 da kengaytirish bo'yicha qaror qilamiz. Pilot jadvali bo'yicha hisoblang: 45 daqiqada yetkazish
+      ulushi, bekor qilish ulushi (hafta jami va kunlar dinamikasi), xato tufayli olinmagan express
+      qo'shimchasi summasi. Spec'dagi kengaytirish shartiga javob: bajariladimi? 3–5 qatorlik xulosa ham yozing.
+    attachments: [doc_pilot_data, doc_express_spec]
+    answer_types: [text]
+    due_in_minutes: 120
+    weight: 2
+    competencies: [technical, communication]
+    rubric:
+      - {id: on_time, description: "45 daqiqa ulushi to'g'ri: 606 / 750 = 80.8% (kunlar: 85.0, 82.1, 80.0, 84.0, 75.0%)", weight: 2}
+      - {id: cancel, description: "Bekor qilish to'g'ri: 50 / 750 ≈ 6.7%", weight: 1.5}
+      - {id: lost_revenue, description: "Olinmagan qo'shimcha: 200 × 9 000 = 1 800 000 so'm", weight: 1.5}
+      - {id: verdict, description: "Xulosa: shart bajarilmaydi (80.8% < 85%, 6.7% > 5%), juma eng yomon; pilotdan tashqari 34 buyurtma alohida izohlangan", weight: 2}
+    hints:
+      - "Avval ustunlar jamini hisoblang, keyin ulushlarni. Ulush — jami bo'yicha, kunlar o'rtachasi emas."
+      - "Pilotdan tashqari 34 buyurtma jadvalga kirmagan — ularni qo'shsangiz natija qanday o'zgaradi? Bu haqda alohida yozing."
+    reference_answer: |
+      Jami: 750 express, 606 tasi 45 daqiqada — 80.8% (Du 85.0, Se 82.1, Cho 80.0, Pa 84.0, Ju 75.0). Bekor: 50 — 6.7%.
+      Olinmagan qo'shimcha: 200 buyurtma × 9 000 = 1 800 000 so'm. Kengaytirish sharti bajarilmaydi: 80.8% < 85%, 6.7% > 5%.
+      Pilotdan tashqari 34 buyurtma (9 tasi vaqtida) qo'shilsa ulush yanada pasayadi (615/784 ≈ 78.4%).
+      Tavsiya: pilotda qolish, kuryerlar sonini juma uchun oshirish va LZ-301 tuzatishidan keyin 1 hafta qayta o'lchash.
+
+  - id: complaints_triage
+    type: task
+    role: support
+    day: 1
+    at: "09:30"
+    from: dilfuza
+    brief: |
+      Bugun express bo'yicha 6 ta shikoyat keldi. Har biriga: toifa (kechikish / hudud / kuryer / kod xatosi /
+      boshqa navbat), siyosat bo'yicha qaror (kompensatsiya bor-yo'q, kimga eskalatsiya) va mijozga 2–3 gaplik
+      javob. Qaysi shikoyat backend'ga ticket bo'lishi kerakligini alohida belgilang.
+    attachments: [doc_complaints, doc_support_policy]
+    answer_types: [text]
+    due_in_minutes: 90
+    weight: 1.5
+    competencies: [communication, prioritization]
+    rubric:
+      - {id: categories, description: "Toifalar to'g'ri: 1 — kechikish, 2 — hudud (pilotdan tashqari), 3 — kuryer, 4 — kod xatosi, 5 — boshqa navbat, 6 — ilova xatosi", weight: 1.5}
+      - {id: policy, description: "Kompensatsiya siyosatga mos: 1 va 2 — 9 000 qaytariladi, 3 — eskalatsiya, pulsiz; 4 — va'da berilmaydi", weight: 2}
+      - {id: tone, description: "Javoblar ohang qoidasiga mos: ism bilan, bahonasiz, aniq muddat bilan", weight: 1.5}
+      - {id: tickets, description: "4 va 6 backend'ga ticket sifatida belgilangan, 2 bilan LZ-301 bog'liqligi aytilgan"}
+    hints:
+      - "Har shikoyatni siyosatdagi bitta qoidaga bog'lang. Qaysi biri umuman express jamoasiga tegishli emas?"
+      - "4-shikoyat mijoz uchun yoqimli, lekin bu xato. Mijozga nima deyish mumkin, nima deyish mumkin emas?"
+    reference_answer: |
+      1 Kamola — kechikish 35 daq (>15) → 9 000 qaytariladi, uzr. 2 Jasur, Sergeli — hudud: express u yerda yo'q, xato sotilgan →
+      9 000 qaytariladi, uzr, LZ-301 bilan bog'liq. 3 Nilufar — kuryer xulqi → kuryerlar bo'limiga, pulsiz, minnatdorlik.
+      4 Bekzod — kod xatosi (qo'shimcha olinmagan) → backend'ga ticket, mijozga "keyingi buyurtmalarda tarif bo'yicha" va'dasiz.
+      5 Shahzoda — promo → umumiy navbat. 6 Otabek — ilova xatosi, Android 14 → backend/QA ticket, javob 2 soat ichida.
+
+  - id: launch_decision
+    type: decision
+    day: 1
+    at: "11:30"
+    from: aziza
+    brief: |
+      Marketing ertadan butun shahar bo'ylab express reklamasini boshlamoqchi. Bugungi 15:00 relizda express'ni
+      barcha hududlarga ochamizmi? Jamoa bo'lib qaror qiling — analitik raqamlariga qarang.
+    competencies: [prioritization, communication]
+    options:
+      - key: pilot_only
+        label: "Pilot hududlarda qoldiramiz: shart bajarilmagan (80.8% < 85%). LZ-301 ni chiqaramiz, 1 hafta qayta o'lchaymiz, marketingga sanani surishni raqamlar bilan yozamiz"
+        grade: correct
+      - key: pilot_silent
+        label: "Pilotda qoldiramiz, lekin marketingga hech narsa demaymiz — reklamani o'zlari to'xtatar"
+        grade: acceptable
+      - key: city_wide
+        label: "Barcha hududlarga ochamiz — reklama pullari to'langan, muammolarni yo'l-yo'lakay tuzatamiz"
+        grade: wrong
+        flag: city_wide
+
+  - id: lead_on_city_wide
+    type: message
+    day: 1
+    at: "12:00"
+    when: {flag: city_wide}
+    from: sardor
+    brief: |
+      Express'ni hamma hududga ochish qarori bo'yicha: kuryerlar soni faqat ikki hududga yetadi, pilot
+      raqamlari ham shartdan past. Bunday qarorni raqamlarsiz qabul qilmaymiz. Bugun pilotda qoldiramiz.
+
+  - id: release_note
+    type: task
+    role: support
+    after: {node: fix_express, event: submitted, minutes: 30}
+    from: dilfuza
+    brief: |
+      Backend LZ-301 tuzatishini topshirdi — 15:00 relizda chiqadi. Pilot hududlari mijozlari uchun ilova
+      ichidagi qisqa xabar yozing (3–4 gap): nima o'zgaradi, express qayerda ishlaydi, narx qanday.
+      Texnik tafsilotni backend jamoadoshingiz bilan tekshiring.
+    attachments: [doc_express_spec]
+    answer_types: [text]
+    due_in_minutes: 60
+    weight: 1
+    competencies: [communication]
+    rubric:
+      - {id: accurate, description: "Narx va hudud spec'ga mos: 12 000 + 9 000; 150 000 dan yuqorida express 9 000; faqat Chilonzor va Yunusobod", weight: 2}
+      - {id: customer_language, description: "Mijoz tilida, jargon va ichki ticket raqamlarisiz"}
+      - {id: concise, description: "3–4 gap, aniq va ijobiy ohangda"}
+    hints:
+      - "Mijozga eng muhim ikki narsa: express qayerda ishlaydi va qancha turadi."
+    reference_answer: |
+      Express — 45 daqiqada yetkazish — hozircha Chilonzor va Yunusobodda ishlaydi. Narxi: oddiy yetkazish (12 000 so'm,
+      150 000 so'mdan ortiq buyurtmada bepul) va express uchun 9 000 so'm. Boshqa hududlarga tez orada kengaytiramiz.
+
+  - id: mentor_afternoon
+    type: message
+    day: 1
+    at: "14:00"
+    from: nodir
+    brief: |
+      Tushdan keyin bir eslatma: kim nimani kutib turganini jamoa chatida yozib qo'ying. Incident bo'lsa —
+      avval ta'sirni to'xtatish, raqamlarni analitik tasdiqlaydi, mijozga matnni support yozadi.
+
+  - id: incident_mitigate
+    type: incident
+    role: backend
+    day: 1
+    at: "15:30"
+    from: sardor
+    brief: |
+      SHOSHILINCH: 15:00 relizdan keyin express buyurtmalarda yetkazish puli ikki marta yechilyapti.
+      Loglar ilovada. Yozing: 1) #incidents e'loni (SEV bilan), 2) hozir qanday qadam qilasiz, 3) taxminiy sabab
+      va doimiy tuzatish.
+    attachments: [doc_incident_runbook, doc_incident_logs]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 1.5
+    competencies: [stress_handling, technical]
+    rubric:
+      - {id: severity, description: "SEV-1 (pul noto'g'ri yechilgan), e'londa nima, qachondan, ta'sir bor", weight: 1.5}
+      - {id: mitigate_first, description: "Avval ta'sirni to'xtatadi: express_enabled flag'ini o'chirish yoki v2.15.0 rollback", weight: 2}
+      - {id: cause, description: "Sabab: retry to'lov so'rovini idempotency kalitisiz qayta yuboradi; tuzatish — idempotency key + test", weight: 1.5}
+    hints:
+      - "Runbook'ning 2-bandi: relizdan keyin boshlangan muammoda birinchi ish nima?"
+      - "Loglarda 15:00 deploy yozuviga qarang: relizda to'lov so'roviga nima qo'shilgan?"
+    reference_answer: |
+      SEV-1: 15:02 dan express buyurtmalarda yetkazish puli ikki marta yechilmoqda, 64 buyurtma (raqamlar analitikdan).
+      Qadam: darhol express_enabled=false; to'xtamasa — v2.15.0 rollback. Prod DB'ga qo'lda tegilmaydi.
+      Sabab: v2.15.0 dagi retry timeout'dan keyin to'lovni qayta yuboradi, idempotency kaliti yo'q. Tuzatish: buyurtma id'si
+      asosidagi idempotency key, retry testi, keyin postmortem.
+
+  - id: incident_impact
+    type: incident
+    role: analyst
+    day: 1
+    at: "15:30"
+    from: aziza
+    brief: |
+      Ikki marta yechilgan pul bo'yicha raqamlar kerak: nechta buyurtma, ortiqcha yechilgan jami summa,
+      o'rtacha bitta mijozga. Raqamlarni jamoadoshlaringizga ham yuboring — support mijozga yozadi.
+    attachments: [doc_incident_logs]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 1.5
+    competencies: [technical, stress_handling]
+    rubric:
+      - {id: total, description: "Jami ortiqcha: 41 × 21 000 + 23 × 9 000 = 861 000 + 207 000 = 1 068 000 so'm", weight: 2}
+      - {id: average, description: "O'rtacha: 1 068 000 / 64 ≈ 16 688 so'm"}
+      - {id: breakdown, description: "Ikki guruh alohida ko'rsatilgan, standart yetkazishga ta'sir yo'qligi aytilgan"}
+    hints:
+      - "Ikki guruhda ortiqcha summa har xil — har birini alohida ko'paytiring."
+    reference_answer: |
+      64 express buyurtma: 41 tasi 21 000 dan (861 000), 23 tasi 9 000 dan (207 000). Jami ortiqcha — 1 068 000 so'm,
+      o'rtacha 16 688 so'm. Standart yetkazish ta'sirlanmagan. Hammasi to'liq qaytarilishi kerak.
+
+  - id: incident_comms
+    type: incident
+    role: support
+    day: 1
+    at: "15:30"
+    from: dilfuza
+    brief: |
+      Ikki marta pul yechilgan mijozlarga SMS va ilova xabari kerak. Xabar matnini yozing: nima bo'ldi,
+      qancha qaytariladi va qachon, nima qilish kerak emas. Raqamlarni analitikdan oling.
+    attachments: [doc_support_policy, doc_incident_runbook]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 1.5
+    competencies: [communication, stress_handling]
+    rubric:
+      - {id: honest, description: "Aybni tan oladi, bahonasiz, texnik jargonsiz", weight: 1.5}
+      - {id: refund, description: "Qaytarish siyosatga mos: to'liq summa, 3 bank kuni ichida, kartaga", weight: 2}
+      - {id: action, description: "Mijozdan hech narsa talab qilinmasligi aytilgan; savol bo'lsa qayerga yozish"}
+    hints:
+      - "Siyosatdagi 'ortiqcha yechilgan pul' qoidasini toping: qancha va qachon?"
+    reference_answer: |
+      Hurmatli mijoz, bugun 15:00–15:30 oralig'ida express buyurtmangiz uchun yetkazish puli xato tufayli ikki marta
+      yechildi. Uzr so'raymiz. Ortiqcha summa to'liq, 3 bank kuni ichida kartangizga qaytariladi — sizdan hech narsa
+      talab qilinmaydi. Savollar bo'lsa ilovadagi chat orqali yozing.
+
+  - id: incident_thanks
+    type: message
+    after: {node: incident_mitigate, event: submitted, minutes: 20}
+    from: sardor
+    brief: "Rahmat, flag o'chirildi, yangi ikki marta yechish yo'q. Ertaga postmortem'ni jamoa bo'lib yozamiz."
+
+  - id: day1_end
+    type: day_end
+    day: 1
+    at: "17:30"
+    brief: |
+      Kun yakuni — jamoaning bitta umumiy hisoboti Aziza va Sardorga: har rol nima qildi, qaror va uning
+      sababi, incident yakuni, ertangi reja. Jamoa bo'lib nimani yaxshiroq qilish mumkin edi — bitta xulosa.
+    competencies: [communication]
+    rubric:
+      - {id: by_role, description: "Har rolning natijasi aniq sanalgan", weight: 1.5}
+      - {id: decision, description: "Kengaytirish qarori va raqamli sababi yozilgan"}
+      - {id: incident, description: "Incident holati va keyingi qadamlar (qaytarish, postmortem)"}
+      - {id: reflection, description: "Jamoaviy ish bo'yicha aniq xulosa bor"}

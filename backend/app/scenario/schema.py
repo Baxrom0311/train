@@ -134,6 +134,37 @@ class Checks(_Strict):
         return v
 
 
+class TeamRole(_Strict):
+    """Jamoaviy Run'dagi rol (§29.1)."""
+    key: str = Field(pattern=_KEY)
+    title: str = Field(min_length=1, max_length=80)
+    summary: str = Field(default="", max_length=300)
+
+
+class Team(_Strict):
+    """§29.1: ssenariyni 2–4 talaba rollarga bo'linib o'tadi."""
+    min_size: int = Field(default=2, ge=2, le=4)
+    roles: list[TeamRole] = Field(min_length=2, max_length=4)
+
+    @model_validator(mode="after")
+    def _sizes(self) -> Team:
+        _unique("rol", [r.key for r in self.roles])
+        if self.min_size > len(self.roles):
+            raise ValueError(f"team.min_size={self.min_size} rollar sonidan ({len(self.roles)}) oshmasin")
+        return self
+
+    @property
+    def max_size(self) -> int:
+        return len(self.roles)
+
+    def role(self, key: str) -> TeamRole:
+        return next(r for r in self.roles if r.key == key)
+
+
+# §29.1 — `role` qo'yiladigan node turlari (`day_end` doim umumiy)
+ROLE_TYPES = frozenset({NodeType.TASK, NodeType.INCIDENT, NodeType.DECISION})
+
+
 class After(_Strict):
     node: str
     event: Literal["delivered", "submitted"]
@@ -149,6 +180,8 @@ class Node(_Strict):
     after: After | None = None
     when: Condition | None = None
     from_: str | None = Field(default=None, alias="from")
+    # §29.1: jamoaviy Run'da faqat shu rol egasi topshiradi; null — umumiy
+    role: str | None = Field(default=None, pattern=_KEY)
 
     brief: str = ""
     attachments: list[str] = []
@@ -206,6 +239,8 @@ class Node(_Strict):
             raise ValueError(f"{self.id}: rubric/reference_answer/hints faqat baholanadigan node'da")
         if len({c.id for c in self.rubric}) != len(self.rubric):
             raise ValueError(f"{self.id}: rubric mezon id'lari takrorlanmasin")
+        if self.role is not None and self.type not in ROLE_TYPES:
+            raise ValueError(f"{self.id}: role faqat task/incident/decision'da (day_end — jamoaga umumiy)")
         return self
 
     @property
@@ -223,6 +258,7 @@ class ScenarioDefinition(_Strict):
     personas: list[Persona] = Field(min_length=1)
     documents: list[Document] = []
     nodes: list[Node] = Field(min_length=1)
+    team: Team | None = None
 
     @property
     def mentor(self) -> Persona | None:
@@ -258,6 +294,7 @@ class ScenarioDefinition(_Strict):
             _check_condition(n, nodes)
 
         _check_after_cycles(nodes)
+        _check_team(self)
 
         for day in range(1, self.duration_days + 1):
             ends = [n for n in self.nodes if n.type == NodeType.DAY_END and n.day == day]
@@ -296,6 +333,21 @@ def _check_condition(n: Node, nodes: dict[str, Node]) -> None:
                 raise ValueError(f"{n.id}: chose → `{target.id}` decision emas")
             if leaf.chose.option not in {o.key for o in target.options}:
                 raise ValueError(f"{n.id}: `{target.id}`da `{leaf.chose.option}` varianti yo'q")
+
+
+def _check_team(defn: ScenarioDefinition) -> None:
+    """§29.1: `role` faqat `team` rollaridan; har rolda kamida bitta baholanadigan node."""
+    roled = [n for n in defn.nodes if n.role is not None]
+    if defn.team is None:
+        if roled:
+            raise ValueError(f"{roled[0].id}: role faqat `team` bloki bor ssenariyda yoziladi")
+        return
+    keys = {r.key for r in defn.team.roles}
+    for n in roled:
+        if n.role not in keys:
+            raise ValueError(f"{n.id}: noma'lum rol `{n.role}`")
+    if idle := sorted(keys - {n.role for n in roled}):
+        raise ValueError(f"rol(lar)ga birorta ham task/incident/decision berilmagan: {idle}")
 
 
 def _check_after_cycles(nodes: dict[str, Node]) -> None:

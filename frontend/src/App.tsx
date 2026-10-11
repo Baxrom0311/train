@@ -11,6 +11,8 @@ import LandingPage from './pages/LandingPage'
 import SimulationsPage from './pages/SimulationsPage'
 import RunPage from './pages/RunPage'
 import RunReportPage from './pages/RunReportPage'
+import TeamPage from './pages/TeamPage'
+import TeamJoinPage from './pages/TeamJoinPage'
 import TalentsPage from './pages/TalentsPage'
 import SentOffersPage from './pages/SentOffersPage'
 import CompanyReportPage from './pages/CompanyReportPage'
@@ -59,6 +61,8 @@ export default function App() {
               <Route path="/simulations" element={<RequireAuth><SimulationsPage /></RequireAuth>} />
               <Route path="/runs/:id" element={<RequireAuth><RunPage /></RequireAuth>} />
               <Route path="/runs/:id/report" element={<RequireAuth><RunReportPage /></RequireAuth>} />
+              <Route path="/teams/join/:code" element={<RequireAuth><TeamJoinPage /></RequireAuth>} />
+              <Route path="/teams/:id" element={<RequireAuth><TeamPage /></RequireAuth>} />
               <Route path="/notifications" element={<RequireAuth><NotificationsPage /></RequireAuth>} />
               <Route path="/offers" element={<RequirePermission permission="receive_offers"><OffersPage /></RequirePermission>} />
               <Route path="/vacancies" element={<RequirePermission permission="receive_offers"><VacanciesPage /></RequirePermission>} />

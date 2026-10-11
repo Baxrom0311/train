@@ -6,7 +6,7 @@ from .simulation import Simulation, SimulationTask, Submission
 from .case_cup import CaseCup, CaseCupSubmission
 from .scenario import (
     Scenario, ScenarioVersion, ScenarioDocument, DocumentChunk,
-    Run, RunEvent, UploadedFile, ChatMessage, WorkHoliday,
+    Run, RunEvent, UploadedFile, ChatMessage, WorkHoliday, RunTeam, RunTeamMember,
 )
 from .credential import Certificate, CvSettings, Portfolio
 from .notification import Notification, NotificationSettings, PushSubscription
@@ -40,6 +40,8 @@ __all__ = [
     "UploadedFile",
     "ChatMessage",
     "WorkHoliday",
+    "RunTeam",
+    "RunTeamMember",
     "Certificate",
     "Portfolio",
     "CvSettings",

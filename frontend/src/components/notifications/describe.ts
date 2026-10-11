@@ -2,7 +2,7 @@
 import type { TFunction } from 'i18next'
 import {
   AlarmClock, Award, BriefcaseBusiness, CalendarCheck2, CalendarClock, CalendarPlus, CalendarX2, ClipboardList, FileX2, FlaskConical,
-  GitBranch, GraduationCap, Handshake, Siren, UserCheck, UserX,
+  GitBranch, GraduationCap, Handshake, Siren, UserCheck, UserPlus, UsersRound, UserX,
   type LucideIcon,
 } from 'lucide-react'
 import { formatDateTime, formatTime } from '@/lib/time'
@@ -79,6 +79,15 @@ export function describe(n: AppNotification, t: TFunction): Described {
         title: t(p.incomplete ? 'notifications.kind.assessment_incomplete' : 'notifications.kind.assessment_completed'),
         body: [`${str('candidate')} — ${str('scenario')}`, p.score == null ? '' : t('notifications.score', { score: Math.round(Number(p.score)) })].filter(Boolean).join(' · '),
       }
+    case 'team_joined':
+      return { Icon: UserPlus, title: t('notifications.kind.team_joined', { member: str('member') }), body: str('scenario'), urgent: false }
+    case 'team_started': {
+      const roles = Array.isArray(p.roles) ? (p.roles as string[]).join(', ') : ''
+      return {
+        Icon: UsersRound, title: t('notifications.kind.team_started'), urgent: false,
+        body: [str('scenario'), p.start_at ? formatDateTime(str('start_at')) : '', roles ? t('notifications.yourRoles', { roles }) : ''].filter(Boolean).join(' · '),
+      }
+    }
   }
 }
 

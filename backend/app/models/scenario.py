@@ -163,6 +163,10 @@ class Run(Base):
     ai_tokens_used: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default=text("0"))
     competency_scores: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     final_report: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    # §29: jamoaviy Run (`user_id` — kapitan); null — yakka Run
+    team_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("run_teams.id", ondelete="SET NULL"), nullable=True, unique=True,
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
     scenario_version = relationship("ScenarioVersion")
@@ -240,6 +244,62 @@ class ChatMessage(Base):
     submission_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("submissions.id", ondelete="CASCADE"), nullable=True, unique=True
     )
+    # §29: jamoaviy Run'da talaba xabarining muallifi (yakka Run'da ham yoziladi)
+    author_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+
+
+# §29.2 — jamoa holati
+TEAM_FORMING = "forming"
+TEAM_STARTED = "started"
+TEAM_DISBANDED = "disbanded"
+
+
+class RunTeam(Base):
+    """Jamoaviy Run lobbysi (§29.2). Boshlangach Run `runs.team_id` orqali bog'lanadi."""
+    __tablename__ = "run_teams"
+    __table_args__ = (
+        CheckConstraint("status IN ('forming', 'started', 'disbanded')", name="ck_run_teams_status"),
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    scenario_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("scenarios.id", ondelete="CASCADE"), nullable=False, index=True,
+    )
+    # tuzilgan paytdagi nashr versiyasi — rollar shu versiyadan
+    scenario_version_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("scenario_versions.id", ondelete="CASCADE"), nullable=False,
+    )
+    captain_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    invite_code: Mapped[str] = mapped_column(String(8), nullable=False, unique=True)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default=TEAM_FORMING)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    members = relationship(
+        "RunTeamMember", back_populates="team", cascade="all, delete-orphan", order_by="RunTeamMember.joined_at",
+    )
+
+
+class RunTeamMember(Base):
+    __tablename__ = "run_team_members"
+    __table_args__ = (
+        # lobbyda bitta rolni bitta a'zo band qiladi
+        Index("uq_run_team_members_role", "team_id", "role", unique=True, postgresql_where=text("role IS NOT NULL")),
+        Index("ix_run_team_members_user_id", "user_id"),
+    )
+
+    team_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("run_teams.id", ondelete="CASCADE"), primary_key=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    # lobbyda tanlangan rol (null — tanlamagan)
+    role: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    # Run'dagi rollar (boshlanganda taqsimlanadi, a'zo chiqsa qayta taqsimlanadi)
+    roles: Mapped[list] = mapped_column(JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb"))
+    joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow)
+    left_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    team = relationship("RunTeam", back_populates="members")
 
 
 class WorkHoliday(Base):

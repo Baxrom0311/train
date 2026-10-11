@@ -29,10 +29,10 @@ from app.models.scenario import ChatMessage, Run, RunEvent, Scenario, ScenarioVe
 from app.models.simulation import Submission
 from app.scenario.engine import Conflict, Invalid, NotFound, definition_for
 from app.scenario.holidays import load_calendar
-from app.scenario.limits import DAILY_AI_MESSAGES, RUN_AI_TOKEN_BUDGET
 from app.scenario.mentor import profile, student_work_lines
 from app.scenario.rag import search
 from app.scenario.schema import Persona, PersonaKind, ScenarioDefinition
+from app.scenario.team import TeamView, ai_limits, team_view
 
 HISTORY_LIMIT = 20
 
@@ -127,19 +127,26 @@ async def history(db: AsyncSession, run_id: uuid.UUID, persona_key: str, limit: 
     return list(reversed((await db.execute(q)).scalars().all()))
 
 
-def _as_turn(m: ChatMessage, file_names: dict[uuid.UUID, str]) -> ChatTurn:
+def _as_turn(m: ChatMessage, file_names: dict[uuid.UUID, str], team: TeamView | None = None) -> ChatTurn:
     body = m.body
     if m.file_id:
         body += f"\n[fayl: {file_names.get(m.file_id, 'fayl')}]"
     if m.link_url:
         body += f"\n[havola: {m.link_url}]"
-    return ChatTurn("student" if m.sender == ChatSender.STUDENT else "persona", body.strip())
+    body = body.strip()
+    student = m.sender == ChatSender.STUDENT
+    if student and team is not None:
+        # §29.3: umumiy chatda personaj kim yozganini bilsin
+        body = f"{team.label(m.author_id)}: {body}"
+    return ChatTurn("student" if student else "persona", body)
 
 
 async def accept_student_message(
-    db: AsyncSession, run: Run, persona_key: str, msg: StudentMessage, now: datetime
+    db: AsyncSession, run: Run, persona_key: str, msg: StudentMessage, now: datetime,
+    author_id: uuid.UUID | None = None,
 ) -> tuple[ChatMessage, ReplyPlan]:
-    """Run qulflangan va `advance_run` qilingan bo'lishi kerak."""
+    """Run qulflangan va `advance_run` qilingan bo'lishi kerak. `author_id` — yozgan a'zo (§29.3)."""
+    author_id = author_id or run.user_id
     if run.status != RunStatus.ACTIVE:
         raise Conflict("Run faol emas")
     version = await db.get(ScenarioVersion, run.scenario_version_id)
@@ -159,7 +166,7 @@ async def accept_student_message(
     file_name = None
     if msg.file_id is not None:
         f = await db.get(UploadedFile, msg.file_id)
-        if f is None or f.owner_user_id != run.user_id or f.run_id not in (None, run.id):
+        if f is None or f.owner_user_id != author_id or f.run_id not in (None, run.id):
             raise Invalid("Fayl topilmadi")
         file_name = f.original_name
 
@@ -175,6 +182,7 @@ async def accept_student_message(
         file_id=msg.file_id,
         link_url=msg.link_url,
         created_at=now,
+        author_id=author_id,
     )
     db.add(student)
     await db.flush()
@@ -184,9 +192,10 @@ async def accept_student_message(
         history=[], prompt="", references=[],
     )
     cal = await load_calendar(db)
+    daily_limit, token_budget = await ai_limits(db, run)
     if (
-        run.ai_tokens_used >= RUN_AI_TOKEN_BUDGET
-        or await _ai_messages_today(db, run.id, now, cal.tz) >= DAILY_AI_MESSAGES
+        run.ai_tokens_used >= token_budget
+        or await _ai_messages_today(db, run.id, now, cal.tz) >= daily_limit
     ):
         plan.fallback = persona.busy_reply
         return student, plan
@@ -211,8 +220,9 @@ async def accept_student_message(
         open_tasks=tuple(open_tasks) if is_mentor else (),
         student_work=tuple(await _student_work(db, run, defn)) if is_mentor else (),
     )
-    plan.history = [_as_turn(m, file_names) for m in previous]
-    plan.prompt = _as_turn(student, file_names).body
+    team = await team_view(db, run, defn)
+    plan.history = [_as_turn(m, file_names, team) for m in previous]
+    plan.prompt = _as_turn(student, file_names, team).body
     plan.references = [n.reference_answer for n in defn.nodes if n.reference_answer]
     return student, plan
 

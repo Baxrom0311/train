@@ -26,6 +26,19 @@ export interface Persona {
   kind: 'colleague' | 'mentor'
 }
 
+export interface TeamRole {
+  key: string
+  title: string
+  summary: string
+}
+
+/** Jamoaviy ssenariy (CONTRACT.md §29.1): 2–4 kishi, rollar. */
+export interface TeamSpec {
+  min_size: number
+  max_size: number
+  roles: TeamRole[]
+}
+
 export interface Scenario {
   id: string
   slug: string
@@ -35,6 +48,7 @@ export interface Scenario {
   difficulty: string
   duration_days: number
   version: number
+  team: TeamSpec | null
 }
 
 export interface ScenarioBrief {
@@ -52,6 +66,10 @@ export interface RunSummary {
   start_at: string
   ends_at: string
   scenario: ScenarioBrief
+  // §29: jamoaviy Run — faol a'zolar soni (yakka Run'da null)
+  team_size: number | null
+  is_captain: boolean
+  left: boolean
 }
 
 export interface RunEvent {
@@ -72,6 +90,9 @@ export interface RunEvent {
   last_feedback: string | null
   last_eval_status: EvalStatus | null
   last_checks: CheckResults | null
+  // §29.3: jamoaviy Run'da node roli va oxirgi urinish muallifi
+  role: string | null
+  submitted_by: { user_id: string; name: string } | null
 }
 
 /** Yashirin testlar natijasi (CONTRACT.md §19.4) — test kodi emas, faqat nomlar. */
@@ -82,12 +103,54 @@ export interface CheckResults {
   failed: string[]
 }
 
+export interface RunTeam {
+  id: string
+  captain_id: string
+  me: string
+  my_roles: string[]
+  roles: (TeamRole & { holder_id: string | null })[]
+  members: { user_id: string; name: string; roles: string[]; is_captain: boolean }[]
+}
+
 export interface RunDetail extends RunSummary {
   now: string
   local_time: string
   is_work_time: boolean
   personas: Persona[]
   events: RunEvent[]
+  team: RunTeam | null
+}
+
+/** Jamoa lobbysi (CONTRACT.md §29.2, §29.6). */
+export type TeamState = 'forming' | 'expired' | 'started' | 'disbanded'
+
+export interface Team {
+  id: string
+  scenario: ScenarioBrief
+  status: string
+  state: TeamState
+  invite_code: string
+  expires_at: string
+  captain_id: string
+  is_captain: boolean
+  min_size: number
+  roles: TeamRole[]
+  members: { user_id: string; name: string; role: string | null; is_captain: boolean; joined_at: string }[]
+  run_id: string | null
+  created_at: string
+}
+
+export interface TeamInvite {
+  id: string
+  scenario: ScenarioBrief
+  state: TeamState
+  captain_name: string
+  min_size: number
+  roles: TeamRole[]
+  taken_roles: string[]
+  members: number
+  expires_at: string
+  is_member: boolean
 }
 
 export interface RunCreated {
@@ -125,6 +188,9 @@ export interface ChatMessage {
   // mentorning o'zi boshlagan xabari (CONTRACT.md §9.13)
   purpose: 'review' | 'nudge' | null
   node_id: string | null
+  // §29.3: talaba xabari muallifi (ism — faqat jamoaviy Run'da)
+  author_id: string | null
+  author_name: string | null
 }
 
 export interface DocumentOut {
@@ -150,6 +216,23 @@ export interface TaskResult {
   attempts: number
   late: boolean
   checks?: CheckResults | null
+  // §29.4: jamoaviy Run'da — node roli va kimga biriktirilgan (user_id)
+  role?: string | null
+  by?: string | null
+}
+
+export interface TeamMemberResult {
+  user_id: string
+  name: string
+  roles: string[]
+  is_captain: boolean
+  left: boolean
+  assigned: number
+  submitted: number
+  on_time_rate: number | null
+  overall_score: number | null
+  competency_scores: Record<string, number>
+  share: number | null
 }
 
 export interface DayReport {
@@ -168,6 +251,8 @@ export interface FinalReport {
   competency_scores: Record<string, number>
   tasks: TaskResult[]
   summary: { summary: string; strengths: string[]; improvements: string[] } | null
+  // §29.4: faqat jamoaviy Run'da
+  team?: { roles: { key: string; title: string }[]; members: TeamMemberResult[] }
 }
 
 export interface RunReport {
@@ -554,6 +639,7 @@ export type NotificationKind =
   | 'application_received' | 'application_rejected'
   | 'interview_proposed' | 'interview_cancelled' | 'interview_confirmed' | 'interview_declined' | 'interview_reminder'
   | 'assessment_assigned' | 'assessment_completed'
+  | 'team_joined' | 'team_started'
 
 export interface AppNotification {
   id: string
