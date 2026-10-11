@@ -72,6 +72,10 @@ kerak bo'lgan kunda yangi top-level papka sifatida qo'shiladi. Asosiy
 skelet faqat yuqoridagi 5 papka (`backend`, `frontend`, `deploy`, `tools`,
 `docs`) bilan cheklanadi.
 
+Istisno: `pitch/` — Pitch Day uchun alohida statik taqdimot sayti (platforma kodi emas,
+`frontend/`ga bog'liq emas; skrinshotlar `pitch/assets/img/`da, AI chat — `pitch/api/chat.js`,
+kalit `DEEPSEEK_API_KEY` muhitdan). Batafsil: `pitch/README.md`.
+
 Quyidagi §6 jadvalidagi barcha yo'llar shu tuzilishga nisbatan o'qiladi
 (masalan "Core & Auth" moduli → `backend/app/core/`, `backend/app/models/user.py`).
 
