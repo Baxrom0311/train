@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Demo — TryJob</title>
+  <meta name="description" content="TryJob demo-videosi, tavsifi va ishlayotgan prototip.">
+  <meta name="theme-color" content="#060815">
+  <meta property="og:title" content="TryJob — Demo">
+  <meta property="og:image" content="../assets/img/landing.webp">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <div class="aurora"><i></i><i></i><i></i></div>
+
+  <nav class="nav glass">
+    <a href="../" class="logo"><span class="logo-mark">T</span><span>Try<span>Job</span></span></a>
+    <div class="nav-links">
+      <a href="#video">Video</a>
+      <a href="#tavsif">Tavsif</a>
+      <a href="#prototip">Prototip</a>
+      <a href="#api">API</a>
+    </div>
+    <a href="../" class="btn btn-ghost">Bosh sahifa</a>
+  </nav>
+
+  <header class="demo-hero">
+    <div class="wrap">
+      <span class="eyebrow rv"><b><svg class="ico" style="width:14px;height:14px"><use href="#i-play"/></svg></b>Demo</span>
+      <h1 class="rv d1">TryJob <span class="grad">amalda</span></h1>
+      <p class="lead rv d2" style="margin-inline:auto">Bir ish kuni — boshidan sertifikatgacha.</p>
+    </div>
+  </header>
+
+  <main class="wrap" style="padding-bottom:100px">
+    <!-- 6.1 Video -->
+    <div class="player glass rv" id="video">
+      <div class="vid" id="vid">
+        <div class="poster">
+          <img src="../assets/img/landing.webp" alt="" width="1440" height="900">
+          <span class="play"><svg viewBox="0 0 24 24"><path d="M7 4v16l13-8z" fill="currentColor"/></svg></span>
+          <span class="soon" hidden>Video tez orada qo'shiladi</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-grid">
+      <!-- 6.2 Tavsif -->
+      <div class="desc glass rv" id="tavsif">
+        <h3>Videoda nima bor</h3>
+        <p>Talaba bank yoki IT kompaniyasida bir kunlik ishni o'tadi. AI har javobni baholaydi, mentor yo'l ko'rsatadi, oxirida sertifikat va kompaniyadan taklif.</p>
+        <ul class="chapters">
+          <li><time>01</time><b>Ssenariy tanlash</b></li>
+          <li><time>02</time><b>Ish kuni boshlanadi — xatlar va vazifalar</b></li>
+          <li><time>03</time><b>Javob → AI baho va mentor izohi</b></li>
+          <li><time>04</time><b>Kutilmagan vaziyat va dedlayn</b></li>
+          <li><time>05</time><b>Hisobot va sertifikat</b></li>
+          <li><time>06</time><b>Kompaniya nomzodni topadi</b></li>
+        </ul>
+      </div>
+
+      <!-- 6.3 Prototip -->
+      <div class="proto glass rv d1" id="prototip">
+        <h3>Prototip</h3>
+        <span class="status"><i></i>Ishlaydi · 28+ modul</span>
+        <a class="big" id="proto-live" href="#" target="_blank" rel="noopener" hidden>
+          <span class="bubble"><svg class="ico"><use href="#i-monitor"/></svg></span>
+          <div><b>Jonli prototip</b><small></small></div>
+          <svg class="ico arrow"><use href="#i-ext"/></svg>
+        </a>
+        <a class="big" href="https://github.com/Baxrom0311/train" target="_blank" rel="noopener">
+          <span class="bubble"><svg class="ico"><use href="#i-github"/></svg></span>
+          <div><b>Manba kodi</b><small>github.com/Baxrom0311/train</small></div>
+          <svg class="ico arrow"><use href="#i-ext"/></svg>
+        </a>
+        <a class="big" href="../">
+          <span class="bubble"><svg class="ico"><use href="#i-layers"/></svg></span>
+          <div><b>Pitch sahifa</b><small>Muammo, jamoa, reja</small></div>
+          <svg class="ico arrow"><use href="#i-arrow"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="shots">
+      <figure class="glass rv"><img src="../assets/img/catalog.webp" alt="Ssenariylar katalogi" loading="lazy"><figcaption>1 · Katalog</figcaption></figure>
+      <figure class="glass rv d1"><img src="../assets/img/desk.webp" alt="Ish stoli va mentor" loading="lazy"><figcaption>2 · Ish stoli</figcaption></figure>
+      <figure class="glass rv d2"><img src="../assets/img/report.webp" alt="AI hisobot" loading="lazy"><figcaption>3 · AI hisobot</figcaption></figure>
+      <figure class="glass rv"><img src="../assets/img/cert.webp" alt="Sertifikat" loading="lazy"><figcaption>4 · Sertifikat</figcaption></figure>
+      <figure class="glass rv d1"><img src="../assets/img/talents.webp" alt="Kompaniya nomzodlari" loading="lazy"><figcaption>5 · Kompaniya</figcaption></figure>
+      <figure class="glass rv d2"><img src="../assets/img/analytics.webp" alt="Talaba analitikasi" loading="lazy"><figcaption>6 · Analitika</figcaption></figure>
+    </div>
+
+    <!-- API -->
+    <div class="api glass rv" id="api">
+      <div>
+        <h3>API Access</h3>
+        <p>Loyiha ma'lumotlari ochiq JSON ko'rinishida. Platformaning o'zida REST API: ssenariylar, natijalar, nomzodlar.</p>
+        <div class="cta" style="margin-top:18px">
+          <a href="../api/v1/project.json" target="_blank" class="btn btn-ghost" style="height:44px"><svg class="ico"><use href="#i-terminal"/></svg>project.json</a>
+        </div>
+      </div>
+<pre><span class="c"># Ochiq loyiha ma'lumoti</span>
+<span class="k">curl</span> <span class="s" id="api-url">https://…/api/v1/project.json</span>
+
+<span class="c"># Platforma API (namuna)</span>
+<span class="k">GET</span>  /api/v1/showcase
+<span class="k">GET</span>  /api/v1/scenarios
+<span class="k">POST</span> /api/v1/runs
+<span class="k">GET</span>  /api/v1/talents</pre>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <a href="../" class="logo"><span class="logo-mark">T</span><span>Try<span>Job</span></span></a>
+      <span>Pitch Day 3.0 · 2026</span>
+    </div>
+  </footer>
+
+  <script src="../assets/app.js"></script>
+  <script>
+    document.getElementById("api-url").textContent = new URL("../api/v1/project.json", location.href).href;
+  </script>
+</body>
+</html>
