@@ -251,7 +251,8 @@ export interface FinalReport {
   competency_scores: Record<string, number>
   tasks: TaskResult[]
   summary: { summary: string; strengths: string[]; improvements: string[] } | null
-  team?: { members: TeamMemberResult[] }
+  // §29.4: faqat jamoaviy Run'da
+  team?: { roles: { key: string; title: string }[]; members: TeamMemberResult[] }
 }
 
 export interface RunReport {

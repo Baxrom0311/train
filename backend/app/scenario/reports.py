@@ -219,7 +219,10 @@ def team_section(team: TeamView, results: list[TaskResult]) -> dict:
             "competency_scores": competency_scores(mine),
             "share": round(100 * len(done) / len(submitted), 1) if submitted else None,
         })
-    return {"members": members}
+    return {
+        "roles": [{"key": r.key, "title": r.title} for r in team.spec.roles],
+        "members": members,
+    }
 
 
 def _evals_settled(subs: list[Submission], now: datetime) -> bool:

@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { AlertTriangle, CheckCircle2, CircleDot, ClipboardList, Flag, GitFork, Mail, XCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatTime, remaining } from '@/lib/time'
-import type { Persona, RunEvent } from '@/lib/types'
+import type { Persona, RunEvent, RunTeam } from '@/lib/types'
 
 const TYPE_ICON = {
   message: Mail,
@@ -16,18 +16,25 @@ export function isActionable(e: RunEvent) {
   return e.type !== 'message' && e.status === 'delivered'
 }
 
+/** Jamoaviy Run'da (§29.3) rolli hodisa — faqat rol egasiniki; umumiy va yakka Run'dagi — hammaniki. */
+export function isMine(e: RunEvent, team: RunTeam | null) {
+  return !team || !e.role || team.my_roles.includes(e.role)
+}
+
 export default function Inbox({
   events,
   personas,
   selected,
   onSelect,
   now,
+  team = null,
 }: {
   events: RunEvent[]
   personas: Persona[]
   selected: string | null
   onSelect: (nodeId: string) => void
   now: number
+  team?: RunTeam | null
 }) {
   const { t } = useTranslation()
   const names = Object.fromEntries(personas.map((p) => [p.key, p.name]))
@@ -42,7 +49,10 @@ export default function Inbox({
     <ul className="space-y-1">
       {ordered.map((e) => {
         const Icon = TYPE_ICON[e.type]
-        const left = isActionable(e) && e.due_at ? remaining(e.due_at, now) : null
+        // jamoadoshning vazifasi — ko'rinadi, lekin "javob kutmoqda" belgisisiz
+        const actionable = isActionable(e) && isMine(e, team)
+        const left = actionable && e.due_at ? remaining(e.due_at, now) : null
+        const role = team && e.role ? team.roles.find((r) => r.key === e.role) : null
         return (
           <li key={e.node_id} className="animate-rise">
             <button
@@ -51,16 +61,16 @@ export default function Inbox({
               className={cn(
                 'relative flex w-full gap-3 rounded-xl px-3 py-3 text-left transition-all hover:bg-background/60',
                 selected === e.node_id && 'bg-background/80 shadow-sm ring-1 ring-primary/25',
-                e.type === 'incident' && isActionable(e) && 'ring-1 ring-destructive/40',
+                e.type === 'incident' && actionable && 'ring-1 ring-destructive/40',
               )}
             >
               <span className={cn(
                 'grid h-8 w-8 shrink-0 place-items-center rounded-lg',
-                e.type === 'incident' ? 'bg-destructive/12 text-destructive' : isActionable(e) ? 'bg-primary/12 text-primary' : 'bg-muted text-muted-foreground',
+                e.type === 'incident' ? 'bg-destructive/12 text-destructive' : actionable ? 'bg-primary/12 text-primary' : 'bg-muted text-muted-foreground',
               )}>
                 <Icon className="h-4 w-4" />
               </span>
-              {isActionable(e) && <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-primary animate-glow" />}
+              {actionable && <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-primary animate-glow" />}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2 pr-3 text-xs text-muted-foreground">
                   <span className="truncate">
@@ -68,13 +78,19 @@ export default function Inbox({
                   </span>
                   <span>{e.delivered_at && formatTime(e.delivered_at)}</span>
                 </div>
-                <p className={cn('truncate text-sm', isActionable(e) ? 'font-bold' : 'text-foreground/80')}>
+                <p className={cn('truncate text-sm', actionable ? 'font-bold' : 'text-foreground/80')}>
                   {e.brief.split('\n')[0] || t(`desk.type.${e.type}`)}
                 </p>
-                <div className="mt-1 flex items-center gap-2 text-xs">
+                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
                   <StatusLabel event={e} />
+                  {role && (
+                    <span className={cn('whitespace-nowrap rounded-full px-1.5 py-px text-[10px] font-semibold',
+                      isMine(e, team) ? 'bg-primary/12 text-primary' : 'bg-muted text-muted-foreground')}>
+                      {role.title}
+                    </span>
+                  )}
                   {left && (
-                    <span className={cn('text-muted-foreground', left.minutes < 15 && 'font-medium text-destructive')}>
+                    <span className={cn('whitespace-nowrap text-muted-foreground', left.minutes < 15 && 'font-medium text-destructive')}>
                       ⏱ {left.label}
                     </span>
                   )}
@@ -99,7 +115,7 @@ export function StatusLabel({ event }: { event: RunEvent }) {
     skipped: { Icon: CircleDot, cls: 'text-muted-foreground' },
   }[event.status]
   return (
-    <span className={cn('inline-flex items-center gap-1', map.cls)}>
+    <span className={cn('inline-flex items-center gap-1 whitespace-nowrap', map.cls)}>
       <map.Icon className="h-3 w-3" /> {t(`desk.status.${event.status}`)}
     </span>
   )

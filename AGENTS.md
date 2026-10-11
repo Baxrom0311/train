@@ -53,6 +53,9 @@ o'tmadi/kelmadi — rad); ≤ 2 soat qolganda eslatma (`interview_reminders` cro
 
 Ishga olish voronkasi (`CONTRACT.md` §27, `/talents/report`): vakansiya arizalari kogortasi bo'yicha ariza → sinov → suhbat →
 taklif → qabul konversiyasi, yo'qotishlar, javobsiz arizalar ogohlantirishi va arizalar CSV'si (`talent/hiring.py`).
+Jamoaviy Run (`CONTRACT.md` §29, `/teams/{id}`, `/teams/join/{code}`): 2–4 talaba bitta ssenariyni rollarga bo'linib o'tadi
+(`team` bloki, node `role`; lobby — taklif havolasi 7 kun, rol band qilish, kapitan boshlaydi), umumiy personaj chatlari va
+`_team` jamoa chati, hisobotda a'zolar hissasi; sertifikat va profilga kirmaydi (`scenario/team.py`, `api/teams.py`).
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da
 sandbox/                            # kod runner'i (§19), faqat stdlib

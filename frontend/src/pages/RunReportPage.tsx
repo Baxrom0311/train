@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
-import { Award, ExternalLink, Linkedin, Loader2 } from 'lucide-react'
+import { Award, Crown, ExternalLink, Linkedin, Loader2, UsersRound } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from './Badge'
 import { api } from '@/lib/api'
 import { CompetencyBars, ScoreRing } from '@/components/score'
 import { linkedInUrl } from '@/components/credentials/share'
-import type { Certificate, DayReport, RunReport, TaskResult } from '@/lib/types'
+import type { Certificate, DayReport, FinalReport, RunReport, TaskResult } from '@/lib/types'
 import { ChecksBadge } from '@/components/desk/Checks'
 
 const score = (v: number | null | undefined) => (v === null || v === undefined ? '—' : Math.round(v))
@@ -49,6 +49,8 @@ export default function RunReportPage() {
   if (!report) return <p className="container mx-auto p-8 text-muted-foreground">{t('common.loading')}</p>
 
   const final = report.final
+  // jamoaviy Run (§29.4): "kim bajardi" ustuni uchun ismlar
+  const names = final?.team ? Object.fromEntries(final.team.members.map((m) => [m.user_id, m.name])) : undefined
   const competencies = Object.entries(report.competency_scores ?? {})
 
   return (
@@ -78,6 +80,8 @@ export default function RunReportPage() {
             <CardTitle>{t('report.final')}</CardTitle>
             {final.certificate ? (
               <Badge className="gap-1"><Award className="h-3 w-3" /> {t('report.certificate')}</Badge>
+            ) : final.team ? (
+              <Badge variant="secondary" className="gap-1"><UsersRound className="h-3 w-3" /> {t('catalog.teamRun')}</Badge>
             ) : (
               <Badge variant="secondary">{t('report.incomplete')}</Badge>
             )}
@@ -88,7 +92,9 @@ export default function RunReportPage() {
                 <ScoreRing value={final.overall_score ?? 0} size={72} />
                 <div>
                   <p className="text-xs text-muted-foreground">{t('report.overall')}</p>
-                  <p className="text-sm font-semibold">{final.certificate ? t('report.certificate') : t('report.incomplete')}</p>
+                  <p className="text-sm font-semibold">
+                    {final.certificate ? t('report.certificate') : final.team && !final.incomplete ? t('report.team.title') : t('report.incomplete')}
+                  </p>
                 </div>
               </div>
               <Stat label={t('report.onTime')} value={final.on_time_rate === null ? '—' : `${Math.round(final.on_time_rate)}%`} />
@@ -131,13 +137,15 @@ export default function RunReportPage() {
               </div>
             )}
 
-            <TaskTable tasks={final.tasks} />
+            {final.team && <TeamResults team={final.team} />}
+
+            <TaskTable tasks={final.tasks} names={names} />
           </CardContent>
         </Card>
       )}
 
       {report.days.map((day) => (
-        <DayCard key={day.day} day={day} />
+        <DayCard key={day.day} day={day} names={names} />
       ))}
     </div>
   )
@@ -172,7 +180,7 @@ function Lists({ strengths, improvements }: { strengths: string[]; improvements:
   )
 }
 
-function DayCard({ day }: { day: DayReport }) {
+function DayCard({ day, names }: { day: DayReport; names?: Record<string, string> }) {
   const { t } = useTranslation()
   return (
     <Card>
@@ -188,13 +196,55 @@ function DayCard({ day }: { day: DayReport }) {
             <p className="rounded-xl border border-primary/20 bg-primary/8 p-3">💡 {day.summary.advice}</p>
           </>
         )}
-        <TaskTable tasks={day.tasks} />
+        <TaskTable tasks={day.tasks} names={names} />
       </CardContent>
     </Card>
   )
 }
 
-function TaskTable({ tasks }: { tasks: TaskResult[] }) {
+/** §29.4: har a'zo hissasi — kodda hisoblangan ko'rsatkichlar. */
+function TeamResults({ team }: { team: NonNullable<FinalReport['team']> }) {
+  const { t } = useTranslation()
+  const title = (key: string) => team.roles.find((r) => r.key === key)?.title ?? key
+  return (
+    <div className="space-y-3">
+      <div>
+        <h3 className="flex items-center gap-2 font-semibold"><UsersRound className="h-4 w-4 text-primary" /> {t('report.team.title')}</h3>
+        <p className="text-xs text-muted-foreground">{t('report.team.noCertificate')}</p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {team.members.map((m) => (
+          <div key={m.user_id} className="flex gap-4 rounded-2xl border bg-background/60 p-4">
+            <ScoreRing value={m.overall_score ?? 0} size={56} />
+            <div className="min-w-0 flex-1 space-y-1.5 text-sm">
+              <p className="flex items-center gap-1.5 font-semibold">
+                {m.is_captain && <Crown className="h-3.5 w-3.5 text-amber-500" />}
+                <span className="truncate">{m.name}</span>
+                {m.left && <span className="text-xs font-normal text-muted-foreground">({t('report.team.left')})</span>}
+              </p>
+              {m.roles.length > 0 && <p className="truncate text-xs text-muted-foreground">{m.roles.map(title).join(', ')}</p>}
+              <p className="text-xs text-muted-foreground">
+                {t('report.team.submitted')}: {m.submitted}/{m.assigned}
+                {m.on_time_rate !== null && ` · ${t('report.onTime')}: ${Math.round(m.on_time_rate)}%`}
+              </p>
+              {m.share !== null && (
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-muted-foreground">{t('report.team.share')}</span>
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                    <div className="bg-brand h-full rounded-full" style={{ width: `${m.share}%` }} />
+                  </div>
+                  <span className="font-semibold tabular-nums">{Math.round(m.share)}%</span>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function TaskTable({ tasks, names }: { tasks: TaskResult[]; names?: Record<string, string> }) {
   const { t } = useTranslation()
   return (
     <div className="overflow-x-auto">
@@ -202,6 +252,7 @@ function TaskTable({ tasks }: { tasks: TaskResult[] }) {
         <thead className="text-left text-xs text-muted-foreground">
           <tr>
             <th className="py-1 pr-2">{t('report.task')}</th>
+            {names && <th className="py-1 pr-2">{t('report.team.by')}</th>}
             <th className="py-1 pr-2">{t('report.status')}</th>
             <th className="py-1 text-right">{t('report.score')}</th>
           </tr>
@@ -213,6 +264,7 @@ function TaskTable({ tasks }: { tasks: TaskResult[] }) {
                 {task.title}
                 {task.checks && <span className="ml-2 align-middle"><ChecksBadge checks={task.checks} /></span>}
               </td>
+              {names && <td className="py-2 pr-2">{task.by ? names[task.by] ?? '—' : '—'}</td>}
               <td className="py-2 pr-2 text-muted-foreground">
                 {t(`desk.status.${task.status}`)}
                 {task.late && ` · ${t('report.late')}`}

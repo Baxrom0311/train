@@ -221,7 +221,18 @@
     "history": "Oldingi simulyatsiyalar",
     "report": "Hisobot",
     "realTime": "Real vaqtda",
-    "noMatch": "Bu filtr bo'yicha ssenariy topilmadi."
+    "noMatch": "Bu filtr bo'yicha ssenariy topilmadi.",
+    "teamBadge": "Jamoaviy · {{min}}–{{max}} kishi",
+    "formTeam": "Jamoa tuzish",
+    "solo": "Yakka",
+    "soloHint": "Barcha rollarni o'zingiz bajarasiz",
+    "myTeams": "Yig'ilayotgan jamoalar",
+    "toLobby": "Lobbiga o'tish",
+    "teamMembers_one": "{{count}} a'zo",
+    "teamMembers_other": "{{count}} a'zo",
+    "teamRun": "Jamoaviy",
+    "left": "Siz jamoadan chiqqansiz",
+    "teamBusy": "Bu ssenariy bo'yicha yig'ilayotgan jamoangiz bor"
   },
   "run": {
     "status": {
@@ -291,7 +302,22 @@
       "event": "Vazifa",
       "chat": "Chat"
     },
-    "askMentor": "{{name}} bilan muhokama qilish"
+    "askMentor": "{{name}} bilan muhokama qilish",
+    "team": {
+      "title": "Jamoa",
+      "chat": "Jamoa chati",
+      "chatHint": "Faqat jamoadoshlar ko'radi, AI javob bermaydi",
+      "chatEmpty": "Hali xabar yo'q. Ishni taqsimlash uchun shu yerda kelishib oling.",
+      "yourTask": "Sizning vazifangiz",
+      "theirTask": "Mas'ul: {{name}}",
+      "roleFree": "Rol egasi yo'q",
+      "shared": "Umumiy vazifa",
+      "by": "{{name}} yubordi",
+      "leave": "Jamoadan chiqish",
+      "leaveConfirm": "Run'dan chiqasizmi? Rollaringiz qolgan a'zolarga o'tadi, qaytib kirib bo'lmaydi.",
+      "abandonConfirm": "Run butun jamoa uchun to'xtatiladi. Davom etasizmi?",
+      "captain": "Kapitan"
+    }
   },
   "report": {
     "title": "Hisobot",
@@ -314,7 +340,15 @@
     "late": "kechikkan",
     "abandoned": "Simulyatsiya to'xtatilgan — hisobot tuzilmaydi",
     "certificateReady": "Sertifikatingiz tayyor",
-    "openCertificate": "Sertifikatni ochish"
+    "openCertificate": "Sertifikatni ochish",
+    "team": {
+      "title": "Jamoa natijasi",
+      "noCertificate": "Jamoaviy Run sertifikat bermaydi va profilga kirmaydi.",
+      "submitted": "Topshirdi",
+      "share": "Hissa",
+      "left": "chiqib ketgan",
+      "by": "Ijrochi"
+    }
   },
   "competency": {
     "technical": "Texnik ko'nikma",
@@ -960,7 +994,10 @@
       "latePenalty": "Kechikish jarimasi (0–1)",
       "hintPenalty": "Hint jarimasi (0–1)",
       "checks": "Avtomatik tekshiruvlar ({{keys}}) faqat YAML bo'limida tahrirlanadi",
-      "when": "Shart (ixtiyoriy)"
+      "when": "Shart (ixtiyoriy)",
+      "role": "Rol",
+      "roleShared": "Umumiy — istalgan a'zo",
+      "roleHint": "Faqat shu rol egasi topshiradi"
     },
     "when": {
       "mode": "Shart shakli",
@@ -1042,7 +1079,20 @@
     "valid": "Xatosiz",
     "errors_one": "{{count}} ta xato",
     "errors_other": "{{count}} ta xato",
-    "hasErrors": "Xato bor"
+    "hasErrors": "Xato bor",
+    "team": {
+      "title": "Jamoaviy rejim",
+      "hint": "2–4 kishi bitta ssenariyni rollarga bo'linib o'tadi (yakka ham o'tish mumkin).",
+      "enable": "Jamoaviy qilish",
+      "disable": "Jamoaviy rejimni o'chirish",
+      "minSize": "Eng kam a'zo",
+      "roleKey": "Rol kaliti",
+      "roleTitle": "Rol nomi",
+      "roleSummary": "Qisqa tavsif",
+      "addRole": "Rol qo'shish",
+      "used_one": "{{count}} ta vazifa",
+      "used_other": "{{count}} ta vazifa"
+    }
   },
   "notifications": {
     "title": "Bildirishnomalar",
@@ -1081,7 +1131,9 @@
       "interview_reminder": "Suhbat soat {{time}} da",
       "assessment_assigned": "Sizga sinov topshirig'i yuborildi",
       "assessment_completed": "Nomzod sinov topshirig'ini tugatdi",
-      "assessment_incomplete": "Nomzod sinovni to'liq tugatmadi"
+      "assessment_incomplete": "Nomzod sinovni to'liq tugatmadi",
+      "team_joined": "{{member}} jamoaga qo'shildi",
+      "team_started": "Jamoaviy Run boshlandi"
     },
     "setting": {
       "task_delivered": "Yangi vazifa va vaziyatlar",
@@ -1098,7 +1150,9 @@
       "interview_confirmed": "Nomzod suhbat vaqtini tanlaganda",
       "interview_declined": "Nomzod suhbatni rad etganda",
       "assessment_assigned": "Kompaniya sinov topshirig'i yuborganda",
-      "assessment_completed": "Nomzod sinovni tugatganda"
+      "assessment_completed": "Nomzod sinovni tugatganda",
+      "team_joined": "Jamoaga yangi a'zo qo'shilganda",
+      "team_started": "Jamoaviy Run boshlanganda"
     },
     "email": {
       "title": "Email orqali",
@@ -1118,7 +1172,8 @@
       "days_other": "{{count}} kun oldin"
     },
     "startBy": "{{time}} gacha boshlang",
-    "score": "{{score}} ball"
+    "score": "{{score}} ball",
+    "yourRoles": "rolingiz: {{roles}}"
   },
   "checks": {
     "title": "Avtomatik testlar",
@@ -1686,6 +1741,55 @@
     "byVacancy": {
       "title": "Vakansiyalar bo'yicha",
       "hireRate": "Konversiya"
+    }
+  },
+  "team": {
+    "title": "Jamoa lobbysi",
+    "captain": "Kapitan",
+    "you": "siz",
+    "invite": "Taklif havolasi",
+    "inviteHint": "Havolani jamoadoshlaringizga yuboring. {{date}} gacha amal qiladi.",
+    "copy": "Nusxa olish",
+    "copied": "Nusxa olindi",
+    "roles": "Rollar",
+    "rolesHint": "O'z rolingizni tanlang. Bo'sh qolgan rollar boshlanganda eng kam rolli a'zoga beriladi.",
+    "take": "Olaman",
+    "release": "Bo'shatish",
+    "free": "Bo'sh",
+    "members": "A'zolar",
+    "membersCount": "{{count}} / {{max}}",
+    "remove": "Chiqarish",
+    "removeConfirm": "{{name}} jamoadan chiqarilsinmi?",
+    "startNow": "Hozir boshlash",
+    "startAt": "Boshlash vaqti",
+    "startAtHint": "Bo'sh qoldirilsa — hozir. Ish vaqtidan tashqarida bo'lsa, keyingi ish kuni 09:00 ga suriladi.",
+    "start": "Run'ni boshlash",
+    "needMore_one": "Boshlash uchun yana {{count}} kishi kerak",
+    "needMore_other": "Boshlash uchun yana {{count}} kishi kerak",
+    "waitCaptain": "Kapitan Run'ni boshlashini kuting — boshlanganda bildirishnoma keladi.",
+    "leave": "Jamoadan chiqish",
+    "leaveConfirm": "Jamoadan chiqasizmi?",
+    "disband": "Jamoani tarqatish",
+    "disbandConfirm": "Jamoa tarqatilsinmi? Taklif havolasi ishlamay qoladi.",
+    "state": {
+      "forming": "Yig'ilmoqda",
+      "expired": "Taklif muddati tugagan",
+      "started": "Run boshlangan",
+      "disbanded": "Jamoa tarqatilgan"
+    },
+    "openRun": "Run'ga o'tish",
+    "back": "Simulyatsiyalar",
+    "notFound": "Jamoa topilmadi",
+    "join": {
+      "title": "Jamoaga taklif",
+      "by": "{{name}} sizni jamoaga taklif qilmoqda",
+      "members_one": "Hozir {{count}} a'zo",
+      "members_other": "Hozir {{count}} a'zo",
+      "join": "Jamoaga qo'shilish",
+      "already": "Siz bu jamoadasiz",
+      "toLobby": "Lobbiga o'tish",
+      "closed": "Bu taklif endi faol emas",
+      "notFound": "Taklif topilmadi yoki muddati o'tgan"
     }
   }
 }

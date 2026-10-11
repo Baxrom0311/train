@@ -11,7 +11,7 @@ import ConditionBuilder from './ConditionBuilder'
 import { nodeIcon } from './icons'
 import { AddButton, Chips, ErrorNote, Field, KeyInput, NumberInput, RemoveButton, SELECT, TextList } from './fields'
 import {
-  ANSWERED, ANSWER_TYPES, GRADED, NODE_TYPES, renameNode, retypeNode, stripPrefix, uniqueKey,
+  ANSWERED, ANSWER_TYPES, GRADED, NODE_TYPES, ROLE_TYPES, renameNode, retypeNode, stripPrefix, uniqueKey,
   type Grade, type NodeDef, type ScenarioDef,
 } from './model'
 import type { Located } from './sections'
@@ -141,15 +141,29 @@ export default function NodeEditor({ defn, index, update, errors, onSelect }: {
       </Group>
 
       <Group title={t('editor.nodes.content')}>
-        <Field label={t('editor.nodes.from')} error={err('from')}>
-          {(id) => (
-            <select id={id} className={SELECT} value={n.from ?? ''} onChange={(e) => set({ from: e.target.value || null })}>
-              <option value="">{t('editor.nodes.noSender')}</option>
-              {!!n.from && !defn.personas.some((p) => p.key === n.from) && <option value={n.from}>{n.from}</option>}
-              {defn.personas.map((p) => <option key={p.key} value={p.key}>{p.name || p.key} · {p.role}</option>)}
-            </select>
+        <div className={cn('grid gap-3', defn.team && ROLE_TYPES.includes(n.type) && 'sm:grid-cols-2')}>
+          <Field label={t('editor.nodes.from')} error={err('from')}>
+            {(id) => (
+              <select id={id} className={SELECT} value={n.from ?? ''} onChange={(e) => set({ from: e.target.value || null })}>
+                <option value="">{t('editor.nodes.noSender')}</option>
+                {!!n.from && !defn.personas.some((p) => p.key === n.from) && <option value={n.from}>{n.from}</option>}
+                {defn.personas.map((p) => <option key={p.key} value={p.key}>{p.name || p.key} · {p.role}</option>)}
+              </select>
+            )}
+          </Field>
+          {/* §29.1: jamoaviy ssenariyda — kim topshiradi */}
+          {defn.team && ROLE_TYPES.includes(n.type) && (
+            <Field label={t('editor.nodes.role')} error={err('role')} hint={n.role ? t('editor.nodes.roleHint') : undefined}>
+              {(id) => (
+                <select id={id} className={SELECT} value={n.role ?? ''} onChange={(e) => set({ role: e.target.value || null })}>
+                  <option value="">{t('editor.nodes.roleShared')}</option>
+                  {!!n.role && !defn.team!.roles.some((r) => r.key === n.role) && <option value={n.role}>{n.role}</option>}
+                  {defn.team!.roles.map((r) => <option key={r.key} value={r.key}>{r.title || r.key}</option>)}
+                </select>
+              )}
+            </Field>
           )}
-        </Field>
+        </div>
         <div className="space-y-1.5">
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('editor.nodes.brief')}</span>
@@ -291,7 +305,7 @@ export default function NodeEditor({ defn, index, update, errors, onSelect }: {
 
 // formada alohida ko'rsatiladigan maydonlar — qolgan xatolar tepada
 const FIELDS = new Set([
-  'id', 'type', 'day', 'at', 'after', 'from', 'brief', 'attachments', 'answer_types', 'due_in_minutes', 'options',
+  'id', 'type', 'role', 'day', 'at', 'after', 'from', 'brief', 'attachments', 'answer_types', 'due_in_minutes', 'options',
   'competencies', 'weight', 'rubric', 'reference_answer', 'max_attempts', 'late_penalty', 'hint_penalty', 'when',
 ])
 

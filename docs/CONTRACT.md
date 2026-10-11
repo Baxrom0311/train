@@ -2341,6 +2341,8 @@ nodes:
   ssenariysidan tuziladi (aks holda 404).
 - §16 muharriri `team` blokini va node `role`ini tahrirlaydi; YAML ikki
   tomonlama, jonli tekshiruv shu qoidalar bilan.
+- Kontent: `lazurit-go-express-team-day1` — 3 rol (backend, data analitik,
+  mijozlar bilan ishlash), `min_size: 2`; umumiy standup, qaror va kun yakuni.
 
 ### 29.2 Jamoa yig'ish (lobby)
 
@@ -2404,7 +2406,8 @@ left_at`; PK `(team_id, user_id)`; UNIQUE `(team_id, role)` (null'dan tashqari).
 
 - Kunlik va yakuniy hisobot jamoa bo'yicha (§9.6 o'zgarmaydi); har task
   natijasida `role` va `by` (topshirgan a'zo `user_id`si) bor.
-- `final_report.team.members[]` — kodda hisoblanadi: `user_id, name, roles,
+- `final_report.team.roles[]` — `key, title` (ko'rsatish uchun);
+  `final_report.team.members[]` — kodda hisoblanadi: `user_id, name, roles,
   is_captain, left, assigned, submitted, on_time_rate, overall_score,
   competency_scores, share`. Task a'zoga shunday biriktiriladi: topshirilgan
   — oxirgi urinish muallifiga; topshirilmagan rolli task — Run yopilgan

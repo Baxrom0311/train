@@ -56,9 +56,22 @@ export type Leaf =
   | { flag: string }
 export type Condition = Leaf | { all: Condition[] } | { any: Condition[] }
 
+// §29.1: jamoaviy ssenariy — rollar; node `role` — faqat shu rol egasi topshiradi
+export interface TeamRoleDef {
+  key: string
+  title: string
+  summary: string
+}
+
+export interface TeamDef {
+  min_size: number
+  roles: TeamRoleDef[]
+}
+
 export interface NodeDef {
   id: string
   type: NodeType
+  role: string | null
   day: number | null
   at: string | null
   after: AfterDef | null
@@ -90,6 +103,7 @@ export interface ScenarioDef {
   personas: PersonaDef[]
   documents: DocumentDef[]
   nodes: NodeDef[]
+  team: TeamDef | null
 }
 
 // ── API (backend/app/api/scenario_admin.py) ─────────────────────────
@@ -147,10 +161,12 @@ export interface Validation {
 
 export const GRADED: NodeType[] = ['task', 'incident', 'decision', 'day_end']
 export const ANSWERED: NodeType[] = ['task', 'incident']
+/** Rol beriladigan turlar (backend `ROLE_TYPES`); `day_end` doim umumiy. */
+export const ROLE_TYPES: NodeType[] = ['task', 'incident', 'decision']
 
 export function blankNode(type: NodeType, id: string, day = 1): NodeDef {
   return {
-    id, type, day, at: type === 'day_end' ? '17:30' : '10:00', after: null, when: null, from: null,
+    id, type, role: null, day, at: type === 'day_end' ? '17:30' : '10:00', after: null, when: null, from: null,
     brief: '', attachments: [],
     answer_types: ANSWERED.includes(type) ? ['text'] : [],
     due_in_minutes: ANSWERED.includes(type) ? 60 : null,
@@ -173,7 +189,7 @@ export function templateScenario(): ScenarioDef {
   const end = { ...blankNode('day_end', 'day1_end'), brief: 'Kun yakuni: bugun nima qildingiz va ertaga nima qilasiz?' }
   return {
     slug: '', title: '', sector: 'IT', company_name: '', difficulty: 'junior', duration_days: 1,
-    personas: [lead], documents: [], nodes: [welcome, end],
+    personas: [lead], documents: [], nodes: [welcome, end], team: null,
   }
 }
 
@@ -230,7 +246,7 @@ export interface ErrorTarget {
   field?: string
 }
 
-const GENERAL_FIELDS = ['slug', 'title', 'sector', 'company_name', 'difficulty', 'duration_days']
+const GENERAL_FIELDS = ['slug', 'title', 'sector', 'company_name', 'difficulty', 'duration_days', 'team']
 
 /**
  * Xato qayerga tegishli: maydon xatosida — Pydantic yo'li (`["nodes", 3, "due_in_minutes"]`),
@@ -254,6 +270,7 @@ export function locate(error: FieldError, defn: ScenarioDef): ErrorTarget {
   }
   // `persona kaliti takrorlangan`, `ko'pi bilan bitta mentor`, `2-kun uchun aynan bitta day_end`...
   if (/^persona|mentor/.test(error.message)) return { section: 'personas' }
+  if (/^rol/.test(error.message)) return { section: 'general', field: 'team' }
   if (/^document/.test(error.message)) return { section: 'documents' }
   if (/^node|kun|day_end|after/.test(error.message)) return { section: 'nodes' }
   return { section: 'general' }
@@ -302,6 +319,40 @@ export function renameDocument(d: ScenarioDef, i: number, to: string): ScenarioD
   }
 }
 
+/** Jamoa roli kaliti o'zgarsa — node'lardagi `role` ham. */
+export function renameRole(d: ScenarioDef, i: number, to: string): ScenarioDef {
+  if (!d.team) return d
+  const from = d.team.roles[i].key
+  return {
+    ...d,
+    team: { ...d.team, roles: d.team.roles.map((r, j) => (j === i ? { ...r, key: to } : r)) },
+    nodes: d.nodes.map((n) => (n.role === from ? { ...n, role: to } : n)),
+  }
+}
+
+/** Rol o'chirilsa uning node'lari umumiy bo'ladi; jamoa o'chirilsa — barcha `role`lar. */
+export function removeRole(d: ScenarioDef, i: number): ScenarioDef {
+  if (!d.team) return d
+  const key = d.team.roles[i].key
+  const roles = d.team.roles.filter((_, j) => j !== i)
+  return {
+    ...d,
+    team: { ...d.team, roles, min_size: Math.min(d.team.min_size, Math.max(2, roles.length)) },
+    nodes: d.nodes.map((n) => (n.role === key ? { ...n, role: null } : n)),
+  }
+}
+
+export function setTeam(d: ScenarioDef, on: boolean): ScenarioDef {
+  if (!on) return { ...d, team: null, nodes: d.nodes.map((n) => ({ ...n, role: null })) }
+  return {
+    ...d,
+    team: d.team ?? {
+      min_size: 2,
+      roles: [{ key: 'role_a', title: '', summary: '' }, { key: 'role_b', title: '', summary: '' }],
+    },
+  }
+}
+
 export function renameNode(d: ScenarioDef, i: number, to: string): ScenarioDef {
   const f = swap(d.nodes[i].id, to)
   return {
@@ -323,6 +374,7 @@ export function retypeNode(n: NodeDef, type: NodeType): NodeDef {
   return {
     ...n,
     type,
+    role: ROLE_TYPES.includes(type) ? n.role : null,
     answer_types: answered ? (n.answer_types.length ? n.answer_types : blank.answer_types) : [],
     due_in_minutes: type === 'message' ? null : answered ? n.due_in_minutes ?? blank.due_in_minutes : n.due_in_minutes,
     options: type === 'decision' ? (n.options.length >= 2 ? n.options : blank.options) : [],
@@ -341,7 +393,7 @@ const obj = (v: unknown): Raw => (v && typeof v === 'object' && !Array.isArray(v
 const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : [])
 
 const NODE_DEFAULTS: Omit<NodeDef, 'id' | 'type'> = {
-  day: null, at: null, after: null, when: null, from: null, brief: '', attachments: [], answer_types: [],
+  role: null, day: null, at: null, after: null, when: null, from: null, brief: '', attachments: [], answer_types: [],
   due_in_minutes: null, weight: 1, competencies: [], rubric: [], checks: null, hints: [], reference_answer: null,
   options: [], max_attempts: 3, late_penalty: 0.2, hint_penalty: 0.1,
 }
@@ -353,9 +405,14 @@ const NODE_DEFAULTS: Omit<NodeDef, 'id' | 'type'> = {
 export function normalize(raw: unknown): ScenarioDef {
   const d = obj(raw)
   const base = templateScenario()
+  const team = d.team ? obj(d.team) : null
   return {
     ...base,
     ...d,
+    team: team && {
+      min_size: 2, ...team,
+      roles: arr(team.roles).map((r) => ({ key: '', title: '', summary: '', ...obj(r) }) as TeamRoleDef),
+    },
     personas: arr(d.personas).map((p) => {
       const persona = obj(p)
       return { ...blankPersona(''), ...persona, knows: arr(persona.knows), secrets: arr(persona.secrets) } as PersonaDef

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FileText, Lightbulb, Loader2, MessageCircle, Paperclip } from 'lucide-react'
+import { FileText, Lightbulb, Loader2, MessageCircle, Paperclip, UserRound } from 'lucide-react'
 import { ScoreRing } from '@/components/score'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,7 +10,7 @@ import { api, ApiError, uploadFile } from '@/lib/api'
 import { formatDateTime, remaining } from '@/lib/time'
 import type { AnswerType, HintResult, Persona, RunDetail, RunEvent, SubmissionResult } from '@/lib/types'
 import RichText from './RichText'
-import { StatusLabel } from './Inbox'
+import { StatusLabel, isMine } from './Inbox'
 import { ChecksPanel } from './Checks'
 
 const ANSWERABLE = ['task', 'incident', 'day_end']
@@ -34,7 +34,9 @@ export default function EventDetail({
 }) {
   const { t } = useTranslation()
   const sender = personas.find((p) => p.key === event.from_persona)
-  const open = run.status === 'active'
+  // jamoaviy Run (§29.3): rolli hodisaga faqat rol egasi javob beradi; boshqalar holatini ko'radi
+  const mine = isMine(event, run.team)
+  const open = run.status === 'active' && mine
   const visibleStatus = ['delivered', 'submitted', 'missed'].includes(event.status)
   const canAnswer =
     open && ANSWERABLE.includes(event.type) && visibleStatus && event.attempts_used < event.max_attempts
@@ -53,6 +55,7 @@ export default function EventDetail({
           {sender && <span className="font-medium text-foreground/80">{sender.name}<span className="font-normal text-muted-foreground"> · {sender.role}</span></span>}
           {event.delivered_at && <span className="ml-auto tabular-nums">{formatDateTime(event.delivered_at)}</span>}
         </div>
+        {run.team && event.type !== 'message' && <Ownership run={run} event={event} />}
         {event.type !== 'message' && (
           <div className="flex flex-wrap items-center gap-3 text-sm">
             <StatusLabel event={event} />
@@ -81,7 +84,8 @@ export default function EventDetail({
       {event.type === 'decision' && <Decision run={run} event={event} canDecide={canDecide} onRun={onRun} />}
 
       {ANSWERABLE.includes(event.type) && (
-        <Feedback event={event} mentor={personas.find((p) => p.kind === 'mentor')} onAskMentor={onAskMentor} />
+        <Feedback event={event} mentor={personas.find((p) => p.kind === 'mentor')} onAskMentor={onAskMentor}
+          submittedBy={run.team && event.submitted_by && event.submitted_by.user_id !== run.team.me ? event.submitted_by.name : null} />
       )}
 
       {canAnswer && !evaluating && (
@@ -132,19 +136,50 @@ function Decision({ run, event, canDecide, onRun }: { run: RunDetail; event: Run
           {o.label}
         </button>
       ))}
+      {run.team && event.submitted_by && (
+        <p className="text-xs text-muted-foreground">{t('desk.team.by', { name: event.submitted_by.name })}</p>
+      )}
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   )
 }
 
-function Feedback({ event, mentor, onAskMentor }: { event: RunEvent; mentor?: Persona; onAskMentor?: () => void }) {
+/** Kimning vazifasi: "Sizning vazifangiz" yoki "Mas'ul: Ism" (rol nomi bilan); umumiy — jamoaniki. */
+function Ownership({ run, event }: { run: RunDetail; event: RunEvent }) {
+  const { t } = useTranslation()
+  const team = run.team!
+  const role = event.role ? team.roles.find((r) => r.key === event.role) : null
+  const holder = role?.holder_id ? team.members.find((m) => m.user_id === role.holder_id) : null
+  const mine = isMine(event, team)
+  return (
+    <div className={`mt-2 flex flex-wrap items-center gap-2 rounded-xl px-3 py-2 text-sm ${
+      mine ? 'bg-primary/10 text-primary' : 'bg-muted/70 text-muted-foreground'
+    }`}>
+      <UserRound className="h-4 w-4" />
+      <span className="font-semibold">
+        {!role ? t('desk.team.shared') : mine ? t('desk.team.yourTask') : holder ? t('desk.team.theirTask', { name: holder.name }) : t('desk.team.roleFree')}
+      </span>
+      {role && <span className="opacity-80">· {role.title}</span>}
+    </div>
+  )
+}
+
+function Feedback({ event, mentor, onAskMentor, submittedBy }: {
+  event: RunEvent
+  mentor?: Persona
+  onAskMentor?: () => void
+  submittedBy?: string | null
+}) {
   const { t } = useTranslation()
   if (event.attempts_used === 0) return null
   const evaluating = event.last_eval_status === 'pending' || event.last_eval_status === 'queued_retry'
   return (
     <div className="space-y-3 rounded-2xl border bg-background/60 p-5 text-sm">
       <div className="flex items-center justify-between gap-4">
-        <span className="font-semibold">{t('desk.attempts', { used: event.attempts_used, max: event.max_attempts })}</span>
+        <span className="font-semibold">
+          {t('desk.attempts', { used: event.attempts_used, max: event.max_attempts })}
+          {submittedBy && <span className="ml-2 font-normal text-muted-foreground">· {t('desk.team.by', { name: submittedBy })}</span>}
+        </span>
         {event.last_score !== null && <ScoreRing value={event.last_score} />}
       </div>
       {evaluating && (

@@ -534,6 +534,7 @@ async def test_full_team_day_and_report(db_session, test_user_factory, team_scen
     # topshirilmagan rolli task — rol egasiga
     assert tasks["complaints_triage"]["by"] == str(charos.id) and tasks["complaints_triage"]["score"] == 0
 
+    assert [r["key"] for r in report["team"]["roles"]] == ROLES
     members = {m["name"]: m for m in report["team"]["members"]}
     assert members["Ali"]["roles"] == ["backend"] and members["Ali"]["is_captain"]
     assert members["Ali"]["assigned"] == 3 and members["Ali"]["submitted"] == 3        # fix, mitigate, day_end
