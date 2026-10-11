@@ -436,13 +436,33 @@ footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; g
 
 /* ---------- AI chatbot ---------- */
 .bot-fab {
-  position: fixed; right: 20px; bottom: 20px; z-index: 60; width: 62px; height: 62px; border-radius: 20px;
+  position: fixed; right: 20px; bottom: 20px; z-index: 60; width: 64px; height: 64px; border-radius: 22px;
   display: grid; place-items: center; background: var(--grad); color: var(--on-grad);
-  box-shadow: 0 16px 40px -10px rgba(110, 120, 255, 0.9); transition: transform 0.25s;
+  box-shadow: 0 16px 40px -10px var(--violet); transition: transform 0.25s;
 }
-.bot-fab:hover { transform: translateY(-3px) scale(1.04); }
-.bot-fab .ico { width: 28px; height: 28px; stroke-width: 2; }
-.bot-fab::after { content: "AI"; position: absolute; top: -6px; right: -6px; font-size: 10.5px; font-weight: 900; padding: 3px 6px; border-radius: 8px; background: var(--bg-2); color: var(--cyan); border: 1px solid var(--line-2); }
+.bot-fab::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--grad); z-index: -1; animation: ring 2.6s ease-out infinite; }
+@keyframes ring { 0% { transform: scale(1); opacity: 0.55; } 100% { transform: scale(1.55); opacity: 0; } }
+.bot-fab:hover { transform: translateY(-3px) scale(1.05); }
+.laptop { width: 40px; height: 34px; animation: bob 3.2s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-2px); } }
+.lp-body { fill: #fff; }
+.lp-screen { fill: #0d1f19; }
+:root:not([data-theme="light"]) .lp-screen { fill: #12153a; }
+.lp-dot { fill: #34d399; animation: type 1.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+:root:not([data-theme="light"]) .lp-dot { fill: #2ed3e6; }
+.lp-dot:nth-of-type(2) { animation-delay: 0.15s; } .lp-dot:nth-of-type(3) { animation-delay: 0.3s; }
+@keyframes type { 0%, 60%, 100% { transform: translateY(0); opacity: 0.45; } 30% { transform: translateY(-3px); opacity: 1; } }
+.lp-spark { fill: #fff; animation: twinkle 2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes twinkle { 50% { transform: scale(0.5) rotate(45deg); opacity: 0.5; } }
+.bot-tip {
+  position: absolute; right: 76px; top: 50%; transform: translateY(-50%); white-space: nowrap;
+  padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; color: var(--fg);
+  background: var(--glass-strong); border: 1px solid var(--line-2); box-shadow: 0 10px 30px -12px var(--shadow);
+  animation: tip 6s ease-in-out infinite; pointer-events: none;
+}
+@keyframes tip { 0%, 8% { opacity: 0; transform: translate(8px, -50%); } 14%, 70% { opacity: 1; transform: translate(0, -50%); } 78%, 100% { opacity: 0; transform: translate(8px, -50%); } }
+.bot-open .bot-tip { display: none; }
+@media (max-width: 560px) { .bot-tip { display: none; } }
 .bot {
   position: fixed; right: 20px; bottom: 96px; z-index: 60; width: min(380px, calc(100vw - 32px)); height: min(560px, calc(100vh - 130px));
   display: flex; flex-direction: column; overflow: hidden; background: var(--glass-strong);
