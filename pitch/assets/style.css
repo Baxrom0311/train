@@ -233,15 +233,23 @@ h2 { font-size: clamp(32px, 5vw, 54px); margin: 16px 0 14px; }
 .screen figcaption b { color: var(--fg); }
 
 /* ---------- jamoa ---------- */
-.team { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 340px)); justify-content: center; gap: 18px; }
-.member { padding: 28px; text-align: center; }
+.team { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+@media (max-width: 900px) { .team { grid-template-columns: 1fr; max-width: 440px; margin: 0 auto; } }
+.member { padding: 30px 26px; text-align: center; transition: transform 0.3s, border-color 0.3s; }
+.member:hover { transform: translateY(-4px); border-color: var(--line-2); }
+.member h3 { margin-top: 8px; }
 .avatar {
   width: 88px; height: 88px; margin: 0 auto 16px; border-radius: 28px; display: grid; place-items: center;
   font-size: 30px; font-weight: 800; color: #0a0c22; background: var(--grad);
   box-shadow: 0 16px 40px -14px rgba(110, 120, 255, 0.9);
   overflow: hidden;
 }
-.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.avatar { position: relative; overflow: visible; background: linear-gradient(140deg, var(--a, var(--violet)), var(--b, var(--cyan))); padding: 3px; }
+.avatar img, .avatar svg { width: 100%; height: 100%; object-fit: cover; border-radius: 25px; display: block; }
+.avatar .exp { position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 11.5px; font-weight: 800; padding: 3px 10px; border-radius: 999px; background: #0b0f24; color: var(--cyan); border: 1px solid var(--line-2); }
+.did { list-style: none; display: grid; gap: 8px; margin: 0 0 18px; text-align: left; font-size: 14px; color: var(--muted); }
+.did li { display: flex; gap: 10px; align-items: flex-start; }
+.did .ico { width: 17px; height: 17px; color: var(--green); flex: none; margin-top: 2px; }
 .member h3 { font-size: 20px; }
 .role { color: var(--cyan); font-weight: 700; font-size: 14px; margin: 4px 0 14px; }
 .tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
