@@ -4,8 +4,8 @@
 const CONFIG = {
   // YouTube havolasi yoki video ID (masalan "https://youtu.be/XXXX"). Bo'sh bo'lsa — mp4 fayl yoki namuna.
   youtube: "",
-  // Yoki saytdagi fayl: "assets/demo.mp4"
-  videoFile: "",
+  // Yoki saytdagi fayl (assets/ papkasiga nisbatan): "demo.mp4"
+  videoFile: "demo.mp4",
   // AI chatbot (DeepSeek) manzili. Bo'sh bo'lsa — shu saytning /api/chat (Vercel'da).
   // Ishlamasa, yordamchi tayyor savol-javob namunalari bilan javob beradi.
   chatApi: "",
@@ -72,7 +72,8 @@ const ICONS = {
   div.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg">${sym}</svg>`;
   document.body.prepend(div);
 })();
-const IMG = new URL("img/", document.currentScript.src).href;
+const ASSETS = new URL("./", document.currentScript.src).href;
+const IMG = ASSETS + "img/";
 const icon = (k) => `<svg class="ico"><use href="#i-${k}"/></svg>`;
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -184,11 +185,12 @@ function playVideo(start = 0) {
   } else if (CONFIG.videoFile) {
     let v = $("video", vid);
     if (!v) {
-      vid.innerHTML = `<video src="${CONFIG.videoFile}" controls playsinline></video>`;
+      const src = new URL(CONFIG.videoFile, ASSETS).href;
+      vid.innerHTML = `<video src="${src}" controls playsinline></video>`;
       v = $("video", vid);
     }
     v.currentTime = start;
-    v.play();
+    v.play().catch(() => {});
   }
 }
 if (vid) {
