@@ -85,6 +85,8 @@ const ICONS = {
   ext: '<path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
   phone: '<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/>',
   terminal: '<path d="m4 17 6-6-6-6M12 19h8"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
 };
 (function injectSprite() {
   const sym = Object.entries(ICONS)
@@ -100,6 +102,15 @@ const IMG = ASSETS + "img/";
 const icon = (k) => `<svg class="ico"><use href="#i-${k}"/></svg>`;
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
+// ---------- kun / tun ----------
+const themeBtn = $("#theme-btn");
+if (themeBtn)
+  themeBtn.addEventListener("click", () => {
+    const t = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+    document.documentElement.dataset.theme = t;
+    try { localStorage.setItem("tj-theme", t); } catch (e) {}
+  });
 
 // ---------- jamoa ----------
 const avatar = (m, i) => {

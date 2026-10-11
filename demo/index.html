@@ -2,6 +2,11 @@
 <html lang="uz">
 <head>
   <meta charset="utf-8">
+  <script>
+    // Mavzu: saqlangan tanlov, bo'lmasa kunduzgi
+    try { document.documentElement.dataset.theme = localStorage.getItem("tj-theme") || "light"; }
+    catch (e) { document.documentElement.dataset.theme = "light"; }
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Demo — TryJob</title>
   <meta name="description" content="TryJob demo-videosi, tavsifi va ishlayotgan prototip.">
@@ -12,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../assets/style.css?v=1791726193">
+  <link rel="stylesheet" href="../assets/style.css?v=1791726458">
 </head>
 <body>
   <div class="aurora"><i></i><i></i><i></i></div>
@@ -25,7 +30,7 @@
       <a href="#prototip">Prototip</a>
       <a href="#api">API</a>
     </div>
-    <a href="../" class="btn btn-ghost">Bosh sahifa</a>
+    <div class="nav-right"><button class="theme-btn" id="theme-btn" aria-label="Kun / tun"><svg class="ico i-sun"><use href="#i-sun"/></svg><svg class="ico i-moon"><use href="#i-moon"/></svg></button><a href="../" class="btn btn-ghost">Bosh sahifa</a></div>
   </nav>
 
   <header class="demo-hero">
@@ -121,8 +126,8 @@
     </div>
   </footer>
 
-  <script src="../assets/ai-key.js?v=1791726193"></script>
-  <script src="../assets/app.js?v=1791726193"></script>
+  <script src="../assets/ai-key.js?v=1791726458"></script>
+  <script src="../assets/app.js?v=1791726458"></script>
   <script>
     document.getElementById("api-url").textContent = new URL("../api/v1/project.json", location.href).href;
   </script>
