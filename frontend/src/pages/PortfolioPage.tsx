@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { Award, ExternalLink, Eye, Linkedin, Loader2, Plus, Save, Trash2 } from 'lucide-react'
+import { Award, ExternalLink, Eye, FileText, Linkedin, Loader2, Plus, Save, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -91,14 +91,19 @@ export default function PortfolioPage() {
           <h1 className="text-3xl font-extrabold tracking-tight">{t('portfolio.title')}</h1>
           <p className="text-muted-foreground">{t('portfolio.subtitle')}</p>
         </div>
-        {live && (
-          <div className="flex flex-wrap gap-2">
-            <CopyButton value={publicUrl} />
-            <Button size="sm" asChild>
-              <Link to={`/p/${saved.slug}`}><Eye className="h-4 w-4" /> {t('portfolio.viewPublic')}</Link>
-            </Button>
-          </div>
-        )}
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" asChild>
+            <Link to="/cv"><FileText className="h-4 w-4" /> {t('cv.cta')}</Link>
+          </Button>
+          {live && (
+            <>
+              <CopyButton value={publicUrl} />
+              <Button size="sm" asChild>
+                <Link to={`/p/${saved.slug}`}><Eye className="h-4 w-4" /> {t('portfolio.viewPublic')}</Link>
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.25fr_1fr]">

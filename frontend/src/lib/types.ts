@@ -955,3 +955,46 @@ export interface InterviewDetail extends InterviewCard {
   competency_scores: Record<string, number> | null
   feedback: InterviewFeedback | null
 }
+
+// CONTRACT.md §28 — talaba CV'si
+export interface CvExperience {
+  run_id: string
+  scenario_title: string
+  company_name: string
+  sector: string
+  difficulty: string
+  duration_days: number
+  started_at: string
+  completed_at: string
+  overall_score: number | null
+  on_time_rate: number | null
+  tasks_submitted: number
+  tasks_total: number
+  top_competencies: Record<string, number>
+  strengths: string[]
+  certificate_code: string | null
+  hidden: boolean
+}
+
+export interface CvSettings {
+  phone: string | null
+  city: string | null
+  languages: string[]
+  hidden_run_ids: string[]
+}
+
+export interface Cv {
+  generated_at: string
+  full_name: string
+  email: string
+  headline: string
+  about: string
+  links: PortfolioLink[]
+  portfolio_slug: string | null
+  university: { name: string; city: string } | null
+  overall_score: number | null
+  competencies: Record<string, number>
+  sectors: string[]
+  experience: CvExperience[]
+  settings: CvSettings
+}

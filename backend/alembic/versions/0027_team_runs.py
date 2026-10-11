@@ -5,7 +5,7 @@ Jamoaviy Run (CONTRACT.md §29): `run_teams` (lobby), `run_team_members`
 Yangi ruxsat yo'q — Run kabi kirgan faol foydalanuvchi.
 
 Revision ID: 0027_team_runs
-Revises: 0025_company_scenarios
+Revises: 0026_cv_settings
 Create Date: 2026-10-11 12:00:00
 
 """
@@ -16,7 +16,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision: str = "0027_team_runs"
-down_revision: Union[str, Sequence[str], None] = "0025_company_scenarios"
+down_revision: Union[str, Sequence[str], None] = "0026_cv_settings"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

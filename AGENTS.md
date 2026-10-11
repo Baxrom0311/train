@@ -53,6 +53,8 @@ o'tmadi/kelmadi — rad); ≤ 2 soat qolganda eslatma (`interview_reminders` cro
 
 Ishga olish voronkasi (`CONTRACT.md` §27, `/talents/report`): vakansiya arizalari kogortasi bo'yicha ariza → sinov → suhbat →
 taklif → qabul konversiyasi, yo'qotishlar, javobsiz arizalar ogohlantirishi va arizalar CSV'si (`talent/hiring.py`).
+Talaba CV'si (`CONTRACT.md` §28, `/cv`): Run natijalari, sertifikatlar va kompetensiyalardan avtomatik A4 rezyume
+(uz/ru/en, PDF — brauzer chop etishi); talaba telefon, shahar, tillarni qo'shadi va ishlarni yashiradi (ballar o'zgarmaydi).
 Jamoaviy Run (`CONTRACT.md` §29, `/teams/{id}`, `/teams/join/{code}`): 2–4 talaba bitta ssenariyni rollarga bo'linib o'tadi
 (`team` bloki, node `role`; lobby — taklif havolasi 7 kun, rol band qilish, kapitan boshlaydi), umumiy personaj chatlari va
 `_team` jamoa chati, hisobotda a'zolar hissasi; sertifikat va profilga kirmaydi (`scenario/team.py`, `api/teams.py`).

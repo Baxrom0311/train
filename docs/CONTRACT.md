@@ -166,7 +166,7 @@ schema / endpoint shakli) orqali gaplashadi.
 | 7 | **Frontend (React+shadcn)** | `frontend/` | Har modul backend API'si tayyor bo'lgach, mos ekranlar — vertical slice, lekin alohida agent/task |
 | 8 | **Deploy** | `deploy/` | Docker-compose, nginx, Dockerfile'lar — backend/frontend tuzilishi barqarorlashgach yangilanadi |
 | 9 | **Scenario Engine** | §9.10 ro'yxati (`backend/app/scenario/`, `models/scenario.py`, `api/scenarios.py`, `api/runs.py`, `api/files.py`, `backend/content/scenarios/`, `tools/import_scenario.py`), kompaniya muharriri `api/company_scenarios.py` (§26), jamoaviy Run `api/teams.py`, `scenario/team.py` (§29) | (1),(2) interfeyslari — §9.10 |
-| 10 | **Credentials** | `backend/app/models/credential.py`, `backend/app/api/credentials.py`, `backend/app/credentials/` | (1),(6),(9)ga bog'liq — sertifikat Run'dan, portfolio §10.1 profilidan (§13) |
+| 10 | **Credentials** | `backend/app/models/credential.py`, `backend/app/api/credentials.py`, `backend/app/credentials/` | (1),(6),(9)ga bog'liq — sertifikat Run'dan, portfolio §10.1 profilidan (§13), CV (§28) |
 | 11 | **Notifications** | `backend/app/models/notification.py`, `backend/app/api/notifications.py`, `backend/app/notifications/`, `tools/gen_vapid_keys.py` | (1),(4),(9),(10)ga bog'liq — manbalar §15.2 |
 | 12 | **Analytics** | `backend/app/api/analytics.py`, `backend/app/analytics/` | (9),(10)ga bog'liq — Run natijalarini faqat o'qiydi (§17); platforma statistikasi hisobi `analytics/platform.py` (§21), endpointi Modul 3 `api/admin.py`da |
 | 13 | **Sandbox runner** | `sandbox/`, `deploy/sandbox.Dockerfile` | Tashqi bog'liqliksiz (faqat stdlib); backend `core/sandbox.py` orqali chaqiradi (§19) |
@@ -2304,6 +2304,95 @@ holatlar va "javobsiz arizalar" ogohlantirishi (vakansiya sahifasiga
 havola), bosqichlar bo'yicha yo'qotishlar, sinov va suhbat kartalari,
 vakansiyalar jadvali va arizalar CSV'si. Bo'sh kogortada — vakansiyalarga
 havola.
+
+---
+
+## 28. Talaba CV'si (Modul 10 + 7)
+
+Portfolio (§13.2) — havola; ish beruvchi esa ko'pincha fayl so'raydi.
+CV — talabaning Run natijalari, sertifikatlari va kompetensiyalaridan
+avtomatik yig'iladigan bir-ikki betlik A4 rezyume. Talaba faqat profilda
+yo'q narsalarni (telefon, shahar, tillar) qo'shadi va qaysi ishlar
+ko'rinishini tanlaydi; qolgani — tizimdagi tasdiqlangan ma'lumot.
+
+CV — talabaning **shaxsiy** hujjati: hech qanday ochiq endpoint yo'q,
+kompaniya ham uni API orqali ko'rmaydi (§23: ariza = profil). Talaba PDF'ni
+o'zi yuboradi.
+
+### 28.1 Tarkib
+
+- **Sarlavha**: ism, `headline` (§13.2 portfolio), email (hisob), telefon,
+  shahar; havolalar — portfolio `links` va, portfolio ochiq bo'lsa,
+  `/p/{slug}` (QR bilan).
+- **Haqida**: portfolio `about`.
+- **Ko'nikmalar**: §10.1 profili — `overall_score`, kompetensiyalar (ball
+  kamayishi bo'yicha), sohalar.
+- **Amaliy tajriba (simulyatsiya)**: §10.1 profiliga kiradigan Run'lar —
+  har ssenariydan eng yaxshisi, kompaniya sinovlari (§26.1) va bekor
+  qilingan sertifikatlilar **kirmaydi**; yangisi birinchi. Har yozuvda:
+  ssenariy nomi, kompaniya (fictional) va "TryJob simulyatsiyasi" belgisi
+  (haqiqiy ish joyi bilan adashtirilmasin), soha, daraja, sanalar
+  (`start_at` – tugallangan), ball, o'z vaqtida topshirish foizi,
+  topshirilgan/jami vazifalar (`submitted` / `submitted + missed`, §9.6
+  `on_time_rate` maxraji), shu Run'ning 3 ta eng kuchli kompetensiyasi,
+  AI yakuniy xulosasidagi `strengths` (≤ 3) va bekor qilinmagan sertifikat
+  kodi (tekshiruv havolasi `/c/{code}`).
+- **Ta'lim**: bog'langan va tasdiqlangan universitet (§13.2 kabi).
+- **Tillar**: talaba yozgan qatorlar.
+- Talabaning javoblari, chat, fayllar, AI suhbat mashqi (§24) — **yo'q**.
+
+Yashirilgan ish faqat "Amaliy tajriba"dan tushadi: umumiy ball,
+kompetensiyalar va sohalar §10.1 profilidan o'zgarmasdan olinadi — CV
+kompaniyalar ko'radigan profildan "chiroyliroq" bo'lib qolmaydi.
+
+### 28.2 Ma'lumot (`models/credential.py`)
+
+`cv_settings` (talaba hech narsa saqlamagan bo'lsa yozuv yo'q — hammasi
+bo'sh, hamma ish ko'rinadi):
+- `user_id` (PK, FK users, CASCADE);
+- `phone` (≤ 20, ixtiyoriy; `+`, raqam, bo'shliq, `-`, `()` — kamida 7 raqam);
+- `city` (≤ 80, ixtiyoriy);
+- `languages` JSONB — ≤ 5 qator, har biri 1–40 belgi (masalan, "Ingliz tili — B2");
+- `hidden_run_ids` JSONB — CV'dan yashirilgan Run'lar; saqlashda faqat
+  talabaning o'z Run'lari qoladi, boshqasi indamay tashlanadi (≤ 50);
+- `updated_at`.
+
+### 28.3 API (`api/credentials.py`, `manage_portfolio`)
+
+```
+GET /api/v1/users/me/cv              → Cv
+PUT /api/v1/users/me/cv/settings     {phone, city, languages, hidden_run_ids} → Cv | 422
+```
+
+`Cv`: `generated_at, full_name, email, headline, about, links,
+portfolio_slug` (faqat portfolio ochiq bo'lsa, aks holda `null`)`,
+university, overall_score, competencies, sectors, experience:
+[CvExperience], settings: {phone, city, languages, hidden_run_ids}`.
+`CvExperience`: `run_id, scenario_title, company_name, sector, difficulty,
+duration_days, started_at, completed_at, overall_score, on_time_rate,
+tasks_submitted, tasks_total, top_competencies, strengths,
+certificate_code, hidden`. Yashirilganlar ham qaytadi (`hidden=true`) —
+sozlamalar ro'yxati uchun; varaqqa faqat `hidden=false` chiqadi.
+
+### 28.4 Frontend
+
+- `/cv` (`manage_portfolio`): chapda (telefonda tepada) sozlamalar —
+  telefon, shahar, tillar, ishlar ro'yxati (ko'rsatish/yashirish
+  kalitlari) va CV tili (`uz | ru | en`, interfeys tilidan alohida);
+  o'ngda — CV varag'ining jonli ko'rinishi. "PDF yuklab olish" —
+  `window.print()`, A4 kitob (portrait), faqat varaqning o'zi; fayl nomi
+  hujjat sarlavhasidan (`{Ism} — CV`).
+- Varaq sertifikat kabi doim "qog'oz" (kunduzgi ranglar, tungi mavzuda
+  ham), chop etishda ortiqcha fon va soya yo'q; uzun ro'yxatda yozuv
+  sahifa chegarasida bo'linmaydi.
+- Varaq sozlamalar formasini darhol aks ettiradi (saqlanmagani ham) —
+  PDF ko'rinib turganining o'zi; "Saqlash" keyingi safar uchun.
+- Tugallangan Run'i yo'q talaba — bo'sh holat va katalogga havola.
+- Kirish nuqtalari (talaba menyusi to'la — alohida band yo'q):
+  `/portfolio` sarlavhasida "CV" tugmasi va dashboard'dagi (§17)
+  tezkor havola.
+
+---
 
 ## 29. Jamoaviy Run (Modul 9 + 11 + 7)
 
