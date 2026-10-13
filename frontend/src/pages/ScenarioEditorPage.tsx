@@ -94,7 +94,7 @@ export default function ScenarioEditorPage({ scope = ADMIN_SCOPE }: { scope?: Ed
       }
     })()
     return () => { cancelled = true }
-  }, [id, isNew, params, loadInfo, t])
+  }, [id, isNew, params, loadInfo, base, t])
 
   // ── Jonli tekshiruv (debounce) ──────────────────────────────────
   useEffect(() => {
@@ -108,7 +108,7 @@ export default function ScenarioEditorPage({ scope = ADMIN_SCOPE }: { scope?: Ed
         .finally(() => !ctrl.signal.aborted && setValidating(false))
     }, VALIDATE_DELAY)
     return () => { clearTimeout(timer); ctrl.abort() }
-  }, [defn])
+  }, [defn, base])
 
   // saqlanmagan o'zgarishlar bilan sahifani yopish
   useEffect(() => {

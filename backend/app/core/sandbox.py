@@ -26,6 +26,7 @@ import ast
 import asyncio
 import logging
 import resource
+import signal
 import subprocess
 import sys
 from typing import NamedTuple
@@ -197,11 +198,18 @@ def run_code(code: str, timeout: float = 2.0) -> SandboxResult:
             timeout=safe_timeout,
             preexec_fn=_apply_resource_limits,
         )
+        error = None
+        if proc.returncode in (-signal.SIGXCPU, -signal.SIGKILL):
+            # RLIMIT_CPU (3s) devor soati timeout'idan oldin ishlashi mumkin —
+            # yadro jarayonni signal bilan o'ldiradi, stderr bo'sh qoladi
+            error = f"Timeout: kod {safe_timeout:.1f}s CPU vaqti limitidan oshdi"
+        elif proc.returncode < 0:
+            error = f"Jarayon {signal.Signals(-proc.returncode).name} signali bilan to'xtatildi"
         return SandboxResult(
             success=proc.returncode == 0,
             stdout=proc.stdout[:4096],
             stderr=proc.stderr[:2048],
-            error=None,
+            error=error,
         )
     except subprocess.TimeoutExpired:
         return SandboxResult(
