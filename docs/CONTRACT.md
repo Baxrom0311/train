@@ -40,6 +40,7 @@ top-level papkalarda yashaydi — eski holatdagi kabi backend kodi
 
 ```
 /
+├── .github/workflows/ci.yml   # CI (§31)
 ├── backend/
 │   ├── app/
 │   │   ├── core/          # auth, security, sandbox, file_validator, rbac deps
@@ -2729,3 +2730,44 @@ Modul 8: `nginx.conf` (`real_ip`), `.env.example` (`MAIL_BACKEND`), README.
   "Xatni qayta yuborish" (yuborilgach — "Yuborildi"), sessiya davomida
   yopish mumkin. Ro'yxatdan o'tgan tashkilot ariza kartasida "emailingizni
   tasdiqlang" eslatmasi. Vakansiya arizasida 403 — tushunarli xabar.
+
+---
+
+## 31. Doimiy integratsiya — CI (Modul 8 + 1 + 7)
+
+Har PR va `main`ga har push GitHub Actions'da (`.github/workflows/ci.yml`)
+tekshiriladi. Qizil CI bilan birlashtirilmaydi; test o'tkazib yuborilmaydi,
+o'chirilmaydi va karantinga olinmaydi — yiqilgan test sabab topilib tuzatiladi.
+
+### 31.1 Ishlar (parallel)
+
+| Ish | Nima tekshiradi |
+|---|---|
+| `backend-tests` | `backend/`dan `pytest -q` — butun to'plam, real PostgreSQL (`pgvector/pgvector:pg16`, §3.1) va Redis 7 servislari bilan |
+| `migrations` | Bo'sh bazaga `alembic upgrade head`; `alembic check` — modellar migratsiyalardan farq qilsa (yangi migratsiya yozilmagan) yiqiladi; `downgrade base` → `upgrade head` (har migratsiyaning `downgrade()` ishlaydi); `tools/import_scenario.py --publish` — deploy'dagi kontent yuklash qadami |
+| `frontend` | `npm ci`, `npm run lint` (ESLint, ogohlantirish ham xato), `npm run build` (`tsc -b` + Vite) |
+| `docker` | `deploy/{backend,frontend,sandbox}.Dockerfile` image'lari yig'iladi (push yo'q) |
+
+Versiyalar deploy bilan bir xil: Python 3.13 (`backend.Dockerfile`),
+Node 22 (`frontend.Dockerfile`), Postgres/Redis image'lari `docker-compose.yml`dagidek.
+
+### 31.2 Qoidalar
+
+- CI muhitidagi `SECRET_KEY`, baza paroli — faqat CI uchun soxta qiymatlar,
+  workflow faylida ochiq; haqiqiy secret (AI kalitlari, SMTP, VAPID) CI'ga
+  berilmaydi — testlar ularsiz ishlaydi (kalitsiz provayder o'tkazib yuboriladi).
+- `permissions: contents: read`; bir PR'ga yangi push eski ishga tushirishni
+  bekor qiladi (`main`dagisi bekor qilinmaydi).
+- Lint (`frontend/eslint.config.js`): `@eslint/js` + `typescript-eslint`
+  tavsiya etilganlari + `react-hooks` (`rules-of-hooks`, `exhaustive-deps`).
+  Hook bog'liqligini ataylab tashlab ketish faqat sababi yozilgan
+  `eslint-disable-next-line` izohi bilan.
+- Yangi migratsiyaning `downgrade()`i ham ishlashi shart (nomsiz FK/indeks
+  qoldirilmaydi — PostgreSQL standart nomi yoki aniq nom bilan).
+- Lokal tekshiruv shu buyruqlar bilan (AGENTS.md "Lokal ishga tushirish").
+
+### 31.3 Modul chegaralari
+
+Modul 8: `.github/workflows/ci.yml`. Modul 7: `frontend/eslint.config.js`,
+`package.json` (`lint` skripti, ESLint devDependencies). Modul 1:
+`backend/alembic/` (0006 `downgrade()` tuzatildi).

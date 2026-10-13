@@ -61,11 +61,12 @@ def downgrade() -> None:
                existing_type=sa.DateTime(timezone=True),
                type_=postgresql.TIMESTAMP(),
                existing_nullable=True)
-    op.add_column('talent_offers', sa.Column('candidate_id', sa.UUID(), autoincrement=False, nullable=False))
-    # WARNING: constraint name is None; this directive will fail as
-    # rendered.  Add a name, or use a naming convention; see
-    # https://alembic.sqlalchemy.org/en/latest/naming.html
-    op.drop_constraint(None, 'talent_offers', type_='foreignkey')
+    # Mavjud qatorlar bo'lsa ham ishlashi uchun: avval nullable, nusxa, keyin NOT NULL
+    op.add_column('talent_offers', sa.Column('candidate_id', sa.UUID(), autoincrement=False, nullable=True))
+    op.execute("UPDATE talent_offers SET candidate_id = candidate_user_id")
+    op.alter_column('talent_offers', 'candidate_id', existing_type=sa.UUID(), nullable=False)
+    # upgrade() FK'ni nomsiz yaratgan — PostgreSQL bergan standart nom
+    op.drop_constraint('talent_offers_candidate_user_id_fkey', 'talent_offers', type_='foreignkey')
     op.create_foreign_key(op.f('talent_offers_candidate_id_fkey'), 'talent_offers', 'users', ['candidate_id'], ['id'])
     op.alter_column('talent_offers', 'created_at',
                existing_type=postgresql.TIMESTAMP(timezone=True),

@@ -28,7 +28,9 @@ export default function YamlPanel({ defn, onApply }: { defn: ScenarioDef; onAppl
       .catch((e) => setErrors([e.message]))
       .finally(() => setBusy(false))
   }
-  // bo'lim ochilganda — joriy holat (saqlanmagan o'zgarishlar bilan)
+  // bo'lim ochilganda bir marta — joriy holat (saqlanmagan o'zgarishlar bilan);
+  // keyingi `defn` o'zgarishlari matnni bosib ketmasin, yangilash — tugma orqali
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(load, [])
 
   const apply = async (source: string) => {

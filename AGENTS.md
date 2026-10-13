@@ -61,6 +61,8 @@ Jamoaviy Run (`CONTRACT.md` §29, `/teams/{id}`, `/teams/join/{code}`): 2–4 ta
 Hisob xavfsizligi (`CONTRACT.md` §30): parolni tiklash (`/forgot-password`, havola `#token=` fragmentida, 1 soat,
 tiklash eski JWT'larni `iat` bo'yicha bekor qiladi), email tasdiqlash (tasdiqlanmaganga email bildirishnoma ketmaydi,
 vakansiyaga ariza yo'q), login cheklovi (Redis, `core/throttle.py`); xat backend'i `MAIL_BACKEND` — lokalda `console`.
+CI (`CONTRACT.md` §31, `.github/workflows/ci.yml`): har PR va `main` push'da pytest (Postgres+Redis), Alembic
+(`upgrade` → `check` → `downgrade base` → `upgrade`), frontend lint + build va Docker image'lari.
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da
 sandbox/                            # kod runner'i (§19), faqat stdlib
@@ -108,4 +110,4 @@ arq app.ai.worker.WorkerSettings                     # baholash, yetkazish cron'
 
 Frontend (`frontend/`): `npm ci && npm run dev` — Vite `/api`ni
 `http://localhost:8000`ga proksilaydi (boshqa manzil: `VITE_API_TARGET`).
-Testlar: `backend/`dan `TEST_DATABASE_URL=... pytest -q`.
+Testlar: `backend/`dan `TEST_DATABASE_URL=... pytest -q`; frontend: `npm run lint && npm run build`.
