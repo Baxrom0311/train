@@ -1,4 +1,4 @@
-from .user import User
+from .user import AccountToken, User
 from .rbac import Role, Permission, role_permissions
 from .talent import ApplicationAssessment, ApplicationInterview, CandidateVisibility, TalentOffer, Vacancy, VacancyApplication
 from .billing import Company, University, Invoice
@@ -16,6 +16,7 @@ from app.database import Base
 
 __all__ = [
     "User",
+    "AccountToken",
     "Role",
     "Permission",
     "role_permissions",

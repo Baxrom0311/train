@@ -69,6 +69,21 @@ docker compose -f deploy/docker-compose.yml up -d backend worker
 Yuborishni `worker` bajaradi (har daqiqa). Kalitni almashtirsangiz eski
 obunalar ishlamay qoladi — foydalanuvchilar `/notifications`da qayta ulaydi.
 
+### Email va hisob xavfsizligi (§30)
+
+Parolni tiklash va email tasdiqlash xatlari SMTP orqali ketadi — production'da
+`SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` va `PUBLIC_URL` (havolalar
+shu manzilga) to'ldirilishi **shart**. SMTP bo'lmasa (`MAIL_BACKEND` bo'sh →
+`off`) foydalanuvchi parolini tiklay olmaydi va email'ini tasdiqlay olmaydi;
+backend log'ida `hisob xati yuborilmadi: MAIL_BACKEND=off` ko'rinadi.
+`MAIL_BACKEND=console` — faqat lokal sinov uchun (xat matni havola bilan log'ga).
+
+Login cheklovi (§30.4) mijoz IP'sini nginx `real_ip` orqali oladi: `X-Forwarded-For`
+faqat ichki tarmoqlardan (Caddy) kelganda ishoniladi. HTTPS'siz rejimda Docker
+`userland-proxy` yoqilgan bo'lsa nginx barcha mijozlarni shlyuz IP'si (172.x)
+bilan ko'radi va ularning sarlavhasiga ishonadi — production'da HTTPS rejimini
+(Caddy) ishlating.
+
 ## Holat
 
 `GET /api/v1/health` → `{status, db, redis, worker}`; hammasi ishlasa 200,

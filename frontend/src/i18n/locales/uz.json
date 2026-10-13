@@ -1836,5 +1836,55 @@
       "closed": "Bu taklif endi faol emas",
       "notFound": "Taklif topilmadi yoki muddati o'tgan"
     }
+  },
+  "account": {
+    "backToLogin": "Kirish sahifasiga qaytish",
+    "waitButton": "Kuting · {{time}}",
+    "tooMany": {
+      "minutes_one": "Juda ko'p urinish. {{count}} daqiqadan keyin qayta urinib ko'ring.",
+      "minutes_other": "Juda ko'p urinish. {{count}} daqiqadan keyin qayta urinib ko'ring.",
+      "seconds_one": "Juda ko'p urinish. {{count}} soniyadan keyin qayta urinib ko'ring.",
+      "seconds_other": "Juda ko'p urinish. {{count}} soniyadan keyin qayta urinib ko'ring."
+    },
+    "forgot": {
+      "title": "Parolni tiklash",
+      "subtitle": "Email manzilingizni kiriting — yangi parol o'rnatish havolasini yuboramiz.",
+      "submit": "Havola yuborish",
+      "sentTitle": "Emailingizni tekshiring",
+      "sentBody": "Agar {{email}} manzilida TryJob akkaunti bo'lsa, unga parolni tiklash havolasi yuborildi. Havola 1 soat amal qiladi.",
+      "sentHint": "Xat kelmasa «Spam» papkasini tekshiring yoki manzilni to'g'ri yozganingizga ishonch hosil qiling.",
+      "again": "Boshqa manzil"
+    },
+    "reset": {
+      "title": "Yangi parol",
+      "subtitle": "Akkauntingiz uchun yangi parol o'rnating.",
+      "password": "Yangi parol",
+      "submit": "Parolni saqlash",
+      "sessionsNote": "Parol almashgach barcha qurilmalardagi sessiyalar yopiladi — qayta kirasiz.",
+      "doneTitle": "Parol yangilandi",
+      "doneBody": "Endi yangi parol bilan kiring. Boshqa qurilmalardagi sessiyalar yopildi.",
+      "toLogin": "Kirish",
+      "invalidTitle": "Havola yaroqsiz",
+      "invalidBody": "Havola muddati o'tgan, allaqachon ishlatilgan yoki undan keyin yangisi so'ralgan. Yangi havola so'rang.",
+      "requestNew": "Yangi havola so'rash"
+    },
+    "verify": {
+      "checking": "Tasdiqlanmoqda…",
+      "checkingBody": "Email manzilingizni tekshiryapmiz.",
+      "doneTitle": "Email tasdiqlandi",
+      "doneBody": "{{email}} tasdiqlandi. Endi bildirishnomalar shu manzilga keladi va vakansiyalarga ariza bera olasiz.",
+      "continue": "Davom etish",
+      "invalidTitle": "Havola yaroqsiz",
+      "invalidBody": "Havola muddati o'tgan yoki allaqachon ishlatilgan. Kirib, tasdiqlash xatini qayta yuboring.",
+      "invalidResend": "Havola muddati o'tgan yoki allaqachon ishlatilgan. Sahifa tepasidagi «Xatni qayta yuborish» tugmasidan yangisini oling."
+    },
+    "banner": {
+      "title": "Emailingizni tasdiqlang.",
+      "body": "{{email}} manziliga havola yubordik. Tasdiqlangach bildirishnomalar emailga keladi va vakansiyalarga ariza bera olasiz.",
+      "resend": "Xatni qayta yuborish",
+      "sent": "Yuborildi"
+    },
+    "pendingVerify": "{{email}} manziliga tasdiqlash havolasi yubordik — admin tasdiqlashini kutayotganda ham ochishingiz mumkin.",
+    "verifyToApply": "Ariza berish uchun avval email manzilingizni tasdiqlang (sahifa tepasidagi yo'lak)."
   }
 }

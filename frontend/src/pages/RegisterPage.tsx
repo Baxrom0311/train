@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/context/AuthContext'
-import { api, ApiError, registerOrg } from '@/lib/api'
+import { api, ApiError, registerOrg, retryAfter } from '@/lib/api'
+import { tooManyText } from '@/components/account/useCooldown'
 import { cn } from '@/lib/utils'
 import AuthShell from '@/components/layout/AuthShell'
 
@@ -33,7 +34,7 @@ export default function RegisterPage() {
   const [universities, setUniversities] = useState<University[]>([])
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const [pending, setPending] = useState<string | null>(null)
+  const [pending, setPending] = useState<{ org: string; email: string } | null>(null)
 
   useEffect(() => {
     api<University[]>('/university/list').then(setUniversities).catch(() => setUniversities([]))
@@ -62,11 +63,13 @@ export default function RegisterPage() {
           org_name: form.orgName.trim(),
           ...(kind === 'company' ? { industry: form.detail.trim() } : { city: form.detail.trim() }),
         })
-        setPending(form.orgName.trim())
+        setPending({ org: form.orgName.trim(), email: base.email })
       }
     } catch (err) {
       const status = err instanceof ApiError ? err.status : 0
-      setError(status === 400 ? t('auth.errors.exists') : status === 409 ? t('auth.errors.orgExists') : t('common.error'))
+      const wait = retryAfter(err)
+      setError(wait !== null ? tooManyText(t, wait)
+        : status === 400 ? t('auth.errors.exists') : status === 409 ? t('auth.errors.orgExists') : t('common.error'))
     } finally {
       setBusy(false)
     }
@@ -81,7 +84,10 @@ export default function RegisterPage() {
               <Hourglass className="h-6 w-6" />
             </span>
             <h2 className="text-2xl font-extrabold">{t('auth.pending.title')}</h2>
-            <p className="text-sm text-muted-foreground">{t('auth.pending.body', { org: pending })}</p>
+            <p className="text-sm text-muted-foreground">{t('auth.pending.body', { org: pending.org })}</p>
+            <p className="rounded-xl bg-primary/10 px-3 py-2 text-xs font-medium text-primary">
+              {t('account.pendingVerify', { email: pending.email })}
+            </p>
             <Button asChild variant="outline"><Link to="/login">{t('auth.register.loginLink')}</Link></Button>
           </CardContent>
         </Card>

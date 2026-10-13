@@ -26,7 +26,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.talent_hunt import CandidateCard, ReportDays, candidate_card, company_of, csv_response, visible_profiles
-from app.core.deps import require_permission
+from app.core.deps import require_permission, require_verified_email
 from app.database import get_db
 from app.models.billing import Company
 from app.models.scenario import ScenarioVersion
@@ -1117,7 +1117,10 @@ async def get_vacancy(vacancy_id: uuid.UUID, current_user: Candidate, db: AsyncS
 
 
 @router.post("/{vacancy_id}/apply", response_model=ApplicationOut, status_code=status.HTTP_201_CREATED)
-async def apply(vacancy_id: uuid.UUID, body: ApplyIn, current_user: Candidate, db: AsyncSession = Depends(get_db)):
+async def apply(
+    vacancy_id: uuid.UUID, body: ApplyIn, current_user: Candidate, db: AsyncSession = Depends(get_db),
+    _verified: User = Depends(require_verified_email),   # ariza kompaniyaga kontakt beradi (§30.2)
+):
     vacancy, _ = await _student_vacancy(db, current_user, vacancy_id, lock=True)
     if vacancy.status != VacancyStatus.OPEN:
         raise HTTPException(status_code=409, detail="Vacancy is closed")

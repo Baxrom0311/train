@@ -58,6 +58,9 @@ Talaba CV'si (`CONTRACT.md` §28, `/cv`): Run natijalari, sertifikatlar va kompe
 Jamoaviy Run (`CONTRACT.md` §29, `/teams/{id}`, `/teams/join/{code}`): 2–4 talaba bitta ssenariyni rollarga bo'linib o'tadi
 (`team` bloki, node `role`; lobby — taklif havolasi 7 kun, rol band qilish, kapitan boshlaydi), umumiy personaj chatlari va
 `_team` jamoa chati, hisobotda a'zolar hissasi; sertifikat va profilga kirmaydi (`scenario/team.py`, `api/teams.py`).
+Hisob xavfsizligi (`CONTRACT.md` §30): parolni tiklash (`/forgot-password`, havola `#token=` fragmentida, 1 soat,
+tiklash eski JWT'larni `iat` bo'yicha bekor qiladi), email tasdiqlash (tasdiqlanmaganga email bildirishnoma ketmaydi,
+vakansiyaga ariza yo'q), login cheklovi (Redis, `core/throttle.py`); xat backend'i `MAIL_BACKEND` — lokalda `console`.
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da
 sandbox/                            # kod runner'i (§19), faqat stdlib

@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Boolean, ForeignKey, DateTime, Enum as SAEnum
+from sqlalchemy import Column, String, Boolean, ForeignKey, DateTime, Index, Enum as SAEnum, CheckConstraint
 from sqlalchemy.orm import relationship
 from app.database import Base
 from app.models.rbac import GUID
@@ -35,6 +35,10 @@ class User(Base):
         nullable=True,
     )
     is_active = Column(Boolean, default=True)
+    # §30.2: null — email tasdiqlanmagan (bildirishnoma emaillari ketmaydi, ariza berib bo'lmaydi)
+    email_verified_at = Column(DateTime(timezone=True), nullable=True)
+    # §30.3: shu paytdan oldin berilgan JWT'lar (`iat`) bekor
+    password_changed_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at = Column(
         DateTime(timezone=True),
@@ -51,3 +55,21 @@ class User(Base):
         uselist=False,
         cascade="all, delete-orphan",
     )
+
+
+class AccountToken(Base):
+    """Bir martalik havola tokeni (CONTRACT.md §30.1) — bazada faqat SHA-256 xeshi."""
+    __tablename__ = "account_tokens"
+    __table_args__ = (
+        CheckConstraint("purpose IN ('verify_email', 'reset_password')", name="ck_account_tokens_purpose"),
+        Index("ix_account_tokens_user_purpose", "user_id", "purpose"),
+    )
+
+    id = Column(GUID, primary_key=True, default=uuid.uuid4)
+    user_id = Column(GUID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    purpose = Column(String(20), nullable=False)
+    token_hash = Column(String(64), nullable=False, unique=True)
+    email = Column(String, nullable=False)
+    created_at = Column(DateTime(timezone=True), nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    used_at = Column(DateTime(timezone=True), nullable=True)

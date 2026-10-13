@@ -7,6 +7,7 @@ from app.config import settings
 from app.database import get_db
 from app.models.user import User
 from app.models.rbac import Permission
+from app.core.security import issued_after_password_change
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
@@ -41,7 +42,7 @@ async def get_current_user(
 
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalars().first()
-    if user is None:
+    if user is None or not issued_after_password_change(payload, user.password_changed_at):
         raise credentials_exception
     return user
 
@@ -73,6 +74,13 @@ def require_any_permission(*keys: str):
             raise HTTPException(status_code=403, detail="Not enough permissions")
         return current_user
     return permission_checker
+
+async def require_verified_email(current_user: User = Depends(get_current_active_user)) -> User:
+    """Tashqi tomonga kontakt beradigan amallar uchun (CONTRACT.md §30.2)."""
+    if current_user.email_verified_at is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="email_not_verified")
+    return current_user
+
 
 def rate_limit(action: str, max_requests: int = 10, window_seconds: int = 60, fail_closed: bool = False):
     """

@@ -111,8 +111,29 @@ export async function login(email: string, password: string): Promise<void> {
     body: form,
   })
   const body = await r.json().catch(() => null)
-  if (!r.ok) throw new ApiError(r.status, errorMessage(body, r.statusText))
+  if (!r.ok) throw new ApiError(r.status, errorMessage(body, r.statusText), body?.detail)
   tokens.set(body.access_token, body.refresh_token)
+}
+
+/** 429 javobidagi kutish soniyalari (CONTRACT.md §30.4), boshqa xatoda null. */
+export function retryAfter(err: unknown): number | null {
+  if (!(err instanceof ApiError) || err.status !== 429) return null
+  const seconds = (err.detail as { retry_after?: unknown } | null)?.retry_after
+  return typeof seconds === 'number' && seconds > 0 ? seconds : 60
+}
+
+// Hisob xavfsizligi (CONTRACT.md §30): token havolaning fragmentidan (`#token=…`) olinadi
+export const forgotPassword = (email: string) =>
+  api<{ status: 'sent' }>('/auth/password/forgot', { method: 'POST', json: { email } })
+export const resetPassword = (token: string, password: string) =>
+  api<null>('/auth/password/reset', { method: 'POST', json: { token, password } })
+export const verifyEmail = (token: string) =>
+  api<{ email: string; verified: true }>('/auth/verify-email', { method: 'POST', json: { token } })
+export const resendVerification = () => api<{ status: 'sent' }>('/auth/verify-email/resend', { method: 'POST' })
+
+/** `#token=…` — fragment serverga va Referer'ga tushmaydi. */
+export function tokenFromHash(hash: string): string {
+  return new URLSearchParams(hash.replace(/^#/, '')).get('token') ?? ''
 }
 
 export interface StudentSignup {

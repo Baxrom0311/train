@@ -126,7 +126,9 @@ async def send_pending(db: AsyncSession, now: datetime, send=mailer.send) -> dic
     outgoing: list[tuple[Notification, mailer.Mail]] = []
     for n, user, prefs in rows:
         # o'qilgan bo'lsa (talaba saytda ko'rdi) email kerak emas
-        if n.read_at is not None or not user.is_active or n.kind not in email_kinds(prefs):
+        # §30.2: tasdiqlanmagan manzil begona bo'lishi mumkin — unga xat ketmaydi
+        if (n.read_at is not None or not user.is_active or user.email_verified_at is None
+                or n.kind not in email_kinds(prefs)):
             n.email_status = "skipped"
             counts["skipped"] += 1
         else:

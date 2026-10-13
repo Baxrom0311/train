@@ -129,7 +129,9 @@ function ApplyCard({ v, onChange }: { v: VacancyDetail; onChange: () => void }) 
       await api(`/vacancies/${v.id}/${path}`, { method: 'POST', ...(path === 'apply' ? { json: { note: note || null } } : {}) })
       onChange()
     } catch (err) {
-      setError(err instanceof ApiError && err.status === 422 ? t('vacancy.student.noProfile') : err instanceof ApiError ? err.message : t('common.error'))
+      setError(err instanceof ApiError && err.status === 422 ? t('vacancy.student.noProfile')
+        : err instanceof ApiError && err.detail === 'email_not_verified' ? t('account.verifyToApply')
+        : err instanceof ApiError ? err.message : t('common.error'))
     } finally {
       setBusy(false)
     }
