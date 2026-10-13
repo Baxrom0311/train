@@ -120,6 +120,21 @@ class TestRunCode:
         assert result.error is not None
         assert "Timeout" in result.error
 
+    def test_cpu_limit_kill_reported_as_timeout(self, monkeypatch):
+        """RLIMIT_CPU devor soatidan oldin o'ldirsa ham (stderr bo'sh) — Timeout xatosi."""
+        import signal
+        import subprocess
+        from app.core import sandbox
+
+        for sig in (signal.SIGKILL, signal.SIGXCPU):
+            monkeypatch.setattr(
+                sandbox.subprocess, "run",
+                lambda *a, sig=sig, **k: subprocess.CompletedProcess(a[0], -sig, "", ""),
+            )
+            result = run_code("while True: pass")
+            assert result.success is False
+            assert result.error is not None and "Timeout" in result.error
+
     def test_actual_timeout_under_3s(self):
         """Haqiqiy bajarish vaqti 3.0s dan oshmasligi."""
         import time
