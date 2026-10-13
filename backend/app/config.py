@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Literal
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -44,6 +44,8 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_FROM: str = "TryJob <no-reply@localhost>"
     SMTP_STARTTLS: bool = True
+    # §30.5: smtp | console (lokal: xat log'ga) | off; bo'sh — SMTP_HOST bo'lsa smtp, aks holda off
+    MAIL_BACKEND: Literal["", "smtp", "console", "off"] = ""
     # Emaildagi havolalar uchun frontend manzili
     PUBLIC_URL: str = "http://localhost:5173"
 

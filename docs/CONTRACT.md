@@ -234,6 +234,7 @@ POST   /api/v1/talents/offers             counts against subscription's "intervi
 # Suhbat bosqichlari (arizachi bilan haqiqiy suhbat) — §25
 # Kompaniya ssenariylari va arizachiga sinov topshirig'i — §26
 # Jamoaviy Run (lobby, rollar, jamoa chati) — §29
+# Parol tiklash, email tasdiqlash, login cheklovi — §30
 # Universitet portali (talabalar natijalari, bog'lanish) — §12.2
 ```
 
@@ -2577,3 +2578,154 @@ Modul 4/6/10/12 faqat `runs.team_id IS NULL` filtrini qo'shadi.
   a'zoga "Jamoadan chiqish", kapitanga "Tashlab ketish".
 - Hisobotda "Jamoa" bo'limi: har a'zo — rollari, ball, o'z vaqtida ulushi,
   hissasi, kompetensiyalar; task jadvalida kim bajargani.
+
+---
+
+## 30. Hisob xavfsizligi (Modul 1 + 11 + 4 + 7 + 8)
+
+Uchta bo'shliq yopiladi: parolni unutgan foydalanuvchi akkauntini qaytara
+olmasdi, `/auth/login` cheksiz parol tanlashga ochiq edi va email manzili
+tekshirilmasdi (begona yoki xato yozilgan manzilga bildirishnoma ketardi).
+
+### 30.1 Bir martalik tokenlar (`account_tokens`)
+
+`id, user_id (FK users, CASCADE, index), purpose` (`verify_email |
+reset_password`), `token_hash` (UNIQUE), `email` (token yuborilgan manzil),
+`created_at, expires_at, used_at`.
+
+- Token — `secrets.token_urlsafe(32)` (256 bit); bazada faqat uning
+  SHA-256 xeshi (`token_hash`) saqlanadi — baza sizib chiqsa ham havola
+  tiklanmaydi. Qo'lda kriptografiya yo'q: tasodif `secrets`, xesh `hashlib`.
+- Muddat: `reset_password` — **1 soat**, `verify_email` — **48 soat**.
+- Bir martalik: ishlatilgach `used_at`. Yangi token berilganda shu
+  foydalanuvchi va maqsaddagi ishlatilmagan eski tokenlar o'chiriladi —
+  faqat oxirgi havola ishlaydi.
+- `email` foydalanuvchining hozirgi email'iga teng bo'lmasa token yaroqsiz.
+- Yaroqsiz, muddati o'tgan, ishlatilgan token — bir xil javob (400
+  `invalid_token`): qaysi sabab ekani aytilmaydi.
+- Havolada token URL **fragmentida**: `{PUBLIC_URL}/reset-password#token=…`,
+  `/verify-email#token=…` — fragment serverga, proksi loglariga va
+  `Referer`ga tushmaydi; frontend uni POST body'da yuboradi.
+- Eskilarni tozalash: token berilganda shu foydalanuvchining muddati
+  o'tganlari o'chiriladi (alohida cron yo'q).
+
+### 30.2 Email tasdiqlash
+
+`users.email_verified_at` (null — tasdiqlanmagan). Migratsiya mavjud
+foydalanuvchilarni `created_at` bilan tasdiqlangan deb belgilaydi (ular
+bu qoidadan oldin kelgan), `tools/bootstrap_admin.py` admin'ni tasdiqlangan
+yaratadi.
+
+- `register` va `register-org` dan keyin tasdiqlash xati yuboriladi
+  (javobni kutmaydi — §30.5). Tashkilot xodimi admin tasdiqlamaguncha kira
+  olmaydi, lekin email'ini havola orqali tasdiqlay oladi (kirish shart emas).
+- Tasdiqlanmagan foydalanuvchi platformadan foydalanadi, lekin:
+  - unga **email bildirishnomalar yuborilmaydi** (§15.3 cron'i — `skipped`);
+    ilova ichidagi va push bildirishnomalar ishlaydi;
+  - **vakansiyaga ariza bera olmaydi** (§23): ariza kompaniyaga kontakt
+    beradi — 403 `email_not_verified`. `Depends(require_verified_email)`
+    (`core/deps.py`) — inline tekshiruv yo'q.
+- Parol tiklash havolasi ham email egaligini isbotlaydi: muvaffaqiyatli
+  tiklash `email_verified_at`ni ham yozadi.
+- `GET /users/me` + `email_verified: bool`.
+
+### 30.3 Parolni tiklash
+
+- `POST /auth/password/forgot {email}` — **har doim 202** (akkaunt bor-yo'qligi
+  oshkor qilinmaydi; xat yuborish javobdan keyin, vaqt farqi ham yo'q).
+  Xat faqat mavjud va faol (`is_active`) foydalanuvchiga ketadi.
+- `POST /auth/password/reset {token, password}` (parol ≥ 8, ≤ 128) — token
+  §30.1 bo'yicha tekshiriladi; parol yangilanadi, `password_changed_at`,
+  `email_verified_at` yoziladi, foydalanuvchining barcha ishlatilmagan
+  `reset_password` tokenlari o'chiriladi, login bloklash hisoblagichi
+  (§30.4) tozalanadi → 204. Faol bo'lmagan foydalanuvchi — `invalid_token`.
+- **Sessiyalar bekor bo'ladi:** JWT'larda `iat` bor (kasr soniya bilan); `users.password_changed_at`dan
+  oldin berilgan access va refresh tokenlar 401 (`get_current_user` va
+  `/auth/refresh`). `iat`siz eski tokenlar — `password_changed_at` bo'lsa
+  rad etiladi. O'g'irlangan sessiya parol tiklangach ishlamaydi.
+
+### 30.4 Urinishlarni cheklash (Redis)
+
+Muvaffaqiyatsiz login hisoblanadi; chegara oshsa **parol tekshirilmasdan**
+429 qaytadi (`Retry-After` sarlavhasi, `detail: {code: "too_many_attempts",
+retry_after}` — soniyalar). Oyna — birinchi xatodan boshlab qat'iy:
+
+| Kalit | Chegara | Oyna | Maqsad |
+|---|---|---|---|
+| `login:fail:pair:{email}:{ip}` | 5 | 15 daq | bitta joydan bitta akkauntga tanlash |
+| `login:fail:acct:{email}` | 20 | 15 daq | taqsimlangan (ko'p IP) hujum |
+| `login:fail:ip:{ip}` | 100 | 15 daq | ko'p akkauntga parol sochish (universitet NAT'i uchun keng) |
+
+- Muvaffaqiyatli login `pair` va `acct` hisoblagichlarini tozalaydi; IP
+  hisoblagichi o'z oynasida qoladi. Email kichik harfga keltirilib kalitga
+  kiradi. Faol bo'lmagan akkauntga to'g'ri parol (403) xato hisoblanmaydi.
+- Boshqa amallar (oyna 1 soat, har so'rov hisoblanadi):
+  `forgot` — email bo'yicha 3, IP bo'yicha 10; tasdiqlash xatini qayta
+  yuborish — foydalanuvchi bo'yicha 3; `register` va `register-org` — IP
+  bo'yicha 10 (begona manzillarga xat yog'dirishga qarshi). `reset` va
+  `verify-email` — IP bo'yicha 20 / 15 daq.
+- Redis ishlamasa — **fail-open** (log `warning`): login butun platforma
+  uchun to'xtamasin; parol bcrypt bilan baribir sekin.
+- `forgot`da chegara oshsa ham 429 (email bor-yo'qligini oshkor qilmaydi —
+  hisoblagich so'rovga qo'yiladi, akkauntga emas).
+- IP — `request.client.host` (uvicorn `--proxy-headers`). Modul 8:
+  `deploy/nginx.conf` mijoz IP'sini `real_ip` bilan oladi (faqat ichki
+  tarmoqlardan kelgan `X-Forwarded-For`ga ishonadi — Caddy) va backend'ga
+  `X-Forwarded-For $remote_addr` bilan **qayta yozadi**: mijoz yuborgan
+  soxta sarlavha IP chegarasini aylanib o'tolmaydi.
+
+### 30.5 Xat yuborish (`MAIL_BACKEND`)
+
+`notifications/mailer.py` (Modul 11) yagona yuboruvchi: `MAIL_BACKEND`
+— `smtp | console | off` (boshqa qiymat — ishga tushishda xato); bo'sh bo'lsa `SMTP_HOST` bor — `smtp`, yo'q —
+`off` (avvalgi xatti-harakat). `console` — lokal ishlab chiqish: xat
+yuborilmaydi, to'liq matni (havola bilan) log'ga `WARNING` darajasida
+yoziladi — standart log sozlamasida ham ko'rinadi; §15.3 cron'i ham shu
+backend bilan ishlaydi. `off`da hisob xatlari ham ketmaydi — operator
+`deploy/README.md` dagi ogohlantirishni ko'radi.
+
+Hisob xatlari (o'zbekcha, `core/account.py`) so'rov ichida SMTP kutmaydi:
+FastAPI `BackgroundTasks` bilan javobdan keyin yuboriladi; xato — log
+(`error`), foydalanuvchi qayta so'raydi. Xatlarda havola va muddat bor;
+tiklash xatida "siz so'ramagan bo'lsangiz — e'tibor bermang".
+
+### 30.6 API
+
+```
+# api/auth.py — ochiq
+POST /api/v1/auth/password/forgot      {email}            → 202 {status: "sent"}
+POST /api/v1/auth/password/reset       {token, password}  → 204 | 400 invalid_token
+POST /api/v1/auth/verify-email         {token}            → {email, verified: true} | 400 invalid_token
+# kirgan foydalanuvchi
+POST /api/v1/auth/verify-email/resend                     → 202 | 409 already_verified
+```
+
+`/auth/login`: 429 (§30.4). `/auth/register*`: 429 (IP). `/users/me` +
+`email_verified`. Vakansiya arizasi: 403 `email_not_verified`.
+
+### 30.7 Modul chegaralari
+
+Modul 1: `core/account.py` (tokenlar, xat matni), `core/throttle.py`
+(Redis hisoblagichlari), `core/security.py` (`iat`), `core/deps.py`
+(`require_verified_email`, token `iat` tekshiruvi), `models/user.py`
+(`email_verified_at`, `password_changed_at`, `AccountToken`), `api/auth.py`,
+`config.py` (`MAIL_BACKEND`), `tests/conftest.py` (fabrika foydalanuvchini
+tasdiqlangan yaratadi), migratsiya `0028_account_security`.
+Modul 11: `mailer.py` backend'lari, `emails.py` tasdiqlanmaganni o'tkazadi.
+Modul 4: `api/vacancies.py` ariza endpointiga dependency.
+Modul 8: `nginx.conf` (`real_ip`), `.env.example` (`MAIL_BACKEND`), README.
+
+### 30.8 Frontend
+
+- Login: "Parolni unutdingizmi?" havolasi; 429 — "Juda ko'p urinish, N
+  daqiqadan keyin qayta urinib ko'ring" (tugma shu vaqtgacha o'chiq).
+- `/forgot-password` — email → "Agar shu manzilda akkaunt bo'lsa, havola
+  yubordik" (har doim bir xil).
+- `/reset-password#token=…` — yangi parol va takror → muvaffaqiyat, login'ga;
+  yaroqsiz havola — tushuntirish va "Yangi havola so'rash".
+- `/verify-email#token=…` — ochilganda o'zi tasdiqlaydi; natija va davom
+  etish tugmasi (kirgan bo'lsa — profil yangilanadi).
+- Tasdiqlanmagan kirgan foydalanuvchiga navbar ostida yo'lak: manzil,
+  "Xatni qayta yuborish" (yuborilgach — "Yuborildi"), sessiya davomida
+  yopish mumkin. Ro'yxatdan o'tgan tashkilot ariza kartasida "emailingizni
+  tasdiqlang" eslatmasi. Vakansiya arizasida 403 — tushunarli xabar.

@@ -33,6 +33,7 @@ x-backend-env: &backend-env
   SMTP_PASSWORD: ${SMTP_PASSWORD:-}
   SMTP_FROM: ${SMTP_FROM:-TryJob <no-reply@localhost>}
   SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
+  MAIL_BACKEND: ${MAIL_BACKEND:-}
   PUBLIC_URL: ${PUBLIC_URL:-http://localhost}
   # §22.2: bo'sh — push o'chiq (sayt va email ishlaydi)
   VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}

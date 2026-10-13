@@ -1836,5 +1836,55 @@
       "closed": "This invite is no longer active",
       "notFound": "Invite not found or expired"
     }
+  },
+  "account": {
+    "backToLogin": "Back to sign in",
+    "waitButton": "Wait · {{time}}",
+    "tooMany": {
+      "minutes_one": "Too many attempts. Try again in {{count}} minute.",
+      "minutes_other": "Too many attempts. Try again in {{count}} minutes.",
+      "seconds_one": "Too many attempts. Try again in {{count}} second.",
+      "seconds_other": "Too many attempts. Try again in {{count}} seconds."
+    },
+    "forgot": {
+      "title": "Reset password",
+      "subtitle": "Enter your email and we'll send you a link to set a new password.",
+      "submit": "Send link",
+      "sentTitle": "Check your email",
+      "sentBody": "If there's a TryJob account for {{email}}, a password reset link is on its way. The link is valid for 1 hour.",
+      "sentHint": "No email? Check your spam folder and make sure the address is correct.",
+      "again": "Use another address"
+    },
+    "reset": {
+      "title": "New password",
+      "subtitle": "Set a new password for your account.",
+      "password": "New password",
+      "submit": "Save password",
+      "sessionsNote": "Changing the password signs you out on every device — you'll sign in again.",
+      "doneTitle": "Password updated",
+      "doneBody": "Sign in with your new password. Sessions on other devices have been closed.",
+      "toLogin": "Sign in",
+      "invalidTitle": "Link no longer valid",
+      "invalidBody": "The link has expired, was already used, or a newer one was requested. Request a new link.",
+      "requestNew": "Request a new link"
+    },
+    "verify": {
+      "checking": "Verifying…",
+      "checkingBody": "Checking your email address.",
+      "doneTitle": "Email verified",
+      "doneBody": "{{email}} is verified. Notifications will now reach this address and you can apply to vacancies.",
+      "continue": "Continue",
+      "invalidTitle": "Link no longer valid",
+      "invalidBody": "The link has expired or was already used. Sign in and resend the verification email.",
+      "invalidResend": "The link has expired or was already used. Get a new one with “Resend email” at the top of the page."
+    },
+    "banner": {
+      "title": "Verify your email.",
+      "body": "We sent a link to {{email}}. Once verified, notifications reach your inbox and you can apply to vacancies.",
+      "resend": "Resend email",
+      "sent": "Sent"
+    },
+    "pendingVerify": "We sent a verification link to {{email}} — you can open it while your application awaits approval.",
+    "verifyToApply": "Verify your email before applying (see the bar at the top of the page)."
   }
 }

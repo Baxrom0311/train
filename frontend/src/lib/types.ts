@@ -12,6 +12,8 @@ export type AnswerType = 'text' | 'code' | 'link' | 'file'
 export interface Me {
   id: string
   email: string
+  /** §30.2: tasdiqlanmagan — email bildirishnomalar ketmaydi, ariza berib bo'lmaydi */
+  email_verified: boolean
   full_name: string
   role: string
   org_type: 'company' | 'university' | null

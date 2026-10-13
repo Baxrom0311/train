@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy.pool import NullPool
 from sqlalchemy import text
 import uuid
+from datetime import datetime, timezone
 
 from app.database import Base, get_db
 from app.main import app
@@ -66,6 +67,13 @@ async def setup_db(create_tables):
             await conn.execute(table.delete())
         await conn.execute(text("SET session_replication_role = 'origin'"))
 
+    # §30.4 hisoblagichlari Redis'da — testlar bir-biriga ta'sir qilmasin
+    from app.core.redis_client import redis_client
+    from app.core.throttle import PREFIX
+    stale = [key async for key in redis_client.scan_iter(match=PREFIX + "*")]
+    if stale:
+        await redis_client.delete(*stale)
+
     # Boshlang'ich rollar va ruxsatlarni seed qilish
     async with TestingSessionLocal() as session:
         student_role = Role(id=uuid.uuid4(), name="student")
@@ -118,7 +126,8 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
 @pytest.fixture
 async def test_user_factory(db_session: AsyncSession):
     async def _create_test_user(
-        email: str, password: str, role_name: str = "student", is_active: bool = True
+        email: str, password: str, role_name: str = "student", is_active: bool = True,
+        email_verified: bool = True,
     ):
         from sqlalchemy.future import select
         result = await db_session.execute(select(Role).where(Role.name == role_name))
@@ -129,6 +138,7 @@ async def test_user_factory(db_session: AsyncSession):
             full_name="Test User",
             role_id=role.id,
             is_active=is_active,
+            email_verified_at=datetime.now(timezone.utc) if email_verified else None,
         )
         db_session.add(user)
         await db_session.commit()

@@ -4,8 +4,12 @@ import { AuthProvider, RequireAuth, RequirePermission, homeFor, useAuth } from '
 import Navbar from './components/Navbar'
 import Backdrop from './components/layout/Backdrop'
 import OfflineBanner from './components/layout/OfflineBanner'
+import VerifyEmailBanner from './components/layout/VerifyEmailBanner'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
+import VerifyEmailPage from './pages/VerifyEmailPage'
 import DashboardPage from './pages/DashboardPage'
 import LandingPage from './pages/LandingPage'
 import SimulationsPage from './pages/SimulationsPage'
@@ -53,10 +57,14 @@ export default function App() {
             <Backdrop />
             <Navbar />
             <OfflineBanner />
+            <VerifyEmailBanner />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
               <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
               <Route path="/simulations" element={<RequireAuth><SimulationsPage /></RequireAuth>} />
               <Route path="/runs/:id" element={<RequireAuth><RunPage /></RequireAuth>} />

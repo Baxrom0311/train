@@ -23,6 +23,7 @@ import argparse
 import asyncio
 import os
 import sys
+from datetime import datetime, timezone
 
 BACKEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "backend")
 sys.path.insert(0, BACKEND_DIR)
@@ -57,6 +58,7 @@ async def create_admin(email: str, password: str, full_name: str) -> None:
             full_name=full_name,
             role_id=admin_role.id,
             is_active=True,
+            email_verified_at=datetime.now(timezone.utc),  # operator manzili — tasdiqlash xati kerak emas (§30.2)
         )
         session.add(user)
         await session.commit()

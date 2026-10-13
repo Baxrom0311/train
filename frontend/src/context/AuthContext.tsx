@@ -10,6 +10,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<Me | null>
   register: (data: StudentSignup) => Promise<void>
   logout: () => void
+  /** Profilni qayta yuklash (masalan email tasdiqlangach). */
+  reload: () => Promise<Me | null>
   /** Ruxsat bo'yicha tekshiruv (CONTRACT.md §10.3) — rol nomi bo'yicha emas. */
   can: (permission: string) => boolean
 }
@@ -66,10 +68,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
   }
 
+  // fon yangilanishi (masalan email tasdiqlangach): xato bo'lsa sessiyaga tegmaydi — loadMe'dan farqi
+  const reload = useCallback(async () => {
+    const me = await fetchMe()
+    setUser(me)
+    return me
+  }, [])
+
   const can = useCallback((permission: string) => Boolean(user?.permissions.includes(permission)), [user])
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, can }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, can, reload }}>{children}</AuthContext.Provider>
   )
 }
 
