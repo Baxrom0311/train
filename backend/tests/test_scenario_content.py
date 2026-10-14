@@ -1,13 +1,20 @@
-"""`backend/content/scenarios/` kontenti: sxema, sifat qoidalari va to'liq kun o'tishi (CONTRACT.md §9.11, §29)."""
+"""`backend/content/scenarios/` kontenti: sxema, sifat qoidalari va to'liq kun/hafta/jamoa o'tishi (CONTRACT.md §9.11, §29)."""
+import uuid
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
 import yaml
 
+from app.ai.reports import FinalSummary
 from app.models.enums import AIEvalStatus, NodeType, RunEventStatus, RunStatus, Sector
-from app.scenario.engine import Answer, create_run, decide, submit_answer
+from app.models.scenario import RunTeam, RunTeamMember
+from app.scenario.conditions import FlagSet, ScoreGte, iter_leaves, referenced_nodes, score_nodes
+from app.scenario.engine import Answer, advance, create_run, decide, submit_answer
 from app.scenario.importer import import_scenario, publish_version
+from app.scenario.reports import write_final_report
 from app.scenario.schema import ANSWER_TYPES, PersonaKind, ScenarioDefinition, scenario_warnings
+from app.scenario.team import assign_roles
 from tests.test_runs_engine import T, _events, _step
 
 CONTENT = Path(__file__).resolve().parents[1] / "content" / "scenarios"
@@ -18,15 +25,23 @@ def _load(path: Path) -> ScenarioDefinition:
     return ScenarioDefinition.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")))
 
 
+def _kind(d: ScenarioDefinition) -> str:
+    return "team" if d.team is not None else ("week" if d.duration_days == 5 else "day")
+
+
+DEFS = {p.stem: _load(p) for p in FILES}
+WEEKS = sorted(slug for slug, d in DEFS.items() if _kind(d) == "week")
+TEAMS = sorted(slug for slug, d in DEFS.items() if _kind(d) == "team")
+
+
 def test_content_covers_every_sector():
-    """§9.11: har sohada kamida bitta 1 kunlik ssenariy + IT haftaligi; har 1 kunlik `test_full_day`da."""
-    defs = [_load(p) for p in FILES]
-    assert sorted((d.sector.value, d.duration_days) for d in defs) == [
-        ("Banking", 1), ("Data", 1), ("HR", 1), ("IT", 1), ("IT", 1), ("IT", 5), ("Marketing", 1)]
-    assert {d.sector for d in defs} == set(Sector)
-    # jamoaviy ssenariy (§29) o'z to'liq kuni bilan — tests/test_team_runs.py
-    assert {d.slug for d in defs if d.duration_days == 1 and d.team is None} == set(PATHS)
-    assert [d.slug for d in defs if d.team is not None] == ["lazurit-go-express-team-day1"]
+    """§9.11: har sohada 1 kunlik, haftalik va jamoaviy ssenariy; har biri o'z to'liq o'tish testida."""
+    by_sector: dict[Sector, list[str]] = {}
+    for d in DEFS.values():
+        assert d.duration_days in (1, 5) and (d.team is None or d.duration_days == 1), d.slug
+        by_sector.setdefault(d.sector, []).append(_kind(d))
+    assert {s: sorted(k) for s, k in by_sector.items()} == {s: ["day", "team", "week"] for s in Sector}
+    assert {slug for slug, d in DEFS.items() if _kind(d) == "day"} == set(PATHS)
 
 
 @pytest.mark.parametrize("path", FILES, ids=lambda p: p.stem)
@@ -127,15 +142,45 @@ async def test_full_day(db_session, test_user_factory, slug, good):
     assert run.status == RunStatus.COMPLETED
 
 
-WEEK = "lazurit-go-backend-week1"
 WEEK_DAYS = {1: 7, 2: 8, 3: 9, 4: 12, 5: 13}   # chorshanba → keyingi seshanba (dam olish kunlari o'tkaziladi)
 
 
+def _week_shape(defn: ScenarioDefinition):
+    """Haftalik skelet: kalit task, unga bog'liq 4-kun incident juftligi, flag xabarlari, mentor izohi."""
+    (strong,) = [n for n in defn.nodes if any(isinstance(leaf, ScoreGte) for leaf in iter_leaves(n.when))]
+    (key,) = score_nodes(strong.when)
+    (weak,) = [n for n in defn.nodes if n.is_graded and n is not strong and key in referenced_nodes(n.when)]
+    flagged = {
+        n.id: leaf.flag for n in defn.nodes if n.type == NodeType.MESSAGE
+        for leaf in iter_leaves(n.when) if isinstance(leaf, FlagSet)
+    }
+    mentor_notes = [n.id for n in defn.nodes if n.after and n.after.node == key and n.from_ == defn.mentor.key]
+    return key, weak.id, strong.id, flagged, mentor_notes
+
+
+@pytest.mark.parametrize("slug", WEEKS)
+def test_week_shape(slug):
+    defn = DEFS[slug]
+    key, weak, strong, flagged, mentor_notes = _week_shape(defn)
+    assert (defn.node(weak).day, defn.node(weak).at) == (defn.node(strong).day, defn.node(strong).at)
+    assert defn.node(weak).day == 4 and defn.node(key).day < 4
+    wrong_flags = {o.flag for n in defn.nodes if n.type == NodeType.DECISION for o in n.options if o.grade == "wrong"}
+    assert len(wrong_flags) >= 2 and None not in wrong_flags
+    assert set(flagged.values()) == wrong_flags, "har xato qaror rahbar xabarini chaqiradi"
+    assert mentor_notes, "kalit task'dan keyin mentor izohi"
+    for day in range(1, 6):
+        assert defn.node(f"standup_d{day}").day == day and defn.node(f"day{day}_end").day == day
+    # nisbiy (`after`) node'lar haftalikda faqat xabar — to'liq hafta testi ularni kutmaydi
+    assert all(n.type == NodeType.MESSAGE for n in defn.nodes if n.after)
+
+
 @pytest.mark.parametrize("good", [True, False], ids=["strong", "weak"])
-async def test_full_week(db_session, test_user_factory, good):
-    """Har baholanadigan node o'z vaqtida topshiriladi; 4-kun incident'i 3-kun kodi baliga bog'liq."""
-    defn = _load(CONTENT / f"{WEEK}.yaml")
-    run = await _start(db_session, test_user_factory, CONTENT / f"{WEEK}.yaml", f"week-{good}@example.com")
+@pytest.mark.parametrize("slug", WEEKS)
+async def test_full_week(db_session, test_user_factory, slug, good):
+    """Har baholanadigan node o'z vaqtida topshiriladi; 4-kun incident'i kalit task baliga bog'liq."""
+    defn = DEFS[slug]
+    key, weak, strong, flagged, mentor_notes = _week_shape(defn)
+    run = await _start(db_session, test_user_factory, CONTENT / f"{slug}.yaml", f"{slug}-{good}@example.com")
     fixed = sorted(
         (n for n in defn.nodes if n.day is not None and n.is_graded),
         key=lambda n: (n.day, n.at),
@@ -153,14 +198,114 @@ async def test_full_week(db_session, test_user_factory, good):
             await decide(db_session, run, n.id, next(o.key for o in n.options if o.grade == grade), reply_at)
             await db_session.commit()
         else:
-            await _answer(db_session, run, n.id, reply_at, 40 if (n.id == "implement_cancel" and not good) else 80)
+            await _answer(db_session, run, n.id, reply_at, 40 if (n.id == key and not good) else 80)
 
     await db_session.refresh(run)
     events = await _events(db_session, run)
     assert run.status == RunStatus.COMPLETED
-    assert events["incident_refund_timeout"].status == (RunEventStatus.SUBMITTED if good else RunEventStatus.SKIPPED)
-    assert events["incident_double_refund"].status == (RunEventStatus.SKIPPED if good else RunEventStatus.SUBMITTED)
-    flagged = RunEventStatus.SKIPPED if good else RunEventStatus.DELIVERED
-    assert {events[m].status for m in ("lead_on_scope", "lead_on_friday")} == {flagged}
-    assert sorted(run.flags) == ([] if good else ["friday_deploy", "scope_creep"])
-    assert events["mentor_code_note"].status == RunEventStatus.DELIVERED
+    assert events[strong].status == (RunEventStatus.SUBMITTED if good else RunEventStatus.SKIPPED)
+    assert events[weak].status == (RunEventStatus.SKIPPED if good else RunEventStatus.SUBMITTED)
+    assert {events[m].status for m in flagged} == {RunEventStatus.SKIPPED if good else RunEventStatus.DELIVERED}
+    assert sorted(run.flags) == ([] if good else sorted(set(flagged.values())))
+    assert all(events[m].status == RunEventStatus.DELIVERED for m in mentor_notes)
+
+
+# ── Jamoaviy ssenariylar (§29) ────────────────────────────────────────
+
+
+@pytest.mark.parametrize("slug", TEAMS)
+def test_team_shape(slug):
+    """Jamoa skeleti: umumiy standup, qaror va kun yakuni; har rolga task va incident; rollararo bog'liqlik."""
+    defn = DEFS[slug]
+    roles = [r.key for r in defn.team.roles]
+    assert len(roles) == 3 and defn.team.min_size == 2
+    assert all(r.summary for r in defn.team.roles)
+    graded = [n for n in defn.nodes if n.is_graded]
+    for kind in (NodeType.TASK, NodeType.INCIDENT):
+        assert {n.role for n in graded if n.type == kind and n.role} == set(roles), kind
+    shared = {n.type for n in graded if n.role is None}
+    assert shared == {NodeType.TASK, NodeType.DECISION, NodeType.DAY_END}
+    (handoff,) = [n for n in graded if n.after is not None]
+    trigger = defn.node(handoff.after.node)
+    assert handoff.after.event == "submitted" and trigger.role and handoff.role and trigger.role != handoff.role
+
+
+def _grid():
+    """09:00–17:45 har 15 daqiqa (tushlikdan tashqari)."""
+    for h in (9, 10, 11, 12, 14, 15, 16, 17):
+        for m in (0, 15, 30, 45):
+            yield f"{h:02d}:{m:02d}"
+
+
+@pytest.mark.parametrize("good", [True, False], ids=["strong", "weak"])
+@pytest.mark.parametrize("slug", TEAMS)
+async def test_full_team_day(db_session, test_user_factory, slug, good):
+    """Uch a'zo har biri o'z rolida: hamma ish o'z vaqtida, hisobotda har kimning hissasi."""
+    defn = DEFS[slug]
+    roles = [r.key for r in defn.team.roles]
+    version, _ = await import_scenario(db_session, defn)
+    await publish_version(db_session, version)
+    users = []
+    for i, name in enumerate(("Ali", "Bobur", "Charos")):
+        u = await test_user_factory(f"{slug}-{good}-{i}@example.com", "pass")
+        u.full_name = name
+        users.append(u)
+    team = RunTeam(id=uuid.uuid4(), scenario_id=version.scenario_id, scenario_version_id=version.id,
+                   captain_id=users[0].id, invite_code=uuid.uuid4().hex[:8].upper(), status="started",
+                   created_at=T("08:00"), started_at=T("08:00"))
+    db_session.add(team)
+    await db_session.flush()
+    holdings = assign_roles(roles, [(u.id, role) for u, role in zip(users, roles)])
+    holder = {role: u for u in users for role in holdings[u.id]}
+    for i, u in enumerate(users):
+        db_session.add(RunTeamMember(team_id=team.id, user_id=u.id, roles=holdings[u.id],
+                                     joined_at=T("08:00") + timedelta(seconds=i)))
+    run, _ = await create_run(db_session, users[0].id, version, T("09:00"), T("09:00"), team_id=team.id,
+                              participants=[u.id for u in users])
+    await db_session.commit()
+
+    for hhmm in _grid():
+        now = T(hhmm)
+        await _step(db_session, run, now)
+        reply_at = now + timedelta(minutes=1)
+        for e in (await _events(db_session, run)).values():
+            node = defn.node(e.node_id)
+            if e.status != RunEventStatus.DELIVERED or not node.is_graded:
+                continue
+            actor = holder[node.role] if node.role else users[1]
+            if node.type == NodeType.DECISION:
+                grade = "correct" if good else "wrong"
+                option = next(o.key for o in node.options if o.grade == grade)
+                await decide(db_session, run, node.id, option, reply_at, actor_id=actor.id)
+                await db_session.commit()
+            else:
+                sub, _ = await submit_answer(db_session, run, node.id, Answer(text="javob"), reply_at, actor_id=actor.id)
+                sub.ai_eval_status = AIEvalStatus.COMPLETED
+                sub.ai_score = 85 if good else 55
+                sub.evaluated_at = reply_at
+                await db_session.commit()
+
+    await db_session.refresh(run)
+    events = await _events(db_session, run)
+    assert run.status == RunStatus.COMPLETED
+    assert not [e.node_id for e in events.values() if e.status == RunEventStatus.MISSED]
+    decision = next(n for n in defn.nodes if n.type == NodeType.DECISION)
+    wrong_flag = next(o.flag for o in decision.options if o.grade == "wrong")
+    lead = [n.id for n in defn.nodes for leaf in iter_leaves(n.when) if isinstance(leaf, FlagSet) and leaf.flag == wrong_flag]
+    assert lead and {events[m].status for m in lead} == {RunEventStatus.SKIPPED if good else RunEventStatus.DELIVERED}
+
+    async def final(tasks, competencies, messages, completed):
+        return FinalSummary(summary="Jamoa", strengths=["a"], improvements=["b"], initiative_score=60)
+
+    assert await write_final_report(db_session, run.id, T("18:00"), summarize=final)
+    await db_session.refresh(run)
+    report = run.final_report
+    assert report["certificate"] is False and not report["incomplete"]
+    for t in report["tasks"]:
+        node = defn.node(t["node_id"])
+        if node.role:
+            assert t["role"] == node.role and t["by"] == str(holder[node.role].id), node.id
+    assert [r["key"] for r in report["team"]["roles"]] == roles
+    members = report["team"]["members"]
+    assert all(m["assigned"] >= 2 and m["submitted"] == m["assigned"] and m["on_time_rate"] == 100.0 for m in members)
+    assert sum(m["share"] for m in members) == pytest.approx(100, abs=0.2)

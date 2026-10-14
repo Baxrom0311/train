@@ -17,6 +17,11 @@ const CHIP = 'rounded-full border px-3.5 py-1.5 text-sm font-medium transition-c
 const CHIP_ON = 'border-primary/50 bg-primary/15 text-primary'
 const CHIP_OFF = 'border-border/60 bg-background/40 text-muted-foreground hover:text-foreground'
 
+// katalog formati: yakka 1 kunlik, yakka haftalik yoki jamoaviy (§29)
+const FORMATS = ['day', 'week', 'team'] as const
+type Format = (typeof FORMATS)[number]
+const formatOf = (s: Scenario): Format => (s.team ? 'team' : s.duration_days > 1 ? 'week' : 'day')
+
 export default function SimulationsPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -25,6 +30,7 @@ export default function SimulationsPage() {
   const [teams, setTeams] = useState<Team[]>([])
   const [query, setQuery] = useState('')
   const [sector, setSector] = useState<Sector | null>(null)
+  const [format, setFormat] = useState<Format | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [starting, setStarting] = useState<string | null>(null)
 
@@ -46,10 +52,12 @@ export default function SimulationsPage() {
   const q = query.trim().toLowerCase()
   const visible = scenarios.filter(
     (s) => (!sector || s.sector === sector)
+      && (!format || formatOf(s) === format)
       && (!q || s.title.toLowerCase().includes(q) || s.company_name.toLowerCase().includes(q)),
   )
   // filtrda faqat katalogda bor sohalar
   const sectors = SECTORS.filter((x) => scenarios.some((s) => s.sector === x))
+  const formats = FORMATS.filter((x) => scenarios.some((s) => formatOf(s) === x))
 
   const start = async (scenarioId: string) => {
     setStarting(scenarioId)
@@ -112,20 +120,36 @@ export default function SimulationsPage() {
           <Input className="pl-10" placeholder={t('simulations.search')} value={query}
             onChange={(e) => setQuery(e.target.value)} />
         </div>
-        {sectors.length > 1 && (
-          <div className="flex flex-wrap gap-2" role="group" aria-label={t('talent.filter.sector')}>
-            <button type="button" aria-pressed={sector === null} onClick={() => setSector(null)}
-              className={`${CHIP} ${sector === null ? CHIP_ON : CHIP_OFF}`}>
-              {t('talent.filter.any')}
-            </button>
-            {sectors.map((x) => (
-              <button key={x} type="button" aria-pressed={sector === x} onClick={() => setSector(sector === x ? null : x)}
-                className={`${CHIP} ${sector === x ? CHIP_ON : CHIP_OFF}`}>
-                {t(`catalog.sector.${x}`)}
+        <div className="flex flex-col gap-2 md:items-end">
+          {sectors.length > 1 && (
+            <div className="flex flex-wrap gap-2" role="group" aria-label={t('talent.filter.sector')}>
+              <button type="button" aria-pressed={sector === null} onClick={() => setSector(null)}
+                className={`${CHIP} ${sector === null ? CHIP_ON : CHIP_OFF}`}>
+                {t('talent.filter.any')}
               </button>
-            ))}
-          </div>
-        )}
+              {sectors.map((x) => (
+                <button key={x} type="button" aria-pressed={sector === x} onClick={() => setSector(sector === x ? null : x)}
+                  className={`${CHIP} ${sector === x ? CHIP_ON : CHIP_OFF}`}>
+                  {t(`catalog.sector.${x}`)}
+                </button>
+              ))}
+            </div>
+          )}
+          {formats.length > 1 && (
+            <div className="flex flex-wrap gap-2" role="group" aria-label={t('catalog.format.label')}>
+              <button type="button" aria-pressed={format === null} onClick={() => setFormat(null)}
+                className={`${CHIP} ${format === null ? CHIP_ON : CHIP_OFF}`}>
+                {t('catalog.format.any')}
+              </button>
+              {formats.map((x) => (
+                <button key={x} type="button" aria-pressed={format === x} onClick={() => setFormat(format === x ? null : x)}
+                  className={`${CHIP} ${format === x ? CHIP_ON : CHIP_OFF}`}>
+                  {t(`catalog.format.${x}`)}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">

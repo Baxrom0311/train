@@ -232,7 +232,14 @@
     "teamMembers_other": "{{count}} a'zo",
     "teamRun": "Jamoaviy",
     "left": "Siz jamoadan chiqqansiz",
-    "teamBusy": "Bu ssenariy bo'yicha yig'ilayotgan jamoangiz bor"
+    "teamBusy": "Bu ssenariy bo'yicha yig'ilayotgan jamoangiz bor",
+    "format": {
+      "label": "Format",
+      "any": "Barcha formatlar",
+      "day": "1 kunlik",
+      "week": "Haftalik",
+      "team": "Jamoaviy"
+    }
   },
   "run": {
     "status": {
