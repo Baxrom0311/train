@@ -1,0 +1,1045 @@
+# CONTRACT.md §9.11 — HR haftalik kontent. Kompaniya, nomzodlar, xodimlar, kanallar va raqamlar o'ylab topilgan.
+# Tanlov, ish haqi, sinov muddati, mehnat muhofazasi va shaxsiy ma'lumotlar qoidalari — o'quv maqsadidagi
+# ichki siyosat, real mehnat qonunchiligi yoki normativ emas.
+# Hikoya: yangi GL-3 gofroliniyasi uchun 16 kishini yollash haftasi — vakansiya matni → yollash rejasi (kalit) →
+# intervyu to'plami va baholash → takliflar va incident → onboarding rejasi, HR metrikalari va retro.
+# 4-kun incident'i 2-kundagi yollash rejasi baliga bog'liq.
+slug: qaldirgoch-qadoq-hr-week1
+title: "Qaldirg'och Qadoq — Junior HR mutaxassisi, 1 hafta: yangi liniya uchun ommaviy yollash"
+sector: HR
+company_name: "Qaldirg'och Qadoq"     # fictional: gofrokarton qadoq ishlab chiqaruvchi, ~320 xodim
+difficulty: junior
+duration_days: 5
+
+personas:
+  - key: dilnoza
+    name: "Dilnoza Rahimova"
+    role: "HR bo'limi boshlig'i"
+    tone: "xotirjam, talabchan, siyosatga tayanadi; xatoni ochiq aytadi, lekin xodimni himoya qiladi"
+    knows: [doc_onboarding, doc_gl3_project, doc_operator_profile, doc_hiring_policy, doc_comp_policy, doc_data_policy, doc_hr_metrics]
+    secrets:
+      - "Direktor jalb qilish byudjetini 3.5 mln so'mdan oshirmaydi, lekin tavsiya bonuslari HR rag'batlantirish fondidan alohida to'lanadi."
+      - "O'tgan yili mavsumiy qadoqlovchilarning uchdan biri birinchi oyda ketgan — sabab: ish sharoiti haqida oldindan aytilmagan."
+    busy_reply: "Direktor bilan yig'ilishdaman, chiqqach javob beraman."
+    deflect_reply: "Qarorni siz chiqarasiz. Hujjatdagi qoidani toping va raqamni o'zingiz hisoblang — keyin muhokama qilamiz."
+  - key: shahlo
+    name: "Shahlo Yusupova"
+    role: "Katta HR mutaxassisi, mentor"
+    kind: mentor
+    tone: "iliq, sabrli, savol bilan yo'naltiradi; hisobni yoki matnni o'zi yozib bermaydi"
+    knows: [doc_onboarding, doc_operator_profile, doc_hiring_policy, doc_funnel_history, doc_scorecard, doc_training_reqs]
+    busy_reply: "Telefon saralashidaman, 40 daqiqadan keyin yozaman."
+    deflect_reply: "Javobni o'zingiz topasiz. Qaysi qadamda ikkilanayotganingizni yozing — o'sha joydan savol beraman."
+    nudge_reply: "«{task}» dedlayni {time}da. Qayerda to'xtadingiz? Bitta raqam yoki bitta nomzod misolida birga ko'rib chiqamiz."
+  - key: rustam
+    name: "Rustam Nazarov"
+    role: "2-sex boshlig'i, GL-3 loyihasi buyurtmachisi"
+    tone: "to'g'ridan-to'g'ri, shoshqaloq, ishga tushirish sanasidan xavotirda; o'z tajribasiga ko'p tayanadi"
+    knows: [doc_gl3_project, doc_draft_ad, doc_interview_notes, doc_funnel_status]
+    secrets:
+      - "Zarina Usmonovaga telefonda «qo'lingizga 6.5 mln tegadi» degan — HR bilan kelishmagan."
+      - "GL-2 dan 2 nafar tajribali operatorni GL-3 ga o'tkazishga tayyor, lekin GL-2 o'rniga odam so'raydi."
+    busy_reply: "Liniyadaman, smena almashinuvi. Keyinroq yozaman."
+    deflect_reply: "Men HR emasman. Menga 16-noyabrga 16 ta odam kerak, qanday qilishni siz bilasiz."
+  - key: botir
+    name: "Botir Xolmatov"
+    role: "Bosh hisobchi o'rinbosari (ish haqi)"
+    tone: "aniq, raqamga tayanadi, qisqa yozadi; hujjatsiz hech narsani qabul qilmaydi"
+    knows: [doc_comp_policy, doc_referral_rules]
+    secrets:
+      - "Daromad solig'i bo'yicha o'quv soddalashtirish: taklif xatlarida taxminiy qo'lga summa gross × 0.88 deb yoziladi."
+    busy_reply: "Oylik vedomosti yopilyapti, bir soatdan keyin yozaman."
+    deflect_reply: "Hisobni men qilib bersam, sizni tekshirish ma'nosi qolmaydi. Formulasi ish haqi siyosatida."
+  - key: anvar
+    name: "Anvar Qodirov"
+    role: "Mehnat muhofazasi muhandisi"
+    tone: "jiddiy, qoidaga qat'iy, faktlarni jurnal bo'yicha aytadi"
+    knows: [doc_safety_policy, doc_safety_case, doc_training_reqs]
+    secrets:
+      - "19-oktabr ertalab u kasal bo'lgan; kirish yo'riqnomasini HR mutaxassisi «keyin o'tkazamiz» deb qoldirgan."
+    busy_reply: "Sexda tekshiruvdaman, keyinroq yozaman."
+    deflect_reply: "Qoida hujjatda yozilgan — har bandni o'sha 5 xodimning jurnali bilan solishtiring."
+
+documents:
+  - key: doc_onboarding
+    title: "HR bo'limi: yangi xodim uchun hafta tartibi"
+    content: |
+      Qaldirg'och Qadoq — Toshkent viloyatidagi gofrokarton va qadoq ishlab chiqaruvchi korxona, ~320 xodim,
+      3 ta sex. HR bo'limi: Dilnoza (boshliq), Shahlo (katta mutaxassis, mentor), 2 mutaxassis.
+      Ish haqi — buxgalteriya (Botir aka), mehnat muhofazasi — Anvar aka.
+
+      Ish kuni 09:00–18:00, tushlik 13:00–14:00. Har kuni 09:00 da standup (yozma ham bo'ladi):
+      kecha nima qildim / bugun nima qilaman (muddat bilan) / nima to'sib turibdi. 3–5 qator.
+      Har kuni 17:30 da kun yakuni hisoboti.
+
+      Asosiy qoidalar:
+      - Nomzod faqat lavozim profilidagi mezonlar bo'yicha baholanadi; har qaror yozma asoslanadi.
+      - Ish haqi va shartlar faqat yozma taklif bilan; og'zaki va'da berilmaydi.
+      - Nomzod va xodim ma'lumotlari faqat HR tizimi va korporativ pochtada.
+      - Rahbar siyosatga zid narsa so'rasa — muloyim rad, siyosatni tushuntirish va HR boshlig'iga yozma xabar.
+
+  - key: doc_gl3_project
+    title: "GL-3 loyihasi: yangi gofroliniya va shtat"
+    content: |
+      2-sexda yangi GL-3 gofroagregati o'rnatilmoqda. Ishlab chiqarishga tushish: 2026-11-16 (dushanba).
+      Ish grafigi: 2 smena (kunduzgi 08:00–20:00 va tungi 20:00–08:00 almashib), "2 kun ish / 2 kun dam".
+
+      Yangi shtat (16 kishi):
+      lavozim | soni | izoh
+      Gofroliniya operatori | 12 | har smenada 6 ta, minimal ekipaj — smenada 6
+      Qadoqlovchi-taxlovchi | 4 | har smenada 2 ta
+
+      Muddatlar (ichki reja):
+      - E'lonlar va arizalar: 2026-10-20 – 2026-10-31 (2 hafta)
+      - Intervyular: 2026-10-26 – 2026-11-04 (8 ish kuni)
+      - Takliflar: 2026-11-06 gacha qabul qilingan bo'lishi kerak
+      - Ishga chiqish va o'qitish: 2026-11-09 – 2026-11-13 (5 kun), mustaqil ish — 2026-11-16 dan
+      Erta to'lqin: zaxira bazasi va tavsiyalar bo'yicha nomzodlar shu hafta ko'riladi.
+
+  - key: doc_operator_profile
+    title: "Lavozim profili: Gofroliniya operatori (GL-3) — tasdiqlangan"
+    content: |
+      Vazifa: gofroagregatni ishga tushirish, format almashtirish, rejim nazorati, brakni aniqlash, smena hisobotini yuritish.
+      Ish sharoiti: shovqin, issiq zona (gofrovalik yonida), 20 kg gacha rulon qoldiqlarini ko'chirish, tungi smenalar.
+
+      Majburiy talablar (bittasi bajarilmasa — telefon saralashiga chaqirilmaydi):
+      M1. Ishlab chiqarish liniyasida (operator yoki operator yordamchisi) kamida 6 oy tajriba YOKI texnik kasb-hunar
+          ma'lumoti (mexanika, mexatronika, poligrafiya, qadoq, kimyo texnologiyasi va h.k.). Ombor, yuklash, savdo
+          liniya tajribasiga kirmaydi.
+      M2. Aralash (kunduzgi/tungi) smena grafigida ishlashga tayyorlik.
+      Ishga qabulda: tibbiy ko'rik (20 kg gacha yuk, shovqin) — saralashda so'ralmaydi, qabulda tasdiqlanadi.
+
+      Ball jadvali (maksimum 7, faqat M1–M2 bajarilganlar uchun):
+      - Liniyadagi tajriba (barcha davrlar yig'indisi): 6–23 oy = 1, 2–4 yil = 2, 5 yil va ko'p = 3
+      - Gofrokarton, qadoq yoki poligrafiya liniyasi tajribasi: bor = 2
+      - Texnik kasb-hunar yoki oliy texnik ma'lumot: bor = 1
+      - Uskunani sozlash (format almashtirish, val/pichoq sozlash) — aniq misol bilan: bor = 1
+      Telefon saralashiga chegara: 3 ball. Tajriba 2026-10-19 holatiga, to'liq oy/yilda (pastga yaxlitlanadi).
+      Razryad: 4-razryad — gofro/qadoq liniyasida operator sifatida kamida 2 yil; qolganlar — 3-razryad.
+
+  - key: doc_draft_ad
+    title: "Rustam akaning vakansiya e'loni qoralamasi"
+    content: |
+      ZAVODGA OPERATORLAR KERAK!!!
+      Qaldirg'och Qadoq yangi liniyaga 12 ta operator oladi. Faqat yigitlar, 20–35 yosh, harbiy xizmatni o'tagan,
+      uylanmagan bo'lsa yaxshi (tungi smenaga ko'p qoladi). Toshkent viloyati propiskasi shart. Ko'rinishi tartibli bo'lsin.
+      Oylik 8 mln gacha!!! Tajriba shart emas, hammasini o'rgatamiz. Sog'lom bo'lsin, kasalmand bo'lmasin.
+      Murojaat: Rustam aka, shaxsiy telefon +998 9X XXX XX XX (Telegram'ga rasm bilan rezyume tashlang).
+
+  - key: doc_hiring_policy
+    title: "Xodim tanlash va teng imkoniyatlar siyosati (ichki, o'quv versiyasi)"
+    content: |
+      1. Nomzod faqat lavozim profilidagi mezonlar bo'yicha baholanadi. Jins, yosh, millat, din, oilaviy holat,
+         homiladorlik yoki farzand rejalari, harbiy xizmat (lavozimga aloqasi bo'lmasa), yashash joyi/propiska,
+         tashqi ko'rinish bo'yicha talab qo'yish, saralash va bu haqda savol berish TAQIQLANADI.
+      2. Sog'liq haqida savol berilmaydi; ish talablari (yuk, shovqin, smena) aytiladi va ishga qabulda tibbiy ko'rik bilan
+         tasdiqlanadi. Ruxsat etilgan savol: "Ish talablari bilan tanishdingizmi, bu grafik sizga mos keladimi?"
+      3. E'londa: lavozim, vazifalar, majburiy talablar, ish sharoiti, grafik, ish haqi oralig'i (tasdiqlangan
+         siyosat bo'yicha), ariza berish yo'li — faqat korporativ kanal (hr@ pochta yoki HR telefoni). Rasm talab qilinmaydi.
+      4. Intervyu — strukturalangan: hamma nomzodga bir xil savollar, tasdiqlangan scorecard, har baho dalil bilan.
+      5. Ta'til va ish bo'shliqlari salbiy baholanmaydi; bo'shliq — neytral savol bilan aniqlashtiriladi.
+      6. CV xulosasi sanalarga mos kelmasa — "nomuvofiqlik" deb yoziladi, hisob sanalar bo'yicha qilinadi.
+      7. Rad etilganlarga 3 ish kuni ichida xushmuomala javob; sabab — profil mezoni bo'yicha, boshqa nomzodlar
+         haqida ma'lumotsiz; rozilik bilan zaxira bazasiga.
+
+  - key: doc_comp_policy
+    title: "Ish haqi va taklif shartlari: GL-3 (ichki, o'quv versiyasi)"
+    content: |
+      Okladlar (oyiga, soliqlargacha):
+      lavozim | oklad
+      Gofroliniya operatori, 3-razryad | 5 400 000
+      Gofroliniya operatori, 4-razryad | 6 000 000
+      Qadoqlovchi-taxlovchi | 4 200 000
+
+      Aralash smena ustamasi: okladning 15%, har oy.
+      Ishga tushirish mukofoti: 1 000 000 so'm, bir martalik, sinov muddatidan muvaffaqiyatli o'tganlarga, sinov
+      tugagan oyning ish haqi bilan.
+      Sinov muddati: 2 oy (ishga chiqqan kundan; masalan 09.11 → 08.01). Sinovda oklad kamaytirilmaydi.
+      Taklif xatida: lavozim, razryad, oklad, ustama, oylik gross, taxminiy qo'lga (o'quv soddalashtirish:
+      gross × 0.88), sinov muddati va tugash sanasi, mukofot sharti, ishga chiqish sanasi, taklifning amal qilish
+      muddati — 3 ish kuni (shanba-yakshanba kirmaydi).
+      Og'zaki va'da kuchga ega emas. Grid'dan chetga chiqish — faqat direktorning yozma ruxsati bilan.
+
+  - key: doc_reserve_cards
+    title: "Zaxira bazasi: operator vakansiyasiga mos bo'lishi mumkin bo'lgan nomzodlar (2026-10-19)"
+    content: |
+      A) Bobur Haydarov, 28 yosh. Kasb-hunar kolleji: "Poligrafiya ishlab chiqarishi".
+         2021-03 – 2022-08: gofroliniya operatori yordamchisi, «Kamalak Qadoq» MChJ (gofrokarton)
+         2022-09 – hozir: gofroliniya operatori, o'sha korxona
+         Sozlash: format almashtirishni mustaqil bajaradi, smenada 4–5 marta (misol CV'da)
+         Grafik: aralash smenaga tayyor
+
+      B) Zarina Usmonova, 26 yosh. Turmush qurgan, 1 farzand. Kollej: "Kimyo texnologiyasi".
+         2022-07 – 2025-05: sotuvchi, oziq-ovqat do'koni
+         2025-06 – hozir: plyonka ekstruziya liniyasi operatori, «Tegirmon Plast» MChJ (plastik qadoq)
+         Sozlash: yo'q (rejimni usta o'rnatadi)
+         Grafik: aralash smenaga tayyor
+
+      C) Sanjar Qurbonov, 19 yosh. Kasb-hunar kolleji: "Mexatronika" (2026-yil bitiruvchi).
+         2026-02 – 2026-05: amaliyot, liniya yordamchisi, «Shabada Tekstil» MChJ
+         Sozlash: yo'q
+         Grafik: aralash smenaga tayyor
+
+      D) Ravshan Toshpo'latov, 44 yosh. Umumiy o'rta ma'lumot.
+         2010-01 – 2020-12: bosma mashina operatori, «Chinor Bosma» MChJ (poligrafiya)
+         2021-01 – hozir: taksi haydovchisi
+         Sozlash: bosma mashinada format va valiklarni sozlagan (misol CV'da)
+         Grafik: aralash smenaga tayyor
+
+      E) Gulnora Ahmedova, 31 yosh. Oliy: pedagogika.
+         2019-04 – 2024-08: qadoqlash avtomati operatori, «Oqqush Qandolat» MChJ (konditer fabrikasi)
+         Sozlash: plyonka formatini almashtirgan (misol CV'da)
+         Grafik: "Kechki o'qishim bor, faqat kunduzgi smenada ishlay olaman."
+
+      F) Farrux Sattorov, 27 yosh. Umumiy o'rta ma'lumot.
+         Xulosa (CV boshida): "5 yillik ishlab chiqarish tajribasi, gofrokarton sexida ishlayman."
+         2021-02 – 2023-01: omborchi, «Karvon Ombor» logistika markazi
+         2023-02 – 2024-01: yuk tashuvchi haydovchi
+         2024-02 – hozir: yuklovchi (pogruzchik haydovchisi), «Kamalak Qadoq» MChJ, gofrokarton sexi ombori
+         Grafik: aralash smenaga tayyor
+
+  - key: doc_funnel_history
+    title: "Yollash voronkasi: tarixiy konversiyalar (2025–2026)"
+    content: |
+      bosqich | operator | qadoqlovchi
+      Ariza → telefon saralashidan o'tdi (intervyuga taklif) | 50% | 70%
+      Taklif qilingan → intervyuga keldi | 80% | 80%
+      Intervyu → ish taklifi | 40% | 60%
+      Ish taklifi → qabul qildi | 75% | 85%
+      Qabul qildi → 1-kuni ishga chiqdi | 90% | 90%
+
+      Rejalash qoidasi: kerakli son oxirgi bosqichdan orqaga hisoblanadi, HAR BOSQICHDA yuqoriga yaxlitlanadi
+      (odam butun bo'ladi).
+      Eslatma: 2024-yil mavsumiy yollashda (faqat qadoqlovchilar) ariza → ishga chiqish umumiy konversiyasi 15% bo'lgan.
+
+  - key: doc_channels
+    title: "Jalb qilish kanallari, byudjet va intervyu sig'imi (2026-10-20 – 2026-10-31)"
+    content: |
+      Kanal | narx (2 hafta) | operator arizalari | qadoqlovchi arizalari
+      Ishbozor sayti, oddiy e'lon | 1 400 000 | 48 | 10
+      Ishbozor sayti, TOP e'lon (oddiy o'rniga) | 2 600 000 | 72 | 14
+      "Vodiy Ish" Telegram kanali (2 post) | 700 000 | 32 | 12
+      Tuman bandlik markazi yarmarkasi (24.10) | 0 | 18 | 6
+      Zavod darvozasidagi banner | 250 000 | 8 | 6
+      Ishbozor CV bazasida faol qidiruv | 900 000 | 10 | 2
+
+      Arizalar soni — o'tgan kampaniyalar bo'yicha kutilma. Oddiy va TOP e'lon birga olinmaydi.
+      Jalb qilish byudjeti: 3 500 000 so'm (direktor tasdiqlagan, oshirilmaydi).
+      Tavsiya dasturi (xodim tavsiyasi) — HR rag'batlantirish fondidan, bu byudjetga kirmaydi; oqimi rejada
+      hisobga olinmaydi (zaxira).
+
+      Intervyu sig'imi: asosiy panel (Rustam aka + HR) — kuniga 6 ta intervyu, 26.10–04.11.
+      Ikkinchi panel (2-sex smena ustasi + HR mutaxassisi) — kuniga 4 ta, faqat 29.10–04.11 da, so'ralsa.
+      Kelmagan nomzod slotni band qilmaydi — sig'im o'tkaziladigan intervyular soniga solishtiriladi.
+
+  - key: doc_referral_rules
+    title: "Xodim tavsiyasi dasturi: qoidalar (ichki, o'quv versiyasi)"
+    content: |
+      1. Bonus: 500 000 so'm har tavsiya qilingan va ishga qabul qilingan nomzod uchun, nomzod sinov muddatidan
+         (2 oy) o'tgach, sinov tugagan oyning ish haqi bilan to'lanadi.
+      2. Bir xodimga chorakda ko'pi bilan 3 ta bonus.
+      3. Qatnasha olmaydi: HR xodimlari va shu vakansiya bo'yicha nomzodni baholaydigan rahbarlar.
+      4. Tavsiya qiluvchi nomzodning telefonini faqat nomzodning roziligi bilan beradi; tanlov jarayoniga aralashmaydi.
+         Tavsiya — ishga qabul kafolati emas: nomzod umumiy tartibda, profil bo'yicha ko'riladi.
+      5. Tavsiya HR'ning korporativ shakli orqali (hr@ pochta yoki HR xonasidagi qog'oz shakl).
+
+  - key: doc_data_policy
+    title: "Nomzod va xodim ma'lumotlari (ichki, o'quv versiyasi)"
+    content: |
+      1. Nomzod ma'lumotlari (F.I.Sh., telefon, CV, intervyu baholari va izohlari) faqat shu vakansiya va, nomzod
+         roziligi bilan, zaxira bazasi uchun ishlatiladi.
+      2. Uchinchi shaxsga (boshqa korxona, agentlik, tanish rahbar) nomzod ma'lumotini berish — faqat nomzodning
+         aniq yozma roziligi bilan. "O'zaro almashinuv" kelishuvlari bunga asos bo'lmaydi.
+      3. Ruxsat etilgan muqobil: rad etilgan nomzodga boshqa korxona vakansiyasi haqida xabar berish — nomzod o'zi
+         murojaat qiladi.
+      4. Qoidaga zid so'rov kelsa — muloyim rad va HR boshlig'iga xabar.
+
+  - key: doc_scorecard
+    title: "Intervyu scorecard: Gofroliniya operatori — tasdiqlangan"
+    content: |
+      Mezon | og'irlik
+      K1 Texnik bilim (liniya, sozlash, rejim) | 30%
+      K2 Xavfsizlik madaniyati | 25%
+      K3 Sifat va diqqat (brakni ko'rish) | 20%
+      K4 Jamoada ishlash va smena topshirish | 15%
+      K5 Ishonchlilik (intizom, grafikka rioya) | 10%
+
+      Har mezon 1–5 ball, ikki intervyuer alohida baholaydi. Mezon balli = ikki baholovchining o'rtachasi.
+      Umumiy ball = Σ og'irlik × mezon balli.
+      O'tish: umumiy ≥ 3.5 VA hech bir mezon < 2.5. Stop-mezon: K2 < 3.0 bo'lsa — umumiy balldan qat'i nazar rad.
+      Har baho nomzod javobidagi dalil bilan yoziladi. Dalilsiz yoki siyosatning 1–2-bandiga zid asosdagi baho
+      hisobga olinmaydi: shu mezon bo'yicha ikkinchi baholovchining bahosi olinadi va HR boshlig'iga xabar beriladi.
+      Tavsiya qilingan nomzodga qo'shimcha ball berilmaydi.
+
+  - key: doc_interview_notes
+    title: "Erta to'lqin intervyulari: 2026-10-21 (Rustam aka — R, Shahlo opa — S)"
+    content: |
+      A) Bobur Haydarov. Zaxira bazasi, telefon saralashi 19.10.
+         K1: R 5, S 5 — format almashtirishni bosqichma-bosqich aytdi, val haroratini to'g'ri izohladi
+         K2: R 4, S 4 — LOTO (to'xtatib, qulflab ta'mirlash) tartibini bildi
+         K3: R 4, S 3 — brak turlarini sanadi, lekin namunani tekshirish chastotasini aniq aytmadi
+         K4: R 4, S 4 — smena topshirish jurnalini misol bilan aytdi
+         K5: R 4, S 5 — 4 yilda bitta ham kechikish yo'q (avvalgi rahbardan ma'lumotnoma)
+
+      B) Zarina Usmonova. Zaxira bazasi, telefon saralashi 19.10.
+         K1: R 2, S 4 — S: ekstruziya rejimini va plyonka uzilishida harakatni aniq aytdi. R: "Ayol kishi val sozlashni eplamaydi."
+         K2: R 4, S 4 — SHHV va avariya tugmasi haqida to'g'ri javob
+         K3: R 3, S 4 — qalinlik o'lchovini misol qildi
+         K4: R 3, S 4 — smena topshirishda usta bilan ishlashini aytdi
+         K5: R 2, S 4 — S: 1 yil 4 oyda grafik buzilmagan. R: "Yosh bolasi bor, tez-tez kasal varaqasi oladi."
+
+      C) Ravshan Toshpo'latov. Zaxira bazasi, telefon saralashi 19.10.
+         K1: R 5, S 5 — bosma mashinasini sozlashni batafsil aytdi
+         K2: R 2, S 3 — "Himoya ko'zoynagi xalaqit beradi, tajriba bilan bilaman" dedi; LOTO'ni bilmaydi
+         K3: R 4, S 4 — rang va kesim brakini misol bilan aytdi
+         K4: R 4, S 4
+         K5: R 4, S 4
+
+      D) Alisher Jo'rayev, 23 yosh. Tavsiya: Lola Nurmatova (2-sex qadoqlovchisi).
+         2024-03 – hozir: poligrafiya liniyasi operatori yordamchisi, «Chinor Bosma» MChJ. Kollej: "Mexanika".
+         K1: R 3, S 3 — asosiy rejimlarni biladi, sozlashni mustaqil qilmagan
+         K2: R 4, S 4
+         K3: R 3, S 4
+         K4: R 4, S 4
+         K5: R 3, S 3
+         R izohi: "Lolaning tanishi, yaxshi yigit."
+
+  - key: doc_offer_brief
+    title: "Takliflar uchun ma'lumot (2026-10-22)"
+    content: |
+      Dilnoza opa tasdiqladi: erta to'lqin bo'yicha takliflar scorecard natijasiga ko'ra yuboriladi.
+      Ishga chiqish: 2026-11-09 (dushanba). Taklif bugun, 2026-10-22 (payshanba) yuboriladi.
+      Tajriba (razryad uchun): Bobur — gofroliniya operatori 2022-09 dan; Zarina — plyonka liniyasi operatori 2025-06 dan;
+      Alisher — poligrafiya liniyasi yordamchisi 2024-03 dan.
+      Rustam akaning xabari (bugun 09:10): "Zarinaga telefonda qo'lingizga 6.5 mln tegadi dedim, xatni shunga moslab yozing.
+      Bobur ham tez kelsin, unga ham 7 mln deb qo'yaylik."
+
+  - key: doc_funnel_status
+    title: "Yollash holati va tezkor imkoniyatlar (2026-10-22, 10:00)"
+    content: |
+      Joriy reja bo'yicha ishga tushgan kanallar: Ishbozor oddiy e'lon (1 400 000) va "Vodiy Ish" 2 post (700 000).
+      Ikkinchi panel so'ralmagan. Intervyu kalendari: 26.10–04.11, kuniga 6 slot.
+
+      kanal | 3 kunda kelgan operator arizalari | 31.10 gacha prognoz
+      Ishbozor oddiy | 14 | 48
+      "Vodiy Ish" | 9 | 32
+      Bandlik yarmarkasi (24.10) | — | 18
+      Jami | 23 | 98
+
+      Qolgan byudjet: 3 500 000 − 2 100 000 = 1 400 000 so'm.
+      Tezkor imkoniyatlar (31.10 gacha qo'shimcha operator arizalari):
+      imkoniyat | narx | + arizalar
+      Ishbozor e'lonini TOP'ga o'tkazish | 900 000 | 16
+      "Vodiy Ish" 3-post | 350 000 | 14
+      Ishbozor CV bazasida faol qidiruv | 900 000 | 8
+      Darvoza banneri | 250 000 | 5
+      "Ishchi Qo'l" yollash agentligi | 1 600 000 har ishga chiqqan operatorga | 5 ish kunida 2 nomzod
+      Rustam aka taklifi: GL-2 operatorlarini GL-3 ishga tushganda ketma-ket 2 smena (24 soat) qoldirish.
+      Ichki qoida: smena ≤ 12 soat, smenalar orasida ≥ 12 soat dam; agentlik — direktor yozma ruxsati bilan.
+
+  - key: doc_safety_policy
+    title: "Yangi xodimni ishga qo'yish: mehnat muhofazasi tartibi (ichki, o'quv versiyasi)"
+    content: |
+      1. Kirish yo'riqnomasi (2 soat, mehnat muhofazasi muhandisi) — birinchi smenadan OLDIN, jurnalda xodim imzosi bilan.
+         Muhandis bo'lmasa — xodim ishga qo'yilmaydi, yo'riqnoma ko'chiriladi yoki zaxira muhandis chaqiriladi.
+      2. Ish joyidagi yo'riqnoma (smena ustasi) va 2 smena murabbiy bilan stajirovka.
+      3. SHHV (kesilishga chidamli qo'lqop, poyabzal, quloqchin) berilmagan xodim ishga qo'yilmaydi.
+      4. Baxtsiz hodisa: birinchi yordam; 1 soat ichida muhandis va sex boshlig'iga; 24 soat ichida HB-1 dalolatnomasi;
+         3 ish kuni ichida sabab tahlili va choralar.
+      5. HR har yangi xodim uchun "ishga qo'yish varaqasi"ni yuritadi: yo'riqnoma, SHHV, murabbiy — uchala belgi
+         bo'lmaguncha xodim smena jadvaliga kiritilmaydi.
+
+  - key: doc_safety_case
+    title: "Hodisa va audit: mavsumiy qadoqlovchilar, GL-2 (2026-10-22)"
+    content: |
+      19.10 da GL-2 ga 5 nafar mavsumiy qadoqlovchi ishga chiqqan (yollashni boshqa HR mutaxassisi qilgan).
+      Bugun 09:40 da Sevara Ismoilova taxlash stolida tiqilib qolgan kartonni olayotib karton pichog'i bilan qo'lini kesdi.
+      Birinchi yordam ko'rsatildi, tikish kerak bo'lmadi, xodim uyiga yuborildi.
+
+      xodim | kirish yo'riqnomasi imzosi | qo'lqop berilgan | holat
+      Sevara Ismoilova | yo'q | yo'q | jarohat, uyda
+      Diyor Ergashev | yo'q | ha | 21.10 da "ish menga to'g'ri kelmaydi" deb ketdi
+      Muxlisa Karimova | ha | yo'q | ishlayapti
+      Nodirbek Salimov | ha | ha | ishlayapti
+      Kamola Yo'ldosheva | ha | ha | ishlayapti
+
+      19.10 ertalab muhandis kasal bo'lgan; HR "yo'riqnomani keyin o'tkazamiz" deb 2 xodimni smenaga yuborgan.
+      Omborda kesilishga chidamli qo'lqop 2 juft yetmagan. Diyor ketishda: "Ish shunchalik og'ir va issiq
+      bo'lishini hech kim aytmagan edi."
+
+  - key: doc_training_reqs
+    title: "GL-3 yangi xodimlar o'qitish dasturi: talablar (09.11–13.11)"
+    content: |
+      Jami 40 soat (har kuni 8 soat, 08:00–17:00, tushlik 12:00–13:00). Yangi xodimlar — 16 kishi.
+      modul | soat | qoida
+      Kirish yo'riqnomasi | 2 | 1-kun, eng birinchi; o'quv xonasida (12 o'rin)
+      SHHV berish va sex bilan tanishuv | 2 | 1-kun; SHHVsiz sexga kirilmaydi
+      Mehnat muhofazasi va yong'in xavfsizligi | 6 | yig'ilish zalida (40 o'rin)
+      Mehnat muhofazasi imtihoni | 1 | o'quv xonasida; liniyadagi stajirovkadan OLDIN
+      Sex tartibi, smena topshirish, 1C smena hisoboti | 2 |
+      Sifat va brak | 3 | yig'ilish zalida
+      GL-3 nazariyasi (uskuna yetkazib beruvchi muhandisi) | 8 | faqat 11.11 (chorshanba)
+      Liniyada stajirovka murabbiy bilan | 15 | faqat 12.11–13.11 (liniya sinov rejimida)
+      1-hafta yakuniy suhbat | 1 | 13.11
+      Murabbiy (buddy): bir murabbiyga ko'pi bilan 3 yangi xodim, faqat o'z lavozimidagi yangi xodimlarga (operatorga —
+      GL-2 operatori, qadoqlovchiga — qadoqlovchi); korxonada ≥ 1 yil; smena ustasi murabbiy bo'lmaydi. Murabbiylikka tavsiya qilinganlar:
+      murabbiy | lavozim | korxonada staj
+      Ilhom Rasulov | GL-2 operatori | 4 yil
+      Dilshod Karimov | GL-2 operatori | 2 yil
+      Oybek Saidov | GL-2 operatori | 3 yil
+      Akmal Tursunov | 2-sex smena ustasi | 7 yil
+      Lola Nurmatova | qadoqlovchi (GL-2) | 2 yil
+      Mohinur Qosimova | qadoqlovchi (GL-2) | 3 yil
+      Sherali Bozorov | GL-2 operatori | 8 oy
+      Nigora Aliyeva | GL-2 operatori | 5 yil
+      Jasur Holiqov | GL-2 operatori | 1 yil 6 oy
+      Nazorat suhbatlari: 1-kun, 1-hafta oxiri, 30-kun, sinov tugashidan oldin.
+
+  - key: doc_hr_metrics
+    title: "HR metrikalari: ma'lumotlar (2-sex, 2026-yil III chorak va shu hafta)"
+    content: |
+      2-sex shtati: 01.07.2026 — 118 kishi, 30.09.2026 — 124 kishi.
+      III chorakda ishdan ketganlar: 9 kishi; shundan o'z xohishi bilan 7, shundan 4 tasi ishga kirganidan keyin 90 kun ichida.
+      II chorakda (aprel–iyun) ishga olinganlar: 20 kishi; ulardan 90 kun ichida ketganlar: 6 kishi.
+      Erta to'lqin takliflari (22.10): 3 ta; javoblar (23.10, 09:00): Bobur — qabul, Alisher — qabul,
+      Zarina — rad ("telefonda boshqa summa aytilgan edi").
+      Mavsumiy qadoqlovchilar (19.10 dan, 5 kishi): 1 kishi birinchi haftada ketdi; kirish yo'riqnomasi 3 tasida, qo'lqop 3 tasida.
+
+      Formulalar va maqsadlar (korxona KPI):
+      metrika | formula | maqsad
+      Kadrlar qo'nimsizligi (chorak) | ketganlar / o'rtacha shtat ((boshi + oxiri) / 2) | yillik hisobda ≤ 20%
+      90 kunlik saqlanish | 90 kundan keyin qolganlar / ishga olinganlar | ≥ 85%
+      Taklif qabul qilish ulushi | qabul qilinganlar / yuborilgan takliflar | ≥ 80%
+      Kirish yo'riqnomasi qamrovi | yo'riqnoma imzolangan / yangi xodimlar | 100%
+
+nodes:
+  # ── 1-kun: profil va vakansiya matni ──────────────────────────────
+  - id: welcome
+    type: message
+    day: 1
+    at: "09:00"
+    from: dilnoza
+    brief: |
+      Xush kelibsiz! Bu hafta butun bo'lim GL-3 liniyasi bilan yashaydi: 16-noyabrga 16 kishi kerak.
+      Bugun — vakansiya matni va zaxira bazasi, ertaga — yollash rejasi, chorshanba — intervyu,
+      payshanba — takliflar, juma — onboarding va hisobot.
+
+  - id: standup_d1
+    type: task
+    day: 1
+    at: "09:00"
+    from: dilnoza
+    brief: "Standup: bugungi rejangizni onboarding formatida yozing (3–5 qator)."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Formatga mos: reja (muddat bilan) / to'siqlar, 3–5 qator"}
+      - {id: concrete, description: "Reja aniq: GL-3 shtati, vakansiya matni, zaxira bazasini saralash", weight: 2}
+    hints: ["Birinchi kunda 'kecha' o'rniga nima bilan tanishishingizni yozing va har ishga muddat qo'ying."]
+    reference_answer: "Bugun: GL-3 loyihasi va operator profili bilan tanishaman, vakansiya matnini tushlikkacha, zaxira bazasi saralashini 16:00 gacha tayyorlayman. To'siq: HR tizimiga kirish — Shahlo opadan so'rayman."
+
+  - id: mentor_intro
+    type: message
+    day: 1
+    at: "09:15"
+    from: shahlo
+    brief: |
+      Salom! Men Shahlo, shu hafta mentoringizman. Matn yoki hisobni siz uchun yozmayman, lekin qaysi qoidaga
+      qarash kerakligini birga topamiz. Hint so'rasangiz bo'ladi — har hint task balini biroz kamaytiradi.
+
+  - id: job_ad
+    type: task
+    day: 1
+    at: "09:30"
+    from: rustam
+    brief: |
+      Salom, HR! E'lon qoralamasini yozib qo'ydim, ertaga saytga chiqsin. Dilnoza opa "HR ko'rib chiqsin" dedi.
+      Topshiriq: 1) qoralamadagi siyosatga zid yoki noto'g'ri joylarni sanab, har biriga sabab yozing;
+      2) tasdiqlangan profil va ish haqi siyosati asosida Ishbozor uchun to'liq e'lon matnini yozing.
+    attachments: [doc_draft_ad, doc_operator_profile, doc_hiring_policy, doc_comp_policy, doc_gl3_project]
+    answer_types: [text, file]
+    due_in_minutes: 150
+    weight: 1.5
+    competencies: [communication, technical]
+    rubric:
+      - {id: bias_found, description: "Kamsituvchi talablar topilgan va olib tashlangan: jins (faqat yigitlar), yosh 20–35, harbiy xizmat, oilaviy holat, propiska, tashqi ko'rinish, 'kasalmand bo'lmasin' (sog'liq) — kamida 6 tasi, siyosat bandi bilan", weight: 2}
+      - {id: facts_fixed, description: "Noto'g'ri faktlar tuzatilgan: '8 mln gacha' o'rniga grid bo'yicha 5 400 000–6 000 000 + 15% ustama (6 210 000–6 900 000 gross); 'tajriba shart emas' o'rniga M1 (6 oy liniya yoki texnik ma'lumot); shaxsiy telefon va Telegram/rasm o'rniga korporativ kanal", weight: 2}
+      - {id: complete, description: "E'lon to'liq: vazifalar, M1–M2, ish sharoiti (shovqin, issiq, 20 kg, tungi smena), grafik 2/2 12 soat, tibbiy ko'rik qabulda, ishga chiqish 09.11 va o'qitish, ariza muddati 31.10 gacha", weight: 1.5}
+      - {id: tone, description: "Ochiq, hurmatli, barcha nomzodlarga qaratilgan til; undov va KATTA harflar suiiste'molisiz"}
+    hints:
+      - "Qoralamani qator-qator tanlov siyosatining 1–3-bandlari bilan solishtiring: har talab ishning o'ziga kerakmi?"
+      - "Ish haqi oralig'ini ish haqi siyosatidan hisoblang: eng past va eng yuqori razryad, ustama bilan."
+      - "Ish sharoitini halol yozish — nomzodning keyin ketib qolmasligi uchun ham muhim."
+    reference_answer: |
+      Muammolar: "faqat yigitlar" (jins), "20–35 yosh" (yosh), "harbiy xizmatni o'tagan" (lavozimga aloqasiz), "uylanmagan" (oilaviy holat),
+      "propiska shart" (yashash joyi), "ko'rinishi tartibli" (tashqi ko'rinish), "kasalmand bo'lmasin" (sog'liq — faqat tibbiy ko'rik) — siyosat 1–2.
+      "8 mln gacha" — grid'ga zid; "tajriba shart emas" — M1'ga zid; shaxsiy telefon, Telegram'ga rasm — siyosat 3.
+      E'lon: Qaldirg'och Qadoq yangi GL-3 gofroliniyasiga 12 gofroliniya operatori qabul qiladi. Vazifalar: agregatni ishga tushirish,
+      format almashtirish, rejim va sifat nazorati, smena hisoboti. Talablar: liniyada (operator/yordamchi) ≥6 oy tajriba yoki texnik
+      kasb-hunar ma'lumoti; aralash smenaga tayyorlik. Sharoit: 2 kun ish / 2 kun dam, 12 soatlik kunduzgi va tungi smena, shovqin,
+      issiq zona, 20 kg gacha yuk; qabulda tibbiy ko'rik. Ish haqi: oklad 5 400 000–6 000 000 + 15% smena ustamasi
+      (6 210 000–6 900 000 so'm, soliqlargacha), sinovdan keyin 1 000 000 mukofot. 09.11 dan 5 kunlik pullik o'qitish, murabbiy.
+      Ariza: 31.10 gacha hr@ pochta yoki HR telefoni orqali. Barcha nomzodlar profil mezonlari bo'yicha teng ko'riladi.
+
+  - id: lead_ack_ad
+    type: message
+    after: {node: job_ad, event: submitted, minutes: 15}
+    from: dilnoza
+    brief: "E'lonni oldim. Rustam akaga qoralamadagi muammolarni o'zim tushuntiraman — siz zaxira bazasiga o'ting."
+
+  - id: reserve_screening
+    type: task
+    day: 1
+    at: "14:00"
+    from: shahlo
+    brief: |
+      Zaxira bazasida 6 ta nomzod bor — erta to'lqin uchun telefon saralashiga kimni chaqiramiz?
+      Har nomzod uchun: M1, M2, ball (kim uchun qo'llanadi), qaror va asos. Oxirida saralashga chaqiriladiganlar
+      ball bo'yicha tartibda va rad etilganlarga keyingi qadam.
+    attachments: [doc_reserve_cards, doc_operator_profile, doc_hiring_policy]
+    answer_types: [text, file]
+    due_in_minutes: 150
+    weight: 2
+    competencies: [technical, prioritization]
+    rubric:
+      - {id: must_haves, description: "Majburiy talab: Gulnora (E) — M2 ✗ (faqat kunduzgi); Farrux (F) — M1 ✗ (ombor, haydovchi, yuklovchi liniya emas, ma'lumot texnik emas); Sanjar (C) — M1 ✓ texnik diplom orqali (amaliyot 4 oy < 6 oy)", weight: 2}
+      - {id: scores, description: "Ball to'g'ri: Bobur 7 (3+2+1+1, liniyada 5 yil 7 oy), Ravshan 6 (3+2+0+1, 10 yil 11 oy), Zarina 4 (1+2+1+0, 1 yil 4 oy), Sanjar 1 (0+0+1+0); ±0", weight: 2}
+      - {id: shortlist, description: "Telefon saralashiga: Bobur 7, Ravshan 6, Zarina 4; Sanjar 1 < 3 — chaqirilmaydi", weight: 1.5}
+      - {id: fairness, description: "Yosh (19, 44), oilaviy holat va farzand, Ravshanning 2021 dan taksida ishlagani rad sababi qilinmagan; Farruxning '5 yil ishlab chiqarish' xulosasi nomuvofiqlik deb qayd etilgan", weight: 1.5}
+      - {id: next_steps, description: "Rad etilganlarga keyingi qadam: Gulnora — kunduzgi vakansiya uchun zaxira; Farrux va Sanjar — qadoqlovchi vakansiyasiga taklif yoki zaxira; 3 ish kuni ichida javob"}
+    hints:
+      - "Avval faqat M1 va M2. M1'da 'YOKI' bor — tajriba yetmasa, ma'lumotga qarang."
+      - "Liniyadagi tajribani sanalardan hisoblang va qaysi ish 'liniya' hisoblanishini profildan tekshiring."
+      - "Qadoq liniyasi plastik bo'lsa ham qadoq liniyasimi? Profil so'zlariga e'tibor bering."
+    reference_answer: |
+      A Bobur: M1 ✓, M2 ✓. Liniya 2021-03 – 2026-10 = 5 yil 7 oy → 3; gofro → 2; poligrafiya kolleji → 1; sozlash misoli → 1. Jami 7.
+      B Zarina: M1 ✓ (operator 1 yil 4 oy), M2 ✓. 1 + 2 (plastik qadoq liniyasi) + 1 (kimyo texnologiyasi) + 0 = 4. Oilaviy holat e'tiborga olinmaydi.
+      C Sanjar: M1 ✓ (amaliyot 4 oy < 6 oy, lekin mexatronika diplomi), M2 ✓. 0 + 0 + 1 + 0 = 1 < 3 → chaqirilmaydi; qadoqlovchiga taklif/zaxira.
+      D Ravshan: M1 ✓, M2 ✓. 2010-01 – 2020-12 = 10 yil 11 oy → 3; poligrafiya → 2; ma'lumot umumiy → 0; sozlash → 1. Jami 6.
+         2021 dan taksi — rad sababi emas, intervyuda neytral savol.
+      E Gulnora: M2 ✗ (faqat kunduzgi) → chaqirilmaydi, ball qo'llanmaydi; kunduzgi vakansiya uchun zaxira.
+      F Farrux: M1 ✗ — omborchi, haydovchi, pogruzchik liniya tajribasi emas, ma'lumot texnik emas; "5 yil ishlab chiqarish" — nomuvofiqlik.
+         Qadoqlovchi vakansiyasiga taklif qilish mumkin.
+      Saralashga: 1) Bobur 7, 2) Ravshan 6, 3) Zarina 4. Qolganlarga 3 ish kuni ichida javob.
+
+  - id: day1_end
+    type: day_end
+    day: 1
+    at: "17:30"
+    brief: "1-kun yakuni Dilnoza opaga: nima tayyor, nima ochiq qoldi, ertangi reja (yollash rejasi)."
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "E'lon va zaxira saralashi natijasi aniq (kim saralashga)", weight: 1.5}
+      - {id: plan, description: "Ertangi reja: voronka, kanallar, byudjet, intervyu sig'imi"}
+
+  # ── 2-kun: yollash rejasi (kalit) ─────────────────────────────────
+  - id: standup_d2
+    type: task
+    day: 2
+    at: "09:00"
+    from: dilnoza
+    brief: "Standup (2-kun). Shahlo opa kecha kechqurun saralashdagi 3 nomzodga qo'ng'iroq qildi — ertaga intervyu."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Kecha / bugun / to'siqlar"}
+      - {id: concrete, description: "Bugungi reja aniq: yollash rejasi (voronka, kanallar, byudjet, sig'im) muddati bilan", weight: 2}
+    hints: ["Rejani qaysi hujjatlar asosida va qachongacha qilasiz?"]
+    reference_answer: "Kecha: e'lon matni, zaxira saralashi (Bobur, Ravshan, Zarina). Bugun: yollash rejasi — voronka, kanallar, byudjet, intervyu sig'imi, 12:30 gacha. To'siq: kanal narxlari dolzarbligini Dilnoza opa bilan tekshiraman."
+
+  - id: hiring_plan
+    type: task
+    day: 2
+    at: "09:30"
+    from: dilnoza
+    brief: |
+      GL-3 yollash rejasini tuzing — direktorga shu bilan boraman. Kerak:
+      1) har lavozim uchun voronka: nechta ariza, intervyuga taklif, intervyu, ish taklifi, qabul kerak (hisob bilan);
+      2) kanallar to'plami: arizalar yetadimi, narxi, byudjetga sig'adimi, nima uchun aynan shu to'plam;
+      3) intervyu sig'imi va muddatlar: rejadagi sanalarga sig'amizmi, sig'masa — yechim;
+      4) bitta yollash xarajati (cost per hire) va asosiy xavflar.
+    attachments: [doc_gl3_project, doc_funnel_history, doc_channels]
+    answer_types: [text, file]
+    due_in_minutes: 210
+    weight: 3
+    competencies: [technical, prioritization, time_management]
+    rubric:
+      - {id: funnel_ops, description: "Operator voronkasi orqaga, har bosqichda yuqoriga: 12 ← 14 qabul ← 19 taklif ← 48 intervyu ← 60 taklif qilingan ← 120 ariza (12/0.108 ≈ 112 — qoidaga zid, qisman)", weight: 2.5}
+      - {id: funnel_pack, description: "Qadoqlovchi: 4 ← 5 ← 6 ← 10 intervyu ← 13 ← 19 ariza; 2024-yilgi 15% umumiy konversiya ishlatilmagan", weight: 1.5}
+      - {id: channels, description: "TOP'siz barcha kanallar 116 < 120 — yetmaydi; yagona mos to'plam TOP + Telegram + yarmarka: 122 operator, 32 qadoqlovchi arizasi, 3 300 000 so'm ≤ 3 500 000; banner yoki CV bazasi qo'shilsa byudjetdan oshadi (3 550 000 / 4 200 000)", weight: 2.5}
+      - {id: capacity, description: "Intervyular 48 + 10 = 58 > asosiy panel sig'imi 8 × 6 = 48; yechim: ikkinchi panel (+5 × 4 = 20 → 68) yoki muddatni oldinga surish", weight: 2}
+      - {id: cost_risks, description: "Cost per hire 3 300 000 / 16 = 206 250 so'm; xavf: operator arizalari zaxirasi atigi 2 ta — tavsiya dasturi zaxira sifatida, haftalik nazorat nuqtasi", weight: 1.5}
+    hints:
+      - "Oxirgi bosqichdan boshlang: 12 kishi ishga chiqishi uchun nechta odam taklifni qabul qilishi kerak? Har bosqichda yuqoriga yaxlitlang."
+      - "Avval TOP'siz eng ko'p arizani hisoblang. Yetmasa — TOP bilan qaysi to'plamlar byudjetga sig'adi?"
+      - "Sig'imni intervyuga taklif qilinganlar emas, kelganlar soni bilan solishtiring; panel kunlarini sanab chiqing."
+    reference_answer: |
+      Operator: 12 ishga chiqish / 0.9 = 13.3 → 14 qabul; 14 / 0.75 = 18.7 → 19 taklif; 19 / 0.4 = 47.5 → 48 intervyu; 48 / 0.8 = 60 taklif qilingan;
+      60 / 0.5 = 120 ariza. Qadoqlovchi: 4 / 0.9 → 5; 5 / 0.85 → 6; 6 / 0.6 = 10 intervyu; 10 / 0.8 → 13; 13 / 0.7 → 19 ariza.
+      Kanallar: oddiy + Telegram + yarmarka + banner + CV bazasi = 116 < 120 — TOP shart. TOP + Telegram + yarmarka = 122 operator / 32 qadoqlovchi,
+      2 600 000 + 700 000 + 0 = 3 300 000 so'm (byudjet 3 500 000). Banner qo'shilsa 3 550 000, CV bazasi — 4 200 000: byudjetdan oshadi.
+      Sig'im: 58 intervyu, asosiy panel 8 kun × 6 = 48 → 10 ta yetmaydi. Ikkinchi panelni 29.10–04.11 ga so'raymiz (+20, jami 68) — qadoqlovchilar va
+      operatorlarning bir qismi. Muddatlar: arizalar 31.10 gacha, intervyular 04.11 gacha, takliflar 06.11 gacha, ishga chiqish 09.11.
+      Cost per hire: 3 300 000 / 16 = 206 250 so'm. Xavflar: zaxira atigi 2 ariza — tavsiya dasturini zaxira sifatida ishga tushiramiz,
+      23.10 va 28.10 da arizalar soni prognoz bilan solishtiriladi; no-show yuqori bo'lsa — yarmarkada joyida saralash.
+
+  - id: mentor_plan_note
+    type: message
+    after: {node: hiring_plan, event: submitted, minutes: 30}
+    from: shahlo
+    brief: "Rejangizni ko'rdim. Payshanba kuni birinchi raqamlarni rejaga solishtiramiz — reja qog'ozda emas, prognozda tekshiriladi."
+
+  - id: data_request
+    type: decision
+    day: 2
+    at: "11:30"
+    from: rustam
+    brief: |
+      «Sariq Quti» HR'i (qo'shni korxona) qo'ng'iroq qildi: ularga ham operatorlar kerak. Bizga to'g'ri kelmagan
+      nomzodlar ro'yxatini (F.I.Sh., telefon, intervyu izohlari) Excel'da yuborsak, ular ham o'zlarinikini berishadi.
+      Bugun yuborib yuboring, Dilnoza opaga aytish shart emas — oddiy narsa.
+    competencies: [communication, stress_handling]
+    options:
+      - key: refuse_alternative
+        label: "Muloyim rad etaman: ma'lumot faqat nomzod roziligi bilan beriladi. Rad etilgan nomzodlarga «Sariq Quti» vakansiyasi haqida aytib, o'zlari murojaat qilishini taklif qilaman; Dilnoza opaga yozaman"
+        grade: correct
+      - key: ask_lead
+        label: "Rustam akaga javob bermay, so'rovni Dilnoza opaga uzataman"
+        grade: acceptable
+      - key: send_list
+        label: "Excel'ni yuboraman — almashinuv ikki tomonga foydali, nomzodlar ham ish topadi"
+        grade: wrong
+        flag: candidate_data_shared
+
+  - id: lead_on_data
+    type: message
+    day: 2
+    at: "14:00"
+    when: {flag: candidate_data_shared}
+    from: dilnoza
+    brief: |
+      «Sariq Quti»ga nomzodlar ro'yxati ketganini bildim. Bu shaxsiy ma'lumotlar qoidasining 2-bandiga zid: nomzodlar
+      bizga rozilik bergan, boshqa korxonaga emas, intervyu izohlari esa umuman tashqariga chiqmaydi. Ular bilan
+      bog'lanib o'chirishni so'rayman; bundan keyin bunday so'rovni avval menga yozing.
+
+  - id: referral_post
+    type: task
+    day: 2
+    at: "14:30"
+    from: dilnoza
+    brief: |
+      Zaxira sifatida xodim tavsiyasi dasturini ochamiz. Xodimlar uchun ichki e'lon yozing (ichki kanal va sex
+      e'lonlar taxtasi): kimni qidiryapmiz, bonus qancha va qachon, kim qatnasha olmaydi, qanday tavsiya qilinadi.
+      Oxirida misol: xodim 2 kishini tavsiya qilsa va ikkalasi 09.11 da ishga chiqib sinovdan o'tsa — qancha va qachon oladi.
+    attachments: [doc_referral_rules, doc_comp_policy, doc_operator_profile]
+    answer_types: [text]
+    due_in_minutes: 120
+    weight: 1
+    competencies: [communication, technical]
+    rubric:
+      - {id: rules, description: "Qoidalar to'g'ri: 500 000 sinovdan (2 oy) keyin, chorakda ≤ 3 ta, HR va baholaydigan rahbarlar qatnashmaydi, korporativ shakl orqali", weight: 2}
+      - {id: example, description: "Misol: 2 × 500 000 = 1 000 000 so'm; sinov 09.11 → 08.01.2027, yanvar oyi ish haqi bilan", weight: 1.5}
+      - {id: consent_fair, description: "Nomzod roziligi bilan raqam berish; tavsiya — kafolat emas, umumiy tartib; e'londa jins/yosh bo'yicha 'yigitlarni tavsiya qiling' kabi ibora yo'q", weight: 1.5}
+      - {id: clear, description: "Xodim tilida qisqa va tushunarli: lavozimlar va asosiy talab (≥6 oy liniya yoki texnik ma'lumot, aralash smena)"}
+    hints:
+      - "Bonus qachon to'lanishini sinov muddatining tugash sanasidan hisoblang."
+      - "Qoidalarning 3- va 4-bandi kimni cheklaydi va nomzodni qanday himoya qiladi?"
+    reference_answer: |
+      Do'stingizni GL-3 ga tavsiya qiling! Yangi gofroliniyaga operatorlar (liniyada ≥6 oy yoki texnik ma'lumot, aralash smena) va qadoqlovchilar kerak.
+      Tavsiya qilgan nomzodingiz ishga qabul qilinib, 2 oylik sinovdan o'tsa — 500 000 so'm bonus (chorakda 3 tagacha).
+      Qanday: HR shakli (hr@ yoki HR xonasi) orqali, nomzodning roziligi bilan uning telefonini yozing. Nomzod hammadek profil bo'yicha ko'riladi,
+      tavsiya — kafolat emas, tanlovga aralashilmaydi. HR xodimlari va nomzodni baholaydigan rahbarlar qatnashmaydi.
+      Misol: 2 nomzod 09.11 da chiqib, sinov 08.01.2027 da tugasa — 2 × 500 000 = 1 000 000 so'm yanvar ish haqi bilan.
+
+  - id: day2_end
+    type: day_end
+    day: 2
+    at: "17:30"
+    brief: "2-kun yakuni: reja asosiy raqamlari, tavsiya dasturi, ertangi reja (intervyu)."
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Rejaning asosiy raqamlari (ariza soni, kanal to'plami, byudjet, sig'im) aytilgan", weight: 1.5}
+      - {id: plan, description: "Ertangi reja va ochiq savollar (ikkinchi panel, arizalar nazorati)"}
+
+  # ── 3-kun: intervyu ───────────────────────────────────────────────
+  - id: standup_d3
+    type: task
+    day: 3
+    at: "09:00"
+    from: dilnoza
+    brief: "Standup (3-kun). Bugun ertalab Rustam aka va Shahlo opa erta to'lqindagi 4 nomzod bilan intervyu o'tkazishyapti."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Kecha / bugun / to'siqlar"}
+      - {id: concrete, description: "Bugungi reja: intervyu to'plami, natijalarni hisoblash, muddatlar", weight: 2}
+    hints: ["Ommaviy intervyular 26.10 dan — bugungi to'plam ularga ulgurishi kerak."]
+    reference_answer: "Kecha: yollash rejasi (120 operator arizasi, TOP + Telegram + yarmarka, 3.3 mln), tavsiya e'loni. Bugun: intervyu to'plami 12:00 gacha, tushdan keyin erta to'lqin baholari. To'siq: ikkinchi panel tasdig'i."
+
+  - id: interview_kit
+    type: task
+    day: 3
+    at: "09:30"
+    from: shahlo
+    brief: |
+      26.10 dan ommaviy intervyular boshlanadi — hamma panel bir xil savol bersin. Tasdiqlangan scorecard bo'yicha
+      intervyu to'plamini tuzing: har mezonga (K1–K5) 2 ta savol (xulq-atvor yoki vaziyat), 1/3/5 ball uchun
+      tavsif (nimani eshitsak qaysi ball), 45 daqiqalik intervyu tartibi (vaqt taqsimoti) va taqiqlangan
+      savollar ro'yxati — ularning o'rniga nima so'rash mumkinligi bilan.
+    attachments: [doc_scorecard, doc_operator_profile, doc_hiring_policy]
+    answer_types: [text, file]
+    due_in_minutes: 150
+    weight: 2
+    competencies: [technical, communication]
+    rubric:
+      - {id: questions, description: "10 ta savol (5 mezon × 2), har biri mezonga mos va ochiq: 'oxirgi marta ... qachon bo'lgan, nima qildingiz' yoki liniya vaziyati", weight: 2}
+      - {id: anchors, description: "Har mezon uchun 1/3/5 tavsifi kuzatiladigan xulqda (masalan, K2: 5 — LOTO'ni o'zi aytadi va misol; 1 — SHHVni keraksiz deydi)", weight: 2}
+      - {id: rules, description: "Hisob qoidalari kiritilgan: ikki baholovchi o'rtachasi, og'irliklar 30/25/20/15/10, o'tish ≥ 3.5, mezon < 2.5 yo'q, K2 < 3.0 — stop", weight: 1.5}
+      - {id: forbidden, description: "Taqiqlangan savollar (homiladorlik/farzand rejasi, yosh, oilaviy holat, sog'liq, harbiy xizmat, propiska) va qonuniy muqobili: grafik va ish talablari bilan tanishganmi", weight: 1.5}
+      - {id: timing, description: "45 daqiqa taqsimoti yig'indisi 45 ga teng: tanishuv, 10 savol, nomzod savollari, keyingi qadamlar"}
+    hints:
+      - "Yaxshi savol nomzodning o'tmishdagi aniq xatti-harakatini so'raydi, 'nima qilardingiz' emas."
+      - "Har mezon uchun avval '5 ball' javobni tasavvur qiling, keyin '1 ball' — o'rtasi '3'."
+      - "Siyosatning 2-bandida sog'liq o'rniga nima so'rash mumkinligi yozilgan."
+    reference_answer: |
+      K1: "Oxirgi format almashtirishni bosqichma-bosqich aytib bering"; "Gofrolist qatlamlarga ajralsa nimani tekshirasiz?" 5 — ketma-ketlik va sabab-oqibat, 3 — umumiy, usta yordamida; 1 — bilmaydi.
+      K2: "Uskunada tiqilish bo'lsa, qo'l bilan olishdan oldin nima qilasiz?"; "Hamkasbingiz SHHVsiz ishlasa nima qilgansiz?" 5 — LOTO, to'xtatish, xabar; 3 — to'xtatadi, LOTO'ni bilmaydi; 1 — "tez olaman".
+      K3: "Brakni qanday aniqlagansiz, misol"; "Namunani qanchada bir tekshirgansiz?" 5 — chastota va o'lchov; 1 — "ko'z bilan".
+      K4: "Smenani qanday topshirasiz?"; "Hamkasb bilan kelishmovchilik misoli". K5: "Oxirgi yil grafik buzilgan holat"; "Kechiksangiz kimga va qachon xabar berasiz?"
+      Hisob: ikki baholovchi o'rtachasi, Σ (30/25/20/15/10%), o'tish ≥ 3.5, hech bir mezon < 2.5, K2 < 3.0 — rad. Har baho dalil bilan.
+      Tartib: 5 tanishuv va ish sharoiti, 30 savollar (10 × 3), 7 nomzod savollari, 3 keyingi qadamlar = 45.
+      Taqiqlanadi: homiladorlik/farzand rejasi, yosh, oilaviy holat, sog'liq/kasallik, harbiy xizmat, propiska. O'rniga: "2/2, 12 soatlik
+      tungi smena va 20 kg yuk talablari bilan tanishdingizmi, bu grafik sizga mos keladimi?" — sog'liq qabulda tibbiy ko'rik bilan.
+
+  - id: interview_bias
+    type: decision
+    day: 3
+    at: "11:30"
+    from: rustam
+    brief: |
+      Intervyu savollariga ikkita narsa qo'shing: ayollardan yaqin 2 yilda farzand rejasi bormi deb so'raymiz,
+      40 dan oshganlardan surunkali kasalligi bormi deb so'raymiz. Liniya ishga tushganda dekret va kasal varaqasi
+      menga kerak emas. "Ixtiyoriy savol" deb yozsak, hech kim e'tiroz qilmaydi.
+    competencies: [communication, stress_handling]
+    options:
+      - key: refuse_legit
+        label: "Qo'shmayman: bu siyosatning 1–2-bandiga zid. O'rniga hamma nomzodga grafik va ish talablari haqida bir xil savol beramiz, sog'liq — qabulda tibbiy ko'rik bilan. Rustam akaga tushuntiraman va Dilnoza opaga yozaman"
+        grade: correct
+      - key: escalate_only
+        label: "Rustam akaga javob bermay, Dilnoza opaga uzataman"
+        grade: acceptable
+      - key: add_optional
+        label: "«Ixtiyoriy» belgisi bilan qo'shaman — javob bermaslik huquqi bor-ku"
+        grade: wrong
+        flag: biased_questions
+
+  - id: lead_on_bias
+    type: message
+    day: 3
+    at: "14:00"
+    when: {flag: biased_questions}
+    from: dilnoza
+    brief: |
+      Intervyu to'plamida farzand rejasi va kasallik haqida "ixtiyoriy" savollarni ko'rdim. Ixtiyoriy bo'lsa ham bu
+      saralash vositasi: javob bermagan nomzod ham shubha ostida qoladi. Siyosatning 1–2-bandi — bunday savol umuman yo'q.
+      Savollarni olib tashlaymiz; Rustam aka bilan o'zim gaplashaman.
+
+  - id: interview_scoring
+    type: task
+    day: 3
+    at: "14:30"
+    from: shahlo
+    brief: |
+      Ertalabki 4 intervyu baholari tayyor. Scorecard qoidasi bo'yicha har nomzodning mezon ballari va umumiy
+      ballini hisoblang, qoida bo'yicha hisobga olinmaydigan baholarni ajrating va qaror chiqaring: kimga taklif,
+      kimga rad (sababi bilan). Dilnoza opaga nimani xabar qilish kerakligini ham yozing.
+    attachments: [doc_scorecard, doc_interview_notes, doc_hiring_policy]
+    answer_types: [text, file]
+    due_in_minutes: 150
+    weight: 2
+    competencies: [technical, prioritization]
+    rubric:
+      - {id: invalid_ratings, description: "Zarinaning K1 (R 2 — 'ayol kishi') va K5 (R 2 — 'yosh bolasi bor') baholari dalilsiz/kamsituvchi — hisobga olinmaydi, S bahosi (4) olinadi; Dilnoza opaga xabar", weight: 2.5}
+      - {id: totals, description: "Ballar: Bobur 4.25; Zarina 3.825 (noto'g'ri hisobda 3.425); Ravshan 3.925; Alisher 3.5; ±0.01", weight: 2}
+      - {id: stop_rule, description: "Ravshan: K2 o'rtachasi 2.5 < 3.0 — stop-mezon, umumiy 3.925 bo'lsa ham rad", weight: 1.5}
+      - {id: decision, description: "Taklif: Bobur, Zarina, Alisher (3.5 — chegarada o'tadi, tavsiya qo'shimcha ball bermaydi); rad: Ravshan — xavfsizlik mezoni", weight: 1.5}
+    hints:
+      - "Avval har mezonda ikki baho o'rtachasini toping, keyin og'irlikka ko'paytiring."
+      - "Scorecard'ning oxirgi xatboshisi qaysi baholar hisobga olinmasligini aytadi — izohlarni o'qing."
+      - "O'tish shartlari uchta: umumiy ball, eng past mezon va stop-mezon. Har nomzodda uchalasini tekshiring."
+    reference_answer: |
+      Bobur: 5, 4, 3.5, 4, 4.5 → 0.3·5 + 0.25·4 + 0.2·3.5 + 0.15·4 + 0.1·4.5 = 4.25 → taklif.
+      Zarina: R'ning K1 "ayol kishi eplamaydi" va K5 "yosh bolasi bor" — siyosat 1-bandiga zid, dalilsiz → S bahosi: K1 4, K5 4.
+      Mezonlar 4, 4, 3.5, 3.5, 4 → 1.2 + 1.0 + 0.7 + 0.525 + 0.4 = 3.825 → taklif (R baholari bilan 3.425 bo'lib, noto'g'ri rad bo'lardi).
+      Ravshan: 5, 2.5, 4, 4, 4 → 3.925, lekin K2 2.5 < 3.0 (SHHVni rad etadi, LOTO'ni bilmaydi) → stop-mezon, rad.
+      Alisher: 3, 4, 3.5, 4, 3 → 0.9 + 1.0 + 0.7 + 0.6 + 0.3 = 3.5 → chegara, o'tadi; tavsiya ball qo'shmaydi.
+      Taklif: Bobur, Zarina, Alisher. Rad: Ravshan (xavfsizlik madaniyati), 3 ish kuni ichida. Dilnoza opaga: Rustam akaning Zarina bo'yicha 2 bahosi
+      siyosatga zid — panel uchun qisqa trening va scorecard'da "dalil" ustunini majburiy qilish.
+
+  - id: day3_end
+    type: day_end
+    day: 3
+    at: "17:30"
+    brief: "3-kun yakuni: intervyu to'plami, erta to'lqin natijasi, ertangi reja (takliflar)."
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Natijalar aniq: to'plam tayyor, kimga taklif, kimga rad", weight: 1.5}
+      - {id: risks, description: "Ochiq xavflar va ertangi reja (taklif xatlari, rad javobi)"}
+
+  # ── 4-kun: incident va takliflar ──────────────────────────────────
+  - id: standup_d4
+    type: task
+    day: 4
+    at: "09:00"
+    from: dilnoza
+    brief: "Standup (4-kun). E'lonlar 20.10 dan ishlayapti — bugun birinchi raqamlarni rejaga solishtiramiz."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Kecha / bugun / to'siqlar"}
+      - {id: concrete, description: "Bugungi reja: arizalar prognozini tekshirish, 3 taklif va rad javobi muddati bilan", weight: 2}
+    hints: ["Rejaning qaysi raqami bugun birinchi marta haqiqat bilan solishtiriladi?"]
+    reference_answer: "Kecha: intervyu to'plami, erta to'lqin baholari (3 taklif, 1 rad). Bugun: arizalar sur'ati va prognoz, taklif xatlari va rad javobi 16:30 gacha. To'siq: Botir akadan hisob tasdig'i."
+
+  - id: incident_staffing_gap
+    type: incident
+    day: 4
+    at: "10:00"
+    when: {any: [{missed: hiring_plan}, {score_lt: {node: hiring_plan, value: 60}}]}
+    from: rustam
+    brief: |
+      SHOSHILINCH! 3 kunda bor-yo'g'i 23 ta operator arizasi. Shu ketishda 16-noyabrda tungi smena bo'sh qoladi!
+      Direktor 45 daqiqada tezkor reja so'rayapti. Men GL-2 yigitlarini ketma-ket ikki smena qoldirishni taklif qildim.
+      Yozing: 1) prognoz bo'yicha nechta operator ishga chiqadi va qancha yetmaydi; 2) qolgan byudjetga qaysi
+      choralar; 3) intervyu sig'imi; 4) mening taklifim va agentlik bo'yicha javob; 5) direktorga 3–4 qatorlik xulosa.
+    attachments: [doc_funnel_status, doc_funnel_history, doc_gl3_project]
+    answer_types: [text]
+    due_in_minutes: 45
+    weight: 2
+    competencies: [stress_handling, technical, prioritization]
+    rubric:
+      - {id: forecast, description: "98 ariza → 49 → 39.2 → 15.7 → 11.8 → ≈ 10.6, ya'ni ~10 operator; 12 dan 2 tasi yetmaydi (smenada 6 talik minimal ekipaj buziladi); 120 gacha 22 ariza kam", weight: 2}
+      - {id: recovery, description: "1 400 000 ichida: TOP'ga o'tkazish + Telegram 3-post = 1 250 000, +30 → 128 ≥ 120 (yoki Telegram + CV bazasi = 120 aynan); banner + TOP 119 — yetmaydi", weight: 2}
+      - {id: capacity, description: "Intervyular ~58 > 48 slot: ikkinchi panelni darhol so'rash (+20)", weight: 1}
+      - {id: refuse_unsafe, description: "Ketma-ket 2 smena (24 soat) — ichki qoidaga zid, rad; agentlik — byudjetdan tashqari, faqat direktor yozma ruxsati bilan zaxira variant", weight: 1.5}
+      - {id: exec_summary, description: "Direktorga qisqa: muammo raqamda, chora va narx, keyingi tekshiruv sanasi (28.10)"}
+    hints:
+      - "Prognozdagi 98 arizani tarixiy konversiyalar bo'yicha oldinga yuring: oxirida nechta odam chiqadi?"
+      - "Qolgan byudjetga sig'adigan har juft chorani sanab, qaysi biri 120 ga yetkazishini toping."
+      - "Rustam akaning taklifini ichki qoidadagi smena va dam olish chegarasi bilan solishtiring."
+    reference_answer: |
+      Prognoz: 98 ariza × 0.5 = 49 × 0.8 = 39.2 × 0.4 = 15.7 × 0.75 = 11.8 × 0.9 ≈ 10.6 → ~10 operator, 12 dan 2 kam — tungi smena 6 o'rniga 4 kishi.
+      120 uchun 22 ariza yetmaydi. Chora (1 400 000 ichida): Ishbozor TOP'ga o'tkazish (900 000, +16) + "Vodiy Ish" 3-post (350 000, +14) =
+      1 250 000 so'm, +30 → 128 ariza; 150 000 qoladi. Tavsiya dasturi zaxira. Intervyu: 58 > 48 — ikkinchi panel 29.10–04.11 (+20).
+      Rustam aka taklifi: 24 soatlik ketma-ket smena — qoida (≤ 12 soat, ≥ 12 soat dam) va xavfsizlikka zid, rad. Agentlik (1 600 000/kishi) —
+      byudjetdan tashqari, 28.10 da prognoz yetmasa direktorga yozma so'rov bilan.
+      Direktorga: "Joriy sur'atda 16.11 ga 10/12 operator. Bugun TOP + 3-post (1.25 mln, byudjet ichida) → 128 ariza, ikkinchi panel. 28.10 da qayta tekshiruv,
+      yetmasa — agentlik bo'yicha so'rov."
+
+  - id: incident_safety_induction
+    type: incident
+    day: 4
+    at: "10:00"
+    when: {score_gte: {node: hiring_plan, value: 60}}
+    from: anvar
+    brief: |
+      SHOSHILINCH: GL-2 dagi yangi mavsumiy qadoqlovchi Sevara Ismoilova qo'lini kesib oldi. Tekshirsam,
+      jurnalda unda kirish yo'riqnomasi yo'q, qo'lqop ham berilmagan. 5 kishining hammasini tekshirdim — ilovada.
+      HR sifatida 45 daqiqada yozing: 1) hozir nima qilinadi (kim, qachon); 2) audit raqamlari; 3) sabab;
+      4) bu GL-3 ning 16 yangi xodimida takrorlanmasligi uchun nima o'zgaradi.
+    attachments: [doc_safety_case, doc_safety_policy]
+    answer_types: [text]
+    due_in_minutes: 45
+    weight: 2
+    competencies: [stress_handling, communication, initiative]
+    rubric:
+      - {id: immediate, description: "Darhol: Muxlisa qo'lqop berilguncha liniyadan olinadi; Sevara qaytguncha va qaytganda yo'riqnoma o'tkaziladi; HB-1 dalolatnomasi 24 soat ichida, sex boshlig'iga xabar; Sevara holatini so'rash", weight: 2}
+      - {id: audit_numbers, description: "Audit: yo'riqnoma 3/5 (60%), qo'lqop 3/5 (60%), to'liq qoidaga mos faqat 2/5 (Nodirbek, Kamola); 1 ketgan — erta ketish 20%", weight: 1.5}
+      - {id: root_cause, description: "Sabab — jarayon: muhandis yo'qligida yo'riqnoma ko'chirilmagan, ishga qo'yish varaqasi tekshirilmagan, SHHV zaxirasi rejalanmagan; aybdor qidirilmaydi", weight: 1.5}
+      - {id: prevention, description: "GL-3 uchun: uchala belgisiz smena jadvaliga kiritmaslik, 16 kishilik SHHV 06.11 gacha omborda, zaxira muhandis; Diyorning so'zi bo'yicha e'lon va intervyuda ish sharoitini oldindan aytish", weight: 1.5}
+    hints:
+      - "Tartibning 3- va 5-bandi: hozir ham ishlayotganlar orasida kim qoidaga to'liq mos emas?"
+      - "Jadvalni ikki ustun bo'yicha sanang va ikkalasi ham bor xodimlarni alohida toping."
+      - "Diyorning ketishdagi gapi GL-3 onboardingi uchun nimani o'rgatadi?"
+    reference_answer: |
+      Darhol: Muxlisa qo'lqop berilguncha liniyadan olinadi (omborga 2 juft so'rov bugun); Sevara holatini so'raymiz, qaytganda ishdan oldin kirish yo'riqnomasi;
+      Anvar aka bilan HB-1 dalolatnomasi 23.10 09:40 gacha, Rustam akaga xabar; 3 ish kunida sabab tahlili.
+      Audit: yo'riqnoma 3/5 = 60%, qo'lqop 3/5 = 60%, ikkalasi ham — faqat Nodirbek va Kamola (2/5 = 40%). Diyor ketdi — 1/5 = 20% birinchi haftada.
+      Sabab: 19.10 muhandis kasal — yo'riqnoma ko'chirilmay xodimlar smenaga yuborilgan; ishga qo'yish varaqasi tekshirilmagan; qo'lqop zaxirasi hisoblanmagan.
+      GL-3: varaqadagi uchala belgi (yo'riqnoma, SHHV, murabbiy) bo'lmaguncha jadvalga kiritilmaydi; 16 kishilik SHHV 06.11 gacha; zaxira muhandis;
+      e'lon va intervyuda shovqin, issiqlik, yuk haqida halol ma'lumot.
+
+  - id: offer_letters
+    type: task
+    day: 4
+    at: "14:00"
+    from: dilnoza
+    brief: |
+      Erta to'lqin takliflari: 1) Bobur, Zarina, Alisher uchun hisob jadvali — razryad, oklad, ustama, oylik gross,
+      taxminiy qo'lga, sinov tugash sanasi, taklif amal qilish muddati, uchala oylik fond; 2) Zarinaga to'liq taklif xati;
+      3) Ravshanga rad xati. Rustam akaning xabarini ham hisobga oling.
+    attachments: [doc_offer_brief, doc_comp_policy, doc_operator_profile, doc_hiring_policy]
+    answer_types: [text, file]
+    due_in_minutes: 150
+    weight: 2
+    competencies: [technical, communication]
+    rubric:
+      - {id: grades, description: "Razryad: Bobur 4 (gofro operatori 2022-09 dan, ≥ 2 yil), Zarina 3 (1 yil 4 oy), Alisher 3 (yordamchi, operator emas)", weight: 1.5}
+      - {id: pay_calc, description: "Bobur 6 000 000 + 900 000 = 6 900 000, qo'lga ≈ 6 072 000; Zarina va Alisher 5 400 000 + 810 000 = 6 210 000, qo'lga ≈ 5 464 800; fond 19 320 000", weight: 2}
+      - {id: dates, description: "Sinov 09.11.2026 – 08.01.2027, mukofot 1 000 000 yanvar ish haqi bilan; taklif 27.10.2026 gacha amal qiladi (3 ish kuni)", weight: 1.5}
+      - {id: verbal_promise, description: "Og'zaki va'da (Zarinaga 6.5 mln, Boburga 7 mln) bajarilmaydi: xat grid bo'yicha, Zarinaga farq halol tushuntiriladi, Rustam akaga va Dilnoza opaga yozma xabar", weight: 2}
+      - {id: rejection, description: "Ravshanga rad: hurmatli, sabab profil mezoni (xavfsizlik talablari) darajasida, boshqa nomzodlar va baholar haqida ma'lumotsiz, zaxira bazasi rozilik bilan"}
+    hints:
+      - "Razryad shartini har nomzodning qaysi lavozimda qancha ishlaganiga qo'ying."
+      - "Ustama okladdan hisoblanadi; qo'lga summa — siyosatdagi o'quv soddalashtirish."
+      - "3 ish kunini sanashda 22-oktabr qaysi kun ekaniga qarang."
+    reference_answer: |
+      Jadval: Bobur — 4-razryad, 6 000 000 + 15% 900 000 = 6 900 000 gross, qo'lga ≈ 6 072 000. Zarina — 3-razryad, 5 400 000 + 810 000 = 6 210 000, ≈ 5 464 800.
+      Alisher — 3-razryad (yordamchi, operatorlik yo'q), 6 210 000, ≈ 5 464 800. Oylik fond 19 320 000 so'm. Ishga chiqish 09.11.2026, sinov 08.01.2027 gacha,
+      mukofot 1 000 000 yanvar ish haqi bilan. Taklif 22.10 (payshanba) → 23, 26, 27 → 27.10.2026 gacha.
+      Zarinaga: "Zarina opa, sizni GL-3 ga gofroliniya operatori (3-razryad) lavozimiga taklif qilamiz: oklad 5 400 000, aralash smena ustamasi 810 000,
+      jami 6 210 000 so'm (taxminan qo'lga 5 464 800). Telefonda boshqa summa aytilgan bo'lsa — uzr, rasmiy shartlar shu xatda. ..."
+      Rustam akaga: og'zaki va'da grid'dan chiqadi, faqat direktor yozma ruxsati bilan; Boburga 7 mln ham yo'q — grid bo'yicha 6 900 000. Dilnoza opaga nusxa.
+      Ravshanga: "Qatnashganingiz uchun rahmat. Bu safar lavozimning mehnat xavfsizligi bo'yicha talablariga to'liq mos kelmadingiz. Roziligingiz bilan
+      ma'lumotlaringizni zaxira bazasida saqlaymiz."
+
+  - id: botir_offer_check
+    type: message
+    after: {node: offer_letters, event: submitted, minutes: 20}
+    from: botir
+    brief: "Takliflar hisobini oldim. Grid bo'yicha — 7 mln yoki 6.5 mln qo'lga summani faqat direktor buyrug'i bilan ko'raman."
+
+  - id: day4_end
+    type: day_end
+    day: 4
+    at: "17:30"
+    brief: "4-kun yakuni: bugungi incident qanday yopildi, takliflar holati, ertangi reja (onboarding, metrikalar)."
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Incident va takliflar holati aniq", weight: 1.5}
+      - {id: plan, description: "Ertangi reja va ochiq xavflar (javob muddati 27.10, arizalar nazorati)"}
+
+  # ── 5-kun: onboarding, metrikalar, retro ──────────────────────────
+  - id: standup_d5
+    type: task
+    day: 5
+    at: "09:00"
+    from: dilnoza
+    brief: "Standup (5-kun). Erta to'lqin javoblari keldi: ikki qabul, bitta rad."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Kecha / bugun / to'siqlar"}
+      - {id: concrete, description: "Bugungi reja: onboarding rejasi, metrikalar hisoboti, retro — muddatlar bilan", weight: 2}
+    hints: ["Bugungi uch ish qaysi tartibda va qachongacha?"]
+    reference_answer: "Kecha: incident, 3 taklif va rad xati. Bugun: GL-3 onboarding rejasi 12:00 gacha, metrikalar 16:00 gacha, retro. To'siq: murabbiylar ro'yxatini Rustam aka tasdiqlashi kerak."
+
+  - id: onboarding_plan
+    type: task
+    day: 5
+    at: "09:30"
+    from: dilnoza
+    brief: |
+      09–13 noyabr GL-3 ning 16 yangi xodimi uchun onboarding rejasini tuzing: kunlar bo'yicha dastur (modullar,
+      soatlar, guruhlar), murabbiylar ro'yxati (kim mos, kim mos emas — nega), ishga qo'yish varaqasi va nazorat
+      suhbatlari. Bu haftadagi mavsumiy qadoqlovchilar auditidan xulosani ham kiriting.
+    attachments: [doc_training_reqs, doc_safety_policy, doc_safety_case, doc_gl3_project]
+    answer_types: [text, file]
+    due_in_minutes: 150
+    weight: 2
+    competencies: [technical, prioritization, initiative]
+    rubric:
+      - {id: schedule, description: "Kunlar: 1-kun yo'riqnoma (birinchi) + SHHV + mehnat muhofazasi; imtihon stajirovkadan oldin; 11.11 — GL-3 nazariyasi 8 soat; 12–13.11 — stajirovka 15 soat; 13.11 — yakuniy suhbat; jami 40 soat", weight: 2}
+      - {id: groups, description: "Kirish yo'riqnomasi va imtihon o'quv xonasida — 16 > 12, ikki guruh (masalan 8 + 8); zal mashg'ulotlari hammaga birga", weight: 1.5}
+      - {id: buddies, description: "Murabbiylar lavozim bo'yicha: 12 operatorga 12 / 3 = 4 (mos 5: Ilhom, Dilshod, Oybek, Nigora, Jasur — bittasi zaxira), 4 qadoqlovchiga 4 / 3 → 2 (Lola, Mohinur); jami 6; Akmal (smena ustasi) va Sherali (8 oy) mos emas", weight: 2}
+      - {id: checklist, description: "Ishga qo'yish varaqasi (yo'riqnoma, SHHV, murabbiy) — uchalasisiz jadvalga kiritilmaydi; SHHV 16 kishiga 06.11 gacha", weight: 1.5}
+      - {id: retention, description: "Nazorat suhbatlari: 1-kun, 13.11, 30-kun (~09.12), sinov tugashidan oldin (08.01 gacha); realistik ish sharoiti va erta ketish xavfiga chora"}
+    hints:
+      - "Avval qat'iy sanali modullarni joylashtiring (11.11, 12–13.11), keyin qolganini 09–10.11 ga."
+      - "Murabbiylik shartlarini har nomzodga qo'ying: lavozim, staj, rol."
+      - "Auditdagi uchta muammo onboarding rejasining qaysi qismida yopiladi?"
+    reference_answer: |
+      09.11 (du): 08–10 A guruh (8) kirish yo'riqnomasi, B — SHHV va sex bilan tanishuv; 10–12 almashadi; 13–17 mehnat muhofazasi (zal, 4 soat).
+      10.11 (se): 08–10 mehnat muhofazasi (2 soat, jami 6); imtihon A 10–11, B 11–12 (o'quv xonasi), qolgan guruh — sex tartibi va 1C (2 soat); 13–16 sifat va brak (3 soat).
+      11.11 (cho): GL-3 nazariyasi, yetkazib beruvchi muhandisi, 8 soat. 12–13.11: liniyada stajirovka 8 + 7 = 15 soat; 13.11 16–17 yakuniy suhbat. Jami 40.
+      Murabbiylar: operatorlar 12 / 3 = 4 — Ilhom (4 yil), Nigora (5 yil), Oybek (3 yil), Dilshod (2 yil), zaxira Jasur (1.5 yil);
+      qadoqlovchilar 4 / 3 = 1.3 → 2 — Lola (2 yil), Mohinur (3 yil). Jami 6. Mos emas: Akmal — smena ustasi; Sherali — 8 oy < 1 yil.
+      Varaqa: yo'riqnoma imzosi, SHHV, murabbiy — uchalasisiz smenaga yo'q; SHHV 16 kishiga 06.11 gacha omborda; muhandis bo'lmasa zaxira muhandis.
+      Nazorat: 09.11, 13.11, ~09.12 (30-kun), 06.01 (sinov tugashidan oldin). Audit xulosasi: yo'riqnoma va SHHV 60% edi — varaqa; Diyor ketishi —
+      1-kun sex bilan tanishuvda issiqlik, shovqin, yuk haqida halol aytamiz.
+
+  - id: hr_metrics
+    type: task
+    day: 5
+    at: "14:00"
+    from: dilnoza
+    brief: |
+      Direktor uchun 2-sex HR metrikalari: qo'nimsizlik (chorak va yillik hisobda), o'z xohishi bilan ketganlar
+      ichida erta ketish ulushi, 90 kunlik saqlanish, erta to'lqin taklif qabuli, mavsumiy qadoqlovchilarda
+      yo'riqnoma qamrovi va birinchi hafta ketish. Har birini maqsad bilan solishtiring va 3 ta tavsiya bering.
+    attachments: [doc_hr_metrics, doc_safety_case]
+    answer_types: [text, file]
+    due_in_minutes: 120
+    weight: 1.5
+    competencies: [technical, communication]
+    rubric:
+      - {id: turnover, description: "O'rtacha shtat (118 + 124) / 2 = 121; qo'nimsizlik 9 / 121 ≈ 7.4% chorakda, yillik ≈ 29.8% > 20% (9 / 124 = 7.3% — formulaga zid)", weight: 2}
+      - {id: retention, description: "90 kunlik saqlanish 14 / 20 = 70% < 85%; o'z xohishi bilan ketganlarning 4 / 7 ≈ 57% i 90 kun ichida (barcha ketganlarning 4 / 9 ≈ 44%)", weight: 1.5}
+      - {id: offers_safety, description: "Taklif qabuli 2 / 3 ≈ 66.7% < 80% (sabab — og'zaki va'da); yo'riqnoma qamrovi 3 / 5 = 60% < 100%; birinchi haftada ketish 1 / 5 = 20%", weight: 1.5}
+      - {id: recommendations, description: "3 tavsiya raqamlarga bog'langan: onboarding va nazorat suhbatlari (erta ketish), faqat yozma taklif (qabul ulushi), ishga qo'yish varaqasi (100% qamrov)", weight: 1.5}
+    hints:
+      - "Qo'nimsizlik maxrajini formuladan oling, oxirgi kundagi shtatdan emas. Chorakni yilga qanday o'tkazasiz?"
+      - "Har metrikani alohida qatorda: qiymat — maqsad — farq."
+    reference_answer: |
+      Qo'nimsizlik: 9 / ((118 + 124) / 2 = 121) = 7.4% chorakda, × 4 ≈ 29.8% yillik — maqsad ≤ 20%, oshgan.
+      Erta ketish: o'z xohishi bilan 7 tadan 4 tasi 90 kun ichida (≈ 57%; barcha ketganlarning 44%). 90 kunlik saqlanish: 14 / 20 = 70% (maqsad 85%).
+      Taklif qabuli: 2 / 3 = 66.7% (maqsad 80%) — Zarina telefondagi og'zaki summa sababli rad etdi.
+      Mavsumiy qadoqlovchilar: yo'riqnoma 3 / 5 = 60% (maqsad 100%), birinchi hafta ketish 1 / 5 = 20%.
+      Tavsiyalar: 1) GL-3 onboardingi va 1-kun/1-hafta/30-kun suhbatlari — 90 kunlik saqlanishni 85% ga; 2) shartlar faqat yozma taklifda, rahbarlarga qisqa
+      yo'riqnoma — qabul ulushi; 3) ishga qo'yish varaqasi va SHHV zaxirasi — yo'riqnoma qamrovi 100%.
+
+  - id: retro
+    type: task
+    day: 5
+    at: "15:30"
+    from: shahlo
+    brief: |
+      Haftalik retro: 3 ta yaxshi ketgan narsa, 3 ta yaxshilash kerak bo'lgan narsa (aniq hafta voqeasi bilan)
+      va keyingi hafta uchun bitta o'lchanadigan maqsad.
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 90
+    weight: 1
+    competencies: [initiative, communication]
+    rubric:
+      - {id: specific, description: "Har band aniq voqeaga bog'langan (e'lon qoralamasi, reja raqamlari, baholashdagi kamsitish, og'zaki va'da, audit)", weight: 2}
+      - {id: honest, description: "O'z xatolarini halol tan olgan, aybni boshqaga qo'ymagan"}
+      - {id: goal, description: "Maqsad o'lchanadigan (masalan, 28.10 gacha 120 ariza va 100% ishga qo'yish varaqasi)", weight: 1.5}
+    hints: ["Har kundan bitta voqeani eslang: nima o'rgatdi va keyingi safar nima boshqacha bo'ladi?"]
+    reference_answer: "Yaxshi: e'londan kamsituvchi talablarni olib tashladim; rejada TOP'siz arizalar yetmasligini va sig'im kamligini oldindan topdim; scorecard'dagi kamsituvchi baholarni ajratdim. Yaxshilash: konversiya qoidasini darhol to'g'ri qo'llash; og'zaki va'da xavfini oldindan rahbarga aytish; mavsumiy xodimlar varaqasini birinchi kuni tekshirish. Maqsad: 28.10 gacha 120 operator arizasi va GL-3 ning 16 xodimida varaqa 100%."
+
+  - id: day5_end
+    type: day_end
+    day: 5
+    at: "17:30"
+    brief: "Hafta yakuni Dilnoza opaga: nima yetkazildi, nima ochiq, keyingi hafta rejasi (intervyular 26.10 dan)."
+    competencies: [communication]
+    rubric:
+      - {id: delivered, description: "Hafta natijalari aniq: e'lon, reja, intervyu to'plami, 2 qabul, onboarding, metrikalar", weight: 1.5}
+      - {id: open_items, description: "Ochiq ishlar: Zarina bilan qayta suhbat, arizalar nazorati, ikkinchi panel, SHHV"}
+      - {id: reflection, description: "Haftadan asosiy xulosa"}

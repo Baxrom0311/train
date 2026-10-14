@@ -232,7 +232,14 @@
     "teamMembers_other": "{{count}} members",
     "teamRun": "Team",
     "left": "You left the team",
-    "teamBusy": "You already have a team forming for this scenario"
+    "teamBusy": "You already have a team forming for this scenario",
+    "format": {
+      "label": "Format",
+      "any": "All formats",
+      "day": "1 day",
+      "week": "1 week",
+      "team": "Team"
+    }
   },
   "run": {
     "status": {

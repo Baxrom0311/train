@@ -1,0 +1,525 @@
+# CONTRACT.md §29 — jamoaviy HR ssenariysi (2–3 talaba). Kompaniya, odamlar, nomzodlar va raqamlar o'ylab topilgan.
+# Ishga qabul, ish haqi, tungi ish, mehnat muhofazasi va shaxsiy ma'lumotlar qoidalari — o'quv maqsadidagi
+# ichki siyosat, real mehnat qonunchiligi yoki normativ emas.
+# Hikoya: 1-sexda birinchi tungi smena ochilish kuni — rekruter ekipajni yig'adi, C&B tungi ish haqini hisoblaydi,
+# onboarding birinchi tunni tayyorlaydi; tushdan keyin maxfiy jadval sex chatiga tushib qoladi.
+slug: qaldirgoch-qadoq-night-shift-team-day1
+title: "Qaldirg'och Qadoq — HR jamoasi: yangi tungi smena ochilish kuni, 1 kun"
+sector: HR
+company_name: "Qaldirg'och Qadoq"     # fictional: gofrokarton qadoq ishlab chiqaruvchi, ~320 xodim
+difficulty: junior
+duration_days: 1
+
+team:
+  min_size: 2
+  roles:
+    - key: recruiter
+      title: "Rekruter"
+      summary: "Bugungi tungi ekipajni yig'adi: kim ishga chiqa oladi, bo'sh joylarni zaxiradan to'ldiradi, nomzodlar bilan aloqa"
+    - key: cb
+      title: "Kompensatsiya va ish haqi (C&B) mutaxassisi"
+      summary: "Tungi smena ish haqini va fondni hisoblaydi, sex boshlig'i qoralamasini tekshiradi; barcha raqamlar shu roldan"
+    - key: onboarding
+      title: "Onboarding va xodimlar bilan aloqa"
+      summary: "Birinchi tun dasturi, SHHV va murabbiylar, xodimlarga ketadigan barcha matnlar"
+
+personas:
+  - key: dilnoza
+    name: "Dilnoza Rahimova"
+    role: "HR bo'limi boshlig'i"
+    tone: "xotirjam, talabchan, siyosatga tayanadi; jamoadan aniq kelishuv va bitta ovoz kutadi"
+    knows: [doc_team_charter, doc_night_project, doc_data_policy, doc_leak_case]
+    secrets:
+      - "Direktor tungi smenani 1 hafta keyinga surishga ham rozi, agar xavfsizlik shartlari bajarilmasa — buni faqat so'rasalar aytadi."
+    busy_reply: "Direktor bilan yig'ilishdaman, chiqqach javob beraman."
+    deflect_reply: "Javobni jamoa bo'lib chiqaring: raqamlar C&B'dan, ro'yxat rekruterdan, matn onboarding'dan."
+  - key: shahlo
+    name: "Shahlo Yusupova"
+    role: "Katta HR mutaxassisi, jamoa mentori"
+    kind: mentor
+    tone: "iliq, sabrli, savol bilan yo'naltiradi; jamoada kim nimani kutayotganini aniq kelishishga undaydi"
+    knows: [doc_team_charter, doc_night_project, doc_admission_rules]
+    busy_reply: "Boshqa jamoa bilan gaplashyapman, birozdan keyin yozaman."
+    deflect_reply: "Javobni o'zingiz topsangiz yaxshiroq. Jamoadoshingizdan qaysi raqam yoki ro'yxat kerakligini aniq so'rang."
+    nudge_reply: "«{task}» dedlayni {time}da. Jamoadoshlardan nimani kutyapsiz? Kutmasdan qila oladigan qismidan boshlang."
+  - key: komil
+    name: "Komil Rasulov"
+    role: "1-sex (bosma va shtans) boshlig'i"
+    tone: "shoshqaloq, rejaga bog'langan, odamlarga yaxshi munosabatda, lekin qoidani 'keyinroq' deb qoldirishga moyil"
+    knows: [doc_night_project, doc_roster, doc_pay_draft]
+    secrets:
+      - "Kunduzgi smenadan yana 1 tajribali operatorni (Shuhrat) 2 hafta tungi smenaga murabbiy qilib berishga tayyor, agar so'rashsa."
+      - "Jadvalni sex chatiga o'zi yuborgan: 'smena ustasiga' deb noto'g'ri chatni tanlagan."
+    busy_reply: "Sexdaman, mashinalarni tungi smenaga tayyorlayapmiz. Keyinroq yozaman."
+    deflect_reply: "Men ishlab chiqarishchiman, HR qoidalarini siz bilasiz. Menga bugun 22:00 da ishlaydigan smena kerak."
+  - key: botir
+    name: "Botir Xolmatov"
+    role: "Bosh hisobchi o'rinbosari (ish haqi)"
+    tone: "aniq, raqamga tayanadi, qisqa yozadi; hujjatsiz hech narsani qabul qilmaydi"
+    knows: [doc_pay_rules, doc_pay_draft]
+    secrets:
+      - "Komilning qoralamasi buxgalteriyaga hali kelmagan; buyruq faqat C&B tasdiqlagan jadval bilan chiqadi."
+    busy_reply: "Oylik vedomosti yopilyapti, bir soatdan keyin yozaman."
+    deflect_reply: "Hisobni men qilib bersam, sizni tekshirish ma'nosi qolmaydi. Formulalar ish haqi qoidasida."
+  - key: anvar
+    name: "Anvar Qodirov"
+    role: "Mehnat muhofazasi muhandisi"
+    tone: "jiddiy, qoidaga qat'iy, faktlarni jurnal bo'yicha aytadi"
+    knows: [doc_admission_rules, doc_roster, doc_first_night]
+    secrets:
+      - "Bugun 11:00–13:00 da qo'shimcha kirish yo'riqnomasi o'tkaza oladi, agar 10:30 gacha ro'yxat bersalar."
+    busy_reply: "Sexda tekshiruvdaman, keyinroq yozaman."
+    deflect_reply: "Qoida hujjatda yozilgan — har xodimni to'rt shart bo'yicha birma-bir tekshiring."
+
+documents:
+  - key: doc_team_charter
+    title: "Tungi smena ochilishi: HR jamoasi kelishuvi"
+    content: |
+      Qaldirg'och Qadoq — gofrokarton va qadoq ishlab chiqaruvchi korxona, ~320 xodim. Bugun, 2026-12-07 (dushanba),
+      1-sexda birinchi tungi smena (22:00–06:00) ishga tushadi. HR'dan uch kishilik jamoa ajratilgan.
+
+      Kim nima qiladi:
+      - Rekruter: bugungi ekipaj ro'yxati (kim ishga chiqa oladi), bo'sh joylar va zaxira, nomzodlar bilan aloqa.
+      - C&B: tungi ish haqi, smena fondi, sex qoralamasini tekshirish. Xodimga yoki rahbarga raqam — faqat C&B tasdig'idan keyin.
+      - Onboarding: birinchi tun dasturi (yo'riqnoma, SHHV, murabbiylar, transport), xodimlarga ketadigan barcha matnlar.
+
+      Kelishuvlar:
+      - Ertalabki standup jamoaga bitta: kim nima qiladi, kim kimdan nima kutadi, nima to'sib turibdi.
+      - Ro'yxat rekruterdan, raqamlar C&B'dan, xodimga matn onboarding'dan — boshqa rol o'zboshimcha yozmaydi.
+      - Kim ishga chiqishi o'zgarsa — darhol jamoa chatida (C&B fondni, onboarding murabbiylarni qayta hisoblaydi).
+      - Kun oxirida Dilnoza opaga bitta umumiy hisobot.
+
+  - key: doc_night_project
+    title: "1-sex tungi smenasi: loyiha"
+    content: |
+      Tungi smena: 22:00–06:00, dushanba–juma kechalari. Uskunalar va minimal ekipaj (bittasi bo'lmasa — mashina ishlamaydi):
+      uskuna | soni | ekipaj
+      Fleksobosma-slotter FS-1, FS-2 | 2 | har biriga 1 operator + 1 yordamchi
+      Shtans (die-cut) | 1 | 1 operator + 1 yordamchi
+      Taxlash va qadoqlash | — | kamida 3 qadoqlovchi
+      Smena ustasi | 1 | ichki o'tkazma: Sobir Karimov
+      Smena minimal ekipaji: usta 1, operator 3, yordamchi 3, qadoqlovchi 3 = 10 kishi. Rejadagi shtat: 14 kishi
+      (usta 1, operator 4, yordamchi 4, qadoqlovchi 5). Yordamchi yoki operator yetmasa — bitta FS to'xtatiladi
+      (ishlab chiqarish rejasi ~35% kamayadi).
+      Murabbiylar: kunduzgi smenadan 2 hafta tungiga o'tkazilgan 3 tajribali operator (Ilhom, Oybek, Nigora).
+
+  - key: doc_roster
+    title: "Tungi smena ro'yxati: holat 2026-12-07, 09:00"
+    content: |
+      lavozim | xodim | holat
+      Smena ustasi | Sobir Karimov | tayyor (ichki o'tkazma)
+      Operator | Behruz Saidov | tayyor
+      Operator | Islom Turg'unov | tayyor
+      Operator | Doniyor Rahmatov | 03.12 da taklifni rad etdi
+      Operator | Lochin Abdurahmonov | mehnat muhofazasi imtihonidan o'tmagan — bugun 14:00 qayta
+      Yordamchi | Feruza Nazarova | tayyor
+      Yordamchi | Shoxrux Aminov | tayyor
+      Yordamchi | Temur Yoqubov | 04.12 da taklifni rad etdi
+      Yordamchi | Abbos Murodov | bugun 08:30 dagi yakuniy hujjat topshirishga kelmadi, telefon javob bermayapti
+      Qadoqlovchi | Mohira Saidova | tayyor
+      Qadoqlovchi | Gulshan Ro'ziyeva | tayyor
+      Qadoqlovchi | Nodira Hamidova | tibbiy ko'rik: ishga yaroqsiz
+      Qadoqlovchi | Sevinch Olimova | tayyor
+      Qadoqlovchi | Kamron Ismoilov | mehnat muhofazasi imtihonidan o'tmagan — bugun 14:00 qayta
+      "Tayyor" — kirish yo'riqnomasi, imtihon va tibbiy ko'rik bor. SHHV hali hech kimga berilmagan.
+
+      Zaxira (rozilik bilan zaxira bazasida):
+      A) Jamshid Po'latov, nomzod. Yordamchi.
+         2024-05 – 2025-08: gofroliniya yordamchisi, «Kamalak Qadoq» MChJ
+         Tibbiy ko'rik: amalda (2026-11-20 da o'tgan). Mehnat muhofazasi: yo'riqnoma va imtihon yo'q.
+         Tungi smena: tayyor. Telefon: ertalab javob beradi.
+      B) Ziyoda Qodirova, nomzod. Yordamchi.
+         2023-09 – hozir: bosma liniyasi yordamchisi, «Chinor Bosma» MChJ
+         Tibbiy ko'rik: yo'q, eng yaqin navbat 2026-12-09. Hozirgi ish joyida 2 hafta ishlab berishi kerak.
+      C) Bekmurod Usmonov, nomzod. Operator.
+         2021-03 – hozir: fleksobosma operatori, «Chinor Bosma» MChJ
+         Oklad talabi: 7 500 000 (grid: 6 000 000). Hozirgi ish joyida 2 hafta ishlab berishi kerak.
+      D) Shoira Yusupova, xodim (2-sex kunduzgi qadoqlovchisi). Tungi smenaga o'tish arizasi bor.
+         Mehnat muhofazasi: amalda; ish joyidagi yo'riqnoma kerak (1 soat). O'tkazish — 2-sex boshlig'i roziligi bilan.
+
+  - key: doc_admission_rules
+    title: "Tungi smenaga qo'yish qoidalari (ichki, o'quv versiyasi)"
+    content: |
+      Xodim smenaga faqat to'rt shart bajarilganda qo'yiladi:
+      1. Tibbiy ko'rik — amalda.
+      2. Kirish yo'riqnomasi (2 soat, mehnat muhofazasi muhandisi, faqat 09:00–18:00) va imtihon — o'tgan.
+      3. SHHV berilgan (poyabzal, qo'lqop, quloqchin). Ombor 18:00 da yopiladi.
+      4. Ish joyidagi yo'riqnoma (smena ustasi, 1 soat) va murabbiy biriktirilgan. Murabbiy ko'pi bilan 3 yangi
+         xodimga; smena ustasi murabbiy bo'lmaydi.
+      Shartlardan biri bajarilmasa — xodim smenaga qo'yilmaydi; "keyin o'tkazamiz" ruxsat etilmaydi.
+      Ekipaj yetmasa — mashina to'xtatiladi yoki smena kechiktiriladi, qaror sex boshlig'i va HR boshlig'i bilan.
+      Taklifni qabul qilmagan yoki ishga chiqmagan nomzod: 2 marta aloqa urinish va yozma xabar, javob bo'lmasa — taklif bekor.
+      Ish haqi faqat yozma taklif va grid bo'yicha; og'zaki va'da yo'q.
+
+  - key: doc_pay_rules
+    title: "Tungi smena ish haqi qoidalari (ichki, o'quv versiyasi)"
+    content: |
+      Okladlar (oyiga, soliqlargacha):
+      lavozim | oklad
+      Fleksobosma/shtans operatori (4-razryad) | 6 000 000
+      Operator yordamchisi | 4 400 000
+      Qadoqlovchi | 4 200 000
+      Smena ustasi | 8 000 000
+      Oylik norma: 20 smena × 8 soat = 160 soat. Soat stavkasi = oklad / 160.
+      Tungi ish ustamasi: 22:00–06:00 dagi har soat uchun soat stavkasining 40%.
+      To'liq bo'lmagan oy: oklad ishlangan smenalarga mutanosib (ishlangan smena / 20).
+      Dekabr: tungi smena 07.12 dan 25.12 gacha — 15 smena (28–31.12 sex profilaktikada).
+      Ochilish mukofoti: birinchi oyda bir martalik 300 000 so'm (har bir tungi smena xodimiga).
+      Ish haqi keyingi oyning 10-sanasigacha kartaga.
+      Tungi smena ish haqi fondi (direktor tasdiqlagan): oyiga 100 000 000 so'm (14 shtat birligi, to'liq oy, bir martalik to'lovlarsiz).
+
+  - key: doc_pay_draft
+    title: "Komil akaning qoralamasi: tungi smena ish haqi (buxgalteriyaga yuborishga tayyorlangan)"
+    content: |
+      lavozim | oklad | tungi ustama (50%) | mukofot | dekabr jami
+      Operator | 6 000 000 | 3 000 000 | 300 000 | 9 300 000
+      Yordamchi | 4 400 000 | 2 200 000 | 300 000 | 6 900 000
+      Qadoqlovchi | 4 200 000 | 2 100 000 | 300 000 | 6 600 000
+      Smena ustasi | 8 000 000 | 4 000 000 | 300 000 | 12 300 000
+      "Har oylik fond: 1 usta + 4 operator + 4 yordamchi + 5 qadoqlovchi = 110 100 000 so'm. Byudjetdan biroz oshadi,
+      direktorga aytamiz."
+
+  - key: doc_first_night
+    title: "Birinchi tun: tashkiliy ma'lumot"
+    content: |
+      SHHV: ombor 09:00–18:00. Har yangi xodimga: poyabzal (o'lcham kerak), kesilishga chidamli qo'lqop, quloqchin.
+      Ish joyidagi yo'riqnoma: smena ustasi Sobir aka bilan 21:00–22:00, sexda.
+      Transport: korxona servisi 20:15 da shahar markazidan (30 o'rin), ertalab 06:15 da qaytadi.
+      Ovqat: oshxona 18:00 da yopiladi; tungi smenaga 02:00 da issiq ovqat (termos) — ro'yxat 16:00 gacha oshxonaga.
+      Kutilayotgan yangi xodimlar: rejada 13 (ustadan tashqari), bugungi aniq son — rekruterdan.
+      Murabbiylar: Ilhom, Oybek, Nigora (kunduzgi operatorlar, 2 hafta). Smena ustasi murabbiy emas.
+
+  - key: doc_data_policy
+    title: "Shaxsiy ma'lumotlar: sizib chiqish tartibi (ichki, o'quv versiyasi)"
+    content: |
+      Shaxsiy ma'lumot: F.I.Sh., telefon, pasport ma'lumotlari, ish haqi, tibbiy ma'lumot, baholash izohlari.
+      Tibbiy ma'lumot — alohida himoyalanadi: faqat "yaroqli/yaroqsiz", tashxis hech qayerda yozilmaydi.
+      Ma'lumot noto'g'ri joyga ketsa:
+      1. Darhol tarqalishni to'xtatish (xabarni o'chirish, guruh adminiga murojaat), 1 soat ichida HR boshlig'i va IT xavfsizlikka.
+      2. Incident reyestriga: nima, qachon, kimga, nechta shaxs, qaysi maydonlar.
+      3. Ma'lumoti oshkor bo'lgan har bir shaxsga 24 soat ichida xabar: nima oshkor bo'ldi, nima qilindi, aloqa.
+      4. 3 ish kuni ichida sabab tahlili.
+      Taqiqlanadi: guruhda boshqa xodimning ish haqi yoki tibbiy holatini muhokama qilish, aybni aniq xodimga
+      yuklash, hodisani kichraytirish, kompensatsiya yoki oshirishni va'da qilish.
+
+  - key: doc_leak_case
+    title: "Hodisa: maxfiy jadval sex chatida (2026-12-07, 15:10)"
+    content: |
+      15:10 da "1-sex umumiy" Telegram guruhiga (186 a'zo) "Tungi smena — yakuniy ro'yxat va ish haqi.xlsx" yuborilgan.
+      Fayl ichida 18 kishi: rejadagi 14 (shu jumladan rad etgan Doniyor va Temur) va zaxiradagi 4.
+      Ustunlar: F.I.Sh., telefon, pasport seriyasi va raqami, lavozim, oklad, tungi ustama, dekabr jami (Komil akaning
+      qoralamasidagi raqamlar: operator 9 300 000 va h.k.), izoh.
+      Izohlar: Nodira Hamidova — "tibbiy ko'rik: yaroqsiz (tashxis ko'rsatilgan)"; Abbos Murodov — "kelmadi, ishonchsiz";
+      Bekmurod Usmonov — "7.5 mln so'radi — qimmat"; Ziyoda Qodirova — "tibbiy ko'rik yo'q".
+      15:28 holati: 47 ko'rish, 2 marta boshqa chatga uzatilgan. Guruhdagi kunduzgi operator yozgan:
+      "Tungida 9.3 mln beriladi ekan, bizga kunduzgida 6 mln? Hammamiz tungiga o'tamiz!"
+      Xodim emaslar (nomzodlar): Doniyor, Temur, Jamshid, Ziyoda, Bekmurod.
+
+nodes:
+  - id: welcome
+    type: message
+    day: 1
+    at: "09:00"
+    from: dilnoza
+    brief: |
+      Xayrli tong, jamoa! Bugun 22:00 da 1-sexda birinchi tungi smena. Kelishuv hujjatini o'qing va standup'da
+      kim nima qilishini, kim kimdan nima kutishini kelishib oling.
+
+  - id: standup
+    type: task
+    day: 1
+    at: "09:00"
+    from: dilnoza
+    brief: |
+      Jamoa standup'i — bitta umumiy javob: har rol bugun nima qiladi (muddat bilan), kim kimdan nima kutadi,
+      nima to'sib turishi mumkin. Jamoa chatida kelishib, bittangiz yozing.
+    attachments: [doc_team_charter, doc_night_project]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 0.5
+    competencies: [communication, prioritization]
+    rubric:
+      - {id: roles, description: "Har rolning ishi aniq: rekruter — ekipaj va zaxira, C&B — ish haqi va qoralama, onboarding — birinchi tun dasturi", weight: 2}
+      - {id: dependencies, description: "Bog'liqlik: onboarding va C&B aniq sonni rekruterdan, xodimlarga raqam C&B'dan, matn onboarding'dan", weight: 2}
+      - {id: blockers, description: "To'siqlar: 14:00 imtihon natijasi, Abbos bilan aloqa, ombor 18:00 da yopilishi"}
+    hints:
+      - "Kelishuv hujjatidagi 'kim kimdan' qatoriga qarang: kimning ishi boshqasining natijasiga bog'liq?"
+    reference_answer: |
+      Rekruter: 11:00 gacha bugungi ekipaj va bo'sh joylar, zaxiradan to'ldirish, 14:00 imtihondan keyin yakuniy ro'yxat.
+      C&B: 11:30 gacha tungi ish haqi va fond, Komil aka qoralamasini tekshirish. Onboarding: 12:00 gacha birinchi tun dasturi — SHHV 18:00 gacha, murabbiylar, servis, ovqat.
+      Bog'liqlik: onboarding va C&B aniq sonni rekruterdan oladi; xodimlarga raqamlar faqat C&B'dan, matn onboarding'dan.
+      To'siq: Lochin va Kamron imtihoni 14:00 da, Abbos javob bermayapti, ombor 18:00 da yopiladi.
+
+  - id: mentor_intro
+    type: message
+    day: 1
+    at: "09:15"
+    from: shahlo
+    brief: |
+      Salom, jamoa! Men Shahlo, bugun mentoringizman. Vazifalar alohida, lekin natija bitta — 22:00 dagi smena.
+      Kim nimani kutayotganini jamoa chatida yozib boring. Qiyin bo'lsa hint so'rang.
+
+  - id: crew_check
+    type: task
+    role: recruiter
+    day: 1
+    at: "09:30"
+    from: komil
+    brief: |
+      Salom! Bugun kechqurun kim ishlaydi? Ro'yxatni ko'rib chiqing: har lavozimda nechta tayyor, minimal
+      ekipajga nechta yetmaydi, zaxiradan kim bugun chiqa oladi va kim — yo'q (nega), Abbos bilan nima qilamiz.
+      Soatlar bilan harakat rejasi va eng yomon holat uchun variant ham yozing.
+    attachments: [doc_roster, doc_night_project, doc_admission_rules]
+    answer_types: [text, file]
+    due_in_minutes: 120
+    weight: 2
+    competencies: [technical, prioritization]
+    rubric:
+      - {id: count, description: "Hozir tayyor: usta 1, operator 2, yordamchi 2, qadoqlovchi 3 = 8 (minimal 10, reja 14); operator −1 (Lochin imtihonga bog'liq), yordamchi −1", weight: 2}
+      - {id: reserve, description: "Zaxira: bugun faqat Jamshid (tibbiy ko'rik amalda) — 10:30 gacha qo'ng'iroq, 11:00–13:00 yo'riqnoma, 14:00 imtihon; Ziyoda (ko'rik yo'q, 2 hafta) va Bekmurod (2 hafta, grid'dan yuqori talab) — bugun emas; Shoira — qadoqlovchi, faqat 2-sex roziligi bilan va qadoqlovchi yetishmasa", weight: 2}
+      - {id: abbos, description: "Abbos: qoida bo'yicha 2 marta aloqa va yozma xabar, javob bo'lmasa taklif bekor; bugungi ekipajga hisoblanmaydi", weight: 1}
+      - {id: fallback, description: "Eng yomon holat: Lochin yoki Jamshid imtihondan o'tmasa — bitta FS to'xtatiladi (FS + shtans ishlaydi), qaror Komil aka va Dilnoza opa bilan; ro'yxat o'zgarishi jamoaga darhol", weight: 1.5}
+    hints:
+      - "Har lavozimda 'tayyor' sonini minimal ekipaj bilan solishtiring — umumiy son emas, lavozim bo'yicha."
+      - "Zaxiradagi har nomzodni qoidaning to'rt sharti bilan tekshiring: bugun 22:00 gacha qaysi biri bajarilishi mumkin?"
+    reference_answer: |
+      Tayyor: usta 1, operator 2 (Behruz, Islom), yordamchi 2 (Feruza, Shoxrux), qadoqlovchi 3 (Mohira, Gulshan, Sevinch) = 8; minimal 10.
+      Yetmaydi: operator 1 — Lochin 14:00 imtihondan o'tsa yopiladi; yordamchi 1 — Temur rad etgan, Abbos kelmagan.
+      Zaxira: Jamshid — ko'rik amalda; 10:30 gacha qo'ng'iroq, Anvar aka bilan 11:00–13:00 yo'riqnoma, 14:00 imtihon, 17:00 gacha SHHV. Ziyoda — ko'rik yo'q,
+      Bekmurod — 2 hafta va 7.5 mln grid'dan yuqori (va'da yo'q) — bugun emas. Shoira — qadoqlovchi: Kamron o'tmasa ham 3 ta bor, bugun shart emas.
+      Abbos: 10:00 va 12:00 da qo'ng'iroq + SMS/xat; javob bo'lmasa taklif bekor. Nodira yaroqsiz — ro'yxatdan chiqariladi.
+      Yakuniy ro'yxat 14:30 da jamoaga. Eng yomon holat: operator yoki yordamchi 3 tadan kam — FS-2 to'xtatiladi, Komil aka va Dilnoza opa bilan kelishamiz.
+
+  - id: night_pay_calc
+    type: task
+    role: cb
+    day: 1
+    at: "09:30"
+    from: botir
+    brief: |
+      Komil aka tungi smena ish haqi qoralamasini buxgalteriyaga yubormoqchi. Qoidalar bo'yicha tekshiring:
+      1) har lavozim uchun dekabr (to'liq bo'lmagan oy) va to'liq oy ish haqi; 2) 14 shtat birligining to'liq
+      oylik fondi va direktor fondiga solishtirish; 3) qoralamadagi xatolar va ularning ta'siri.
+    attachments: [doc_pay_rules, doc_pay_draft]
+    answer_types: [text, file]
+    due_in_minutes: 120
+    weight: 2
+    competencies: [technical, communication]
+    rubric:
+      - {id: december, description: "Dekabr (15/20 smena): operator 4 500 000 + 1 800 000 + 300 000 = 6 600 000; yordamchi 4 920 000; qadoqlovchi 4 710 000; usta 8 700 000", weight: 2}
+      - {id: full_month, description: "To'liq oy (oklad × 1.4): operator 8 400 000, yordamchi 6 160 000, qadoqlovchi 5 880 000, usta 11 200 000", weight: 1.5}
+      - {id: fund, description: "Fond: 11.2 + 4 × 8.4 + 4 × 6.16 + 5 × 5.88 = 98 840 000 ≤ 100 000 000 (98.8%, zaxira 1 160 000); qoralamadagi 110 100 000 — xato", weight: 2}
+      - {id: draft_errors, description: "Qoralama xatolari: ustama 50% emas 40%; dekabr 15/20 ga mutanosib emas; bir martalik mukofot oylik fondga qo'shilgan; 'byudjetdan oshadi' degan xulosa noto'g'ri", weight: 1.5}
+    hints:
+      - "Avval bitta operator uchun soat stavkasini toping, keyin tungi soatlar ustamasini. Barcha soatlar tungi bo'lsa natija okladning qancha foizi?"
+      - "Dekabrda nechta smena va oylik norma nechta? Mukofot qaysi oyga tegishli?"
+    reference_answer: |
+      Soat stavkasi = oklad / 160; smena butunlay 22:00–06:00, demak ustama = 40% × ishlangan oklad. To'liq oy: oklad × 1.4.
+      Dekabr (15 / 20 = 0.75): operator 4 500 000 + 1 800 000 + 300 000 = 6 600 000; yordamchi 3 300 000 + 1 320 000 + 300 000 = 4 920 000;
+      qadoqlovchi 3 150 000 + 1 260 000 + 300 000 = 4 710 000; usta 6 000 000 + 2 400 000 + 300 000 = 8 700 000.
+      To'liq oy: 8 400 000 / 6 160 000 / 5 880 000 / 11 200 000. Fond: 11 200 000 + 33 600 000 + 24 640 000 + 29 400 000 = 98 840 000 —
+      fondning 98.8%, 1 160 000 zaxira. Qoralama: 50% o'rniga 40%, dekabr pro-rata yo'q, mukofot har oyda — shuning uchun 110 100 000 va
+      "oshadi" xulosasi xato. Qoralama buxgalteriyaga ketmaydi; to'g'ri jadval Botir akaga, ro'yxat rekruter bilan solishtiriladi.
+
+  - id: first_night_plan
+    type: task
+    role: onboarding
+    day: 1
+    at: "09:30"
+    from: anvar
+    brief: |
+      Bugungi yangi xodimlar 22:00 da qoidaga to'liq mos holda smenada bo'lishi kerak. Birinchi tun dasturini
+      soatlar bilan yozing: kim qachon SHHV oladi, yo'riqnomalar, murabbiylar (nechta kerak, bor-yo'qligi),
+      servis va ovqat, nazorat. Aniq sonni rekruter jamoadoshingizdan oling.
+    attachments: [doc_first_night, doc_admission_rules]
+    answer_types: [text, file]
+    due_in_minutes: 150
+    weight: 2
+    competencies: [prioritization, communication, initiative]
+    rubric:
+      - {id: ppe, description: "SHHV 18:00 gacha (ombor yopiladi): yangi xodimlar kunduzi chaqiriladi yoki SHHV o'lcham bo'yicha oldindan olinib ustaga topshiriladi", weight: 2}
+      - {id: buddies, description: "Murabbiylar: rejadagi 13 yangi uchun 13 / 3 → 5 kerak, bor 3 (2 yetmaydi); yoki rekruter soni bo'yicha (masalan 10 → 4, 1 yetmaydi); usta hisoblanmaydi; Komil akadan qo'shimcha murabbiy so'rash", weight: 2}
+      - {id: timeline, description: "Vaqt chizig'i: 14:00 imtihon → ro'yxat; 16:00 gacha oshxonaga ovqat ro'yxati; 20:15 servis; 21:00–22:00 ish joyidagi yo'riqnoma; 02:00 ovqat; 06:15 qaytish", weight: 1.5}
+      - {id: check, description: "Nazorat: 21:45 da to'rt shart bo'yicha har xodim varaqasi tekshiriladi; ertalab 06:00 da birinchi tun bo'yicha qisqa so'rov"}
+    hints:
+      - "Kun davomidagi qat'iy vaqtlarni (ombor, oshxona, servis, yo'riqnoma) bir qatorga tizing."
+      - "Murabbiy qoidasi: bittasiga nechta yangi xodim? Smena ustasi hisoblanadimi?"
+    reference_answer: |
+      Son rekruterdan (14:30 yakuniy). 16:00–17:30: yangi xodimlar SHHV oladi (o'lchamlar ertalab telefonda yig'iladi), ombor 18:00 gacha; kela olmaganlarga — ustaga topshiriladi.
+      16:00 gacha oshxonaga 02:00 dagi ovqat ro'yxati. 20:15 servis (30 o'rin yetadi). 21:00–22:00 Sobir aka bilan ish joyidagi yo'riqnoma.
+      Murabbiylar: rejadagi 13 yangi uchun 5 kerak, bor 3 (Ilhom, Oybek, Nigora) → 2 yetmaydi; bugun ~10 kishi bo'lsa 4 kerak → 1 yetmaydi —
+      Komil akadan kunduzgi smenadan yana bir tajribali operator so'raymiz; usta murabbiy bo'lmaydi.
+      21:45: har xodim varaqasi (ko'rik, yo'riqnoma + imtihon, SHHV, murabbiy) — biror belgi yo'q bo'lsa smenaga qo'yilmaydi. 06:00: qisqa so'rov va 1-hafta suhbati sanasi.
+
+  - id: admission_decision
+    type: decision
+    day: 1
+    at: "11:30"
+    from: komil
+    brief: |
+      Gaplashib oldim: Lochin va Kamron 14:00 da yana yiqilsa ham bugun tunda ishlayveradi, imtihonni ertaga
+      topshirishadi. Jamshidni ham yo'riqnomasiz chaqiraylik, kechqurun ish joyida o'zim tushuntiraman. Smena
+      birinchi kuniyoq to'liq bo'lmasa, direktor oldida uyat. Kelishdikmi?
+    competencies: [stress_handling, communication]
+    options:
+      - key: rules_first
+        label: "Yo'q: smenaga faqat to'rt shart bajarilganlar chiqadi. Jamshid 11:00–13:00 da yo'riqnoma va 14:00 imtihondan o'tsa — chiqadi; ekipaj yetmasa FS-2 to'xtaydi. Komil akaga tushuntiramiz va Dilnoza opaga yozamiz"
+        grade: correct
+      - key: escalate_only
+        label: "Komil akaga javob bermay, savolni Dilnoza opa va Anvar akaga uzatamiz"
+        grade: acceptable
+      - key: allow_unqualified
+        label: "Kelishamiz — bir kecha uchun, ertaga imtihonni albatta topshirishadi"
+        grade: wrong
+        flag: unsafe_admission
+
+  - id: lead_on_admission
+    type: message
+    day: 1
+    at: "12:00"
+    when: {flag: unsafe_admission}
+    from: dilnoza
+    brief: |
+      Imtihonsiz va yo'riqnomasiz xodimlarni tungi smenaga qo'yishga rozi bo'libsizlar. Bu tartibning asosiy qoidasi —
+      "keyin o'tkazamiz" yo'q; tunda muhandis ham, tajribali odam ham kam. Bu qaror bekor: yetmasa, FS-2 to'xtaydi.
+      Komil aka bilan o'zim gaplashaman; bundan keyin bunday so'rovni darhol menga yozing.
+
+  - id: pay_memo
+    type: task
+    role: onboarding
+    after: {node: night_pay_calc, event: submitted, minutes: 30}
+    from: dilnoza
+    brief: |
+      C&B jamoadoshingiz hisobni tugatdi. Tungi smena xodimlari uchun qisqa eslatma yozing (6–8 qator):
+      tungi ish haqi qanday hisoblanadi, dekabr uchun lavozimlar bo'yicha taxminiy summa, to'liq oyda qancha,
+      mukofot va to'lov sanasi. Raqamlarni C&B bilan tekshiring.
+    attachments: [doc_pay_rules, doc_team_charter]
+    answer_types: [text]
+    due_in_minutes: 60
+    weight: 1
+    competencies: [communication]
+    rubric:
+      - {id: accurate, description: "Raqamlar C&B hisobi bilan bir xil: dekabr operator 6 600 000, yordamchi 4 920 000, qadoqlovchi 4 710 000; to'liq oyda oklad + 40%", weight: 2}
+      - {id: explain, description: "Tushuntirish sodda: tungi soatlar uchun +40%, dekabr 15 smena, 300 000 bir marta, to'lov keyingi oyning 10-sanasigacha", weight: 1.5}
+      - {id: no_promise, description: "Soliqlargacha ekanini aytgan, individual va'da yoki boshqa xodim summasi yo'q"}
+    hints:
+      - "Xodim eng avval 'dekabrda qancha olaman va qachon' deb so'raydi."
+    reference_answer: |
+      Tungi smenada har tungi soat uchun soat stavkasiga +40% qo'shiladi — to'liq oyda oklad + 40%.
+      Dekabrda 15 smena (07–25.12), oklad 15/20 qismi, ustama va bir martalik 300 000 so'm ochilish mukofoti:
+      operator ≈ 6 600 000, yordamchi ≈ 4 920 000, qadoqlovchi ≈ 4 710 000 so'm (soliqlargacha).
+      To'liq oyda: operator 8 400 000, yordamchi 6 160 000, qadoqlovchi 5 880 000. Ish haqi keyingi oyning 10-sanasigacha kartaga.
+      Savollar — HR (C&B).
+
+  - id: mentor_afternoon
+    type: message
+    day: 1
+    at: "14:00"
+    from: shahlo
+    brief: |
+      Tushdan keyin: 14:00 imtihon natijasini rekruter jamoaga yozsin, onboarding va C&B shunga qarab yangilasin.
+      Muammo chiqsa — avval tarqalishni to'xtatish, raqamlar C&B'dan, matn onboarding'dan.
+
+  - id: incident_candidates
+    type: incident
+    role: recruiter
+    day: 1
+    at: "15:30"
+    from: dilnoza
+    brief: |
+      SHOSHILINCH: 15:10 da "1-sex umumiy" guruhiga tungi smena jadvali (telefon, pasport, ish haqi, izohlar) tushib qoldi.
+      Siz nomzodlar tomonini olasiz: xodim bo'lmagan 5 nomzodning ma'lumoti nima, ularga nima va qachon yozamiz —
+      bitta namunaviy xabar va har biriga nimani alohida qo'shish kerakligi. Bekmurodning izohi bilan ehtiyot bo'ling.
+    attachments: [doc_leak_case, doc_data_policy]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 1.5
+    competencies: [stress_handling, communication]
+    rubric:
+      - {id: who, description: "5 nomzod: Doniyor, Temur (rad etgan), Jamshid, Ziyoda, Bekmurod (zaxira); oshkor: F.I.Sh., telefon, pasport, izohlar; 24 soat ichida xabar", weight: 2}
+      - {id: message, description: "Xabar: nima oshkor bo'ldi, nima qilindi (o'chirish, tekshiruv), aloqa shaxsi; uzr, kichraytirmasdan", weight: 1.5}
+      - {id: no_harm, description: "Bekmurodga 'qimmat' izohi so'zma-so'z takrorlanmaydi, baholash izohi borligi aytiladi; kompensatsiya va'da yo'q; boshqa nomzod ma'lumoti yo'q", weight: 1.5}
+    hints:
+      - "Fayldagi 18 kishidan qaysilari xodim emas? Ro'yxatning oxirgi qatoriga qarang."
+    reference_answer: |
+      Nomzodlar: Doniyor, Temur, Jamshid, Ziyoda, Bekmurod — F.I.Sh., telefon, pasport seriyasi/raqami; Ziyoda va Bekmurodda izoh ham. Xabar bugun, 24 soat ichida.
+      Namuna: "Hurmatli ..., bugun 15:10 da ichki xatolik tufayli sizning F.I.Sh., telefon va pasport ma'lumotlaringiz bor fayl korxonamiz xodimlari
+      guruhiga yuborildi. Fayl o'chirildi, tarqatilgan nusxalar o'chirilmoqda, holat ma'lumotlar himoyasi mas'uli bilan tekshirilmoqda. Uzr so'raymiz.
+      Savollar: Dilnoza Rahimova, HR boshlig'i." Ziyoda va Bekmurodga: faylda nomzodlik bo'yicha ichki izoh ham bo'lganini aytamiz, mazmunini takrorlamaymiz.
+      Kompensatsiya va'da qilinmaydi.
+
+  - id: incident_pay_facts
+    type: incident
+    role: cb
+    day: 1
+    at: "15:30"
+    from: botir
+    brief: |
+      Jadvaldagi ish haqi raqamlari Komil akaning xato qoralamasidan — guruhda "tungida 9.3 mln" deb gap tarqaldi.
+      Siz raqamlar tomonini olasiz: 1) incident reyestri uchun qisqa yozuv (nechta shaxs, qaysi maydonlar, maxsus
+      ma'lumot); 2) tarqalgan raqam qayerda xato va to'g'ri qoida; 3) onboarding jamoadoshingizga xodimlar uchun
+      qaysi raqamlarni berasiz va qaysilarini — yo'q.
+    attachments: [doc_leak_case, doc_pay_rules, doc_data_policy]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 1.5
+    competencies: [technical, stress_handling]
+    rubric:
+      - {id: register, description: "Reyestr: 15:10, 186 a'zoli guruh, 18 shaxs (13 xodim, 5 nomzod), maydonlar: F.I.Sh., telefon, pasport, ish haqi, izoh; tibbiy ma'lumot (Nodira, tashxis) — maxsus; 47 ko'rish, 2 uzatish", weight: 2}
+      - {id: correction, description: "Xato: 9 300 000 = 6 000 000 + 50% + mukofot, dekabr pro-rata yo'q; to'g'ri: operator dekabr 6 600 000, to'liq oy 8 400 000 (+40% faqat tungi soatlar uchun)", weight: 1.5}
+      - {id: what_to_share, description: "Onboarding'ga: umumiy qoida va lavozim summalari; individual ish haqi, kim qancha olishi muhokama qilinmaydi", weight: 1.5}
+    hints:
+      - "9 300 000 ni qismlarga ajrating — qaysi qism qoidaga zid?"
+    reference_answer: |
+      Reyestr: 07.12 15:10, "1-sex umumiy" (186 a'zo), 18 shaxs — 13 xodim va 5 nomzod; F.I.Sh., telefon, pasport, lavozim, oklad, ustama, dekabr jami, izohlar;
+      maxsus — Nodiraning tibbiy ma'lumoti (tashxis), baholash izohlari (Abbos, Bekmurod, Ziyoda). 15:28 holatiga 47 ko'rish, 2 uzatish.
+      Raqam: 9 300 000 = 6 000 000 + 3 000 000 (50%) + 300 000 — ustama 40% bo'lishi va dekabr 15/20 bo'lishi kerak; to'g'ri dekabr 6 600 000, to'liq oy 8 400 000.
+      Tungi ustama faqat 22:00–06:00 soatlar uchun — kunduzgi smenaga nisbatan farq shundan.
+      Onboarding'ga: umumiy qoida va lavozim summalari (6.6 / 4.92 / 4.71 mln dekabr). Individual summalar guruhda muhokama qilinmaydi.
+
+  - id: incident_staff_comms
+    type: incident
+    role: onboarding
+    day: 1
+    at: "15:30"
+    from: dilnoza
+    brief: |
+      Siz xodimlar tomonini olasiz: 1) guruhga darhol yoziladigan xabar (o'chirish, uzatmaslik, noto'g'ri raqam
+      haqida); 2) Nodira va Abbosga shaxsiy xabar; 3) tungi smena xodimlariga bugungi smenadan oldin nima deymiz.
+      Raqamlarni C&B jamoadoshingizdan oling.
+    attachments: [doc_leak_case, doc_data_policy, doc_team_charter]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 1.5
+    competencies: [communication, stress_handling]
+    rubric:
+      - {id: group_post, description: "Guruhga: fayl xato bilan yuborilgan, o'chirish va uzatmaslik iltimosi, uzatilgan nusxalar ham o'chirilsin; raqamlar xato qoralama, to'g'ri qoida HR'dan; adminga murojaat", weight: 2}
+      - {id: personal, description: "Nodiraga: tibbiy ma'lumot oshkor bo'lgani, uzr, choralar, aloqa; Abbosga: izoh borligi, qaror hali qabul qilinmagani va aloqa iltimosi — ayblovsiz", weight: 1.5}
+      - {id: no_violations, description: "Guruhda tashxis, kimning qancha olishi yoki aybdor (Komil aka) muhokama qilinmaydi; oshirish va'da qilinmaydi", weight: 1.5}
+    hints:
+      - "Tartibning birinchi qadami va 'taqiqlanadi' qatori — guruh xabarida nima bo'lishi va nima bo'lmasligini belgilaydi."
+    reference_answer: |
+      Guruhga: "Hurmatli hamkasblar, 15:10 da bu guruhga xato bilan ichki fayl yuborildi. Iltimos, uni o'chiring va hech kimga uzatmang; uzatgan bo'lsangiz,
+      o'sha joydan ham o'chiring. Fayldagi raqamlar tasdiqlanmagan qoralama — tungi smena ish haqi qoidasi bo'yicha HR'ga murojaat qiling." Adminga: faylni o'chirish.
+      Nodiraga: "Nodira opa, ichki faylda sizning tibbiy ko'rik natijangiz ham bor edi va u xodimlar guruhiga tushdi. Fayl o'chirildi, uzr so'raymiz; ertaga HR bilan
+      uchrashib, keyingi qadamlarni gaplashamiz." Abbosga: faylda kelmaganingiz haqida ichki izoh bor edi, uzr; iltimos, bugun HR bilan bog'laning.
+      Tungi smenaga 21:00 da: "Bugungi faylda xato raqamlar bor edi; dekabr uchun to'g'ri summalar (C&B'dan): operator 6.6, yordamchi 4.92, qadoqlovchi 4.71 mln."
+
+  - id: incident_thanks
+    type: message
+    after: {node: incident_staff_comms, event: submitted, minutes: 20}
+    from: dilnoza
+    brief: "Rahmat, jamoa. Fayl guruhdan va ikkala uzatilgan chatdan o'chirildi, reyestrga yozildi. Ertaga sabab tahlilini birga qilamiz."
+
+  - id: day1_end
+    type: day_end
+    day: 1
+    at: "17:30"
+    brief: |
+      Kun yakuni — jamoaning bitta umumiy hisoboti Dilnoza opaga: bugun 22:00 da kim ishlaydi va qaysi mashinalar,
+      ish haqi va fond bo'yicha xulosa, incident holati, ertangi reja. Jamoa bo'lib nimani yaxshiroq qilish mumkin edi — bitta xulosa.
+    competencies: [communication]
+    rubric:
+      - {id: by_role, description: "Har rol natijasi: ekipaj soni va mashinalar, fond 98.84 mln va qoralama xatolari, birinchi tun dasturi", weight: 1.5}
+      - {id: incident, description: "Incident holati: o'chirildi, reyestr, xabarlar, 3 kunda sabab tahlili"}
+      - {id: reflection, description: "Jamoaviy ish bo'yicha aniq xulosa (masalan, ro'yxat o'zgarishini darhol aytish)"}

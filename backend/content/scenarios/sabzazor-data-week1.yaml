@@ -1,0 +1,1100 @@
+# CONTRACT.md §9.11 — Data haftalik kontenti. Kompaniya, odamlar, tizimlar, jadvallar va raqamlar o'ylab topilgan.
+# Metrika ta'riflari, ma'lumotlar siyosati (shaxsiy ma'lumot, hisobot halolligi) va moliyaviy farazlar —
+# o'quv maqsadidagi ichki qoidalar, real normativ yoki qonunchilik emas.
+# Hikoya: yangi analyst bir hafta ichida "Sabzazor+" sodiqlik kartasi pilotining ta'sirini baholaydi —
+# ta'riflar → SQL va review → kogorta funksiyasi (kalit task) va tanlov xatosi → incident → kengash taqdimoti.
+# 4-kun incident'i 3-kun kodi (retention_code) baliga bog'liq.
+slug: sabzazor-data-week1
+title: "Sabzazor — Junior Data analyst, 1 hafta: sodiqlik kartasi ta'siri"
+sector: Data
+company_name: "Sabzazor"             # fictional: oziq-ovqat do'konlari tarmog'i
+difficulty: junior
+duration_days: 5
+
+personas:
+  - key: madina
+    name: "Madina Yusupova"
+    role: "Analitika bo'limi rahbari"
+    tone: "xotirjam, aniq; har raqamning manbasini so'raydi; halollik va maxfiylikda murosaga bormaydi"
+    knows: [doc_onboarding, doc_program_brief, doc_loyalty_tables, doc_metric_spec, doc_data_policy, doc_effect_data, doc_finance, doc_incident_retention, doc_postmortem_template]
+    secrets:
+      - "Kengashdagi moliya direktori cashback xarajatini allaqachon so'ragan — moliyaviy hisobsiz taqdimot qabul qilinmaydi."
+      - "Kengash 'yoyamizmi yoki yo'qmi' degan bitta savolga javob kutadi; 'hozircha yo'q, lekin mana bunday sinov' ham to'liq javob hisoblanadi."
+    busy_reply: "Kengash materiallarini ko'rib chiqyapman, 30 daqiqadan keyin yozaman."
+    deflect_reply: "Raqamni siz chiqarishingiz kerak. Ta'riflar hujjatidagi har bir qoidani ma'lumotdagi ustun bilan solishtiring."
+  - key: otabek
+    name: "Otabek Nazarov"
+    role: "Katta data analyst, mentor"
+    kind: mentor
+    tone: "do'stona, savol bilan yo'naltiradi; kodni o'zi yozib bermaydi, lekin qaysi chegara holatini tekshirishni eslatadi"
+    knows: [doc_onboarding, doc_loyalty_tables, doc_metric_spec, doc_retention_draft, doc_cohort_sample]
+    busy_reply: "Kod review qilyapman, birozdan keyin javob beraman."
+    deflect_reply: "Tayyor javobni bermayman. Bitta a'zoni qo'lda kuzatib chiqing: qaysi kogortaga tushadi, qaysi xaridi hisobga kiradi?"
+    nudge_reply: "«{task}» dedlayni {time}da. Qaysi qadamda turibsiz — ta'rif, kod yoki xulosa? Bitta qator yozing, birga ko'ramiz."
+  - key: rustam
+    name: "Rustam Aliyev"
+    role: "Operatsiyalar direktori"
+    tone: "shoshqaloq, natijaga yo'naltirilgan; SQL'ni bilmaydi, bitta aniq raqam va 'ha/yo'q' javobni yaxshi ko'radi"
+    knows: [doc_program_brief, doc_finance]
+    secrets:
+      - "Karta yetkazib beruvchiga 60 000 karta buyurtmasi qoralamasi tayyor; payshanba 12:00 da imzolash rejalashtirilgan."
+    busy_reply: "Do'konlarni aylanyapman, kechqurun yozaman."
+    deflect_reply: "Men analitik emasman. Menga bitta to'g'ri raqam va nima qilish kerakligi kerak."
+  - key: dilnoza
+    name: "Dilnoza Ergasheva"
+    role: "Marketing menejeri, Sabzazor+ dasturi egasi"
+    tone: "ochiq, g'ayratli, statistikani kam biladi; dasturni muvaffaqiyatli ko'rsatishni juda xohlaydi"
+    knows: [doc_program_brief, doc_members_summary, doc_metric_requests, doc_effect_data]
+    secrets:
+      - "«Chaqmoq Media» agentligi bilan shartnoma hali imzolanmagan, ma'lumotlarni qayta ishlash kelishuvi ham yo'q."
+      - "6–19 iyulda ichimliklar yetkazib beruvchisining −15% aksiyasi faqat pilot do'konlarda o'tgan; marketing hisobotida bu karta effekti deb yozilgan."
+    busy_reply: "Agentlik bilan uchrashuvdaman, keyin yozaman."
+    deflect_reply: "Men statistikani yaxshi bilmayman — sizdan aniq tavsiya kutaman."
+  - key: sherzod
+    name: "Sherzod Toshev"
+    role: "Data engineer"
+    tone: "qisqa, texnik, ochiq; xatosini tan oladi"
+    knows: [doc_loyalty_tables, doc_incident_etl, doc_cohort_full]
+    secrets:
+      - "«Tarozi POS» yetkazib beruvchisi 07.10 kechasi Chilonzor kassalarini yangilagan; changelog'da card_no maydoni loyalty_card_id deb qayta nomlangan. Yunusobod kassalari bugun kechasi yangilanadi."
+      - "POS'ning xom fayllari 30 kun saqlanadi — kartali xaridlarni qayta yuklash (backfill) mumkin."
+    busy_reply: "ETL pipeline'ni tuzatyapman, 15 daqiqadan keyin yozaman."
+  - key: jasur
+    name: "Jasur Karimov"
+    role: "Data analyst (6 oylik tajriba)"
+    tone: "samimiy, tez ishlaydi, ba'zan tekshirmasdan; tanqidni yaxshi qabul qiladi"
+    knows: [doc_jasur_sql, doc_retention_draft]
+    secrets:
+      - "Qoralama skriptni 2 soatda 'tez raqam' uchun yozganman; kogortani UTC bo'yicha olganimni bilaman, lekin tuzatishga ulgurmadim."
+    busy_reply: "Hisobot chiqaryapman, 20 daqiqadan keyin yozaman."
+
+documents:
+  - key: doc_onboarding
+    title: "Analitika bo'limi: onboarding va hafta rejasi"
+    content: |
+      Sabzazor — Toshkentdagi 12 ta do'kondan iborat oziq-ovqat tarmog'i, onlayn buyurtma va yetkazish ham bor.
+      Analitika bo'limi: Madina (rahbar), Otabek (katta analyst, mentor), Jasur va yana 2 analyst.
+      Ombor va ETL — Sherzod (data engineer). Buyurtmachilar: operatsiyalar (Rustam), marketing (Dilnoza).
+
+      Ish kuni 09:00–18:00, tushlik 13:00–14:00. Har kuni 09:00 da yozma standup:
+      kecha nima qildim / bugun nima qilaman va qachon tayyor / nima to'sib turibdi. 3–5 qator. 17:30 da kun yakuni.
+
+      Asosiy qoidalar:
+      - Har raqamning manbasi bo'ladi: jadval, filtr, davr. So'rov yoki kod hisobotga ilova qilinadi.
+      - Raqamni chiqarishdan oldin sifat tekshiruvi: dublikat, NULL, qaytarilganlar, test yozuvlar, vaqt mintaqasi.
+      - Rahbariyatga xulosa texnik bo'lmagan tilda: raqam, xulosa, tavsiya, cheklovlar.
+      - Tasdiqlanmagan (review'dan o'tmagan) skript natijasi rahbariyat hujjatiga kirmaydi.
+
+      Bu hafta (05.10–09.10): juma kuni kengash "Sabzazor+" sodiqlik kartasini 12 do'konga yoyish-yoymaslikni hal qiladi.
+      Dushanba — reja va ta'riflar, seshanba — SQL va review, chorshanba — kogorta funksiyasi va ta'sir tahlili,
+      payshanba — kengash oldi materiallari, juma — taqdimot va retro.
+
+  - key: doc_program_brief
+    title: "Sabzazor+ sodiqlik kartasi: pilot tavsifi"
+    content: |
+      Dastur: xaridor kassada telefon raqami bilan bepul karta oladi, har to'langan xariddan 3% cashback ballari
+      yig'iladi (keyingi xaridda 1 ball = 1 so'm). Karta Sabzazor ilovasida ham bor.
+      Pilot: 01.06.2026 dan Chilonzor (CHL) va Yunusobod (YUN) do'konlarida.
+      Nazorat do'konlari: Sergeli (SRG) va Olmazor (OLM) — kartasiz, joylashuvi va hajmi pilotga o'xshash.
+      Pilotdan oldingi davr: mart–may; pilot davri: iyun–avgust (sentyabr ma'lumotlari hali to'liq tekshirilmagan).
+
+      Kengash savoli (juma, 09.10): dasturni barcha 12 do'konga yoyamizmi?
+      Rustam: "Tushum o'syapti, tezroq yoyish kerak." Dilnoza: "Karta egalari 41% ko'p xarid qiladi."
+      Moliya: "Cashback va karta xarajatlari qoplanyaptimi — shuni ko'rmoqchimiz."
+
+  - key: doc_loyalty_tables
+    title: "Ma'lumotlar lug'ati: sodiqlik jadvallari"
+    content: |
+      dwh.loyalty_members — har karta bitta qator.
+      ustun | turi | izoh
+      member_id | text | Karta raqami (PK).
+      phone_hash | text NULL | Telefon raqamining xeshi. Bir odam yo'qotgan kartasi o'rniga yangisini olsa — bir xil xesh, ikki karta. NULL — telefonsiz berilgan karta.
+      store_id | text | Karta berilgan do'kon: CHL, YUN.
+      signup_ts | timestamp | Karta berilgan vaqt, UTC (Toshkent = UTC+5, yozgi vaqt yo'q).
+      is_test | bool | Kassirlar tekshiruvi uchun test kartalar.
+      is_employee | bool | Xodimlar kartasi (xodimlar har kuni xarid qiladi, cashback'i boshqa).
+      sms_consent | bool | Reklama SMS'iga yozma rozilik bergan.
+
+      dwh.orders — har buyurtma bitta qator: order_id (PRIMARY KEY yo'q — POS qayta yuborsa dublikat bo'ladi),
+      store_id, customer_id (= member_id; NULL — kartasiz xarid), order_ts (UTC), amount_sum (so'm), status (paid | refunded).
+      dwh.order_items — buyurtmadagi har mahsulot bitta qator (order_id, product_id, category, qty, price).
+
+      crm.members_raw — ism va ochiq telefon raqami. Kirish faqat CRM jamoasi va xizmat zarurati bilan;
+      analitikada faqat phone_hash ishlatiladi.
+
+  - key: doc_members_summary
+    title: "loyalty_members: profil (30.09 holati) va marketing dashboard'i"
+    content: |
+      Berilgan kartalar oylar bo'yicha (Toshkent vaqti bo'yicha):
+      oy | kartalar | test | xodim | takroriy (shu telefonning 2-kartasi)
+      iyun | 2 140 | 12 | 68 | 60
+      iyul | 1 530 | 4 | 26 | 50
+      avgust | 1 180 | 2 | 18 | 40
+      sentyabr | 880 | 2 | 14 | 34
+
+      Sentyabrda kamida bitta xarid qilgan kartalar — 3 120. Shulardan:
+      test kartalar — 18; xodim kartalari — 110; takroriy 2-kartalar (egasi asosiy kartasi bilan ham xarid qilgan) — 95;
+      sentyabrdagi yagona xaridi qaytarilgan (refunded) kartalar — 37.
+
+      Marketing dashboard'i (Dilnoza): "Sabzazor+ a'zolari: 5 730. Sentyabrda faol: 3 120 (54.5%)."
+
+  - key: doc_metric_requests
+    title: "Chat: «faol a'zo» nima? (yozishmadan parcha)"
+    content: |
+      Dilnoza: Faol a'zo — karta olgan har kim. Kartani olgan bo'lsa, demak dasturda.
+      Rustam: Yo'q, faol — oyda kamida bitta xarid qilgan. Qaytarib bergan xaridi ham xarid-ku.
+      Moliya (Kamola): Bizga to'langan summa muhim. Xodim kartalari umuman alohida hisoblanadi.
+      Jasur: Retention'ni men birinchi oyda xarid qilganlardan hisoblayman — qolganlari baribir "o'lik" kartalar.
+      Madina: Yangi hamkasbimiz dushanba kuni bitta yozma ta'riflar hujjatini taklif qiladi, keyin tasdiqlaymiz.
+
+  - key: doc_metric_spec
+    title: "Sodiqlik metrikalari: tasdiqlangan ta'riflar v1.0 (ichki standart)"
+    content: |
+      1. Mos a'zo: is_test = false va is_employee = false. Bir xil phone_hash'li kartalar — bitta odam:
+         asosiy karta eng erta signup_ts'li (teng bo'lsa — kichik member_id), qolgan kartalarning xaridlari asosiy kartaga
+         qo'shiladi. phone_hash NULL bo'lsa — karta alohida odam. Test va xodim kartalari xaridlari bilan birga chiqariladi.
+      2. Hisobga olinadigan xarid: status = 'paid'. Bir xil order_id qatorlari bitta xarid.
+      3. Vaqt: barcha sanalar Toshkent vaqtida (UTC + 5 soat).
+      4. Kogorta: mos a'zoning signup oyi (YYYY-MM). Kogorta hajmi — shu oydagi barcha mos a'zolar (xarid qilmaganlar ham).
+      5. Retention M_k = kogortadan k-oyda (signup oyi — M0) kamida bitta hisobga olinadigan xarid qilganlar / kogorta hajmi,
+         foizda, 1 xona aniqlikda.
+      6. Faol a'zo (oy) — shu oyda kamida bitta hisobga olinadigan xaridi bor mos a'zo. Faollik ulushi = faol / barcha mos a'zolar.
+      7. Har hisobotda: davr, filtrlar, chiqarilgan yozuvlar soni va sababi.
+
+  - key: doc_data_policy
+    title: "Ma'lumotlar va hisobot siyosati (ichki qoida)"
+    content: |
+      Shaxsiy ma'lumot:
+      - Ochiq telefon raqami va ism faqat crm.members_raw'da; eksport qilinmaydi, email/chat orqali yuborilmaydi.
+      - Reklama SMS'i faqat sms_consent = true a'zolarga va faqat kompaniyaning CRM SMS moduli orqali yuboriladi.
+      - Tashqi tashkilotga shaxsiy ma'lumot berish — faqat imzolangan ma'lumotlarni qayta ishlash kelishuvi va
+        ma'lumotlar himoyasi mas'ulining yozma ruxsati bilan. Analitik bunday qarorni o'zi qabul qilmaydi.
+      Hisobot halolligi:
+      - Tahlil davri tahlildan OLDIN belgilanadi va o'zgartirilmaydi; natijasi "chiroyli" davrni tanlab olish taqiqlanadi.
+      - Natijaga boshqa omil (aksiya, bayram, nosozlik) ta'sir qilgan bo'lsa — u ochiq yoziladi, yashirilmaydi.
+      - Noqulay natija ham to'liq beriladi: raqam, ishonch oralig'i yoki diapazon, cheklovlar.
+      - Kelishmovchilikda analitik o'zi qaror qilmaydi — bo'lim rahbariga yozadi.
+
+  - key: doc_jasur_sql
+    title: "Jasurning so'rovi: karta egalari va kartasizlarning o'rtacha cheki"
+    content: |
+      Tavsif: "Pilot do'konlarda karta egalarining o'rtacha cheki kartasizlarnikidan qancha yuqori — kengash slaydi uchun."
+
+      ```sql
+      SELECT CASE WHEN m.member_id IS NULL THEN 'kartasiz' ELSE 'karta' END AS segment,
+             AVG(o.amount_sum) AS avg_check,
+             COUNT(*)          AS orders
+      FROM dwh.orders o
+      LEFT JOIN dwh.loyalty_members m ON m.member_id = o.customer_id
+      LEFT JOIN dwh.order_items i     ON i.order_id = o.order_id
+      WHERE o.order_ts BETWEEN '2026-06-01' AND '2026-08-31'
+        AND o.store_id IN ('CHL', 'YUN')
+        AND m.is_test = false
+      GROUP BY 1;
+      ```
+
+      Natija: karta — 162 000 so'm; kartasiz — qator chiqmadi ("kartasizlar ma'lumoti yo'q shekilli, eski hisobotdagi 115 000 ni olaman").
+
+  - key: doc_retention_draft
+    title: "Jasurning qoralama retention skripti (review'dan o'tmagan)"
+    content: |
+      ```python
+      def retention_draft(members, orders, months=4):
+          cohort = {m["member_id"]: m["signup_utc"][:7] for m in members}
+          buyers = {}
+          for o in orders:
+              month = o["ts_utc"][:7]
+              buyers.setdefault((cohort[o["member_id"]], month), set()).add(o["member_id"])
+          result = {}
+          for c in sorted(set(cohort.values())):
+              base = buyers.get((c, c), set())          # M0 da xarid qilgan kartalar
+              row = []
+              for k in range(months):
+                  y, m = int(c[:4]), int(c[5:]) + k
+                  y, m = y + (m - 1) // 12, (m - 1) % 12 + 1
+                  got = buyers.get((c, f"{y:04d}-{m:02d}"), set()) & base
+                  row.append(round(100 * len(got) / len(base), 1) if base else 0.0)
+              result[c] = row
+          return result
+      ```
+      Kirish: members — {member_id, phone_hash, signup_utc, is_test, is_employee}; orders — {order_id, member_id, ts_utc, amount, status}.
+      Vaqtlar "YYYY-MM-DD HH:MM" ko'rinishida, UTC.
+
+  - key: doc_cohort_sample
+    title: "Kogorta namunasi (o'quv uchun qisqartirilgan, vaqtlar UTC)"
+    content: |
+      members:
+      member_id | phone_hash | signup_utc | is_test | is_employee
+      M01 | h01 | 2026-06-03 10:15 | false | false
+      M02 | h02 | 2026-06-10 18:40 | false | false
+      M03 | h03 | 2026-06-30 20:30 | false | false
+      M04 | h04 | 2026-06-15 09:00 | false | true
+      M05 | h05 | 2026-06-20 12:00 | true | false
+      M06 | h01 | 2026-07-05 11:00 | false | false
+      M07 | h07 | 2026-07-08 14:20 | false | false
+      M08 | h08 | 2026-07-21 16:00 | false | false
+      M09 | h09 | 2026-06-25 08:30 | false | false
+      M10 | h10 | 2026-07-29 10:00 | false | false
+
+      orders:
+      order_id | member_id | ts_utc | amount | status
+      O01 | M01 | 2026-06-03 10:30 | 120000 | paid
+      O02 | M02 | 2026-06-12 17:00 | 85000 | refunded
+      O03 | M09 | 2026-06-26 12:00 | 64000 | paid
+      O04 | M01 | 2026-07-14 19:00 | 210000 | paid
+      O05 | M06 | 2026-08-02 09:00 | 99000 | paid
+      O06 | M02 | 2026-07-31 19:10 | 150000 | paid
+      O07 | M03 | 2026-07-01 08:00 | 70000 | paid
+      O08 | M03 | 2026-08-15 12:00 | 88000 | paid
+      O09 | M07 | 2026-07-08 14:30 | 45000 | paid
+      O10 | M07 | 2026-09-03 10:00 | 132000 | paid
+      O11 | M08 | 2026-08-20 18:00 | 56000 | refunded
+      O12 | M08 | 2026-07-22 11:00 | 73000 | paid
+      O13 | M04 | 2026-07-02 12:00 | 300000 | paid
+      O14 | M05 | 2026-06-21 12:00 | 1000 | paid
+      O15 | M10 | 2026-08-10 15:00 | 91000 | paid
+      O15 | M10 | 2026-08-10 15:00 | 91000 | paid
+      O16 | M09 | 2026-09-12 10:00 | 77000 | paid
+
+  - key: doc_effect_data
+    title: "Pilot ta'siri: tushum va chek ma'lumotlari"
+    content: |
+      Oylik tushum, mln so'm (do'konlar juftligi yig'indisi):
+      oy | pilot (CHL + YUN) | nazorat (SRG + OLM)
+      mart | 1 810 | 1 585
+      aprel | 1 835 | 1 610
+      may | 1 875 | 1 635
+      iyun | 1 990 | 1 680
+      iyul | 2 030 | 1 712
+      avgust | 2 052 | 1 729
+
+      Iyun–avgustda pilot do'konlar tushumining 55% i karta bilan to'langan.
+
+      O'rtacha chek, iyun–avgust, pilot do'konlar (Dilnozaning slaydidagi raqamlar):
+      segment | o'rtacha chek, so'm
+      karta bilan xaridlar | 162 000
+      kartasiz xaridlar | 115 000
+
+      Karta olgan va ilgari ilovada onlayn buyurtma bergan a'zolar (kartadan oldin ham kuzatilgan, 1 840 kishi):
+      davr | o'rtacha chek, so'm
+      mart–may (karta yo'q) | 158 000
+      iyun–avgust (karta bor) | 166 000
+
+      Haftalik ta'sir bahosi (pilot haqiqiy tushumi nazorat dinamikasi bo'yicha kutilganidan necha % yuqori):
+      hafta | ta'sir, %
+      01–07.06 | 2.1
+      08–14.06 | 3.0
+      15–21.06 | 2.6
+      22–28.06 | 3.4
+      29.06–05.07 | 2.8
+      06–12.07 | 12.9
+      13–19.07 | 11.9
+      20–26.07 | 2.2
+      27.07–02.08 | 1.5
+      03–09.08 | 0.9
+      10–16.08 | 1.4
+      17–23.08 | 2.0
+      24–30.08 | 1.7
+      Izoh (operatsiyalar jurnali): 6–19 iyulda ichimliklar yetkazib beruvchisi −15% aksiyani faqat CHL va YUN'da o'tkazgan.
+
+  - key: doc_finance
+    title: "Moliya: dastur xarajatlari va farazlar (ichki o'quv faraz)"
+    content: |
+      - Yalpi marja (tushumdan): 22%.
+      - Cashback: karta bilan to'langan summaning 3%.
+      - Doimiy xarajatlar (ilova moduli, SMS, karta chop etish, qo'llab-quvvatlash): pilot do'konlar uchun 7.5 mln so'm/oy.
+      - 12 do'konga yoyish uchun yangi kartalar: 60 000 dona × 1 600 so'm.
+      Dastur o'zini oqlaydi, agar qo'shimcha (inkremental) tushumdan yalpi foyda ≥ cashback + doimiy xarajatlar.
+
+  - key: doc_cohort_full
+    title: "Kogortalar: pilot do'konlar, v1.0 qoidasi bo'yicha (Sherzod, 02.10 holati)"
+    content: |
+      Hisob tasdiqlangan cohort_retention funksiyasi bilan, to'liq dwh ma'lumotida. Faol a'zolar soni:
+      kogorta | mos a'zolar | M0 | M1 | M2 | M3
+      2026-06 | 2 000 | 1 540 | 920 | 810 | 760
+      2026-07 | 1 450 | 1 102 | 638 | 566 | —
+      2026-08 | 1 120 | 829 | 493 | — | —
+      "—" — oy hali tugamagan. Sentyabr kogortasi (830 a'zo) hali M1 ga yetmagan.
+      Nazorat do'konlarida karta yo'q, shuning uchun retention'ni nazorat bilan solishtirib bo'lmaydi.
+
+  - key: doc_incident_retention
+    title: "Kengash pre-read'i: retention raqami (payshanba 09:40)"
+    content: |
+      Chorshanba kechqurun marketing jamoasi Rustam akaga va kengash a'zolariga pre-read yubordi:
+      "Sabzazor+ iyun kogortasi: 2-oy retention 71.4% — har 10 a'zodan 7 tasi qaytib keladi.
+      Tavsiya: 12 do'konga yoyish. 60 000 karta buyurtmasi, shartnoma payshanba 12:00 da imzolanadi."
+      Hisob manbai: Jasurning qoralama skripti (retention_draft) — tasdiqlangan funksiya hali tayyor emas edi.
+
+      Iyun kogortasi, M1 (iyul) — Sherzod dwh'dan ajratib berdi:
+      qism | qoralama skript | v1.0 qoidasi
+      maxraj | 1 638 karta — iyunda kamida bitta xarid qilganlar (shundan 12 test, 64 xodim, 22 takroriy 2-karta) | 2 000 mos a'zo — butun iyun kogortasi
+      surat | 1 170 karta — iyunda ham, iyulda ham xarid qilganlar (qaytarilganlar ham hisobda) | 920 a'zo — iyulda kamida bitta to'langan xarid
+      natija | 71.4% | 46.0%
+
+      Iyun kogortasidagi 2 000 mos a'zoning 460 tasi iyunda umuman xarid qilmagan — qoralama ularni ko'rmaydi.
+
+  - key: doc_incident_etl
+    title: "Monitoring: kartali xaridlar, 04.10–07.10"
+    content: |
+      kun | CHL kartali xaridlar | YUN kartali xaridlar | CHL barcha xaridlar
+      04.10 | 1 280 | 1 150 | 2 330
+      05.10 | 1 305 | 1 170 | 2 395
+      06.10 | 1 296 | 1 162 | 2 360
+      07.10 | 0 | 1 158 | 2 342
+
+      ETL jurnali (08.10, 03:00): pos_orders yuklandi, ogohlantirish: "card_no ustuni topilmadi — NULL bilan to'ldirildi" (CHL, 2 342 qator).
+      Tarozi POS changelog v5.2: "card_no → loyalty_card_id". CHL kassalari 07.10 02:00 da yangilangan, YUN — 08.10 kechasi rejada.
+      Marketing dashboard'i: "Kecha kartali xaridlar 2 458 → 1 158 (−52.9%). Faol a'zolar keskin kamaydi!"
+
+  - key: doc_postmortem_template
+    title: "Postmortem shabloni (analitika)"
+    content: |
+      1. Qisqacha: nima bo'ldi, qaysi raqam/hisobot ta'sirlandi, kimga yetib bordi, qancha davom etdi.
+      2. Vaqt chizig'i: paydo bo'ldi → aniqlandi → to'xtatildi → tuzatildi → xabar berildi.
+      3. Asosiy sabab (5 ta "nega"), aybdor emas — jarayon va tizim.
+      4. Nima yaxshi ishladi / nima ishlamadi.
+      5. Choralar: har biri egasi va muddati bilan; oldini olish (avtomatik ma'lumot testlari) va tezroq aniqlash.
+
+nodes:
+  # ── 1-kun: tanishuv, reja va ta'riflar ─────────────────────────────
+  - id: welcome
+    type: message
+    day: 1
+    at: "09:00"
+    from: madina
+    brief: |
+      Sabzazor analitikasiga xush kelibsiz! Bu hafta bitta katta savol ustida ishlaysiz: "Sabzazor+" kartasi
+      haqiqatan foyda beryaptimi va juma kuni kengashga nima tavsiya qilamiz. Onboarding va pilot tavsifini o'qing.
+
+  - id: standup_d1
+    type: task
+    day: 1
+    at: "09:00"
+    from: madina
+    brief: "Standup: bugungi rejangizni onboarding formatida yozing (3–5 qator)."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Formatga mos: reja / muddat / to'siqlar, 3–5 qator"}
+      - {id: concrete, description: "Reja aniq: pilot bilan tanishish, tahlil rejasi, ta'riflar hujjati, muddatlar bilan", weight: 2}
+    hints: ["Birinchi kunda 'kecha' o'rniga bugun nima bilan tanishishni va qaysi hujjatni topshirishni yozing."]
+    reference_answer: "Bugun: pilot tavsifi va jadvallar bilan tanishaman, tushlikkacha tahlil rejasi, kechgacha metrikalar ta'riflari. To'siq: dwh'ga kirish huquqi — Sherzoddan so'rayman."
+
+  - id: mentor_intro
+    type: message
+    day: 1
+    at: "09:20"
+    from: otabek
+    brief: |
+      Salom! Men Otabek, shu hafta mentoringizman. Kod va SQL'ni siz uchun yozmayman, lekin qaysi chegara holatini
+      tekshirishni eslataman. Qiyin bo'lsa hint so'rang — har hint task balini biroz kamaytiradi.
+
+  - id: analysis_plan
+    type: task
+    day: 1
+    at: "09:30"
+    from: madina
+    brief: |
+      Juma kuni kengashga javob beramiz. Hafta uchun tahlil rejasini yozing:
+      1) kengash savoli va qaror qaysi raqamlarga bog'liq;
+      2) dastur ta'sirini qanday baholaymiz — nima bilan solishtiramiz va nega;
+      3) qanday ma'lumot kerak va qaysi sifat muammolari kutiladi;
+      4) asosiy xavflar (noto'g'ri xulosa qayerdan kelishi mumkin) va kun bo'yicha reja.
+    attachments: [doc_program_brief, doc_loyalty_tables, doc_onboarding]
+    answer_types: [text, file]
+    due_in_minutes: 150
+    weight: 1.5
+    competencies: [technical, prioritization]
+    rubric:
+      - {id: question, description: "Qaror savoli aniq: yoyish foydalimi — qo'shimcha tushum va undan yalpi foyda vs cashback + xarajatlar", weight: 1.5}
+      - {id: comparison, description: "Taqqoslash: pilot (CHL, YUN) vs nazorat (SRG, OLM), oldin (mart–may) va keyin (iyun–avgust) — farqlar farqi; mavsumiylikni nazorat orqali hisobga olish", weight: 2}
+      - {id: biases, description: "Xavflar: karta egalari va kartasizlarni solishtirish — tanlov xatosi (selection bias); faqat oldin-keyin — mavsumiylik; boshqa aksiyalar; retention'da noto'g'ri maxraj", weight: 2}
+      - {id: data, description: "Ma'lumot va sifat: loyalty_members, orders; test/xodim kartalari, takroriy telefonlar, refunded, UTC, order_id dublikati"}
+      - {id: plan, description: "Kunlar bo'yicha reja haftaning tuzilishiga mos va real"}
+    hints:
+      - "Agar faqat pilot do'konlarning iyun–avgustini mart–may bilan solishtirsangiz, yozgi mavsum o'sishini qayerdan ajratasiz?"
+      - "Karta egalari karta olishdan oldin ham boshqa xaridorlardan farq qilganmi? Kim birinchi bo'lib karta oladi?"
+    reference_answer: |
+      1) Savol: 12 do'konga yoyamizmi. Qaror: pilot qo'shimcha tushum beradimi va undan yalpi foyda (22%) cashback (3%)
+      va doimiy xarajatlarni qoplaydimi; retention qo'shimcha signal.
+      2) Usul: farqlar farqi — pilot (CHL+YUN) va nazorat (SRG+OLM), mart–may vs iyun–avgust; avval oldingi trendlar
+      parallelligini tekshiraman. Karta egalari vs kartasizlar — faqat tavsif uchun, ta'sir emas.
+      3) Ma'lumot: loyalty_members, orders, do'konlar tushumi, moliya farazlari. Sifat: test/xodim kartalari,
+      bir telefonga ikki karta, refunded, order_id dublikati, UTC → Toshkent.
+      4) Xavflar: tanlov xatosi, mavsumiylik, pilot do'konlardagi boshqa aksiyalar, retention maxraji.
+      Reja: Du — reja va ta'riflar; Se — kogorta SQL va review; Cho — retention funksiyasi va ta'sir; Pa — tekshiruv; Ju — taqdimot.
+
+  - id: metric_definitions
+    type: task
+    day: 1
+    at: "14:00"
+    from: madina
+    brief: |
+      "Faol a'zo" bo'yicha hamma har xil gapiryapti (yozishma ilovada). Ta'riflar hujjatini taklif qiling:
+      mos a'zo, faol a'zo (oy), kogorta va retention M_k, karta bilan o'rtacha chek — har biri uchun formula,
+      nima kiradi / nima chiqadi, manba ustunlar. Keyin o'z ta'rifingiz bo'yicha sentyabr ko'rsatkichini hisoblang:
+      nechta mos a'zo, nechtasi faol, faollik ulushi — va marketing dashboard'idagi raqam bilan farqini tushuntiring.
+    attachments: [doc_metric_requests, doc_members_summary, doc_loyalty_tables]
+    answer_types: [text, file]
+    due_in_minutes: 180
+    weight: 2
+    competencies: [technical, communication]
+    rubric:
+      - {id: member_def, description: "Mos a'zo: test va xodim kartalari chiqariladi, bir telefon (phone_hash) — bitta odam", weight: 2}
+      - {id: active_def, description: "Faol: oyda kamida bitta status=paid xarid; qaytarilgan xarid hisoblanmaydi; Toshkent vaqti", weight: 1.5}
+      - {id: retention_def, description: "Retention maxraji — butun kogorta (xarid qilmaganlar ham), M0 xaridorlari emas; kogorta — signup oyi", weight: 1.5}
+      - {id: numbers, description: "Sentyabr: mos a'zolar 5 730 − 20 − 126 − 184 = 5 400; faol 3 120 − 18 − 110 − 95 − 37 = 2 860; 2 860 / 5 400 ≈ 53.0%", weight: 2}
+      - {id: gap, description: "Dashboard bilan farq izohlangan: 5 730 va 3 120 (54.5%) test, xodim, takroriy va faqat qaytarilgan kartalarni o'z ichiga oladi"}
+    hints:
+      - "Har bir mavqeni (Dilnoza, Rustam, moliya, Jasur) metrika nimani o'lchashi kerakligi bilan solishtiring: kimniki pul va xulq-atvorni to'g'ri aks ettiradi?"
+      - "Profil jadvalidagi har ustunni alohida ayiring: kartalar soni − test − xodim − takroriy. Faollar uchun ham xuddi shunday."
+      - "Retention maxrajida faqat birinchi oy xaridorlari qolsa, kimlar ko'rinmay qoladi?"
+    reference_answer: |
+      Mos a'zo: is_test=false, is_employee=false; bir phone_hash — bitta odam (asosiy — eng erta karta).
+      Faol a'zo (oy): shu oyda Toshkent vaqti bo'yicha kamida bitta status='paid' xaridi bor mos a'zo; refunded hisoblanmaydi.
+      Kogorta: mos a'zoning signup oyi (UTC+5). Retention M_k = k-oyda faol bo'lganlar / butun kogorta hajmi (xarid qilmaganlar ham).
+      Karta bilan o'rtacha chek: mos a'zolarning paid xaridlari summasi / noyob order_id soni.
+      Sentyabr: mos a'zolar 5 730 − 20 test − 126 xodim − 184 takroriy = 5 400. Faol: 3 120 − 18 − 110 − 95 − 37 = 2 860.
+      Faollik ulushi 2 860 / 5 400 ≈ 53.0%. Dashboard: 3 120 / 5 730 ≈ 54.5% — test, xodim, takroriy kartalar va faqat
+      qaytarilgan xaridlar ham kirgan; "5 730 a'zo" ham kartalar soni, odamlar emas (330 ta ortiqcha).
+      Dilnozaning "karta olgan har kim" ta'rifi faollikni o'lchamaydi; Jasurning maxraji retention'ni oshirib ko'rsatadi.
+
+  - id: day1_end
+    type: day_end
+    day: 1
+    at: "17:30"
+    brief: "1-kun yakuni: reja va ta'riflar holati, ochiq savollar, ertangi reja."
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Bugungi natija aniq: tahlil rejasi, ta'riflar, sentyabr raqami", weight: 1.5}
+      - {id: questions, description: "Ochiq savollar (ta'riflarni kim tasdiqlaydi) va ertangi reja aytilgan"}
+
+  # ── 2-kun: SQL, shaxsiy ma'lumot va review ─────────────────────────
+  - id: standup_d2
+    type: task
+    day: 2
+    at: "09:00"
+    from: madina
+    brief: "Standup (2-kun). Kechagi taklifingiz asosida ta'riflar v1.0 tasdiqlandi — ilovada."
+    attachments: [doc_onboarding, doc_metric_spec]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Kecha / bugun / to'siqlar"}
+      - {id: concrete, description: "Bugungi reja aniq: kogorta SQL v1.0 bo'yicha, Jasur so'roviga review", weight: 2}
+    hints: ["Tasdiqlangan v1.0 kechagi taklifingizdan nimasi bilan farq qiladi va bu bugungi SQL'ga qanday ta'sir qiladi?"]
+    reference_answer: "Kecha: tahlil rejasi va ta'riflar (sentyabr faolligi 53.0%). Bugun: v1.0 bo'yicha kogorta SQL, tushdan keyin Jasur so'roviga review. To'siq: yo'q."
+
+  - id: access_note
+    type: message
+    day: 2
+    at: "09:15"
+    from: sherzod
+    brief: |
+      Salom! dwh.loyalty_members va dwh.orders'ga o'qish huquqi berdim. Adashib crm.members_raw'ga ham kirish ochilib
+      qolgan — u yerda ochiq telefonlar bor, analitika uchun kerak emas. Bugun kechqurun yopaman.
+
+  - id: cohort_sql
+    type: task
+    day: 2
+    at: "09:30"
+    from: madina
+    brief: |
+      Tasdiqlangan v1.0 ta'riflari bo'yicha kogorta jadvalini beradigan SQL yozing (PostgreSQL): kogorta oyi,
+      kogorta hajmi, M0–M3 faol a'zolar soni va retention foizi. Har bir CTE nima uchunligini 1 qatorda izohlang
+      va qaysi qadam qaysi v1.0 bandini bajarishini ko'rsating.
+    attachments: [doc_metric_spec, doc_loyalty_tables]
+    answer_types: [code, text]
+    due_in_minutes: 150
+    weight: 2
+    competencies: [technical]
+    rubric:
+      - {id: members, description: "Mos a'zolar: is_test/is_employee chiqarilgan; phone_hash bo'yicha ROW_NUMBER (signup_ts, member_id) — asosiy karta; NULL phone_hash alohida", weight: 2}
+      - {id: mapping, description: "Takroriy kartalar xaridlari asosiy kartaga bog'langan (member_id → person_id xaritasi)", weight: 1.5}
+      - {id: orders, description: "Xaridlar: status='paid', order_id dublikati DISTINCT, Toshkent vaqti (+5 soat) bilan oy", weight: 2}
+      - {id: denominator, description: "Maxraj — kogortadagi barcha mos a'zolar; LEFT JOIN yoki alohida kogorta hajmi; month_index = oylar farqi", weight: 2}
+      - {id: explain, description: "Har CTE izohlangan va v1.0 bandlariga bog'langan"}
+    hints:
+      - "Avval 'odam' jadvalini yasang: har phone_hash uchun bitta asosiy karta. Telefonsiz kartalar bilan nima qilasiz?"
+      - "Oylar farqini sanadan qanday chiqarasiz? (yil × 12 + oy) ayirmasi yordam beradi."
+      - "Maxrajni xaridlar jadvalidan olsangiz, xarid qilmagan a'zolar qayerda qoladi?"
+    reference_answer: |
+      ```sql
+      WITH m AS (               -- v1.0 §1: mos kartalar, Toshkent vaqti
+        SELECT member_id, COALESCE(phone_hash, 'id:' || member_id) AS person_key,
+               signup_ts + INTERVAL '5 hours' AS signup_local
+        FROM dwh.loyalty_members WHERE NOT is_test AND NOT is_employee),
+      ranked AS (               -- §1: bir telefon — bitta odam, asosiy karta eng erta
+        SELECT *, FIRST_VALUE(member_id) OVER (PARTITION BY person_key ORDER BY signup_local, member_id) AS person_id
+        FROM m),
+      people AS (               -- §4: kogorta = asosiy kartaning signup oyi
+        SELECT DISTINCT person_id, DATE_TRUNC('month', FIRST_VALUE(signup_local) OVER (PARTITION BY person_key
+               ORDER BY signup_local, member_id)) AS cohort FROM ranked),
+      buys AS (                 -- §2–3: paid, dublikatsiz, Toshkent oyi, asosiy kartaga bog'langan
+        SELECT DISTINCT r.person_id, DATE_TRUNC('month', o.order_ts + INTERVAL '5 hours') AS month
+        FROM (SELECT DISTINCT order_id, customer_id, order_ts, status FROM dwh.orders) o
+        JOIN ranked r ON r.member_id = o.customer_id WHERE o.status = 'paid'),
+      act AS (                  -- §5: k-oy
+        SELECT p.cohort, (EXTRACT(YEAR FROM b.month) * 12 + EXTRACT(MONTH FROM b.month))
+                       - (EXTRACT(YEAR FROM p.cohort) * 12 + EXTRACT(MONTH FROM p.cohort)) AS k, b.person_id
+        FROM people p JOIN buys b ON b.person_id = p.person_id),
+      size AS (SELECT cohort, COUNT(*) AS n FROM people GROUP BY cohort)
+      SELECT s.cohort, s.n, a.k, COUNT(DISTINCT a.person_id) AS active,
+             ROUND(100.0 * COUNT(DISTINCT a.person_id) / s.n, 1) AS retention
+      FROM size s LEFT JOIN act a ON a.cohort = s.cohort AND a.k BETWEEN 0 AND 3
+      GROUP BY s.cohort, s.n, a.k ORDER BY 1, 3;
+      ```
+      Maxraj size'dan — xarid qilmaganlar ham kogortada; refunded va test/xodim kartalari xaridlari kirmaydi.
+
+  - id: sms_export
+    type: decision
+    day: 2
+    at: "11:30"
+    from: dilnoza
+    brief: |
+      Salom! Ertaga «Chaqmoq Media» agentligi orqali SMS-kampaniya qilmoqchimiz. Sherzod aytdi, sizda crm.members_raw'ga
+      kirish bor ekan. Barcha 5 730 karta egasining ismi va telefon raqamini Excel'ga chiqarib, agentlikka email qilib
+      yuborib bera olasizmi? Bugun tushlikdan keyin kerak, shoshilinch.
+    competencies: [communication, stress_handling]
+    options:
+      - key: refuse_offer_consent
+        label: "Ochiq telefonlarni eksport qilmayman va tashqariga yubormayman; sms_consent=true a'zolar sonini aytib, kampaniyani CRM SMS moduli orqali qilishni taklif qilaman va Madina opaga xabar beraman"
+        grade: correct
+      - key: ask_lead
+        label: "Javob bermay, so'rovni Madina opaga uzataman"
+        grade: acceptable
+      - key: export_all
+        label: "Shoshilinch ekan — crm.members_raw'dan ism va telefonlarni chiqarib, agentlikka yuboraman"
+        grade: wrong
+        flag: pii_export
+
+  - id: lead_on_pii
+    type: message
+    day: 2
+    at: "14:00"
+    when: {flag: pii_export}
+    from: madina
+    brief: |
+      Agentlikka mijozlar telefonlari ketganini bildim. Bu siyosatimizga zid: rozilik bermaganlar ham ro'yxatda,
+      agentlik bilan ma'lumotlarni qayta ishlash kelishuvi yo'q. Hozir ma'lumotlar himoyasi mas'uli bilan agentlikdan
+      faylni o'chirishni so'raymiz. Keyingi safar shaxsiy ma'lumot so'ralsa — avval menga yozing, eksport qilmang.
+
+  - id: sql_review
+    type: task
+    day: 2
+    at: "14:30"
+    from: jasur
+    brief: |
+      Salom! Kengash slaydi uchun "karta egalari vs kartasizlar o'rtacha cheki" so'rovini yozdim, ilovada.
+      Review qilib bera olasizmi? Har izoh: qaysi qator, muammo, taklif, blocker yoki nit.
+    attachments: [doc_jasur_sql, doc_metric_spec]
+    answer_types: [text]
+    due_in_minutes: 120
+    competencies: [technical, communication]
+    rubric:
+      - {id: left_join, description: "Blocker: WHERE m.is_test = false LEFT JOIN'ni INNER'ga aylantiradi — kartasiz qatorlar yo'qoladi (shuning uchun natija chiqmagan); shartni ON'ga yoki COALESCE", weight: 2}
+      - {id: fanout, description: "Blocker: order_items JOIN qatorlarni ko'paytiradi — AVG mahsulot soniga og'irlangan, COUNT(*) oshgan; JOIN olib tashlansin", weight: 2}
+      - {id: filters, description: "status='paid' yo'q; BETWEEN '2026-08-31' 31-avgustni kesadi va UTC; xodim kartalari, order_id dublikati", weight: 1.5}
+      - {id: method, description: "Metodologiya: karta egalari vs kartasizlar farqi — tanlov xatosi, dastur ta'siri sifatida kengashga berilmasin; eski 115 000 ni boshqa manbadan olmaslik", weight: 1.5}
+      - {id: tone, description: "Hurmatli, aniq qator va taklif bilan, blocker/nit ajratilgan"}
+    hints:
+      - "LEFT JOIN'dan keyin o'ng jadval ustuniga WHERE'da shart qo'yilsa, m NULL bo'lgan qatorlar bilan nima bo'ladi?"
+      - "Bitta buyurtmada 3 ta mahsulot bo'lsa, order_items JOIN'dan keyin u buyurtma necha qator bo'ladi?"
+    reference_answer: |
+      Blocker 1: `AND m.is_test = false` — m NULL bo'lgan (kartasiz) qatorlar tushib qoladi, LEFT JOIN amalda INNER; shuning uchun
+      "kartasiz" chiqmagan. Shartni ON'ga: `LEFT JOIN ... ON m.member_id = o.customer_id AND NOT m.is_test AND NOT m.is_employee`.
+      Blocker 2: order_items JOIN — har buyurtma mahsulot soniga ko'payadi; AVG ko'p mahsulotli cheklarga og'adi, COUNT(*) ~3×. JOIN kerak emas.
+      Major: status='paid' yo'q (refunded kirgan); BETWEEN '2026-06-01' AND '2026-08-31' — 31.08 00:00 dan keyingilar chiqadi va UTC;
+      to'g'risi `order_ts + INTERVAL '5 hours' >= '2026-06-01' AND < '2026-09-01'`; order_id dublikati — DISTINCT.
+      Metodologiya: karta oladiganlar baribir katta savatli xaridorlar — farq dastur ta'siri emas (tanlov xatosi).
+      Eski 115 000 ni boshqa hisobotdan olib qo'ymang. Nit: COUNT(DISTINCT o.order_id), segment nomlari.
+
+  - id: day2_end
+    type: day_end
+    day: 2
+    at: "17:30"
+    brief: "2-kun yakuni: kogorta SQL holati, review natijasi, SMS so'rovi bo'yicha nima kelishildi, ertangi reja."
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "SQL va review natijasi aniq", weight: 1.5}
+      - {id: plan, description: "Ertangi reja: retention funksiyasi va ta'sir tahlili"}
+
+  # ── 3-kun: kogorta funksiyasi (kalit) va tanlov xatosi ─────────────
+  - id: standup_d3
+    type: task
+    day: 3
+    at: "09:00"
+    from: madina
+    brief: "Standup (3-kun)."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Kecha / bugun / to'siqlar"}
+      - {id: concrete, description: "Bugungi reja aniq: retention funksiyasi testlar bilan, tushdan keyin ta'sir tahlili", weight: 2}
+    hints: ["Bugungi ikki ishni ketma-ketlikka qo'ying: qaysi biri juma uchun asosiy raqamni beradi?"]
+    reference_answer: "Kecha: kogorta SQL va Jasur so'roviga review. Bugun: cohort_retention funksiyasi va namunadagi jadval, tushdan keyin pilot ta'siri. To'siq: yo'q."
+
+  - id: retention_code
+    type: task
+    day: 3
+    at: "09:30"
+    from: madina
+    brief: |
+      Kengash materiallari uchun Jasurning qoralama skripti o'rniga tasdiqlangan funksiya kerak. Python'da (faqat stdlib) yozing:
+      cohort_retention(members, orders, months=4) -> dict[str, list[float]]
+      - members: {member_id, phone_hash, signup_utc, is_test, is_employee}; orders: {order_id, member_id, ts_utc, amount, status};
+        vaqtlar "YYYY-MM-DD HH:MM", UTC.
+      - Natija: {"YYYY-MM": [M0, M1, ..., M(months−1)]} — kogortalar o'sish tartibida, foizlar round(..., 1).
+      - Qoidalar — v1.0: test/xodim kartalari xaridlari bilan chiqadi, bir phone_hash — bitta odam (asosiy — eng erta karta),
+        phone_hash None — alohida odam, faqat paid, Toshkent vaqti, maxraj — butun kogorta; k < 0 yoki k ≥ months va
+        noma'lum member_id e'tiborsiz.
+      Javobda: kod, namunadagi natija jadvali va qoralama skriptdagi xatolar ro'yxati.
+      Kod maydonidagi cohort_retention avtomatik testlardan ham o'tkaziladi.
+    attachments: [doc_metric_spec, doc_retention_draft, doc_cohort_sample]
+    answer_types: [code, text]
+    due_in_minutes: 240
+    weight: 3
+    competencies: [technical]
+    checks:
+      module: solution
+      weight: 0.5
+      tests: |
+        from solution import cohort_retention
+
+
+        def _m(mid, phone, signup, test=False, emp=False):
+            return {"member_id": mid, "phone_hash": phone, "signup_utc": signup, "is_test": test, "is_employee": emp}
+
+
+        def _o(oid, mid, ts, status="paid", amount=50_000):
+            return {"order_id": oid, "member_id": mid, "ts_utc": ts, "amount": amount, "status": status}
+
+
+        def test_basic_cohort_and_denominator():
+            members = [_m("A", "h1", "2026-06-02 10:00"), _m("B", "h2", "2026-06-05 10:00")]
+            orders = [_o(1, "A", "2026-06-03 10:00"), _o(2, "A", "2026-07-03 10:00")]
+            assert cohort_retention(members, orders, months=3) == {"2026-06": [50.0, 50.0, 0.0]}
+
+
+        def test_refunded_not_counted():
+            members = [_m("A", "h1", "2026-06-02 10:00")]
+            orders = [_o(1, "A", "2026-06-03 10:00", status="refunded")]
+            assert cohort_retention(members, orders, months=2) == {"2026-06": [0.0, 0.0]}
+
+
+        def test_test_and_employee_cards_excluded():
+            members = [_m("A", "h1", "2026-06-02 10:00"), _m("T", "h9", "2026-06-02 10:00", test=True),
+                       _m("E", "h8", "2026-06-02 10:00", emp=True)]
+            orders = [_o(1, "T", "2026-06-03 10:00"), _o(2, "E", "2026-06-03 10:00")]
+            assert cohort_retention(members, orders, months=1) == {"2026-06": [0.0]}
+
+
+        def test_signup_month_in_tashkent_time():
+            members = [_m("A", "h1", "2026-06-30 20:30")]
+            orders = [_o(1, "A", "2026-07-01 08:00")]
+            assert cohort_retention(members, orders, months=2) == {"2026-07": [100.0, 0.0]}
+
+
+        def test_order_month_in_tashkent_time():
+            members = [_m("A", "h1", "2026-06-10 10:00")]
+            orders = [_o(1, "A", "2026-07-31 19:10")]
+            assert cohort_retention(members, orders, months=3) == {"2026-06": [0.0, 0.0, 100.0]}
+
+
+        def test_duplicate_phone_is_one_person():
+            members = [_m("A", "h1", "2026-06-03 10:00"), _m("A2", "h1", "2026-07-05 11:00"), _m("B", "h2", "2026-06-04 10:00")]
+            orders = [_o(1, "A2", "2026-07-06 10:00")]
+            assert cohort_retention(members, orders, months=2) == {"2026-06": [0.0, 50.0]}
+
+
+        def test_empty_phone_is_separate_person():
+            members = [_m("A", None, "2026-06-03 10:00"), _m("B", None, "2026-06-04 10:00")]
+            orders = [_o(1, "A", "2026-06-05 10:00")]
+            assert cohort_retention(members, orders, months=1) == {"2026-06": [50.0]}
+
+
+        def test_duplicate_order_rows_and_rounding():
+            members = [_m("A", "h1", "2026-06-02 10:00"), _m("B", "h2", "2026-06-02 10:00"), _m("C", "h3", "2026-06-02 10:00")]
+            orders = [_o(1, "A", "2026-06-03 10:00"), _o(1, "A", "2026-06-03 10:00")]
+            assert cohort_retention(members, orders, months=1) == {"2026-06": [33.3]}
+
+
+        def test_orders_outside_window_and_unknown_member_ignored():
+            members = [_m("A", "h1", "2026-06-02 10:00")]
+            orders = [_o(1, "A", "2026-09-03 10:00"), _o(2, "ZZZ", "2026-06-03 10:00")]
+            assert cohort_retention(members, orders, months=2) == {"2026-06": [0.0, 0.0]}
+
+
+        def test_several_cohorts_sorted():
+            members = [_m("B", "h2", "2026-07-10 10:00"), _m("A", "h1", "2026-06-10 10:00")]
+            orders = [_o(1, "B", "2026-07-11 10:00")]
+            out = cohort_retention(members, orders, months=1)
+            assert list(out) == ["2026-06", "2026-07"]
+            assert out == {"2026-06": [0.0], "2026-07": [100.0]}
+    rubric:
+      - {id: rules, description: "v1.0 qoidalari kodda: test/xodim chiqarilgan, phone_hash bo'yicha birlashtirish (asosiy — eng erta), None alohida, faqat paid", weight: 2.5}
+      - {id: timezone, description: "Signup va xarid oyi Toshkent vaqtida (+5 soat): M03 iyul kogortasi, O06 avgust", weight: 1.5}
+      - {id: denominator, description: "Maxraj — butun kogorta, M0 xaridorlari emas; k oralig'i va noma'lum member_id ishlangan", weight: 1.5}
+      - {id: sample_table, description: "Namuna natijasi: 2026-06 (3 a'zo: M01, M02, M09) — 66.7 / 33.3 / 66.7 / 33.3; 2026-07 (4 a'zo: M03, M07, M08, M10) — 75.0 / 50.0 / 25.0 / 0.0", weight: 2}
+      - {id: draft_bugs, description: "Qoralama xatolari: UTC oylar, refunded va test/xodim kartalari hisobda, takroriy telefonlar birlashtirilmagan, maxraj — M0 xaridorlari (M0 doim 100%)", weight: 1.5}
+    hints:
+      - "Avval 'odam' xaritasini quring: member_id → asosiy karta. Keyin har xaridni shu odamga bog'lang."
+      - "M03 qaysi kunda karta olgan — Toshkent soatida? O06 xaridi-chi? Ikkalasini qo'lda o'tkazib ko'ring."
+      - "Qoralamada M0 ustuni har doim 100% chiqadi. Bu nima haqida signal beradi?"
+    reference_answer: |
+      ```python
+      from datetime import datetime, timedelta
+
+      def _month(ts):
+          t = datetime.strptime(ts, "%Y-%m-%d %H:%M") + timedelta(hours=5)
+          return t.year, t.month
+
+      def cohort_retention(members, orders, months=4):
+          ok = [m for m in members if not m["is_test"] and not m["is_employee"]]
+          first = {}
+          for m in sorted(ok, key=lambda m: (m["signup_utc"], m["member_id"])):
+              first.setdefault(m["phone_hash"] or ("id", m["member_id"]), m)
+          owner = {m["member_id"]: first[m["phone_hash"] or ("id", m["member_id"])]["member_id"] for m in ok}
+          cohort = {p["member_id"]: _month(p["signup_utc"]) for p in first.values()}
+          active = set()
+          for o in orders:
+              pid = owner.get(o["member_id"])
+              if pid is None or o["status"] != "paid":
+                  continue
+              (y, mo), (cy, cm) = _month(o["ts_utc"]), cohort[pid]
+              k = (y - cy) * 12 + (mo - cm)
+              if 0 <= k < months:
+                  active.add((pid, k))
+          groups = {}
+          for pid, (y, mo) in cohort.items():
+              groups.setdefault(f"{y:04d}-{mo:02d}", []).append(pid)
+          return {c: [round(100 * sum((p, k) in active for p in ids) / len(ids), 1) for k in range(months)]
+                  for c, ids in sorted(groups.items())}
+      ```
+      Namuna: M04 (xodim), M05 (test) chiqadi; M06 = M01 (h01); M03 signup 30.06 20:30 UTC = 01.07 01:30 — iyul kogortasi.
+      2026-06 (M01, M02, M09): M0 — M01, M09 (M02 faqat refunded) 66.7; M1 — M01 (O04) 33.3; M2 — M01 (O05 M06 orqali),
+      M02 (O06: 31.07 19:10 UTC = 01.08 00:10) 66.7; M3 — M09 (O16) 33.3.
+      2026-07 (M03, M07, M08, M10): M0 — M03, M07, M08 75.0; M1 — M03, M10 (M08 refunded) 50.0; M2 — M07 25.0; M3 — 0.0.
+      Qoralama xatolari: UTC oylar (M03 iyunga, O06 iyulga tushadi), refunded, test va xodim kartalari hisobda, M06 alohida
+      karta, maxraj faqat M0 xaridorlari (M0 doim 100%, retention oshib ko'rinadi), noma'lum member_id'da KeyError.
+
+  - id: mentor_code_note
+    type: message
+    after: {node: retention_code, event: submitted, minutes: 30}
+    from: otabek
+    brief: |
+      Funksiyangizni ko'rdim. Sherzod uni to'liq dwh ma'lumotida ishga tushiradi. Ertaga kengash oldidan qaysi
+      raqam qaysi hisobdan kelganini yana bir tekshiramiz — qoralama skript hali ham kimdadir ishlatilayotgan bo'lishi mumkin.
+
+  - id: effect_analysis
+    type: task
+    day: 3
+    at: "14:30"
+    from: rustam
+    brief: |
+      Dilnoza "karta egalari 41% ko'p xarid qiladi" deydi, mening hisobotim "pilot do'konlarda tushum 10% o'sdi" deydi.
+      Juma uchun bitta raqam kerak: karta tushumni haqiqatan qancha oshirdi? Qisqa yozing — raqam, qanday hisoblandi,
+      nega boshqa ikki raqam noto'g'ri.
+    attachments: [doc_effect_data, doc_program_brief]
+    answer_types: [text, file]
+    due_in_minutes: 150
+    weight: 2
+    competencies: [technical, communication]
+    rubric:
+      - {id: selection_bias, description: "41% (162 000 / 115 000) — tanlov xatosi: karta oluvchilar oldindan katta xaridorlar; o'sha a'zolar kartadan oldin 158 000, keyin 166 000 (≈ +5.1%)", weight: 2}
+      - {id: seasonality, description: "+10% (1 840 → 2 024 mln/oy) mavsumiylikni hisobga olmaydi: nazorat ham +6.0% (1 610 → 1 707) o'sgan", weight: 1.5}
+      - {id: did, description: "Farqlar farqi: kutilgan 1 840 × 1 707 / 1 610 ≈ 1 950.9 mln; qo'shimcha ≈ 73.1 mln so'm/oy, ≈ +3.7% (yoki ≈ 4.0 p.p.)", weight: 2.5}
+      - {id: pretrend, description: "Oldingi trendlar parallelligi tekshirilgan: mart→may pilot +3.6%, nazorat +3.2%"}
+      - {id: caveat, description: "Cheklov: 6–19 iyul aksiyasi faqat pilotda — bu haftalar effektni oshiradi; ularsiz haftalik o'rtacha ≈ 2.1%", weight: 1.5}
+      - {id: plain, description: "Rustam uchun qisqa, bitta asosiy raqam va diapazon bilan"}
+    hints:
+      - "Agar karta umuman bo'lmaganida pilot do'konlar tushumi qancha bo'lardi? Nazorat do'konlari bu savolga qanday javob beradi?"
+      - "Karta egalarining kartadan oldingi o'rtacha chekiga qarang — ular kartasizlarga qaraganda qanday xaridorlar edi?"
+      - "Haftalik jadvalda boshqalardan keskin ajralib turgan haftalar bormi? Jurnal izohini o'qing."
+    reference_answer: |
+      Raqam: karta pilot do'konlar tushumini taxminan +3.7% oshirgan — ≈ 73 mln so'm/oy (iyun–avgust ≈ 219 mln).
+      Hisob: pilot mart–may o'rtacha 1 840 mln/oy, iyun–avgust 2 024 (+10.0%); nazorat 1 610 → 1 707 (+6.0%) — yoz mavsumi.
+      Karta bo'lmaganida pilot: 1 840 × 1 707 / 1 610 ≈ 1 950.9 mln. Qo'shimcha: 2 024 − 1 950.9 ≈ 73.1 mln/oy ≈ 3.7%.
+      Oldingi trendlar o'xshash (mart→may: pilot +3.6%, nazorat +3.2%) — taqqoslash o'rinli.
+      Nega 10% noto'g'ri: yozgi o'sish hamma do'konda bor. Nega 41% noto'g'ri: karta oluvchilar oldindan katta xaridorlar —
+      o'sha 1 840 a'zoning cheki kartadan oldin ham 158 000 edi, keyin 166 000 (+5.1%); farq dastur ta'siri emas (tanlov xatosi).
+      Cheklov: 6–19 iyul ichimliklar aksiyasi faqat pilotda (haftalik ta'sir 12.9% va 11.9%); bu haftalarsiz o'rtacha ≈ 2.1%.
+      Xulosa: haqiqiy ta'sir ≈ 2–4%, asosiy baho +3.7%.
+
+  - id: day3_end
+    type: day_end
+    day: 3
+    at: "17:30"
+    brief: "3-kun yakuni: retention funksiyasi va ta'sir tahlili natijasi, ochiq xavflar, ertangi reja."
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Funksiya, namuna jadvali va ta'sir raqami aniq", weight: 1.5}
+      - {id: risks, description: "Ochiq xavflar (qoralama skript hali ishlatilishi, iyul aksiyasi) va ertangi reja"}
+
+  # ── 4-kun: incident ────────────────────────────────────────────────
+  - id: standup_d4
+    type: task
+    day: 4
+    at: "09:00"
+    from: madina
+    brief: "Standup (4-kun). Ertaga kengash — bugun hamma raqamlar tekshiriladi."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Kecha / bugun / to'siqlar"}
+      - {id: concrete, description: "Bugungi reja aniq: kengash raqamlarini manbasi bilan tekshirish, moliyaviy hisob", weight: 2}
+    hints: ["Kengash oldidan qaysi raqamlar boshqa jamoalar orqali tarqalgan bo'lishi mumkin?"]
+    reference_answer: "Kecha: retention funksiyasi va pilot ta'siri (+3.7%). Bugun: kengash materiallaridagi har raqamni manbasi bilan tekshiraman, moliyaviy hisob. To'siq: yo'q."
+
+  - id: incident_wrong_retention
+    type: incident
+    day: 4
+    at: "10:00"
+    when: {any: [{missed: retention_code}, {score_lt: {node: retention_code, value: 60}}]}
+    from: madina
+    brief: |
+      SHOSHILINCH: kengash pre-read'iga "retention 71.4%" ketib qolgan — Jasurning qoralama skriptidan. Shu raqam asosida
+      Rustam aka bugun 12:00 da 60 000 karta shartnomasini imzolamoqchi. 45 daqiqa ichida:
+      1) Rustam akaga xabar — nima qilish kerak va nega; 2) to'g'ri raqam va farq sababi;
+      3) pre-read oluvchilarga tuzatish matni; 4) qayta takrorlanmasligi uchun nima qilamiz.
+    attachments: [doc_incident_retention, doc_metric_spec, doc_finance]
+    answer_types: [text]
+    due_in_minutes: 45
+    weight: 2
+    competencies: [stress_handling, communication, technical]
+    rubric:
+      - {id: stop_first, description: "Birinchi navbatda 12:00 dagi imzolashni to'xtatish so'raladi (96 mln so'mlik qaror noto'g'ri raqamga tayangan)", weight: 2}
+      - {id: correct_number, description: "To'g'ri raqam: 920 / 2 000 = 46.0% (qoralama 1 170 / 1 638 = 71.4%)", weight: 2}
+      - {id: cause, description: "Farq sababi: maxraj faqat iyun xaridorlari (460 xarid qilmagan a'zo ko'rinmaydi), test/xodim/takroriy kartalar, refunded hisobda", weight: 1.5}
+      - {id: correction, description: "Pre-read oluvchilarga qisqa, ayblovsiz tuzatish: eski raqam, yangi raqam, nima o'zgaradi, yakuniy tavsiya juma kuni"}
+      - {id: prevent, description: "Oldini olish: rahbariyat hujjatiga faqat review'dan o'tgan kod/raqam, raqam manbasi ko'rsatiladi, qoralama arxivlanadi"}
+    hints:
+      - "Qaysi ish 12:00 gacha bajarilmasa, keyin qaytarib bo'lmaydi?"
+      - "Jadvaldagi ikki ustunning maxraj va suratini solishtiring: farq qaysi guruhlardan kelyapti?"
+    reference_answer: |
+      Rustam akaga (darhol): "Iltimos, 12:00 dagi 60 000 karta shartnomasini (≈96 mln so'm) bugunga to'xtating. Pre-read'dagi 71.4%
+      tasdiqlanmagan skriptdan, to'g'ri qiymat 46.0%. Yoyish bo'yicha tavsiya ertaga moliyaviy hisob bilan beriladi."
+      To'g'ri raqam: iyun kogortasi 2 000 mos a'zo, iyulda faol 920 → 46.0%. Qoralama: 1 170 / 1 638 = 71.4% — maxrajda faqat iyunda
+      xarid qilganlar (460 xarid qilmagan a'zo tushib qolgan), 12 test, 64 xodim, 22 takroriy karta, qaytarilganlar ham hisobda.
+      Tuzatish matni: "Kecha yuborilgan pre-read'dagi retention 71.4% noto'g'ri hisoblangan; tasdiqlangan ta'rif bo'yicha 46.0%.
+      Kechirasiz. Yakuniy tavsiya ertangi kengashda moliyaviy hisob bilan." Madina opa nusxada.
+      Oldini olish: rahbariyat hujjatlariga faqat review'dan o'tgan funksiya; har raqam yonida manba; qoralama skript arxivga.
+
+  - id: incident_etl_drop
+    type: incident
+    day: 4
+    at: "10:00"
+    when: {score_gte: {node: retention_code, value: 60}}
+    from: dilnoza
+    brief: |
+      SHOSHILINCH: dashboard'da kecha kartali xaridlar 52.9% ga tushib ketdi! Kengashdan bir kun oldin — dastur
+      o'lyaptimi? Rustam akaga hozir ogohlantirish yuboraymi? 45 daqiqa ichida yozing: 1) bu haqiqiy pasayishmi,
+      2) sabab, 3) hozir nima qilamiz va kimga nima deymiz, 4) ertangi kengash raqamlariga ta'siri.
+    attachments: [doc_incident_etl, doc_loyalty_tables]
+    answer_types: [text]
+    due_in_minutes: 45
+    weight: 2
+    competencies: [stress_handling, technical, communication]
+    rubric:
+      - {id: not_real, description: "Pasayish haqiqiy emas: CHL barcha xaridlari normal (2 342 vs 2 360), faqat kartali qism 0 — YUN o'zgarmagan (1 158)", weight: 2}
+      - {id: cause, description: "Sabab: POS v5.2 da card_no → loyalty_card_id, ETL ustunni topmay NULL yozgan (CHL, 2 342 qator)", weight: 2}
+      - {id: actions, description: "Choralar: Sherzod bilan mapping tuzatish va 07.10 ni xom fayllardan qayta yuklash; YUN bugun kechasi yangilanishidan oldin tuzatish; dashboard'da 07.10 belgilash", weight: 1.5}
+      - {id: comms, description: "Dilnozaga: Rustam akaga signal yubormaslik; qisqa izoh. Kengash raqamlari iyun–avgustga asoslangan — ta'sir yo'q"}
+    hints:
+      - "CHL'ning barcha xaridlari soni ham tushganmi? Kartali va barcha xaridlar ustunini solishtiring."
+      - "ETL jurnalidagi ogohlantirish va POS changelog'i bir-biriga qanday bog'lanadi?"
+    reference_answer: |
+      1) Haqiqiy emas: CHL'da 07.10 barcha xaridlar 2 342 (06.10 — 2 360, normal), lekin kartali — 0; YUN 1 158 (normal).
+      2 458 → 1 158 (−52.9%) butunlay CHL'dagi kartali xaridlar yo'qolgani hisobidan.
+      2) Sabab: Tarozi POS v5.2 (CHL, 07.10 02:00) card_no'ni loyalty_card_id deb qayta nomlagan; ETL ustunni topmay customer_id'ni
+      NULL bilan to'ldirgan (2 342 qator) — kartali xaridlar "kartasiz" bo'lib qolgan.
+      3) Sherzod bilan: ETL mapping'ini yangi nomga moslash, 07.10 ni POS xom fayllaridan qayta yuklash, YUN kassalari bugun kechasi
+      yangilanishidan oldin tuzatish; NULL ulushi keskin oshsa ETL'ni to'xtatuvchi alert. Dashboard'da 07.10 "to'liq emas" belgisi.
+      Dilnozaga: "Rustam akaga ogohlantirish yubormang — bu ma'lumot yuklashdagi xato, xaridorlar kamaymagan. Tuzatilgach yozaman."
+      4) Kengash raqamlari iyun–avgust ma'lumotiga asoslangan — ta'sir yo'q; sentyabr–oktyabr raqamlari ishlatilmaydi.
+
+  - id: rustam_hold
+    type: message
+    after: {node: incident_wrong_retention, event: submitted, minutes: 20}
+    from: rustam
+    brief: "Imzolashni to'xtatdim, yetkazib beruvchiga keyingi haftagacha kutishni aytdim. Ertaga to'g'ri raqamlar bilan gaplashamiz."
+
+  - id: etl_fixed
+    type: message
+    after: {node: incident_etl_drop, event: submitted, minutes: 20}
+    from: sherzod
+    brief: "Mapping tuzatildi, 07.10 qayta yuklandi: CHL'da 1 291 kartali xarid. YUN yangilanishidan oldin sxema tekshiruvini ham qo'shdim."
+
+  - id: postmortem
+    type: task
+    day: 4
+    at: "14:00"
+    from: madina
+    brief: |
+      Bugungi incident bo'yicha postmortem yozing (shablon bo'yicha). Aybdor emas — jarayon va tizim.
+      Oxirida shunga o'xshash xatoni avtomatik ushlaydigan kamida 3 ta ma'lumot testi (data test) taklif qiling.
+    attachments: [doc_postmortem_template, doc_data_policy]
+    answer_types: [text, file]
+    due_in_minutes: 150
+    weight: 1.5
+    competencies: [communication, technical, initiative]
+    rubric:
+      - {id: timeline, description: "Vaqt chizig'i va ta'sir raqamlar bilan (71.4% vs 46.0% va 96 mln shartnoma — yoki 2 458 → 1 158, 07.10)"}
+      - {id: root_cause, description: "Asosiy sabab chuqur: tasdiqlanmagan skript/sxema o'zgarishi → nega review yoki ETL ushlamadi → nega raqam manbasi ko'rinmadi", weight: 2}
+      - {id: data_tests, description: "Kamida 3 ta aniq ma'lumot testi: masalan retention maxraji = kogorta hajmi, test/xodim kartalari 0, kartali xaridlar ulushi kunlik ±20% dan ko'p o'zgarsa alert, majburiy ustun yo'q bo'lsa ETL to'xtaydi", weight: 2}
+      - {id: actions, description: "Choralar egasi va muddati bilan"}
+      - {id: blameless, description: "Aybdor qidirilmaydi (Jasur yoki POS yetkazib beruvchi emas), ohang konstruktiv"}
+    hints: ["Har 'nega'dan keyin yana 'nega' deb so'rang — oxirida jarayon (review, sxema shartnomasi, alert) chiqishi kerak."]
+    reference_answer: |
+      Variant A (retention): ta'sir — 71.4% pre-read orqali kengash a'zolariga yetgan, 96 mln so'mlik shartnoma 10:45 da to'xtatildi.
+      Nega: qoralama skript ishlatildi → tasdiqlangan funksiya kechikdi → hujjatda raqam manbasi yo'q → rahbariyat hujjatiga review talabi yo'q.
+      Variant B (ETL): 07.10 CHL kartali xaridlar 0, dashboard −52.9%; noto'g'ri signal Rustamga yetmadi. Nega: POS sxemasi o'zgardi →
+      ETL yo'q ustunni NULL qildi → majburiy ustun tekshiruvi va NULL ulushi alerti yo'q → yetkazib beruvchi o'zgarishni oldindan aytmadi.
+      Data testlar: 1) retention maxraji = kogorta hajmi va M0 < 100%; 2) mos a'zolar ichida is_test/is_employee = 0;
+      3) customer_id NULL ulushi do'kon bo'yicha kunlik 7 kunlik o'rtachadan ±20 p.p. farq qilsa — alert; 4) majburiy ustun yo'q — ETL to'xtaydi.
+      Choralar: review qoidasi (Madina, 1 hafta), data testlar (Sherzod, 3 kun), POS o'zgarishlari haqida kelishuv (Rustam, 2 hafta).
+
+  - id: day4_end
+    type: day_end
+    day: 4
+    at: "17:30"
+    brief: "4-kun yakuni: incident qanday yopildi, postmortem, ertangi kengash uchun tayyorgarlik."
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Incident va postmortem holati aniq", weight: 1.5}
+      - {id: plan, description: "Kengash taqdimoti rejasi va ochiq xavflar"}
+
+  # ── 5-kun: kengash taqdimoti va retro ──────────────────────────────
+  - id: standup_d5
+    type: task
+    day: 5
+    at: "09:00"
+    from: madina
+    brief: "Standup (5-kun). Kengash 15:00 da."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Kecha / bugun / to'siqlar"}
+      - {id: concrete, description: "Taqdimot tayyorgarligi aniq, muddat bilan (12:30 gacha Madinaga)", weight: 2}
+    hints: ["Kengashga bitta sahifa: qaysi uchta raqamsiz tavsiya ishonchsiz bo'ladi?"]
+    reference_answer: "Kecha: incident va postmortem. Bugun: kengash uchun 1 sahifalik xulosa — ta'sir, retention, moliya, tavsiya; 12:30 gacha Madina opaga. To'siq: yo'q."
+
+  - id: board_memo
+    type: task
+    day: 5
+    at: "09:30"
+    from: madina
+    brief: |
+      Kengash uchun bir sahifalik xulosa tayyorlang (texnik bo'lmagan til): dastur tushumga ta'siri, a'zolar retention'i,
+      moliyaviy natija (oyiga), tavsiya — 12 do'konga yoyamizmi, yo'q bo'lsa nima qilamiz — va cheklovlar.
+      Moliyaviy hisobni ochiq ko'rsating.
+    attachments: [doc_effect_data, doc_finance, doc_cohort_full, doc_data_policy]
+    answer_types: [text, file]
+    due_in_minutes: 180
+    weight: 2.5
+    competencies: [communication, technical, prioritization]
+    rubric:
+      - {id: effect, description: "Ta'sir: ≈ +3.7% (≈ 73 mln so'm/oy) farqlar farqi bo'yicha, diapazon ≈ 2–4% (aksiya haftalarisiz ≈ 2.1%)", weight: 2}
+      - {id: finance, description: "Moliya: yalpi foyda 73.1 × 22% ≈ 16.1 mln; xarajat 3% × 55% × 2 024 ≈ 33.4 + 7.5 = 40.9 mln; natija ≈ −24.8 mln so'm/oy; o'zini oqlashi uchun ≈ 186 mln/oy (≈ 9.5%) qo'shimcha tushum kerak", weight: 2.5}
+      - {id: retention, description: "Retention to'g'ri: M1 ≈ 44–46% (iyun 46.0, iyul 44.0, avgust 44.0), M3 iyun 38.0%; nazorat yo'qligi sababli ta'sir sifatida emas, kuzatuv sifatida", weight: 1.5}
+      - {id: recommendation, description: "Tavsiya: hozirgi shaklda (3% cashback) 12 do'konga yoyilmasin; pilotda arzonroq variantni (masalan 1%: xarajat ≈ 18.6 mln, ≈ −2.5 mln/oy) nazorat bilan 2 oy sinash, karta buyurtmasi kutadi", weight: 2}
+      - {id: limits, description: "Cheklovlar halol: 3 oylik ma'lumot, iyul aksiyasi, uzoq muddatli sodiqlik hali o'lchanmagan; texnik bo'lmagan til, bir sahifa"}
+    hints:
+      - "Qo'shimcha tushumdan qancha foyda qoladi (marja) va dastur oyiga qancha turadi — ikkalasini bir xil birlikda solishtiring."
+      - "Cashback faqat karta bilan to'langan qismga hisoblanadi. Pilot tushumining qancha qismi karta bilan?"
+      - "Retention raqamini nazorat guruhisiz 'dastur ta'siri' deb atash mumkinmi?"
+    reference_answer: |
+      Ta'sir: karta pilot do'konlar tushumini ≈ +3.7% oshirdi (≈ 73 mln so'm/oy; nazorat do'konlari bilan farqlar farqi).
+      6–19 iyul aksiyasi haftalarisiz ≈ 2.1% — ehtiyotkor diapazon 2–4%.
+      Retention: 2-oyda a'zolarning 44–46% i qaytadi (iyun 46.0%, iyul 44.0%, avgust 44.0%), 4-oyda 38.0%. Taqqoslash guruhi yo'q.
+      Moliya (oyiga, pilot): qo'shimcha yalpi foyda 73.1 × 22% ≈ 16.1 mln. Xarajat: cashback 3% × 55% × 2 024 ≈ 33.4 mln + 7.5 mln = 40.9 mln.
+      Natija ≈ −24.8 mln so'm/oy. Dastur o'zini oqlashi uchun ≈ 186 mln/oy (≈ 9.5%) qo'shimcha tushum kerak — hozir 4 baravar kam.
+      Tavsiya: hozirgi shaklda 12 do'konga yoymaslik va 60 000 karta (≈ 96 mln) buyurtmasini kutish. Pilotda 2 oy cashback 1% (xarajat ≈ 18.6 mln,
+      hozirgi ta'sirda ≈ −2.5 mln/oy) va shaxsiy takliflar bilan sinov, nazorat do'konlari bilan; dekabrda qayta qaror.
+      Cheklovlar: 3 oylik ma'lumot, iyul aksiyasi, sodiqlikning uzoq muddatli ta'siri hali ko'rinmaydi.
+
+  - id: cherry_pick
+    type: decision
+    day: 5
+    at: "10:30"
+    from: dilnoza
+    brief: |
+      Ko'rdim, butun davrda atigi +3.7% va dastur zarar chiqaryapti — kengash buni yopib qo'yadi! Lekin 6–19 iyulda
+      effekt +12.4% bo'lgan. Taqdimotda davrni shu ikki haftaga qisqartirsak, "pilot +12%" bo'ladi va dastur foyda ko'rsatadi.
+      Shunday qilaylikmi? Rustam aka ham qarshi emas.
+    competencies: [communication, stress_handling]
+    options:
+      - key: full_period
+        label: "Yo'q: oldindan belgilangan butun davr (iyun–avgust) qoladi; 6–19 iyul aksiya bilan bog'liqligini ochiq yozaman, Dilnozaga arzonroq variant sinovini taklif qilaman va Madina opaga xabar beraman"
+        grade: correct
+      - key: ask_lead
+        label: "O'zim qaror qilmay, Madina opadan so'rayman"
+        grade: acceptable
+      - key: show_two_weeks
+        label: "Mayli — taqdimotda faqat 6–19 iyulni ko'rsatamiz, '+12%' deb yozamiz"
+        grade: wrong
+        flag: cherry_pick
+
+  - id: lead_on_cherry_pick
+    type: message
+    day: 5
+    at: "11:30"
+    when: {flag: cherry_pick}
+    from: madina
+    brief: |
+      Taqdimot qoralamasida "pilot +12%" ni ko'rdim. Bu ikki hafta ichimliklar aksiyasi bilan bir vaqtga to'g'ri kelgan —
+      shu haftalarni tanlasak, zararli dastur foydali ko'rinadi va kengash noto'g'ri qaror qiladi. Davr tahlildan oldin belgilangan:
+      iyun–avgust, +3.7%, aksiya izohi bilan. Slaydni qaytaring; bunday so'rov bo'lsa avval menga yozing.
+
+  - id: retro
+    type: task
+    day: 5
+    at: "15:00"
+    from: otabek
+    brief: |
+      Haftalik retro (mentor bilan): 3 ta yaxshi ketgan narsa, 3 ta yaxshilash kerak bo'lgan narsa (har biri hafta voqeasi
+      bilan) va keyingi hafta uchun bitta o'lchanadigan maqsad.
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 90
+    competencies: [initiative, communication]
+    rubric:
+      - {id: specific, description: "Har band aniq voqeaga bog'langan (ta'riflar, SQL review, retention funksiyasi, incident, kengash)", weight: 2}
+      - {id: honest, description: "O'z xatolarini halol tan olgan, aybni boshqaga qo'ymagan"}
+      - {id: goal, description: "Maqsad o'lchanadigan (masalan, har hisobot raqami yonida manba va review belgisi)", weight: 1.5}
+    hints: ["Haftaning har kunidan bitta voqeani eslang: qaysi raqam sizni chalg'itishiga oz qoldi?"]
+    reference_answer: "Yaxshi: dushanba ta'riflarni yozma kelishib oldik; retention funksiyasini testlar bilan yozdim; ta'sirni nazorat do'konlari bilan baholadim. Yaxshilash: qoralama skript tarqalganini oldinroq tekshirish; moliyaviy hisobni haftaning boshida boshlash; review'da metodologiyani birinchi yozish. Maqsad: har hisobotdagi har raqam yonida manba (so'rov/funksiya) va review belgisi — 100%."
+
+  - id: board_result
+    type: message
+    day: 5
+    at: "16:45"
+    from: rustam
+    brief: |
+      Kengash tugadi. 12 do'konga yoyish hozircha to'xtatildi, karta buyurtmasi kutadi. Pilot 2 oy arzonroq cashback bilan
+      davom etadi, dekabrda qayta ko'ramiz. Moliyaviy hisobni ochiq ko'rsatganingiz uchun rahmat — savollar shunga tushdi.
+
+  - id: day5_end
+    type: day_end
+    day: 5
+    at: "17:30"
+    brief: "Hafta yakuni: Madina opaga haftalik hisobot — nima yetkazildi, nima ochiq, keyingi hafta rejasi."
+    competencies: [communication]
+    rubric:
+      - {id: delivered, description: "Hafta natijalari aniq: ta'riflar, kogorta SQL va funksiya, ta'sir (+3.7%), incident, kengash xulosasi", weight: 1.5}
+      - {id: open_items, description: "Ochiq ishlar (cashback sinovi dizayni, data testlar) va keyingi reja"}
+      - {id: reflection, description: "Haftadan asosiy xulosa"}

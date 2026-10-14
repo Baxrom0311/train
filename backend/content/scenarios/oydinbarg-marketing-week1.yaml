@@ -1,0 +1,911 @@
+# CONTRACT.md §9.11 — Marketing haftalik kontenti. Brend, raqobatchilar, blogger, odamlar, platformalar va
+# barcha raqamlar o'ylab topilgan. Brendbuk, "Reklama" belgisi, da'volar, sharhlar va mijoz ma'lumotlari
+# bo'yicha qoidalar, KPI va marja — o'quv maqsadidagi ichki siyosat, real qonunchilik yoki normativ emas.
+# Reklama kanallari umumiy nomlar bilan ("qisqa video platformasi", "messenjer kanallari" va h.k.).
+# Hikoya: yangi «Qishki qalqon» yuz kremini ishga tushirish haftasi — auditoriya → media-reja (KALIT, 2-kun)
+# → blogger va kontent → 3-kun 16:00 ishga tushirish va 4-kun incident'i (2-kun rejasi baliga bog'liq)
+# → 5-kun natijalar hisoboti va retro.
+slug: oydinbarg-marketing-week1
+title: "Oydinbarg — Junior digital marketolog, 1 hafta: yangi krem ishga tushirilishi"
+sector: Marketing
+company_name: "Oydinbarg"            # fictional: mahalliy tabiiy kosmetika brendi
+difficulty: junior
+duration_days: 5
+
+personas:
+  - key: dilnoza
+    name: "Dilnoza Yusupova"
+    role: "Marketing bo'limi rahbari"
+    tone: "xotirjam, talabchan, raqam va brend qoidalariga tayanadi; xatoni ochiq, lekin hurmat bilan aytadi"
+    knows: [doc_onboarding, doc_brand_guide, doc_launch_brief, doc_product_card, doc_tracking_guide]
+    secrets:
+      - "40 mln so'mni oxirigacha ishlatish shart emas: foydasiz sarflanmagan pul 2-haftaga yoki keyingi oyga o'tkaziladi."
+      - "«Qishki qalqon» birinchi partiyasi 2 000 dona; ikkinchi partiya ishlab chiqarishga 10 ish kuni kerak."
+    busy_reply: "Direktor bilan yig'ilishdaman, chiqqach javob beraman."
+    deflect_reply: "Xulosani siz chiqarishingiz kerak. Brifdagi KPI va marjani har bir kanal raqami bilan birma-bir solishtiring."
+  - key: shoxrux
+    name: "Shoxrux Aliqulov"
+    role: "Senior performance marketolog, mentor"
+    kind: mentor
+    tone: "iliq, sabrli, formulani yoki hujjat bandini eslatadi, lekin hisobni o'zi qilib bermaydi"
+    knows: [doc_onboarding, doc_launch_brief, doc_channel_benchmarks, doc_tracking_guide]
+    busy_reply: "Reklama kabinetida kampaniya sozlayapman, birozdan keyin yozaman."
+    deflect_reply: "Raqamni o'zingiz hisoblang — formulalar brifda bor. Qaysi ko'rsatkichda ikkilanayotganingizni yozing, mantiqini birga tekshiramiz."
+    nudge_reply: "«{task}» dedlayni {time}da. Qaysi qadamda to'xtadingiz? Bitta kanalni hisoblab menga yozing — mantiqini birga tekshiramiz."
+  - key: kamola
+    name: "Kamola Nazarova"
+    role: "SMM menejer"
+    tone: "do'stona, tez yozadi, emoji'ni yaxshi ko'radi, lekin brend qoidalarini biladi"
+    knows: [doc_brand_guide, doc_product_card, doc_influencer_offer]
+    secrets:
+      - "Madina oldingi hamkorlikda (boshqa brend bilan) post ostidagi salbiy izohlarni o'chirib yurgan — obunachilari buni sezgan."
+    busy_reply: "Fotosessiyadaman, telefonni keyinroq ko'raman."
+    deflect_reply: "Matnni o'zingiz yozib ko'ring — brendbukdagi taqiqlangan da'volar ro'yxatiga qarab chiqing, keyin ko'rib beraman."
+  - key: rustam
+    name: "Rustam Toshpo'latov"
+    role: "Tijorat direktori"
+    tone: "shoshqaloq, sotuv raqamiga e'tiborli, marketing qoidalariga sabrsiz; bosim o'tkazadi"
+    knows: [doc_product_card, doc_competitors]
+    secrets:
+      - "Raqobatchi haqidagi «gormon» gapini distribyutordan eshitgan; hech qanday hujjat yoki tahlil yo'q."
+    busy_reply: "Distribyutorlar bilan uchrashuvdaman, keyin gaplashamiz."
+    deflect_reply: "Men marketolog emasman, qanday qilishni o'zingiz bilasiz. Menga birinchi haftada sotuv kerak."
+  - key: gulnora
+    name: "Gulnora Sattorova"
+    role: "Sotuv va ombor menejeri (CRM ham unda)"
+    tone: "amaliy, tez, raqamni aniq aytadi; mijoz bazasini 'o'zimizniki' deb biladi"
+    knows: [doc_crm_data, doc_incident_gift]
+    secrets:
+      - "Do'konlardagi 300 dona lab balzamini 4-kuni kechqurungacha omborga yig'ish mumkin."
+    busy_reply: "Omborda inventarizatsiya, bir soatdan keyin yozaman."
+    deflect_reply: "Raqamlar jadvalda bor, qarorni marketing qiladi. Men ombor va bazani bilaman."
+  - key: madina
+    name: "Madina Qosimova"
+    role: "Go'zallik bloggeri (tashqi hamkor)"
+    tone: "samimiy, ijodiy, tez javob beradi; o'z uslubini himoya qiladi, lekin asosli tuzatishni qabul qiladi"
+    knows: [doc_influencer_offer]
+    secrets:
+      - "Agar shartlar ochiq yozilsa, «Reklama» belgisiga qarshi emas — oldingi brendlar buni so'ramagan, xolos."
+    busy_reply: "Suratga olishdaman, kechroq javob beraman."
+    deflect_reply: "Matnni qanday tuzatish kerakligini siz yozing, men o'z uslubimda moslashtiraman."
+
+documents:
+  - key: doc_onboarding
+    title: "Marketing bo'limi: onboarding va hafta rejasi"
+    content: |
+      Oydinbarg — Toshkentdagi tabiiy kosmetika brendi: kremlar, sovun, lab balzami. Sotuv: o'z sayti, messenjer-bot
+      va 40 ta do'kon. Marketing: Dilnoza (rahbar), Shoxrux (senior performance, mentor), Kamola (SMM), dizayner va siz.
+      Sotuv va ombor, mijozlar bazasi (CRM) — Gulnora. Tijorat direktori — Rustam.
+
+      Bu hafta — yangi «Qishki qalqon» yuz kremini ishga tushirish:
+      1-kun — auditoriya va raqobat, o'lchash rejasi; 2-kun — media-reja va budjet, dizaynerga brif;
+      3-kun — blogger shartlari, kontent; 16:00 da reklama ishga tushadi; 4-kun — birinchi natijalar;
+      5-kun — hisobot va retro.
+
+      Ish kuni 09:00–18:00, tushlik 13:00–14:00. Har kuni 09:00 da standup (yozma):
+      kecha nima qildim / bugun nima qilaman / nima to'sib turibdi. 3–5 qator. 17:30 da kun yakuni hisoboti.
+      Qoidalar: har reklama va post brendbukdan o'tadi; budjetni o'zgartirish faqat rahbar tasdig'i bilan;
+      hisobot = raqam + formula + xulosa + keyingi qadam. "Yaxshi ishladi" degan baho raqamsiz yozilmaydi.
+
+  - key: doc_brand_guide
+    title: "Oydinbarg brendbuki va reklama qoidalari (ichki siyosat)"
+    content: |
+      Ovoz: samimiy, xotirjam, g'amxo'r. Mijozga "siz" deb murojaat. Ilmiy asosli, ortiqcha va'dasiz.
+      Da'volar: faqat mahsulot kartasi va laboratoriya xulosasidagi faktlar. Taqiqlangan: "davolaydi", "shifo",
+      "100%", "mo'jiza", "eng zo'r", "kafolatlangan natija", "kimyosiz", kasallik nomlari, sinalmagan ta'sirlar
+      (masalan, ajin yoki quyoshdan himoya — agar kartada bo'lmasa), "dermatologlar tavsiya qiladi" kabi
+      tasdiqlanmagan ekspert da'volari. Kosmetika dori emas.
+      Raqobatchilar: nomi, logotipi yoki mahsulotini reklamada tilga olish va yomonlash taqiqlanadi; mish-mish ishlatilmaydi.
+      Hamkorlik (blogger, sovg'a evaziga post): post boshida "Reklama" belgisi majburiy, brend nomi ochiq.
+      Sharhlar va reyting: sotib olish, xodim yoki tanishlar nomidan yozish, sharh uchun to'lov yoki chegirma berish
+      taqiqlanadi. Ruxsat: haqiqiy xaridorlardan xariddan keyin fikr so'rash; bepul namuna bilan sinov — sharhda
+      "namuna bepul berilgan" belgisi bilan.
+      Mijoz ma'lumoti: SMS, email va reklama auditoriyalari uchun faqat marketing roziligi bor kontaktlar.
+      Salbiy izohlar o'chirilmaydi (faqat haqorat, spam, shaxsiy ma'lumot yashiriladi).
+      Format: lenta posti — 120 so'zgacha, 1 aniq CTA, ≤ 2 emoji, ≤ 3 xeshteg, #oydinbarg majburiy; messenjer posti —
+      3 xatboshigacha, havola yoki bot buyrug'i bilan tugaydi; qisqa video — 15–30 soniya, birinchi 3 soniyada asosiy foyda.
+      Narx va promokod — muddati bilan; aksiya shartlari yashirilmaydi; soxta shoshiltirish ("faqat 5 ta qoldi" — rost bo'lmasa) yo'q.
+
+  - key: doc_product_card
+    title: "Mahsulot kartasi: «Qishki qalqon» yuz kremi"
+    content: |
+      Hajm 50 ml, narx 149 000 so'm. O'zgaruvchan xarajat (tannarx, qadoq, yetkazish): 59 600 so'm/dona.
+      Tarkib: shi yog'i, skvalan, seramidlar, jo'xori ekstrakti, pantenol. Atirsiz, parabensiz.
+      Laboratoriya xulosasi (mustaqil sertifikatlash laboratoriyasi):
+      - ingredientlarning 87% i tabiiy kelib chiqishli;
+      - 40 ishtirokchida 21 kun sinov: 34 kishida (85%) teri namligi oshgan, korneometr bo'yicha o'rtacha +18%;
+      - sezgir terida qizarish holati qayd etilmagan (40 dan 0).
+      Sinov o'tkazilmagan: ajin, pigment dog'lar, quyoshdan himoya (SPF yo'q). Tasnif: kosmetik vosita, dori emas.
+      Ishga tushirish taklifi: QALQON20 — 20% chegirma (119 200 so'm), ishga tushirishdan 14 kun.
+      Birinchi 500 buyurtmaga «Anor» lab balzami sovg'a (tannarxi 12 000 so'm).
+
+  - key: doc_audience
+    title: "Auditoriya tadqiqoti: Toshkent, 18–45 yosh ayollar (so'rovnoma, 1 200 respondent)"
+    content: |
+      Segment | Toshkentdagi soni | Qishda quruq teri muammosi | 120 000+ so'mlik yuz kremiga tayyor | Asosiy kanallar
+      A. Talabalar, 18–22 | 180 000 | 70% | 8% | qisqa video, lenta
+      B. Yosh mutaxassislar, 23–30 | 220 000 | 65% | 22% | qisqa video, messenjer kanallari
+      C. Yosh onalar, 28–38 | 160 000 | 60% | 18% | messenjer kanallari, bloggerlar
+      D. 39–45 yosh | 120 000 | 75% | 25% | qidiruv, do'kon
+
+      Segmentlar qisman kesishadi (B va C), shuning uchun "salohiyat" — taxminiy ko'rsatkich.
+      Salohiyatli xaridorlar = soni × muammo ulushi × to'lovga tayyorlik ulushi.
+      Xaridda eng muhim omillar (respondentlar ulushi): tarkib va sinov natijasi 58%, narx 47%, do'stlar/blogger tavsiyasi 31%.
+      B va D segmentlarining 62% i "laboratoriya sinovi" so'zini ishonch belgisi deb bilgan.
+
+  - key: doc_competitors
+    title: "Raqobatchilar: qishki yuz kremlari (narxlar do'kon va saytlardan)"
+    content: |
+      Brend | Mahsulot | Hajm, ml | Narx, so'm | Tabiiy kelib chiqishli tarkib | Sinov ma'lumoti
+      Oydinbarg | «Qishki qalqon» | 50 | 149 000 (QALQON20 bilan 119 200) | 87% | 40 kishi, 21 kun
+      Nafis Teri | Barrier krem | 50 | 129 000 | 70% | e'lon qilinmagan
+      Gulbadan | Qishki krem | 40 | 98 000 | ko'rsatilmagan | e'lon qilinmagan
+      Sahro Care (import) | Intensiv krem | 50 | 210 000 | 60% | 30 kishi, 28 kun
+
+      Sotuv bo'limidan izoh (tekshirilmagan): "Distribyutorlar Gulbadan kremida gormon bor deyishyapti, shuni reklamada aytsak-chi?"
+      Hech qanday laboratoriya xulosasi yoki hujjat yo'q.
+
+  - key: doc_launch_brief
+    title: "Brif: «Qishki qalqon» ishga tushirish kampaniyasi"
+    content: |
+      Maqsad: 14 kunda saytda yangi xaridorlar va brendning qishki krem sifatida tanilishi.
+      Budjet: 40 000 000 so'm (14 kun, barcha kanallar, blogger ham shu ichida). Ishga tushirish: 3-kun 16:00.
+      Narx: 149 000 so'm, QALQON20 bilan 119 200 so'm (kampaniya davomida barcha buyurtmalar shu narxda deb oling).
+      O'rtacha buyurtma — 1 dona. Birinchi 500 buyurtmaga lab balzami sovg'a (12 000 so'm/dona).
+      KPI: CAC ≤ 45 000 so'm; ROAS (chegirmali narxda) ≥ 2.5; kampaniya yalpi foydasi musbat.
+      Formulalar:
+      CAC = reklama xarajati / yangi buyurtmalar; ROAS = daromad / reklama xarajati;
+      bir buyurtmadan yalpi foyda = sotuv narxi − o'zgaruvchan xarajat; marja = yalpi foyda / sotuv narxi;
+      zararsizlik ROAS = 1 / marja; zararsizlik CAC = bir buyurtmadan yalpi foyda;
+      kampaniya yalpi foydasi = buyurtmalar × (narx − o'zgaruvchan xarajat) − reklama xarajati − sovg'alar.
+      Har kanalda keyingi qo'shilgan so'm ham zararsizlik CAC'dan arzon buyurtma keltirishi kerak (chekli CAC).
+
+  - key: doc_tracking_guide
+    title: "O'lchash va hisobot qoidalari"
+    content: |
+      UTM: utm_source = kanal (shortvideo, feed, messenger, search, retarget, blogger),
+      utm_medium = to'lov modeli (cpc, cpm, post, influencer), utm_campaign = kampaniya (lotin, kichik harf, pastki chiziq),
+      utm_content = kreativ (masalan, v1_lab, v2_price). Bir kampaniyada nomlar bir xil yoziladi.
+      Promokod: umumiy QALQON20; blogger uchun alohida kod (sotuv va to'lov shu kod bo'yicha hisoblanadi).
+      Atributsiya: oxirgi klik, 7 kunlik oyna. Organik va to'g'ridan-to'g'ri buyurtmalar reklama CAC'iga kiritilmaydi.
+      Kunlik nazorat (10:00 va 16:00): har kanal xarajati rejadan ±30% chetga chiqsa yoki CAC zararsizlik chegarasidan
+      oshsa — rahbarga xabar va kanal to'xtatiladi. Kabinetda har kanalga kunlik limit qo'yiladi.
+      Reklama kabineti optimizatsiya maqsadi: "xarid" (klik emas). Hisobot: kanal | xarajat | klik | buyurtma | CAC | ROAS | yalpi foyda.
+
+  - key: doc_channel_benchmarks
+    title: "Kanallar bo'yicha benchmark (o'tgan kampaniyalar, o'xshash narxdagi mahsulot) va cheklovlar"
+    content: |
+      Kanal | Narx modeli | CPC, so'm | CR (klik → buyurtma) | Cheklov
+      Qisqa video reklama (yangi auditoriya) | klik | 1 400 | 2.5% | 12 mln gacha; undan ortig'ida auditoriya to'yinadi, CPC ≈ 1 820
+      Lenta reklama, karusel | klik | 1 600 | 2.0% | —
+      Messenjer kanallarida reklama posti | post | ≈ 1 500 (o'rtacha) | 4.0% | mos kanallardagi joylar jami 7.5 mln so'mgacha
+      Qidiruv (kontekstli) reklama | klik | 900 | 3.0% | 14 kunda ≈ 9 000 klik (so'rovlar soni cheklangan)
+      Retargeting (saytga kirganlar) | ko'rsatish, CPM 25 000 so'm | — | CTR 2.0%, CR 6.0% | auditoriya 25 000 kishi, chastota ≤ 4
+      Blogger (Madina) | fiks | — | ≈ 80 buyurtma o'z promokodi bilan | ≈ 4 mln so'm; yakuniy shartlar 3-kun
+
+      Izoh: CPM = 1 000 ko'rsatish narxi. Chastota = ko'rsatishlar / qamrov. Benchmark — taxmin, ishga tushgach
+      haqiqiy raqamlar bilan har kuni solishtiriladi.
+
+  - key: doc_influencer_offer
+    title: "Madina Qosimova: hamkorlik taklifi va post loyihasi"
+    content: |
+      Profil: 85 000 obunachi, 72% ayollar, 64% Toshkent; story o'rtacha 18 000 ko'rish, post qamrovi ≈ 30 000.
+      Taklif (1 post + 3 story, MADINA20 promokodi — 20% chegirma, QALQON20 bilan bir xil):
+      A) fiks 4 000 000 so'm;
+      B) 1 500 000 so'm + MADINA20 bilan har buyurtma uchun 25 000 so'm.
+      Shartnoma loyihasidagi bandlar: "Post 30 kun saqlanadi"; "Blogger post ostidagi salbiy izohlarni o'chiradi";
+      "Brend matnni oldindan ko'radi".
+      Benchmark: o'xshash bloggerlarda MADINA20 kabi kod bilan ≈ 80 buyurtma.
+
+      Post loyihasi (Madina yozgan):
+      "Qizlar, topdim! 😍😍😍 Oydinbarg'ning yangi «Qishki qalqon» kremi — 100% tabiiy, kimyosiz,
+      dermatologlar tavsiya qiladi! Ajinlarni 2 haftada yo'qotadi va quyoshdan ham himoya qiladi ☀️
+      Gulbadan kremidan farqli o'laroq terini quritmaydi. Narxi atigi 99 000! MADINA20 kodi bilan yana arzon.
+      #krem #qish #go'zallik #teri #tabiiy #oydinbarg"
+
+  - key: doc_crm_data
+    title: "CRM: sodiqlik kartasi bazasi"
+    content: |
+      Do'konlardagi sodiqlik kartasi egalari: 18 000 telefon raqam (anketa: ism, telefon, tug'ilgan kun).
+      Anketada "aksiya va yangiliklar haqida SMS olishga roziman" belgisi: 4 200 kishida bor, 13 800 kishida yo'q.
+      Karta shartlari: "Ma'lumotlar chegirma va xaridlar tarixini hisoblash uchun ishlatiladi".
+      SMS narxi: 150 so'm/xabar. Reklama kabinetiga telefon ro'yxatini yuklab, "o'xshash auditoriya" yasash mumkin.
+
+  - key: doc_incident_burn
+    title: "Reklama kabineti: ishga tushirishdan keyingi 17 soat 40 daqiqa (3-kun 16:00 – 4-kun 09:40)"
+    content: |
+      Kanal | Xarajat, so'm | Klik | Buyurtma
+      Qisqa video | 7 800 000 | 9 750 | 39
+      Lenta karusel | 1 200 000 | 750 | 6
+      Qidiruv | 300 000 | 330 | 10
+      Retargeting | 300 000 | 240 | 14
+      Messenjer kanallari | 0 (postlar 5-kunga rejalashtirilgan) | — | —
+
+      Sozlamalar: qisqa video va lenta — optimizatsiya maqsadi "klik", auditoriya 16–55 yosh, butun mamlakat,
+      kunlik limit yo'q (umumiy limit 40 mln). Tasdiqlangan budjet: 40 mln so'm / 14 kun.
+      Qisqa video kliklarining 44% i — 16–21 yosh; 38% i — Toshkentdan tashqari (yetkazish 3–5 kun, CR uch barobar past).
+      Barcha buyurtmalar QALQON20 bilan (119 200 so'm). Xarajat hozir ham soatiga ≈ 540 000 so'm.
+
+  - key: doc_incident_gift
+    title: "Sotuv va ombor: 4-kun 09:40 holati"
+    content: |
+      3-kun 21:40 da xaridor Shahnoza R. qisqa video platformasida o'z pulimga olgan kremim deb video joyladi
+      (pullik hamkorlik emas) — 4-kun 09:00 ga 1.1 mln ko'rish. Saytga tashrif 6 barobar oshdi.
+      Sovg'a sharti: "birinchi 500 buyurtmaga lab balzami". Saytdagi hisoblagich sozlanmagan — sovg'a va'da qilingan
+      buyurtmalar 09:40 holatiga: 640 ta va o'sib bormoqda.
+      Hozirgi oqim: soatiga 44 buyurtma (organik 30, reklama 14).
+      Omborda lab balzami: 560 dona; do'konlarda yana 300 dona. «Qishki qalqon» kremi: 1 900 dona (yetarli).
+      Reklamadagi 3 kreativda va sayt bannerida "Birinchi 500 xaridorga sovg'a!" yozuvi; bu kreativlar reklama xarajatining 70% i.
+      Lab balzami tannarxi: 12 000 so'm. Ichki qoida: allaqachon berilgan buyurtmalar bo'yicha e'lon qilingan va'da bajariladi.
+
+  - key: doc_ab_test
+    title: "Mahsulot sahifasi A/B testi (3-kun 16:00 – 4-kun 12:00, 20 soat)"
+    content: |
+      A — sahifa boshida narx va chegirma ("149 000 → 119 200 so'm"); B — sahifa boshida laboratoriya faktlari
+      ("40 kishi, 21 kun: 85% da namlik oshdi"), narx pastroqda. Trafik barcha manbalardan 50/50 bo'linadi.
+      Variant | Sessiya | Buyurtma
+      A | 4 200 | 126
+      B | 4 100 | 164
+      Ichki A/B qoidasi: har variantda ≥ 3 000 sessiya VA kamida 72 soat (hafta ichi va dam olish xulqi farqli);
+      ahamiyatlilik — ikki ulush uchun z-test, |z| ≥ 1.96 (95%). Muddatidan oldin g'olib e'lon qilinmaydi.
+      z = (p_B − p_A) / √(p × (1 − p) × (1/n_A + 1/n_B)), p — ikki variant birlashgan konversiyasi.
+      Kutilayotgan trafik: kuniga ≈ 5 000 sessiya.
+
+  - key: doc_week_results
+    title: "Kampaniya natijalari: 4-kun 12:00 – 5-kun 09:00 (21 soat, 4-kundagi tuzatishlardan keyin)"
+    content: |
+      Tasdiqlangan reja (14 kun): retargeting 2.5 mln, qidiruv 8.1 mln, messenjer 7.5 mln, qisqa video 12.0 mln,
+      blogger — B varianti (1.5 mln + 25 000 so'm/buyurtma), zaxira 5.9 mln. Blogger'siz kunlik reja: 2.15 mln so'm.
+      Kanal | Xarajat, so'm | Klik | Buyurtma
+      Qisqa video | 780 000 | 540 | 12
+      Qidiruv | 510 000 | 560 | 18
+      Messenjer kanallari (1 post) | 540 000 | 360 | 15
+      Retargeting | 160 000 | 130 | 8
+      Blogger (MADINA20; post 4-kun 18:00) | fiks 1 500 000 + 25 000 × buyurtma | — | 26
+      Organik / to'g'ridan-to'g'ri | 0 | — | 21
+
+      Barcha buyurtmalar 119 200 so'mdan (QALQON20 yoki MADINA20). Sovg'a xarajati bu jadvalga kirmaydi.
+      1-sutka natijalari 4-kundagi incident hisobotida alohida.
+
+nodes:
+  # ── 1-kun: auditoriya va o'lchash ──────────────────────────────────
+  - id: welcome
+    type: message
+    day: 1
+    at: "09:00"
+    from: dilnoza
+    brief: |
+      Xush kelibsiz! Bu hafta — yangi «Qishki qalqon» yuz kremini ishga tushiramiz. Bugun auditoriya va o'lchash,
+      ertaga media-reja, 3-kun 16:00 da reklama start, 5-kun — natijalar hisoboti. Onboarding va brendbukni o'qing.
+
+  - id: standup_d1
+    type: task
+    day: 1
+    at: "09:00"
+    from: dilnoza
+    brief: "Standup: bugungi rejangizni onboarding formatida yozing (3–5 qator)."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Formatga mos: bugun / muddatlar / to'siqlar, 3–5 qator"}
+      - {id: concrete, description: "Reja aniq: auditoriya va raqobat tahlili (tushlikkacha), o'lchash rejasi; hafta rejasi bilan bog'langan", weight: 2}
+      - {id: blockers, description: "To'siq yoki savol aytilgan (reklama kabinetiga kirish, so'rovnoma ma'lumoti)"}
+    hints: ["Birinchi kunda 'kecha' o'rniga hafta rejasidagi bugungi ikki ishni va ularning muddatini yozing."]
+    reference_answer: |
+      Bugun: brendbuk va mahsulot kartasi bilan tanishaman; auditoriya va raqobat tahlili — 12:30 gacha; o'lchash rejasi — kun oxirigacha.
+      To'siq: reklama kabineti va sayt analitikasiga kirish huquqi yo'q — Shoxrux akadan so'rayman.
+
+  - id: mentor_intro
+    type: message
+    day: 1
+    at: "09:15"
+    from: shoxrux
+    brief: |
+      Salom! Men Shoxrux, shu hafta mentoringizman. Hisobni siz uchun qilmayman, lekin formulani yoki hujjat bandini
+      birga topamiz. Qiyin bo'lsa hint so'rang — har hint task balini biroz kamaytiradi.
+
+  - id: audience_research
+    type: task
+    day: 1
+    at: "09:30"
+    from: dilnoza
+    brief: |
+      Kampaniyadan oldin kimga va nima deb sotishimizni aniqlaylik. Yozing:
+      1) har segment uchun salohiyatli xaridorlar soni va ulushi — qaysi 2 segment ustuvor va nega;
+      2) raqobatchilar bilan narxni 1 ml hisobida solishtiring (chegirmali narxni ham);
+      3) bitta jumlalik pozitsiya (nima bilan farq qilamiz) va har ustuvor segment uchun kanallar;
+      4) raqobat bo'yicha nimani reklamada ishlatmaymiz.
+    attachments: [doc_audience, doc_competitors, doc_product_card, doc_brand_guide]
+    answer_types: [text, file]
+    due_in_minutes: 180
+    weight: 1.5
+    competencies: [technical, initiative]
+    rubric:
+      - {id: potential, description: "Salohiyat to'g'ri (±1%): A ≈ 10 080, B 31 460, C 17 280, D 22 500; jami 81 320; ulushlar ≈ 12.4 / 38.7 / 21.2 / 27.7%", weight: 2}
+      - {id: priority, description: "Ustuvor B va D; A eng katta segment bo'lsa ham to'lovga tayyorlik (8%) tufayli eng kichik salohiyat ekani aytilgan", weight: 2}
+      - {id: price_ml, description: "So'm/ml to'g'ri: Oydinbarg 2 980 (chegirma bilan 2 384), Nafis Teri 2 580, Gulbadan 2 450, Sahro Care 4 200; xulosa — mahalliylardan qimmat, importdan ancha arzon, chegirma bilan eng arzon", weight: 1.5}
+      - {id: positioning, description: "Pozitsiya tasdiqlangan faktga tayangan (87% tabiiy kelib chiqish, 40 kishida 21 kunlik sinov) va segment kanallariga bog'langan (B — qisqa video/messenjer, D — qidiruv/do'kon)", weight: 1.5}
+      - {id: no_rumor, description: "Raqobatchi haqidagi tekshirilmagan «gormon» gapi va raqobatchi nomini reklamada ishlatmaslik aniq aytilgan"}
+    hints:
+      - "Segmentning hajmi emas, xaridga tayyor odamlar soni muhim. Uchta ustunni qanday birlashtirish kerak?"
+      - "Turli hajmdagi kremlarni solishtirish uchun narxni bitta birlikka keltiring."
+      - "Raqobat jadvalidagi qaysi ustunda faqat bizda aniq raqam bor? Pozitsiyani shunga quring."
+    reference_answer: |
+      1) Salohiyat = soni × muammo × tayyorlik: A 180 000×0.70×0.08 ≈ 10 080 (12.4%); B 31 460 (38.7%); C 17 280 (21.2%);
+      D 22 500 (27.7%); jami 81 320. Ustuvor: B va D (birga ≈ 66%). A eng katta, lekin to'lovga tayyorlik 8% — eng kichik salohiyat.
+      2) So'm/ml: Oydinbarg 2 980 (QALQON20 bilan 2 384), Nafis Teri 2 580, Gulbadan 2 450, Sahro Care 4 200. Biz mahalliylardan
+      ≈ 15–22% qimmat, importdan 29% arzon; ishga tushirish chegirmasi bilan to'plamdagi eng arzon so'm/ml.
+      3) Pozitsiya: "Laboratoriyada 40 kishida sinalgan mahalliy qishki krem: 85% da namlik oshdi, 87% tabiiy kelib chiqishli tarkib."
+      B — qisqa video va messenjer kanallari, lab faktlari bilan; D — qidiruv va do'kon, "namlik +18%" va atirsiz tarkib.
+      4) Ishlatmaymiz: raqobatchi nomi, "gormon" mish-mishi (hujjat yo'q, brendbukka zid), "kimyosiz", "100% tabiiy".
+
+  - id: research_ack
+    type: message
+    after: {node: audience_research, event: submitted, minutes: 15}
+    from: dilnoza
+    brief: "Tahlilni oldim. Ertangi media-rejada B va D segmentlariga qaysi kanal qancha pul olishini shu raqamlar bilan bog'lang."
+
+  - id: measurement_plan
+    type: task
+    day: 1
+    at: "14:30"
+    from: shoxrux
+    brief: |
+      Reklama start olishidan oldin natijani qanday o'lchashimizni kelishib olaylik. O'lchash rejasini yozing:
+      1) har kanal uchun UTM namunasi (6 kanal) va promokodlar; 2) KPI'lar formulasi va maqsadlari, zararsizlik
+      ROAS va CAC chegarasi (chegirmali narxda); 3) kunlik nazorat: nima, qachon, qanday chegarada to'xtatamiz.
+    attachments: [doc_tracking_guide, doc_launch_brief, doc_product_card]
+    answer_types: [text, file]
+    due_in_minutes: 120
+    weight: 1
+    competencies: [technical, prioritization]
+    rubric:
+      - {id: utm, description: "6 kanalning har biriga qoidaga mos UTM (source/medium/campaign/content, lotin, kichik harf, bitta campaign nomi); blogger uchun alohida promokod", weight: 1.5}
+      - {id: breakeven, description: "Zararsizlik to'g'ri: buyurtmadan foyda 119 200 − 59 600 = 59 600, marja 50%, zararsizlik ROAS 2.0, CAC 59 600; to'liq narxdagi 60% marjani (ROAS ≈ 1.67) ishlatmagan", weight: 2}
+      - {id: kpi, description: "KPI maqsadlari brifga mos: CAC ≤ 45 000, ROAS ≥ 2.5, yalpi foyda musbat; sovg'a xarajati (500 × 12 000 = 6 mln) foydada hisobga olinishi aytilgan", weight: 1.5}
+      - {id: control, description: "Kunlik nazorat: 10:00/16:00, kanal kunlik limiti, ±30% chetlanish yoki CAC > 59 600 da to'xtatish va rahbarga xabar; optimizatsiya maqsadi — xarid", weight: 1.5}
+    hints:
+      - "Kampaniya davomida barcha buyurtmalar qaysi narxda bo'ladi? Marjani shu narxdan hisoblang."
+      - "Zararsizlik ROAS va zararsizlik CAC aslida bitta narsani ikki xil ko'rsatadi — ikkalasini ham bitta buyurtmadan foydadan chiqaring."
+      - "To'xtatish qoidasi raqam bilan bo'lmasa, uni hech kim qo'llamaydi. Qaysi chegarani qo'yasiz?"
+    reference_answer: |
+      UTM (campaign=qishki_qalqon_launch): shortvideo/cpc/v1_lab; feed/cpc/v1_carousel; messenger/post/kanal_nomi;
+      search/cpc/brand_vs_generic; retarget/cpm/v1_price; blogger/influencer/madina_post. Promokod: QALQON20 umumiy, MADINA20 blogger.
+      Zararsizlik: 119 200 − 59 600 = 59 600 so'm/buyurtma, marja 50% → ROAS 2.0, CAC 59 600. (To'liq narxda 60% va ROAS 1.67 —
+      bu kampaniyaga mos emas.) KPI: CAC ≤ 45 000 (ROAS ≈ 2.65 ga teng), ROAS ≥ 2.5, yalpi foyda = buyurtma × 59 600 − reklama − 6 mln sovg'a > 0.
+      Nazorat: kabinetda har kanalga kunlik limit; optimizatsiya — xarid; 10:00 va 16:00 da jadval kanal | xarajat | klik | buyurtma |
+      CAC | ROAS; xarajat rejadan ±30% yoki kanal CAC > 59 600 bo'lsa — kanalni to'xtataman va Dilnoza opaga yozaman.
+
+  - id: day1_end
+    type: day_end
+    day: 1
+    at: "17:30"
+    brief: "1-kun yakuni: auditoriya bo'yicha asosiy xulosa, o'lchash rejasi holati, ertangi reja (media-reja)."
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Bugungi natijalar raqam bilan: ustuvor segmentlar, zararsizlik chegarasi", weight: 1.5}
+      - {id: plan, description: "Ertangi media-reja va ochiq savollar aytilgan"}
+
+  # ── 2-kun: media-reja (KALIT) ──────────────────────────────────────
+  - id: standup_d2
+    type: task
+    day: 2
+    at: "09:00"
+    from: dilnoza
+    brief: "Standup (2-kun)."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Kecha / bugun / to'siqlar"}
+      - {id: concrete, description: "Bugungi reja aniq: media-reja va budjet (tushlikkacha), dizaynerga brif", weight: 2}
+    hints: ["Kechagi ustuvor segmentlar va zararsizlik chegarasi bugungi rejaga qanday kiradi?"]
+    reference_answer: "Kecha: B va D ustuvor, zararsizlik CAC 59 600. Bugun: kanal budjeti va KPI hisobi 13:00 gacha, keyin dizaynerga brif. To'siq: blogger shartlari hali yakuniy emas."
+
+  - id: budget_plan
+    type: task
+    day: 2
+    at: "09:30"
+    from: dilnoza
+    brief: |
+      Asosiy ish: 14 kunlik 40 mln so'mni kanallarga taqsimlang. Har kanal uchun: budjet, kutilgan klik va buyurtma,
+      CAC, ROAS va yalpi foyda; jami bo'yicha ham. Benchmark cheklovlarini (retargeting chastotasi, qidiruv hajmi,
+      qisqa video to'yinishi) hisobga oling. Butun 40 mln ni ishlatish kerakmi — raqam bilan asoslang. Oxirida kunlik
+      sarf rejasi va KPI bajariladimi degan xulosa. Jadval (matn yoki fayl) va 5–7 qatorlik izoh.
+    attachments: [doc_launch_brief, doc_channel_benchmarks, doc_product_card]
+    answer_types: [text, file]
+    due_in_minutes: 210
+    weight: 3
+    competencies: [technical, prioritization, initiative]
+    rubric:
+      - {id: unit_econ, description: "Hisob chegirmali narxda: 119 200 so'm daromad, 59 600 foyda/buyurtma, zararsizlik CAC 59 600 (ROAS 2.0); 149 000 dan hisoblanmagan", weight: 2}
+      - {id: caps, description: "Cheklovlar to'g'ri: retargeting 25 000 × 4 = 100 000 ko'rsatish × 25 000/1000 = 2.5 mln (2 000 klik, 120 buyurtma); qidiruv 9 000 × 900 = 8.1 mln (270); messenjer 7.5 mln (5 000 klik, 200)", weight: 2}
+      - {id: channel_cac, description: "Kanal CAC'lari: retargeting ≈ 20 833, qidiruv 30 000, messenjer 37 500, blogger 50 000, qisqa video 56 000 (12 mln gacha), 12 mln dan keyin 72 800, lenta 80 000 — oxirgi ikkisi zararli (> 59 600)", weight: 2}
+      - {id: allocation, description: "Taqsimot: retargeting 2.5, qidiruv 8.1, messenjer 7.5, blogger 4.0, qisqa video ≤ 12.0 mln; lenta yo'q yoki ≤ 1 mln kreativ testi; ≈ 5.9 mln zaxira (yoki asosli muqobil)", weight: 2}
+      - {id: totals, description: "Jami (±1%): xarajat ≈ 34.1 mln, ≈ 884 buyurtma, daromad ≈ 105.4 mln, CAC ≈ 38 560, ROAS ≈ 3.09, yalpi foyda ≈ 18.6 mln, sovg'adan keyin ≈ 12.6 mln; KPI bajariladi", weight: 2}
+      - {id: reserve, description: "40 mln ni to'liq ishlatish tahlili: qolgan 5.9 mln qisqa videoga ketsa ≈ 81 buyurtma, CAC 72 800, foyda ≈ −1.07 mln — umumiy CAC KPI'dan (≈ 41 400) o'tsa ham zarar; zaxira natijaga qarab qayta taqsimlanadi", weight: 1.5}
+      - {id: pacing, description: "Kunlik sarf: ≈ 2.44 mln/kun (blogger'siz ≈ 2.15 mln), har kanalga kunlik limit va tekshiruv vaqti"}
+    hints:
+      - "Avval bitta buyurtma qancha foyda keltirishini toping — keyin har kanal CAC'ini shu chegara bilan solishtiring."
+      - "Retargeting uchun budjet chegarasini auditoriya, chastota va CPM'dan, qidiruv uchun esa klik soni va CPC'dan chiqaring."
+      - "Kanallarni CAC bo'yicha arzondan qimmatga tartiblab, har biriga cheklovigacha pul bering. Qimmat kanalga ketgan keyingi 1 mln qancha foyda yoki zarar beradi?"
+    reference_answer: |
+      Birlik: 119 200 − 59 600 = 59 600 so'm foyda/buyurtma, marja 50% → zararsizlik CAC 59 600, ROAS 2.0.
+      Kanal | budjet | klik | buyurtma | CAC | ROAS | yalpi foyda
+      Retargeting | 2.5 mln (25 000×4=100 000 ko'rsatish × CPM 25 000) | 2 000 | 120 | 20 833 | 5.72 | +4.65 mln
+      Qidiruv | 8.1 mln (9 000 klik × 900) | 9 000 | 270 | 30 000 | 3.97 | +7.99 mln
+      Messenjer | 7.5 mln | 5 000 | 200 | 37 500 | 3.18 | +4.42 mln
+      Blogger | 4.0 mln | — | 80 | 50 000 | 2.38 | +0.77 mln
+      Qisqa video | 12.0 mln | 8 571 | 214 | 56 000 | 2.13 | +0.77 mln
+      Lenta | 0 (CAC 80 000 > 59 600 — zarar) | Zaxira | 5.9 mln
+      Jami: 34.1 mln, ≈ 884 buyurtma, daromad ≈ 105.4 mln, CAC ≈ 38 560, ROAS ≈ 3.09, yalpi foyda ≈ 18.6 mln, sovg'alar 6 mln bilan ≈ 12.6 mln.
+      KPI: CAC 38 560 ≤ 45 000, ROAS 3.09 ≥ 2.5 — bajariladi.
+      Nega 40 mln emas: qolgan 5.9 mln faqat qisqa videoga sig'adi, u yerda CPC 1 820 → CAC 72 800 > 59 600, ≈ 81 buyurtma va ≈ −1.07 mln.
+      Umumiy CAC 41 400 bo'lib KPI "bajariladi", lekin har qo'shimcha so'm zarar. Zaxira birinchi haftadan keyin eng arzon kanalga.
+      Kunlik: ≈ 2.44 mln (blogger'siz 2.15 mln); kabinetda har kanalga kunlik limit, optimizatsiya — xarid, geo Toshkent, 23–45 yosh.
+      Xavf: benchmark taxmin — 4-kun 10:00 da haqiqiy CAC bilan solishtiraman. Tasdiq — Dilnoza opada.
+
+  - id: mentor_budget_note
+    type: message
+    after: {node: budget_plan, event: submitted, minutes: 30}
+    from: shoxrux
+    brief: |
+      Media-rejangizni ko'rdim. Esda tuting: reja Excel'da qolsa foydasi yo'q — 3-kun ishga tushirishda har kanalning kunlik
+      limiti, auditoriyasi va optimizatsiya maqsadi kabinetga aynan shu raqamlar bilan kiritilishi kerak.
+
+  - id: review_pressure
+    type: decision
+    day: 2
+    at: "11:30"
+    from: rustam
+    brief: |
+      Salom! Kremimiz «Bozorcha» marketpleysida ham chiqadi, lekin bitta ham sharh yo'q — odamlar sharhsiz olmaydi.
+      Bir agentlik 3 mln so'mga 300 ta besh yulduzli sharh yozib beradi, xohlasangiz xodimlarga ham yozdiramiz.
+      Ishga tushirishgacha qilib qo'ying, javobgarlik menda. Nima qilasiz?
+    competencies: [communication, stress_handling]
+    options:
+      - key: honest_reviews
+        label: "Hurmat bilan rad etaman: soxta sharh brendbukka zid va ochilib qolsa ishonch va marketpleysdagi sahifamiz xavf ostida. Muqobil: xariddan 7 kun keyin haqiqiy xaridorlardan fikr so'rash va 30 ta bepul namuna — sharhda «namuna bepul berilgan» belgisi bilan. Dilnoza opaga ham yozaman"
+        grade: correct
+      - key: ask_lead
+        label: "Rustam akaga hozircha javob bermay, savolni Dilnoza opaga uzataman"
+        grade: acceptable
+      - key: buy_reviews
+        label: "Agentlikka buyurtma beraman — direktor ruxsat berdi, start uchun sharh kerak"
+        grade: wrong
+        flag: fake_reviews
+      - key: staff_reviews
+        label: "Agentlik qimmat — xodimlar va tanishlardan 50 ta sharh yozdirib qo'yaman"
+        grade: wrong
+        flag: fake_reviews
+
+  - id: lead_on_reviews
+    type: message
+    day: 2
+    at: "14:00"
+    when: {flag: fake_reviews}
+    from: dilnoza
+    brief: |
+      Marketpleysga soxta sharhlar buyurtma qilinayotganini eshitdim — to'xtatdim. Sotib olingan yoki xodimlar yozgan sharh —
+      mijozni aldash: ochilsa, sahifa bloklanadi va brend ishonchi yillar davomida tiklanmaydi. Direktor bosim qilsa ham,
+      bunday so'rovni avval menga yozing. Haqiqiy xaridorlardan fikr so'rash va belgili namuna — yo'limiz shu.
+
+  - id: creative_brief
+    type: task
+    day: 2
+    at: "14:30"
+    from: kamola
+    brief: |
+      Dizaynerga reklama kreativlari uchun brif kerak (qisqa video va messenjer posti uchun 3 ta kreativ). Yozing:
+      kimga (segment), asosiy xabar, isbot (faktlar), taklif va muddat, majburiy elementlar, taqiqlangan narsalar,
+      har kreativ qaysi gipotezani tekshiradi.
+    attachments: [doc_brand_guide, doc_product_card, doc_audience]
+    answer_types: [text, file]
+    due_in_minutes: 120
+    weight: 1.5
+    competencies: [communication, initiative]
+    rubric:
+      - {id: segment, description: "Kreativlar ustuvor segmentlarga (B va D) bog'langan, har biriga mos xabar", weight: 1.5}
+      - {id: facts, description: "Isbot faqat kartadagi faktlar: 87% tabiiy kelib chiqish, 40 kishi/21 kun, 85% da namlik oshgan (+18%), atirsiz; ajin, SPF, 100%, davolash yo'q", weight: 2}
+      - {id: offer, description: "Taklif to'g'ri: 149 000 → 119 200 so'm (QALQON20, 14 kun), birinchi 500 buyurtmaga sovg'a — shart va muddat bilan", weight: 1.5}
+      - {id: test, description: "3 kreativ bitta o'zgaruvchi bo'yicha farqlanadi (masalan, lab fakti / narx / tarkib), gipoteza va o'lchov (CTR, CR, CAC) aniq"}
+      - {id: format, description: "Majburiy elementlar: logotip, narx va muddat, CTA, 15–30 soniya va birinchi 3 soniyada foyda; raqobatchi nomi yo'q"}
+    hints:
+      - "Kechagi tadqiqotda xaridorlar uchun eng muhim omil nima edi? Kreativ shundan boshlansin."
+      - "Uchta kreativ uchta har xil narsani bir vaqtda o'zgartirsa, qaysi biri ishlaganini bilib bo'lmaydi."
+    reference_answer: |
+      Maqsad: B (23–30) va D (39–45) ayollar, Toshkent. Asosiy xabar: "Qishda quruq teriga — laboratoriyada sinalgan namlik".
+      Isbot: 40 kishida 21 kun, 85% da namlik oshgan (o'rtacha +18%); 87% tabiiy kelib chiqishli, atirsiz, parabensiz.
+      Taklif: 149 000 → 119 200 so'm QALQON20 bilan, ishga tushirishdan 14 kun; birinchi 500 buyurtmaga lab balzami.
+      Kreativlar (faqat birinchi kadr farq qiladi): 1) lab fakti "85% da namlik oshdi"; 2) narx "119 200 so'm, 14 kun";
+      3) tarkib "shi yog'i va seramidlar, atirsiz". Gipoteza: B — lab faktiga, D — tarkibga ko'proq bosadi; CTR, CR va CAC bilan solishtiramiz.
+      Majburiy: logotip, narx va muddat, CTA "Saytda buyurtma bering", 15–30 s, foyda 3-soniyagacha. Taqiq: ajin, quyoshdan himoya,
+      "100%", "davolaydi", raqobatchi nomi.
+
+  - id: day2_end
+    type: day_end
+    day: 2
+    at: "17:30"
+    brief: "2-kun yakuni: media-reja va KPI xulosasi, brif holati, ertangi reja (blogger, kontent, ishga tushirish)."
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Media-reja raqamlari (budjet, CAC, ROAS) va brif holati aniq", weight: 1.5}
+      - {id: plan, description: "Ishga tushirishgacha qolgan ishlar va xavflar aytilgan"}
+
+  # ── 3-kun: blogger, kontent, ishga tushirish ───────────────────────
+  - id: standup_d3
+    type: task
+    day: 3
+    at: "09:00"
+    from: dilnoza
+    brief: "Standup (3-kun). Bugun 16:00 da reklama ishga tushadi."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Kecha / bugun / to'siqlar"}
+      - {id: concrete, description: "Bugungi reja aniq: blogger shartlari, kontent, 16:00 gacha kabinet sozlamalarini tekshirish", weight: 2}
+    hints: ["Ishga tushirishdan oldin nimani ikki marta tekshirish kerak?"]
+    reference_answer: "Kecha: media-reja (34.1 mln, CAC ≈ 38 560) va dizaynerga brif. Bugun: blogger shartlari tushlikkacha, kontent kalendari, 15:30 da kabinetda limit va auditoriyani tekshiraman. To'siq: reja tasdig'i."
+
+  - id: madina_hello
+    type: message
+    day: 3
+    at: "09:15"
+    from: madina
+    brief: |
+      Salom! Men Madina. Ikki variantdagi taklifimni va post loyihasini yubordim — o'z uslubimda yozdim, obunachilarim
+      shunday matnni yaxshi ko'radi. Shartlarni bugun tushlikkacha kelishsak, ertaga kechqurun joylayman.
+
+  - id: influencer_terms
+    type: task
+    day: 3
+    at: "09:30"
+    from: dilnoza
+    brief: |
+      Madina bilan hamkorlikni tayyorlang: 1) A va B to'lov variantlarini solishtiring (80 buyurtmada narx va CAC,
+      qaysi buyurtma sonida teng bo'ladi), tavsiya bering; 2) uning auditoriyasidan bizning maqsadli qism (Toshkentlik ayollar)
+      taxminan qancha; 3) post loyihasidagi va shartnomadagi har bir muammo — nima va nega; 4) brendbukka mos tuzatilgan post matni.
+    attachments: [doc_influencer_offer, doc_brand_guide, doc_product_card, doc_channel_benchmarks]
+    answer_types: [text]
+    due_in_minutes: 150
+    weight: 2
+    competencies: [technical, communication]
+    rubric:
+      - {id: payment, description: "A: 4 mln, CAC 50 000; B: 1.5 + 80 × 0.025 = 3.5 mln, CAC 43 750; tenglik 100 buyurtma (2.5 mln / 25 000); 100 dan ko'p sotuvda A arzon; tavsiya asosli (masalan, B — xavf kam, natijaga bog'liq)", weight: 2}
+      - {id: audience, description: "Maqsadli auditoriya ≈ 85 000 × 0.72 × 0.64 ≈ 39 170 kishi"}
+      - {id: claims, description: "Topilgan da'volar: 100% tabiiy (aslida 87%), kimyosiz, dermatologlar tavsiyasi, ajin, quyoshdan himoya (SPF yo'q), raqobatchi nomi, noto'g'ri narx 99 000 (to'g'risi 149 000 / 119 200)", weight: 2}
+      - {id: contract, description: "Shartnoma: «Reklama» belgisi yo'q — qo'shilsin; salbiy izohlarni o'chirish bandi olib tashlansin; emoji va xeshteg soni brendbukdan oshgan", weight: 1.5}
+      - {id: rewrite, description: "Tuzatilgan post: «Reklama» belgisi bilan, faqat kartadagi faktlar, to'g'ri narx va MADINA20 muddati, Madina uslubi saqlangan"}
+    hints:
+      - "B variant narxini buyurtma soniga bog'liq formula sifatida yozing va A ga tenglang."
+      - "Post loyihasini mahsulot kartasi bilan jumlama-jumla solishtiring: kartada yo'q har bir da'vo — muammo."
+      - "Shartnomadagi har bandni brendbukdagi hamkorlik va izohlar qoidasiga qo'yib ko'ring."
+    reference_answer: |
+      To'lov: A — 4 000 000, 80 buyurtmada CAC 50 000. B — 1 500 000 + 25 000 × 80 = 3 500 000, CAC 43 750.
+      Tenglik: (4 000 000 − 1 500 000) / 25 000 = 100 buyurtma; 100 dan kam bo'lsa B arzon, ko'p bo'lsa A. Tavsiya: B — benchmark 80,
+      xavfni blogger bilan bo'lishamiz; 200 buyurtmada ham 6.5 mln, CAC 32 500 — maqbul.
+      Auditoriya: 85 000 × 72% × 64% ≈ 39 170 Toshkentlik ayol.
+      Muammolar: "100% tabiiy" (87%), "kimyosiz" (taqiqlangan), "dermatologlar tavsiya qiladi" (tasdiqlanmagan), "ajinlarni yo'qotadi"
+      (sinalmagan), "quyoshdan himoya" (SPF yo'q), raqobatchi nomi, narx 99 000 (to'g'risi 149 000, kod bilan 119 200), 4 emoji va 6 xeshteg.
+      Shartnoma: «Reklama» belgisi majburiy; "salbiy izohlarni o'chiradi" bandi o'chiriladi — brendbukka zid.
+      Post: "Reklama. Qizlar, qishda yuzim birinchi bo'lib quriydi 🙈 Oydinbarg'ning yangi «Qishki qalqon» kremini sinab ko'rdim:
+      shi yog'i va seramidlar, atirsiz. Laboratoriyada 40 kishida sinalgan — 21 kunda 85% da namlik oshgan. Narxi 149 000,
+      MADINA20 kodi bilan 119 200 so'm (14 kun). Havola profilda. #oydinbarg #qishkiparvarish"
+
+  - id: customer_data
+    type: decision
+    day: 3
+    at: "11:30"
+    from: gulnora
+    brief: |
+      Bizda do'konlardagi sodiqlik kartasidan 18 000 ta telefon raqam bor. Bugun hammasiga yangi krem haqida SMS
+      jo'nataylik va ro'yxatni reklama kabinetiga yuklab, o'xshash auditoriya qilaylik — baribir ular bizning mijozlarimiz.
+      Faylni hozir yuboraymi?
+    attachments: [doc_crm_data]
+    competencies: [prioritization, communication]
+    options:
+      - key: consent_only
+        label: "Faqat SMS roziligi bor 4 200 kishiga yuboramiz (630 000 so'm); qolgan 13 800 raqamni reklama kabinetiga ham yuklamaymiz. Do'kon va saytda rozilik so'rashni taklif qilaman, Dilnoza opaga yozaman"
+        grade: correct
+      - key: ask_lead
+        label: "Faylni hozircha olmayman, Dilnoza opadan nima qilishni so'rayman"
+        grade: acceptable
+      - key: use_all
+        label: "Yuboring — 18 000 kishiga SMS jo'nataman va ro'yxatni o'xshash auditoriya uchun yuklayman"
+        grade: wrong
+        flag: data_misuse
+
+  - id: lead_on_data
+    type: message
+    day: 3
+    at: "14:00"
+    when: {flag: data_misuse}
+    from: dilnoza
+    brief: |
+      Sodiqlik kartasi bazasini to'liq SMS va reklama auditoriyasiga ishlatish rejasini to'xtatdim. 13 800 kishi faqat
+      chegirma uchun raqam bergan, reklamaga rozilik bermagan — bu ularning ishonchini buzish va shikoyatlarga sabab.
+      Brendbukda aniq yozilgan: faqat rozilik bor kontaktlar. Bunday qarorni avval men bilan kelishing.
+
+  - id: launch_content
+    type: task
+    day: 3
+    at: "14:30"
+    from: kamola
+    brief: |
+      Reklama 16:00 da start oladi, organik sahifalarimiz ham tayyor bo'lsin. Tayyorlang: 1) 4–8-kunlar uchun kontent
+      kalendari (kun, kanal, format, mavzu); 2) birinchi lenta posti va messenjer kanal posti matni; 3) izohlarda kutilayotgan
+      uchta savolga javob shabloni: "Quyoshdan himoya qiladimi?", "Ekzemaga yordam beradimi?", "Nega boshqalardan qimmat?"
+    attachments: [doc_brand_guide, doc_product_card, doc_competitors]
+    answer_types: [text, file]
+    due_in_minutes: 120
+    weight: 1.5
+    competencies: [communication, initiative]
+    rubric:
+      - {id: calendar, description: "Kalendar 5 kunni qamraydi, kanal va format xilma-xil (lenta, qisqa video, messenjer), mavzular segment va faktlarga bog'langan"}
+      - {id: posts, description: "Postlar formatga mos (lenta ≤ 120 so'z, 1 CTA, ≤ 2 emoji, ≤ 3 xeshteg + #oydinbarg; messenjer ≤ 3 xatboshi, havola/bot bilan tugaydi), narx va muddat to'g'ri", weight: 2}
+      - {id: faq, description: "FAQ halol: SPF yo'q — quyoshdan himoya qilmaydi; kosmetika, kasallikni davolamaydi — shifokorga murojaat; narx — 1 ml hisobi va sinovga asoslangan, raqobatchi yomonlanmagan", weight: 2}
+      - {id: claims, description: "Faqat tasdiqlangan faktlar; taqiqlangan so'zlar yo'q", weight: 1.5}
+    hints:
+      - "Har FAQ javobini mahsulot kartasidagi 'sinov o'tkazilmagan' qatori bilan tekshiring."
+      - "Narx savoliga raqobatchini emas, o'zingizni tushuntiring: 1 ml narxi va sinov ma'lumoti."
+    reference_answer: |
+      Kalendar: 4-kun lenta — "40 kishi, 21 kun" infografika; 5-kun qisqa video — tarkib (shi yog'i, seramidlar); 6-kun messenjer —
+      qishki parvarish maslahati + QALQON20; 7-kun lenta — mijoz fikri (ruxsat bilan); 8-kun qisqa video — kunlik parvarish tartibi.
+      Lenta: "Qishda yuz terisi namlikni tez yo'qotadi. «Qishki qalqon» — shi yog'i va seramidli atirsiz krem. Laboratoriyada 40 kishida
+      21 kun sinaldi: 85% da namlik oshdi. 149 000 o'rniga QALQON20 bilan 119 200 so'm — 14 kun. Buyurtma — profildagi havola orqali 🤍
+      #oydinbarg #qishkiparvarish"
+      Messenjer: 1) Qishda yuz terisi quriydi. 2) «Qishki qalqon», 50 ml: 87% tabiiy kelib chiqishli tarkib, 85% sinovchida namlik oshgan.
+      3) QALQON20 — 119 200 so'm, 14 kun. Buyurtma: bot, /start.
+      FAQ: SPF yo'q — kunduzi quyoshdan himoya vositasini alohida ishlating. Krem kosmetik vosita, kasallikni davolamaydi — teri
+      muammosi bo'lsa shifokorga murojaat qiling. Narx: 1 ml ≈ 2 980 so'm (aksiyada 2 384); tarkib laboratoriyada sinalgan.
+
+  - id: day3_end
+    type: day_end
+    day: 3
+    at: "17:30"
+    brief: "3-kun yakuni: blogger kelishuvi, kontent, ishga tushirish holati (16:00), ertangi birinchi nazorat rejasi."
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Blogger shartlari, kontent va ishga tushirish holati aniq", weight: 1.5}
+      - {id: monitor, description: "Ertangi 10:00 nazorati: qaysi raqamlar va qaysi chegaralar bilan"}
+
+  # ── 4-kun: birinchi natijalar va incident ──────────────────────────
+  - id: standup_d4
+    type: task
+    day: 4
+    at: "09:00"
+    from: dilnoza
+    brief: "Standup (4-kun). Reklama kecha 16:00 da ishga tushdi."
+    attachments: [doc_onboarding, doc_tracking_guide]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Kecha / bugun / to'siqlar"}
+      - {id: concrete, description: "Bugungi reja aniq, 10:00 dagi birinchi nazorat (xarajat, CAC, ROAS kanal bo'yicha) kiritilgan", weight: 2}
+    hints: ["O'lchash rejangizdagi kunlik nazoratning birinchi vaqti qachon edi?"]
+    reference_answer: "Kecha: blogger shartlari, kontent, 16:00 start. Bugun: 10:00 da kanal xarajati va CAC'ni rejaga solishtiraman, A/B testni ko'raman. To'siq: yo'q."
+
+  - id: incident_budget_burn
+    type: incident
+    day: 4
+    at: "10:00"
+    when: {any: [{missed: budget_plan}, {score_lt: {node: budget_plan, value: 60}}]}
+    from: dilnoza
+    brief: |
+      SHOSHILINCH: moliya 18 soatda reklamaga 9.6 mln so'm ketganini ko'rdi — bu 14 kunlik budjetning chorak qismi,
+      buyurtmalar esa juda kam. Kabinet eksporti ilovada. 45 daqiqada yozing: 1) hozir nima qilasiz (birinchi 15 daqiqa);
+      2) kanal va jami bo'yicha CAC, ROAS, yalpi foyda; 3) sabab; 4) qolgan budjet uchun yangi reja va menga qisqa xabar.
+    attachments: [doc_incident_burn, doc_launch_brief, doc_tracking_guide]
+    answer_types: [text]
+    due_in_minutes: 45
+    weight: 2
+    competencies: [stress_handling, technical, prioritization]
+    rubric:
+      - {id: stop_first, description: "Avval qon ketishini to'xtatadi: qisqa video va lenta darhol pauza (soatiga ≈ 540 000 so'm ketmoqda), qidiruv va retargeting qoladi; keyin tahlil", weight: 2}
+      - {id: numbers, description: "Raqamlar to'g'ri (±1%): jami 9.6 mln, 69 buyurtma, daromad ≈ 8.22 mln, CAC ≈ 139 130, ROAS ≈ 0.86, yalpi foyda ≈ −5.49 mln; qisqa video CR 0.4%, CAC 200 000; qidiruv 30 000, retargeting ≈ 21 430", weight: 2}
+      - {id: cause, description: "Sabab: reja kabinetga ko'chirilmagan — maqsad 'klik', auditoriya 16–55 va butun mamlakat, kunlik limit yo'q; 2.86 mln/kun o'rniga 18 soatda 3.4 kunlik sarf", weight: 1.5}
+      - {id: new_plan, description: "Yangi reja: qolgan 30.4 mln, ≈ 2.34 mln/kun (13 kun) yoki undan kam; maqsad — xarid, Toshkent, 23–45 yosh (B va D), har kanalga kunlik limit; zararli kanal (CAC > 59 600) qaytarilmaydi", weight: 1.5}
+      - {id: report, description: "Rahbarga qisqa, raqamli, ayblovsiz xabar: nima bo'ldi, nima qilindi, keyingi tekshiruv vaqti"}
+    hints:
+      - "Pul hozir ham ketyapti. Tahlildan oldin qaysi ikki kanalni to'xtatish kerak?"
+      - "Har kanalda CAC'ni zararsizlik chegarasi (59 600) bilan solishtiring — qaysi kanallar foyda keltiryapti?"
+      - "Sozlamalar qatorini o'lchash qoidalari bilan solishtiring: qaysi uchta qoida bajarilmagan?"
+    reference_answer: |
+      Birinchi 15 daqiqa: qisqa video va lenta pauza (soatiga ≈ 540 000 so'm ketmoqda), qidiruv va retargeting ishlayveradi; Dilnoza opaga xabar.
+      Raqamlar: jami 9 600 000 so'm, 11 070 klik, 69 buyurtma, daromad 69 × 119 200 = 8 224 800; CAC ≈ 139 130, ROAS ≈ 0.86,
+      yalpi foyda 69 × 59 600 − 9.6 mln ≈ −5.49 mln. Qisqa video: CPC 800, CR 0.4%, CAC 200 000; lenta CAC 200 000; qidiruv CAC 30 000
+      (ROAS 3.97); retargeting CAC ≈ 21 430 (ROAS 5.56).
+      Sabab: maqsad "klik" — arzon, lekin xarid qilmaydigan kliklar; 16–55 yosh va butun mamlakat (38% Toshkentdan tashqarida);
+      kunlik limit yo'q — 18 soatda ≈ 3.4 kunlik byudjet (reja 2.86 mln/kun).
+      Yangi reja: qolgan 30.4 mln, 13 kunda ≤ 2.34 mln/kun; qisqa video faqat "xarid" maqsadi, Toshkent, 23–45 yosh, kunlik limit
+      bilan va 1 kunlik test (CAC > 59 600 bo'lsa — o'chadi); lenta yo'q; qidiruv va retargeting cheklovigacha; messenjer — rejada.
+      Xabar: "Dilnoza opa, 1-sutkada 9.6 mln sarflandi, 69 buyurtma, CAC 139 130 — zarar ≈ 5.5 mln. Sabab — kabinet sozlamalari
+      (klik, keng auditoriya, limitsiz). Qisqa video va lenta to'xtatildi, yangi sozlama va limitlarni 12:00 gacha tasdiqqa yuboraman."
+
+  - id: incident_gift_overrun
+    type: incident
+    day: 4
+    at: "10:00"
+    when: {score_gte: {node: budget_plan, value: 60}}
+    from: gulnora
+    brief: |
+      SHOSHILINCH, lekin yaxshi sababdan: bir xaridorning videosi tarqalib ketdi, buyurtmalar oqib kelyapti. Muammo —
+      "birinchi 500 xaridorga sovg'a" hisoblagichi ishlamagan, va'da qilinganlar allaqachon 640 ta, reklama va banner hali ham
+      sovg'a deyapti. 45 daqiqada yozing: 1) hozirgi qadamlar; 2) sovg'alar bo'yicha qaror va xarajat; 3) mijozlarga va
+      video muallifiga nima deymiz; 4) Dilnoza opaga qisqa xabar.
+    attachments: [doc_incident_gift, doc_brand_guide, doc_product_card]
+    answer_types: [text]
+    due_in_minutes: 45
+    weight: 2
+    competencies: [stress_handling, prioritization, communication]
+    rubric:
+      - {id: stop_promise, description: "Avval va'dani to'xtatadi: sovg'ali 3 kreativ pauza yoki almashtiriladi, sayt banneri o'chiriladi, hisoblagich yoqiladi; har soat ≈ 44 buyurtma yangi va'da oladi", weight: 2}
+      - {id: honor, description: "Allaqachon berilgan 640 buyurtmaga sovg'a beriladi (ichki qoida); ortiqcha 140 × 12 000 = 1 680 000 so'm, jami sovg'a 640 × 12 000 = 7.68 mln; omborda 560 — 80 dona do'kondan olinadi", weight: 2}
+      - {id: numbers, description: "Kechikish narxi: o'zgartirilmasa 2 soatda yana ≈ 88 buyurtma va ≈ 1.06 mln so'm; krem zaxirasi (1 900) yetarli ekanini tekshirgan", weight: 1.5}
+      - {id: honest_comms, description: "Halol e'lon: 'birinchi 500 sovg'a tugadi, shu vaqtgacha buyurtma berganlarga yetkaziladi'; soxta shoshiltirish yo'q; video muallifiga rahmat, repost faqat ruxsat bilan, yashirin to'lov yo'q (sovg'a berilsa — belgilansin)", weight: 1.5}
+      - {id: report, description: "Rahbarga qisqa raqamli xabar: nima bo'ldi, qaror, xarajat, sabab (hisoblagich) va chora"}
+    hints:
+      - "Va'da qilingan sovg'a hozir ham har soatda ko'payyapti. Birinchi qadam nima bo'lishi kerak?"
+      - "Ichki qoidaga ko'ra allaqachon buyurtma berganlarga va'da bajariladimi? Bajarilsa qancha turadi va ombor yetadimi?"
+      - "Video muallifi bilan ishlashda brendbukdagi hamkorlik qoidasini eslang."
+    reference_answer: |
+      Qadamlar (15 daqiqa): sovg'ali 3 kreativni pauza qilaman (keyin "QALQON20" versiyasi bilan qayta yoqamiz), sayt bannerini
+      "500 sovg'a tugadi" ga o'zgartiramiz, hisoblagich yoqiladi; Gulnora opa do'konlardan balzam yig'adi.
+      Qaror: allaqachon buyurtma bergan 640 kishiga sovg'a beriladi. Ortiqcha 140 × 12 000 = 1 680 000 so'm; jami 7 680 000.
+      Ombor 560 — yana 80 dona do'konlardan (u yerda 300). Har kechikkan soat ≈ 44 yangi va'da (2 soatda ≈ 88, ≈ 1.06 mln).
+      Krem 1 900 dona — yetarli. Mijozlarga: "Birinchi 500 sovg'a tugadi — e'tiboringiz uchun rahmat! Shu paytgacha buyurtma
+      berganlarning barchasiga sovg'a yetkaziladi. QALQON20 bilan 119 200 so'm 14 kun amal qiladi." "Faqat 5 ta qoldi" kabi
+      shoshiltirish yo'q. Shahnoza R.ga rahmat, repost faqat ruxsat bilan; sovg'a yuborsak — keyingi postda belgisi bo'lishi kerak.
+      Dilnoza opaga: "Virusli video sabab oqim soatiga 44. Sovg'a hisoblagichi ishlamagan, 640 va'da; sovg'ali kreativlar to'xtatildi,
+      640 ga sovg'a beramiz (+1.68 mln), sabab va hisoblagich bugun tuzatiladi. Reklama tushlikdan keyin yangi kreativ bilan."
+
+  - id: ab_test
+    type: task
+    day: 4
+    at: "14:00"
+    from: dilnoza
+    brief: |
+      Mahsulot sahifasidagi A/B test natijasini ko'ring. Rustam aka B variantini darhol hammaga qo'yishni so'rayapti.
+      Hisoblang: har variant konversiyasi, nisbiy farq, z-statistika; ichki qoida bo'yicha qaror va keyingi qadam;
+      B haqiqatan yaxshi bo'lsa kuniga qancha qo'shimcha buyurtma va yalpi foyda beradi.
+    attachments: [doc_ab_test, doc_launch_brief]
+    answer_types: [text]
+    due_in_minutes: 120
+    weight: 1.5
+    competencies: [technical, communication]
+    rubric:
+      - {id: conversion, description: "CR: A 126/4 200 = 3.0%, B 164/4 100 = 4.0%; nisbiy farq +33%", weight: 1.5}
+      - {id: z_test, description: "Birlashgan p = 290/8 300 ≈ 3.49%; z ≈ 2.48 > 1.96 — 95% darajada ahamiyatli (p ≈ 0.013)", weight: 2}
+      - {id: rule, description: "Qoida: sessiya sharti bajarilgan (≥ 3 000), lekin 72 soat emas, 20 soat — g'olib hali e'lon qilinmaydi, test 72 soatgacha 50/50 davom etadi; sababi aytilgan (kun/hafta xulqi, erta to'xtatish xavfi)", weight: 2}
+      - {id: impact, description: "Ta'sir: 5 000 sessiya × 1 p.p. ≈ 50 buyurtma/kun, × 59 600 ≈ 2.98 mln so'm yalpi foyda/kun", weight: 1.5}
+      - {id: comms, description: "Rustam akaga hurmatli, raqamli tushuntirish: qachon va qanday qaror qilinadi"}
+    hints:
+      - "Avval ikki konversiyani, keyin ikki variant birlashgan konversiyasini hisoblang — z formulasi hujjatda."
+      - "Ahamiyatli natija ham qoidadagi ikkinchi shartni bekor qilmaydi. Qaysi shart bajarilmagan?"
+    reference_answer: |
+      A: 126 / 4 200 = 3.0%; B: 164 / 4 100 = 4.0%; nisbiy farq +33%.
+      p = 290 / 8 300 ≈ 0.0349; SE = √(0.0349 × 0.9651 × (1/4 200 + 1/4 100)) ≈ 0.00403; z ≈ 0.010 / 0.00403 ≈ 2.48 > 1.96 (p ≈ 0.013).
+      Qoida: har variantda ≥ 3 000 sessiya — bajarildi; kamida 72 soat — yo'q (20 soat, ishga tushirishning birinchi kechasi,
+      virusli/reklama trafigi o'zgaruvchan). Qaror: B ustun ko'rinadi, lekin test 72 soatgacha (6-kun 16:00 atrofi) 50/50 davom etadi.
+      Ta'sir: farq saqlansa, 5 000 sessiya × 1 p.p. ≈ 50 buyurtma/kun ≈ 2.98 mln so'm yalpi foyda/kun.
+      Rustam akaga: "B 33% yaxshiroq ko'rinyapti va statistik jihatdan ishonchli, lekin hozircha 20 soatlik ma'lumot. Qoidamiz
+      bo'yicha 72 soat to'lganda — taxminan 2 kundan keyin — g'olibni hammaga qo'yamiz; shu vaqtgacha ikkala variant ham ishlaydi."
+
+  - id: day4_end
+    type: day_end
+    day: 4
+    at: "17:30"
+    brief: "4-kun yakuni: incident qanday yopildi (raqamlar bilan), A/B test holati, ertangi hisobot rejasi."
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Incident natijasi va qarorlar raqamlar bilan aniq", weight: 1.5}
+      - {id: lessons, description: "Incident'dan xulosa va ertangi hisobot rejasi"}
+
+  # ── 5-kun: natijalar hisoboti va retro ─────────────────────────────
+  - id: standup_d5
+    type: task
+    day: 5
+    at: "09:00"
+    from: dilnoza
+    brief: "Standup (5-kun)."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Kecha / bugun / to'siqlar"}
+      - {id: concrete, description: "Hisobot va retro rejasi aniq, muddat bilan", weight: 2}
+    hints: ["Hisobotga qaysi davr ma'lumoti kiradi va uni qachongacha topshirasiz?"]
+    reference_answer: "Kecha: incident yopildi, A/B test davom etmoqda. Bugun: 21 soatlik natijalar hisoboti va 2-hafta tavsiyasi 12:30 gacha, keyin retro. To'siq: yo'q."
+
+  - id: results_report
+    type: task
+    day: 5
+    at: "09:30"
+    from: dilnoza
+    brief: |
+      Rahbariyat uchun ishga tushirish hisobotini tayyorlang (tuzatishlardan keyingi 21 soat): har kanal va jami bo'yicha
+      CAC, ROAS va yalpi foyda; blogger'ni ikki xil (faqat buyurtmaga to'lov va fiks to'lov bilan) ko'rsating; KPI va kunlik
+      reja bilan solishtiring; 2-hafta uchun budjet tavsiyasi (qaysi kanalga ko'proq, qaysi biriga kamroq) va cheklovlar.
+    attachments: [doc_week_results, doc_launch_brief, doc_channel_benchmarks]
+    answer_types: [text, file]
+    due_in_minutes: 180
+    weight: 2
+    competencies: [technical, communication, initiative]
+    rubric:
+      - {id: channels, description: "Kanallar (±1%): qisqa video CAC 65 000, ROAS ≈ 1.83, foyda ≈ −64 800; qidiruv ≈ 28 330, 4.21, +562 800; messenjer 36 000, 3.31, +354 000; retargeting 20 000, 5.96, +316 800", weight: 2}
+      - {id: totals, description: "Pullik kanallar jami: 1.99 mln, 53 buyurtma, CAC ≈ 37 550, ROAS ≈ 3.17, foyda ≈ +1.17 mln; blogger bilan (2.15 mln, 26) — 4.14 mln, 79, CAC ≈ 52 410; organik 21 CAC'ga kirmaydi, jami buyurtma 100", weight: 2}
+      - {id: blogger, description: "Blogger: o'zgaruvchan qismi CAC 25 000; fiks 1.5 mln bilan ≈ 82 690 — fiks to'lov bir martalik, keyingi buyurtmalar bilan pasayishi tushuntirilgan", weight: 1.5}
+      - {id: pacing, description: "Reja bilan solishtirish: 21 soatga ≈ 1.88 mln reja, fakt 1.99 mln (+5.8%, ±30% ichida)"}
+      - {id: recommendation, description: "2-hafta: qisqa video (CAC > 59 600) kamaytirish/yangi kreativ testi, qidiruv va retargeting cheklovigacha, messenjer postlari davom; zaxira 5.9 mln eng arzon kanallarga; 21 soat kichik namuna ekani ogohlantirilgan", weight: 2}
+    hints:
+      - "Har kanal uchun xuddi 2-kundagi kabi jadval tuzing: xarajat, buyurtma, CAC, ROAS, foyda."
+      - "Organik buyurtmalar reklama CAC'iga kirmaydi — o'lchash qoidalarini eslang."
+      - "Blogger'ning fiks to'lovi 14 kun davomidagi barcha buyurtmalarga tegishli. 21 soatlik CAC nimani ko'rsatadi, nimani ko'rsatmaydi?"
+    reference_answer: |
+      Kanal | xarajat | buyurtma | CAC | ROAS | yalpi foyda
+      Qisqa video | 780 000 | 12 | 65 000 | 1.83 | −64 800 (CAC > 59 600 — zararda)
+      Qidiruv | 510 000 | 18 | 28 333 | 4.21 | +562 800
+      Messenjer | 540 000 | 15 | 36 000 | 3.31 | +354 000
+      Retargeting | 160 000 | 8 | 20 000 | 5.96 | +316 800
+      Pullik jami: 1 990 000, 53 buyurtma, CAC ≈ 37 547, ROAS ≈ 3.17, yalpi foyda ≈ +1 168 800.
+      Blogger: 26 × 25 000 = 650 000 (CAC 25 000); fiks bilan 2 150 000 (CAC ≈ 82 692, foyda ≈ −600 400) — fiks bir martalik, post
+      14 kun ishlaydi, CAC kamayadi. Blogger bilan: 4.14 mln, 79 buyurtma, CAC ≈ 52 405, ROAS ≈ 2.27. Organik 21 — CAC'ga kirmaydi.
+      Jami buyurtma 100, daromad 11.92 mln.
+      KPI: pullik kanallarda CAC 37 547 ≤ 45 000, ROAS 3.17 ≥ 2.5 — bajarilmoqda. Reja: 21 soatga 2.15 × 21/24 ≈ 1.88 mln, fakt 1.99 (+5.8%).
+      2-hafta: qisqa video — yangi kreativ bilan 2–3 kunlik test, CAC > 59 600 qolsa budjetning yarmi qidiruv va messenjerga;
+      retargeting — chastota 4 gacha; zaxira 5.9 mln — qidiruv (hajm qolgan bo'lsa) va messenjer joylariga. Ogohlantirish: 21 soat —
+      kichik namuna, 7 kunlik atributsiya oynasi hali yopilmagan; qarorlarni 3 kunlik ma'lumot bilan tasdiqlaymiz.
+
+  - id: report_ack
+    type: message
+    after: {node: results_report, event: submitted, minutes: 20}
+    from: dilnoza
+    brief: "Hisobotni oldim, rahbariyatga shu jadval bilan chiqaman. 2-hafta tavsiyasini dushanba birga yakunlaymiz."
+
+  - id: retro
+    type: task
+    day: 5
+    at: "14:30"
+    from: shoxrux
+    brief: |
+      Haftalik retro (mentor bilan): 3 ta yaxshi ketgan narsa, 3 ta yaxshilash kerak bo'lgan narsa (har biri aniq voqea va
+      raqam bilan) va keyingi hafta uchun bitta o'lchanadigan maqsad.
+    attachments: [doc_onboarding, doc_tracking_guide]
+    answer_types: [text]
+    due_in_minutes: 90
+    weight: 1
+    competencies: [initiative, communication]
+    rubric:
+      - {id: specific, description: "Har band aniq hafta voqeasiga bog'langan (segment tanlovi, media-reja, blogger da'volari, rozilik, 4-kun incident'i, A/B test)", weight: 2}
+      - {id: honest, description: "O'z xatosini halol tan olgan, aybni boshqaga qo'ymagan"}
+      - {id: goal, description: "Keyingi hafta maqsadi o'lchanadigan (masalan, har kanal uchun kunlik limit va 10:00 nazorati 5 kundan 5 kun)", weight: 1.5}
+    hints: ["Haftaning har kunidan bitta voqeani eslang: qaysi raqam yoki qoida sizni to'xtatdi yoki to'xtatishi kerak edi?"]
+    reference_answer: |
+      Yaxshi: segmentni salohiyat bo'yicha tanladim (B va D ≈ 66%); media-rejada chekli CAC'ni ko'rib 5.9 mln zaxira qoldirdim;
+      blogger postidagi 7 ta taqiqlangan da'voni ishga tushirishdan oldin to'xtatdim.
+      Yaxshilash: rejani kabinet sozlamalariga ko'chirishni tekshirish ro'yxatisiz qildim — 4-kun incident'i; A/B testda erta g'olib
+      e'lon qilish vasvasasi; sovg'a/aksiya chegaralarini texnik tomondan tekshirmadim.
+      Maqsad: keyingi hafta har ishga tushirishda 6 bandlik tekshiruv ro'yxati (maqsad, geo, yosh, limit, UTM, aksiya chegarasi) — 100% kampaniyada.
+
+  - id: day5_end
+    type: day_end
+    day: 5
+    at: "17:30"
+    brief: "Hafta yakuni: Dilnoza opaga haftalik hisobot — nima yetkazildi, asosiy raqamlar, nima ochiq, keyingi hafta rejasi."
+    competencies: [communication]
+    rubric:
+      - {id: delivered, description: "Hafta natijalari aniq: tadqiqot, media-reja, blogger, ishga tushirish, incident, hisobot", weight: 1.5}
+      - {id: numbers, description: "Asosiy raqamlar (CAC, ROAS, buyurtmalar) va KPI holati"}
+      - {id: open_items, description: "Ochiq ishlar (A/B test yakuni, 2-hafta budjeti) va keyingi reja"}

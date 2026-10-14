@@ -1,0 +1,530 @@
+# CONTRACT.md §29 — Bank sohasining jamoaviy ssenariysi (2–3 talaba). Bank, mijozlar, kontragentlar, odamlar va
+# raqamlar o'ylab topilgan. Chegaralar (kontraktga nisbatan kredit ulushi, ICR, ta'minot diskontlari, naqd operatsiya
+# chegarasi, AML tartibi) — o'quv maqsadidagi ichki siyosat, real normativ emas.
+# Hikoya: yirik eksport krediti arizasi va firibgarlik signallari — tahlilchi raqamlarni, compliance pul yo'lini,
+# mijozlar menejeri hujjat va mijoz bilan muloqotni ko'radi; kunduzi bosim, kechqurun bir voqeaning uch tomoni.
+slug: oqsaroy-bank-export-fraud-team-day1
+title: "Oqsaroy Bank — Eksport krediti va firibgarlik signali jamoasi, 1 kun"
+sector: Banking
+company_name: "Oqsaroy Bank"          # fictional
+difficulty: junior
+duration_days: 1
+
+team:
+  min_size: 2
+  roles:
+    - key: analyst
+      title: "Kredit tahlilchisi"
+      summary: "Arizani siyosat bo'yicha hisoblaydi: kontrakt ulushi, tozalangan aylanma, foiz qoplash, ta'minot; incident'da xavfni qayta baholaydi"
+    - key: compliance
+      title: "Compliance (KYC/AML) analitik"
+      summary: "Benefitsiar egalar va hisob harakatini tekshiradi, shubha belgilarini topadi, ichki xabarnoma (ISOX) yozadi"
+    - key: manager
+      title: "Filial mijozlar menejeri"
+      summary: "Mijoz hujjatlarini solishtiradi, mijoz bilan muloqot qiladi — ogohlantirib qo'ymasdan (tipping-off yo'q)"
+
+personas:
+  - key: gulnora
+    name: "Gulnora Azimova"
+    role: "Kichik va o'rta biznes kreditlash bo'limi boshlig'i"
+    tone: "rasmiy, xotirjam, raqam va siyosat bandiga tayanadi; jamoadan kelishilgan bitta xulosa kutadi"
+    knows: [doc_team_charter, doc_export_policy, doc_application, doc_collateral]
+    secrets:
+      - "Taqiq reestri ko'chirmasi so'ralgan, lekin reestr tizimi ertalabdan ishlamayapti — natija kechqurun keladi."
+    busy_reply: "Kredit qo'mitasidaman, chiqqach javob beraman."
+    deflect_reply: "Xulosani jamoa chiqaradi. Siyosatdagi har bandni arizadagi raqam bilan solishtiring va kim nimani tekshirganini yozing."
+  - key: feruza
+    name: "Feruza Saidova"
+    role: "Katta kredit tahlilchisi, jamoa mentori"
+    kind: mentor
+    tone: "iliq, sabrli; jamoani bir-birining natijasiga tayanishga va kelishuvni yozib qo'yishga undaydi"
+    knows: [doc_team_charter, doc_export_policy, doc_aml_policy]
+    busy_reply: "Boshqa jamoa bilan uchrashuvdaman, keyinroq yozaman."
+    deflect_reply: "Javobni o'zingiz topsangiz yaxshiroq. Jamoadoshingiz qaysi raqamni allaqachon topganini so'rang — balki u sizning ishingizning yarmi."
+  - key: jasur
+    name: "Jasur Ergashev"
+    role: "Compliance boshlig'i"
+    tone: "qat'iy, qisqa, maxfiylikka juda e'tiborli; faktni taxmindan ajratishni talab qiladi"
+    knows: [doc_aml_policy, doc_kyc, doc_statement]
+    secrets:
+      - "«Sarvqad Savdo» MChJ bo'yicha boshqa bankdan ham so'rov kelgan — buni faqat aniq so'ralsa aytadi."
+    busy_reply: "Tekshiruvdaman. Shoshilinch bo'lsa — AML tartibi bo'yicha ish yuriting."
+    deflect_reply: "Belgilarni siz topasiz: siyosatdagi har belgini ko'chirmadagi qator bilan solishtiring."
+  - key: kamron
+    name: "Kamron Usmonov"
+    role: "Chilonzor filiali boshqaruvchisi"
+    tone: "energiyali, reja va mijoz munosabatini birinchi qo'yadi; 'bu mijozni raqobatchiga bermaymiz' deydi"
+    knows: [doc_team_charter, doc_application, doc_contract_pack]
+    secrets:
+      - "Filialning yillik kredit rejasi 68% bajarilgan — Oltinsoy arizasi rejani 85% ga chiqarardi."
+    busy_reply: "Mijozlar bilan uchrashuvdaman, keyinroq yozaman."
+    deflect_reply: "Men natijani kutaman, tafsilotni jamoa bilan hal qiling."
+  - key: farrux
+    name: "Farrux Nematov"
+    role: "Mijoz, «Oltinsoy Agro Eksport» MChJ direktori"
+    tone: "xushmuomala, lekin qat'iy shoshiltiradi; 'raqobatchi bank kutib turibdi' deydi, noqulay savoldan qochadi"
+    knows: [doc_application, doc_contract_pack]
+    secrets:
+      - "Xaridor bilan oldin faqat og'zaki kelishuv bo'lgan; kontrakt sanasi 'eski kelishuvga mos' qo'yilgan — faqat aniq so'ralsa aytadi."
+    busy_reply: "Omborda yuk ortyapmiz, keyinroq qo'ng'iroq qilaman."
+    deflect_reply: "Men bankir emasman, hujjatlar hammasi joyida. Menga bugun javob kerak."
+
+documents:
+  - key: doc_team_charter
+    title: "Ariza jamoasi: kim nima qiladi (Oltinsoy Agro Eksport)"
+    content: |
+      Bugun yirik ariza: «Oltinsoy Agro Eksport» MChJ, eksportni oldindan moliyalash, 2 400 mln so'm.
+      Jamoa: kredit tahlilchisi (raqamlar va siyosat), Compliance analitik (KYC, AML, hisob harakati),
+      filial mijozlar menejeri (hujjatlar, mijoz bilan aloqa). Bo'lim boshlig'i — Gulnora Azimova,
+      Compliance boshlig'i — Jasur Ergashev, filial boshqaruvchisi — Kamron Usmonov.
+
+      Kelishuvlar:
+      - Ertalabki standup jamoaga bitta: kim nima qiladi, kim kimdan nima kutadi, nima to'sib turibdi.
+      - Raqamlar faqat tahlilchidan: mijozga yoki rahbarga raqam yozishdan oldin tahlilchi bilan tekshiriladi.
+      - Shubha belgilari faqat Compliance kanalida. Mijozga tekshiruv haqida HECH KIM aytmaydi (tipping-off taqiqlangan).
+      - Mijozga ketadigan har qanday matnni menejer yozadi, Compliance matnni "ogohlantirib qo'ymaydimi" deb ko'rib chiqadi.
+      - Kredit bo'yicha qaror — kredit qo'mitasida. Hech kim "dastlabki tasdiq" bermaydi.
+      - Kun oxirida jamoa bitta umumiy hisobot yozadi.
+
+  - key: doc_export_policy
+    title: "Eksportni oldindan moliyalash: kredit siyosati (ichki, o'quv versiyasi)"
+    content: |
+      1. Kredit summasi ≤ eksport kontrakti qiymatining 70% i. Muddat 12 oygacha. Stavka yillik 22%,
+         foiz har oy, asosiy qarz eksport tushumi kelganda (bir yo'la).
+      2. Foiz qoplash (ICR) = oylik EBITDA / oylik foiz ≥ 1.5. Oylik foiz = S × 22% / 12.
+         EBITDA tozalangan tushumdan hisoblanadi (rentabellik — oxirgi audit hisobotidan).
+      3. Tozalangan tushum: bank hisobidagi kirimlardan bog'liq yoki aylanib qaytadigan (shu kuni yoki ertasiga
+         bog'liq tomonga qaytgan) tushumlar chiqariladi. Ariza tushumi bilan farq > 10% bo'lsa — tozalangan raqam ishlatiladi.
+      4. Ta'minot: tan olinadigan qiymat = bozor bahosi × diskont (ko'chmas mulk 0.7, tovar zaxirasi 0.5);
+         tan olinadigan qiymat / kredit ≥ 1.0. Boshqa bankda garovdagi mulk hisobga olinmaydi.
+      5. Xaridor: kamida 1 yil faoliyat yoki to'lov akkreditiv/eksport sug'urtasi bilan kafolatlangan.
+      6. Bitta kontrakt faqat bitta bankda moliyalanadi (ikki marta moliyalash — rad etish asosi).
+
+  - key: doc_application
+    title: "Kredit arizasi: «Oltinsoy Agro Eksport» MChJ"
+    content: |
+      Faoliyat: quritilgan meva (mayiz, o'rik) qayta ishlash va eksport, 5 yil, 42 xodim. Chilonzor filiali mijozi.
+      So'ralgan kredit: 2 400 000 000 so'm, 12 oy. Maqsad: kontrakt bo'yicha xomashyo xaridi.
+      Eksport kontrakti: № BO-26/04, xaridor «Baltic Orchard OÜ» (Estoniya), 240 000 USD
+      (bank kursi 12 500 so'm — 3 000 mln so'm ekvivalenti). Arizada: "xaridor bilan 3 yillik hamkorlik".
+      Tushum (2025, audit): 7 200 mln so'm, EBITDA rentabelligi 14%.
+      Taklif qilingan garov: muzlatgichli ombor (Toshkent viloyati), quritilgan meva zaxirasi.
+      Mijozning izohi: "Raqobatchi bank 2 kunda beradi, bugun javob kutaman."
+
+  - key: doc_collateral
+    title: "Garov ma'lumoti: «Oltinsoy Agro Eksport»"
+    content: |
+      garov | bozor bahosi, mln | turi | izoh
+      Muzlatgichli ombor | 2 600 | ko'chmas mulk | baholash 02.09.2026; taqiq reestri ko'chirmasi so'ralgan, hali kelmagan
+      Quritilgan meva zaxirasi (omborda) | 900 | tovar zaxirasi | mijoz deklaratsiyasi, inventarizatsiya 30.09.2026
+
+  - key: doc_statement
+    title: "«Oltinsoy Agro Eksport»: Oqsaroy Bank hisob ko'chirmasi (aprel–sentyabr 2026), tanlangan qatorlar"
+    content: |
+      6 oy jami kirim: 4 860 mln so'm. Jami chiqim: 4 710 mln so'm.
+      Tanlangan operatsiyalar (mln so'm):
+      sana | turi | summa | kontragent | to'lov maqsadi
+      03.07 | kirim | 300 | «Sarvqad Savdo» MChJ | mayiz uchun avans
+      03.07 | chiqim | 290 | «Yangi Bo'ston Invest» MChJ | qarzni qaytarish
+      17.07 | kirim | 300 | «Sarvqad Savdo» MChJ | mayiz uchun avans
+      18.07 | chiqim | 295 | «Yangi Bo'ston Invest» MChJ | qarzni qaytarish
+      04.08 | kirim | 300 | «Sarvqad Savdo» MChJ | mayiz uchun avans
+      04.08 | chiqim | 290 | «Yangi Bo'ston Invest» MChJ | qarzni qaytarish
+      21.08 | kirim | 300 | «Sarvqad Savdo» MChJ | mayiz uchun avans
+      21.08 | chiqim | 300 | «Yangi Bo'ston Invest» MChJ | qarzni qaytarish
+      08.09 | kirim | 300 | «Sarvqad Savdo» MChJ | mayiz uchun avans
+      09.09 | chiqim | 285 | «Yangi Bo'ston Invest» MChJ | qarzni qaytarish
+      22.09 | kirim | 300 | «Sarvqad Savdo» MChJ | mayiz uchun avans
+      22.09 | chiqim | 290 | «Yangi Bo'ston Invest» MChJ | qarzni qaytarish
+      Naqd yechish (kassa): 12.09 — 98; 15.09 — 97.5; 16.09 — 99; 19.09 — 96; 23.09 — 98.5; 25.09 — 99.
+      «Sarvqad Savdo»ga mahsulot yetkazilgani haqida yuk xati yoki hisob-faktura bankka berilmagan.
+
+  - key: doc_kyc
+    title: "KYC: «Oltinsoy Agro Eksport» va kontragentlar"
+    content: |
+      A) «Oltinsoy Agro Eksport» MChJ. Quritilgan meva eksporti, 2021-yildan
+        Ta'sischilar: Farrux Nematov (51%), Laylo Nematova (49%, Farruxning turmush o'rtog'i)
+        Direktor: Farrux Nematov
+      B) «Yangi Bo'ston Invest» MChJ. Investitsiya va maslahat, 2025-yildan
+        Ta'sischi va direktor: Bobur Qosimov (Laylo Nematovaning akasi)
+        Oltinsoy'ga qarz bergani haqida shartnoma bankka berilmagan
+      C) «Sarvqad Savdo» MChJ. Ulgurji savdo, 2025-yildan
+        Ta'sischi: «Yangi Bo'ston Invest» MChJ (100%)
+        Direktor: Bobur Qosimov
+      D) «Baltic Orchard OÜ». Xaridor, Estoniya
+        Ro'yxatdan o'tgan: 11.05.2026. Ustav kapitali: 2 500 EUR
+        Veb-sayt va moliyaviy hisobot: yo'q. Direktor: Marten Ilves
+        Sanksiya ro'yxatlari: mos kelish yo'q
+
+  - key: doc_aml_policy
+    title: "AML: shubhali operatsiyalar tartibi (ichki, o'quv versiyasi)"
+    content: |
+      Ichki chegara: bitta naqd operatsiya 100 mln so'm va undan ko'p bo'lsa avtomatik nazoratga tushadi.
+      Shubha belgilari:
+      - naqd pulni chegaradan sal kam qismlarga bo'lib yechish yoki kiritish (strukturalash);
+      - bog'liq kompaniyalar orqali pulning aylanib qaytishi (aylanmani sun'iy oshirish);
+      - real mahsulot harakatini tasdiqlovchi hujjatsiz "avans" va "qarz" o'tkazmalari;
+      - yangi, faoliyati tasdiqlanmagan xorijiy kontragent;
+      - hujjatlardagi ziddiyatlar (sanalar, miqdor, narx).
+      Tartib:
+      1. Belgilar bo'lsa — shu ish kuni ichida Compliance'ga ichki shubhali operatsiya xabarnomasi (ISOX):
+         mijoz, davr, operatsiyalar, qaysi belgilar, nega shubhali. Fakt va taxmin ("ehtimol") ajratiladi.
+      2. Mijozga tekshiruv haqida aytish TAQIQLANADI (tipping-off). Mijozga faqat standart jarayon tili.
+      3. Operatsiyani 2 ish kunigacha to'xtatib turish haqida Compliance boshlig'i qaror qiladi, xodim emas.
+      4. Kuchaytirilgan tekshiruv (EDD): benefitsiar egalar, kontragent shartnomalari, pul manbai.
+
+  - key: doc_contract_pack
+    title: "Mijoz hujjatlari: kontrakt, proforma-invoys va yetkazish rejasi"
+    content: |
+      A) Eksport kontrakti № BO-26/04. Imzolangan sana: 20.04.2026
+        Sotuvchi: «Oltinsoy Agro Eksport» MChJ. Xaridor: «Baltic Orchard OÜ», direktor Marten Ilves
+        Mahsulot: mayiz, 120 tonna × 2 000 USD = 240 000 USD
+        To'lov: yetkazilgandan keyin 90 kun ichida, 100%. Akkreditiv yoki sug'urta: yo'q
+        Yetkazish: 2026-noyabr — 2027-yanvar, uch partiya
+      B) Proforma-invoys № PI-0912. Sana: 12.09.2026
+        Mahsulot: mayiz, 150 tonna × 1 600 USD = 240 000 USD
+        Bank rekvizitlari: Latviyadagi bank, xaridor nomi bilan emas, «BO Trading Ltd» nomida
+      C) Yetkazish rejasi (mijoz tayyorlagan). Sana: 05.10.2026
+        Mahsulot: 120 tonna, 3 partiya, birinchisi 15.11.2026
+        Xomashyo xaridi: 2026-oktyabr, kredit pulidan
+
+  - key: doc_kumush_letter
+    title: "Shoshilinch: Kumush Vodiy Bank xati va filialdagi to'lov topshirig'i (15:05–15:20)"
+    content: |
+      15:05 Kumush Vodiy Bank'dan rasmiy so'rov (banklararo kanal):
+      "«Oltinsoy Agro Eksport» MChJga 19.08.2026 da № BO-26/04 eksport kontrakti bo'yicha 2 100 mln so'm kredit
+      berganmiz. Garov: muzlatgichli ombor (ipoteka 19.08.2026 da ro'yxatga olingan). Mijoz sizning bankingizga ham
+      shu kontrakt bo'yicha murojaat qilganmi? Bizda «Sarvqad Savdo» bo'yicha ham savollar bor."
+      15:10 Taqiq reestri ko'chirmasi keldi: ombor — 19.08.2026 dan Kumush Vodiy Bank foydasiga ipotekada.
+      15:15 Farrux Nematov Chilonzor filialida: 1 150 mln so'mni «Yangi Bo'ston Invest» MChJga "qarzni qaytarish"
+      maqsadida o'tkazish topshirig'ini berdi va "bugun 16:00 gacha o'tishi shart" deyapti.
+      Hisob qoldig'i: 1 180 mln so'm.
+
+nodes:
+  - id: welcome
+    type: message
+    day: 1
+    at: "09:00"
+    from: gulnora
+    brief: |
+      Xayrli tong, jamoa! Bugun yirik ariza — «Oltinsoy Agro Eksport», 2.4 mlrd so'm. Bitta ariza, uch nigoh:
+      raqamlar, pul yo'li va hujjatlar. Jamoa hujjatini o'qing va standup'da kim nima qilishini kelishib oling.
+
+  - id: standup
+    type: task
+    day: 1
+    at: "09:00"
+    from: gulnora
+    brief: |
+      Jamoa standup'i — bitta umumiy javob. Har rol bugun nima qiladi, kim kimdan nima kutadi va nima to'sib
+      turishi mumkin. Jamoa chatida kelishib, bittangiz yozing.
+    attachments: [doc_team_charter]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 0.5
+    competencies: [communication, prioritization]
+    rubric:
+      - {id: roles, description: "Har rolning bugungi ishi aniq (tahlilchi — siyosat raqamlari, Compliance — KYC va ko'chirma, menejer — hujjatlar va mijoz)", weight: 2}
+      - {id: dependencies, description: "Bog'liqliklar: mijozga xat Compliance ko'rigidan keyin, raqamlar tahlilchidan, tozalangan tushum uchun Compliance topgan aylanma kerak", weight: 2}
+      - {id: blockers, description: "To'siq yoki ochiq savol aytilgan (taqiq reestri, xaridor ma'lumoti)"}
+    hints:
+      - "Jamoa hujjatidagi kelishuvlarni qayta o'qing: raqamlar, shubha belgilari va mijoz matni kimdan keladi?"
+    reference_answer: |
+      Tahlilchi: kontrakt ulushi, tozalangan tushum, ICR, ta'minot — 11:30 gacha. Compliance: UBO va kontragentlar, ko'chirmadagi
+      shubha belgilari, kerak bo'lsa ISOX — 11:30 gacha. Menejer: kontrakt va invoysni solishtirish, mijoz bilan uchrashuv savollari.
+      Bog'liqlik: tahlilchi tozalangan tushum uchun Compliance'dan aylanib qaytgan summani oladi; mijozga xatni menejer yozadi,
+      Compliance tipping-off yo'qligini tekshiradi. To'siq: taqiq reestri ko'chirmasi hali kelmagan.
+
+  - id: mentor_intro
+    type: message
+    day: 1
+    at: "09:15"
+    from: feruza
+    brief: |
+      Salom, jamoa! Men Feruza, bugun mentoringizman. Firibgarlik signali odatda bitta hujjatda emas —
+      uchta hujjatning tutashgan joyida ko'rinadi. Shuning uchun topganingizni jamoa chatiga darhol yozing.
+      Qiyin bo'lsa "hint" so'rang — har hint task balini biroz kamaytiradi.
+
+  - id: credit_numbers
+    type: task
+    role: analyst
+    day: 1
+    at: "09:30"
+    from: gulnora
+    brief: |
+      Arizani siyosat bo'yicha hisoblang: 1) kredit / kontrakt ulushi va maksimal summa; 2) tozalangan tushum
+      (6 oylik ko'chirmadan, yillikka) va ariza bilan farq; 3) oylik EBITDA va ICR — so'ralgan va maksimal summa uchun;
+      4) ta'minot koeffitsienti; 5) xaridor talabi. Xulosa: qanday summada va qanday shartlar bilan ko'rib chiqish
+      mumkin, nima hal bo'lmaguncha qaror yo'q. Aylanib qaytgan tushumni Compliance jamoadoshingiz bilan tekshiring.
+    attachments: [doc_export_policy, doc_application, doc_collateral, doc_statement]
+    answer_types: [text, file]
+    due_in_minutes: 120
+    weight: 2
+    competencies: [technical]
+    rubric:
+      - {id: contract_share, description: "Kontrakt 240 000 × 12 500 = 3 000 mln; 2 400 / 3 000 = 80% > 70% — maksimal 2 100 mln", weight: 2}
+      - {id: clean_revenue, description: "Tozalangan tushum: 4 860 − 1 800 (Sarvqad, shu kuni YBI'ga qaytgan) = 3 060 mln / 6 oy → ≈ 6 120 mln/yil; ariza 7 200 dan 15% past (> 10%)", weight: 2}
+      - {id: icr, description: "Oylik EBITDA 6 120 × 14% / 12 ≈ 71.4 mln; foiz 2 400 → 44.0, ICR ≈ 1.62; 2 100 → 38.5, ICR ≈ 1.85 — bajariladi", weight: 1.5}
+      - {id: collateral, description: "Ta'minot: 2 600 × 0.7 + 900 × 0.5 = 2 270; 2 400 uchun 0.95 < 1.0, 2 100 uchun 1.08 — reestr ko'chirmasi kelguncha shartli", weight: 1.5}
+      - {id: buyer_conclusion, description: "Xaridor 5 oylik, akkreditiv/sug'urta yo'q — 5-band bajarilmaydi; xulosa: Compliance tekshiruvi va kafolat bo'lmaguncha qaror yo'q, eng yaxshi holatda 2 100 mln", weight: 2}
+    hints:
+      - "Avval kontraktni so'mga o'giring va 70% chegarani hisoblang."
+      - "Ko'chirmada bir xil kontragentdan kelib, shu kuni bog'liq firmaga ketgan summalarni toping — siyosatning 3-bandi ular haqida nima deydi?"
+      - "Ta'minotni ikki summa uchun hisoblang. Qaysi hujjat hali kelmagan va u natijani o'zgartirishi mumkinmi?"
+    reference_answer: |
+      Kontrakt: 240 000 × 12 500 = 3 000 mln. 2 400 / 3 000 = 80% > 70% — maksimal 2 100 mln.
+      Tozalangan tushum: 6 oy kirim 4 860, shundan «Sarvqad Savdo» 1 800 (6 × 300) shu kuni yoki ertasiga «Yangi Bo'ston Invest»ga
+      qaytgan (1 750) — chiqariladi: 3 060 mln / 6 oy → 6 120 mln/yil; ariza 7 200 dan 15% past — tozalangan raqam ishlatiladi.
+      Oylik EBITDA: 6 120 × 14% / 12 ≈ 71.4 mln. Foiz: 2 400 × 22% / 12 = 44.0 → ICR ≈ 1.62; 2 100 → 38.5 → ICR ≈ 1.85. Bajariladi.
+      Ta'minot: ombor 2 600 × 0.7 = 1 820 + zaxira 900 × 0.5 = 450 = 2 270; 2 400 uchun 0.95 < 1.0, 2 100 uchun 1.08. Taqiq reestri kelmagan.
+      Xaridor: 11.05.2026 da ro'yxatdan o'tgan (5 oy), akkreditiv/sug'urta yo'q — 5-band bajarilmaydi.
+      Xulosa: so'ralgan shartlarda — yo'q. Eng ko'pi 2 100 mln, shartlar: akkreditiv yoki eksport sug'urtasi, toza reestr, Compliance EDD
+      natijasi ijobiy. Compliance tekshiruvi tugaguncha qo'mitaga chiqarilmaydi.
+
+  - id: aml_review
+    type: task
+    role: compliance
+    day: 1
+    at: "09:30"
+    from: jasur
+    brief: |
+      Oltinsoy bo'yicha KYC va hisob harakatini tekshiring: 1) benefitsiar egalar va kontragentlar o'rtasidagi bog'liqlik
+      (sxema bilan); 2) ko'chirmadagi shubha belgilari — raqam va sana bilan; 3) xavf darajasi; 4) agar belgilar bo'lsa —
+      ISOX matni va EDD uchun so'raladigan hujjatlar ro'yxati. Aylanib qaytgan summani tahlilchi jamoadoshingizga ham bering.
+    attachments: [doc_aml_policy, doc_kyc, doc_statement]
+    answer_types: [text]
+    due_in_minutes: 120
+    weight: 2
+    competencies: [technical, communication]
+    rubric:
+      - {id: scheme, description: "Bog'liqlik: Oltinsoy (Farrux 51%, Laylo 49%) → YBI (Bobur Qosimov — Laylo'ning akasi) → Sarvqad (YBI 100%, direktor Bobur) → Oltinsoy — yopiq doira", weight: 2}
+      - {id: circular, description: "Aylanma: Sarvqad'dan 6 × 300 = 1 800 kirim, shu kuni/ertasiga YBI'ga 1 750 chiqim; mahsulot hujjati yo'q — aylanmani sun'iy oshirish ehtimoli", weight: 2}
+      - {id: structuring, description: "Naqd: 6 marta 96–99 mln (100 mln chegarasidan sal kam), 12–25.09, jami 588 mln — strukturalash belgisi", weight: 1.5}
+      - {id: buyer, description: "Xaridor 11.05.2026 da ro'yxatdan o'tgan, 2 500 EUR kapital, sayt va hisobot yo'q — faoliyati tasdiqlanmagan"}
+      - {id: isox_edd, description: "ISOX shu kunning o'zida, fakt va 'ehtimol' ajratilgan, xavf — yuqori; EDD ro'yxati (YBI qarz shartnomasi, Sarvqad yuk hujjatlari, naqd pul maqsadi, xaridor ma'lumotlari); mijozga aytilmaydi", weight: 1.5}
+    hints:
+      - "KYC kartochkalaridagi ta'sischi va direktor ismlarini chizib chiqing — kim kimga tegishli?"
+      - "Ko'chirmada bir xil sanadagi kirim va chiqimlarni juftlang. Naqd yechishlarni chegara bilan solishtiring."
+    reference_answer: |
+      Sxema: Oltinsoy (Farrux 51%, Laylo 49%) → «Yangi Bo'ston Invest» (Bobur Qosimov, Laylo'ning akasi) → «Sarvqad Savdo» (YBI 100%,
+      direktor Bobur) → Oltinsoy. Bog'liq tomonlar doirasi yopiq.
+      Belgilar: 1) 03.07–22.09 Sarvqad'dan 6 × 300 = 1 800 mln "avans", shu kuni yoki ertasiga YBI'ga 1 750 mln "qarz qaytarish";
+      yuk hujjati yo'q — aylanmani sun'iy oshirish ehtimoli (ariza tushumi shu hisobiga katta ko'rinadi).
+      2) 12–25.09 olti marta naqd 96–99 mln, jami 588 mln — 100 mln chegarasidan sal kam, strukturalash ehtimoli.
+      3) Xaridor «Baltic Orchard OÜ» 11.05.2026 da ochilgan, 2 500 EUR, sayt va hisobot yo'q.
+      Xavf: yuqori. ISOX bugun Jasur Ergashevga. EDD: YBI bilan qarz shartnomasi, Sarvqad'ga yetkazish hujjatlari, naqd pul maqsadi,
+      xaridor reyestr ko'chirmasi va bank ma'lumotnomasi. Mijozga tekshiruv haqida aytilmaydi; kredit jarayoni EDD tugaguncha to'xtatiladi.
+      Tahlilchiga: aylanib qaytgan 1 800 mln.
+
+  - id: contract_check
+    type: task
+    role: manager
+    day: 1
+    at: "09:30"
+    from: kamron
+    brief: |
+      Farrux aka bugun javob kutyapti. Uning hujjatlarini solishtiring: 1) kontrakt, proforma-invoys, yetkazish rejasi va
+      ariza o'rtasidagi barcha ziddiyatlar (raqam va sana bilan); 2) mijoz bilan uchrashuv uchun 6–8 ta savol;
+      3) mijozga bugun nima deyish mumkin va nima deyish mumkin emas.
+    attachments: [doc_contract_pack, doc_application, doc_team_charter]
+    answer_types: [text]
+    due_in_minutes: 120
+    weight: 1.5
+    competencies: [communication, technical]
+    rubric:
+      - {id: dates, description: "Kontrakt 20.04.2026 da imzolangan, xaridor esa 11.05.2026 da ro'yxatdan o'tgan; arizadagi '3 yillik hamkorlik' bilan zid", weight: 2}
+      - {id: quantity_price, description: "Kontrakt 120 t × 2 000 = 240 000, invoys 150 t × 1 600 = 240 000 — jami bir xil, miqdor va narx boshqa; yetkazish rejasi 120 t", weight: 1.5}
+      - {id: payment_terms, description: "To'lov 90 kunlik keyin, akkreditiv/sug'urta yo'q; invoysda rekvizit boshqa nomda («BO Trading Ltd», Latviya)", weight: 1.5}
+      - {id: no_tipoff, description: "Mijozga faqat jarayon: hujjatlar ko'rib chiqilmoqda, qo'shimcha hujjatlar ro'yxati; shubha, Compliance va qaror haqida gap yo'q, va'da yo'q", weight: 2}
+    hints:
+      - "Har hujjatdan to'rtta ma'lumotni jadvalga yozing: sana, miqdor, narx, to'lovchi/rekvizit."
+      - "Xaridorning ro'yxatdan o'tgan sanasi kimning hujjatida? Jamoadosh Compliance bilan tekshiring."
+    reference_answer: |
+      Ziddiyatlar: 1) kontrakt 20.04.2026, xaridor 11.05.2026 da ro'yxatdan o'tgan — kontrakt kompaniyadan oldin imzolangan;
+      arizadagi "3 yillik hamkorlik" ham mos emas. 2) Kontrakt 120 t × 2 000 USD, invoys 150 t × 1 600 USD (jami 240 000 bir xil, miqdor va narx
+      boshqa); yetkazish rejasi 120 t. 3) Invoysda rekvizit xaridor emas, «BO Trading Ltd» (Latviya). 4) To'lov 90 kun keyin, akkreditiv yo'q.
+      Savollar: kontrakt qachon va kim bilan kelishilgan; nega invoysda miqdor/narx boshqa; BO Trading Ltd kim; xaridor bilan oldingi
+      yetkazishlar hujjati; akkreditiv yoki sug'urta mumkinmi; xomashyo kimdan, qanday narxda; Sarvqad Savdo bilan nima savdo qilingan.
+      Mijozga: "Arizangiz ko'rib chiqilmoqda, quyidagi hujjatlar kerak; qaror kredit qo'mitasida". Aytilmaydi: shubha, Compliance, tasdiq yoki muddat va'dasi.
+
+  - id: client_push
+    type: message
+    day: 1
+    at: "10:30"
+    from: farrux
+    brief: |
+      Assalomu alaykum! Hujjatlarning hammasi sizda. Raqobatchi bank 2 kunda beraman deyapti, lekin men Oqsaroy bilan
+      ishlashni xohlayman. Bugun kamida "ijobiy" degan javob bering — xomashyo sotuvchisi avans kutyapti.
+
+  - id: comfort_letter
+    type: decision
+    day: 1
+    at: "11:30"
+    from: kamron
+    brief: |
+      Jamoa, Farrux aka filialning eng katta mijozi bo'lishi mumkin — bizga reja uchun juda muhim. Bugun unga
+      "kredit ijobiy ko'rib chiqilmoqda, dastlabki tasdiq" degan xat beraylik, xomashyo sotuvchisiga ko'rsatadi.
+      Rasmiy qaror keyin bo'ladi, bu shunchaki xat. Jamoa bo'lib qaror qiling.
+    competencies: [prioritization, communication]
+    options:
+      - key: no_letter_process
+        label: "Xat bermaymiz: Compliance tekshiruvi tugaguncha jarayon to'xtaydi. Mijozga menejer orqali faqat standart javob va hujjatlar ro'yxati (shubhasiz), Gulnora opa va Jasurga yozamiz"
+        grade: correct
+      - key: escalate_gulnora
+        label: "O'zimiz hal qilmaymiz — savolni Gulnora opaga uzatamiz"
+        grade: acceptable
+      - key: issue_letter
+        label: "Xat beramiz — bu rasmiy qaror emas, mijozni yo'qotmaylik"
+        grade: wrong
+        flag: comfort_letter
+
+  - id: lead_on_letter
+    type: message
+    day: 1
+    at: "12:00"
+    when: {flag: comfort_letter}
+    from: gulnora
+    brief: |
+      "Dastlabki tasdiq" xati — bu bank nomidan berilgan majburiyat; mijoz uni xomashyo sotuvchisiga ham, boshqa bankka ham
+      ko'rsatishi mumkin. Ochiq Compliance tekshiruvi bor paytda bunday xat — jiddiy xavf. Xatni qaytarib olamiz,
+      Kamron aka bilan o'zim gaplashaman. Qaror faqat qo'mitada.
+
+  - id: client_request_letter
+    type: task
+    role: manager
+    after: {node: aml_review, event: submitted, minutes: 30}
+    from: kamron
+    brief: |
+      Compliance jamoadoshingiz tekshiruvini topshirdi. Farrux akaga rasmiy xat yozing: qo'shimcha hujjatlar ro'yxati va
+      muddat. Xat mijozni ogohlantirib qo'ymasligi kerak — yuborishdan oldin Compliance jamoadoshingizga ko'rsating.
+    attachments: [doc_aml_policy, doc_contract_pack]
+    answer_types: [text]
+    due_in_minutes: 60
+    weight: 1
+    competencies: [communication]
+    rubric:
+      - {id: complete_list, description: "Ro'yxat EDD bilan mos: xaridor reyestr ko'chirmasi va bank ma'lumotnomasi, invoys/kontrakt farqi izohi, akkreditiv yoki sug'urta, YBI bilan qarz shartnomasi, Sarvqad'ga yetkazish hujjatlari", weight: 2}
+      - {id: no_tipoff, description: "Shubha, Compliance, ISOX yoki 'tekshiruv' haqida so'z yo'q — standart kredit jarayoni tili", weight: 2}
+      - {id: tone, description: "Muloyim, aniq muddat bilan, qaror yoki muddat va'dasi yo'q"}
+    hints:
+      - "Har hujjat so'rovini oddiy kredit jarayoni talabi sifatida yozing. Qaysi so'z mijozga 'sizni tekshiryapmiz' deb eshitiladi?"
+    reference_answer: |
+      Hurmatli Farrux aka, arizangizni ko'rib chiqishni davom ettirish uchun quyidagi hujjatlar kerak:
+      1) «Baltic Orchard OÜ» davlat reyestri ko'chirmasi va xaridor bankining ma'lumotnomasi; 2) kontrakt (120 t × 2 000 USD) va
+      proforma-invoys (150 t × 1 600 USD) o'rtasidagi farq bo'yicha izoh va to'lov rekvizitlari; 3) to'lov akkreditivi yoki eksport sug'urtasi
+      imkoniyati; 4) «Yangi Bo'ston Invest» bilan qarz shartnomasi; 5) «Sarvqad Savdo»ga yetkazishlar bo'yicha yuk xatlari va hisob-fakturalar.
+      Iltimos, 3 ish kuni ichida yuboring. Hujjatlar to'liq bo'lgach ariza kredit qo'mitasida ko'rib chiqiladi.
+
+  - id: mentor_afternoon
+    type: message
+    day: 1
+    at: "14:00"
+    from: feruza
+    brief: |
+      Tushdan keyin bir eslatma: kim nimani topganini jamoa chatida yig'ib qo'ying — tahlilchining raqamlari, Compliance'ning
+      sxemasi, menejerning ziddiyatlari bitta rasm bo'lishi kerak. Voqea bo'lsa: raqam — tahlilchidan, qaror — Compliance boshlig'idan,
+      mijozga gap — menejerdan.
+
+  - id: incident_exposure
+    type: incident
+    role: analyst
+    day: 1
+    at: "15:30"
+    from: gulnora
+    brief: |
+      SHOSHILINCH: Kumush Vodiy Bank xati va taqiq reestri keldi. 30 daqiqada qayta baholang: 1) kontrakt necha marta
+      moliyalanmoqda (foizda); 2) ta'minot endi qancha; 3) arizaga xulosa va qaror uchun raqamlar jamoaga.
+    attachments: [doc_kumush_letter, doc_export_policy, doc_collateral]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 1.5
+    competencies: [technical, stress_handling]
+    rubric:
+      - {id: double_financing, description: "Ikki marta moliyalash: Kumush 2 100 + so'ralgan 2 400 = 4 500 / 3 000 = 150% (yoki 2 100 bilan 140%) — 6-band, rad etish asosi", weight: 2}
+      - {id: collateral, description: "Ombor Kumush'da ipotekada — hisobga olinmaydi: faqat zaxira 450; 2 100 uchun 0.21, 2 400 uchun ≈ 0.19", weight: 2}
+      - {id: conclusion, description: "Xulosa: arizani rad etish tavsiyasi, raqamlar jamoaga va Gulnora'ga; arizada Kumush krediti yashirilgan"}
+    hints:
+      - "Bitta kontrakt bo'yicha ikkala bankning summasini qo'shing va kontrakt qiymatiga bo'ling."
+      - "Siyosatning 4-bandi boshqa bankda garovdagi mulk haqida nima deydi?"
+    reference_answer: |
+      Kontrakt BO-26/04 (3 000 mln) Kumush Vodiy'da 19.08 da 2 100 mln moliyalangan; biz bilan birga 4 500 mln — kontraktning 150% i (2 100 bilan ham 140%).
+      6-band — rad etish asosi. Ombor 19.08 dan Kumush'da ipotekada — hisobga olinmaydi; qoladi zaxira 900 × 0.5 = 450: 2 100 uchun 0.21, 2 400 uchun 0.19.
+      Xulosa: arizani rad etish tavsiyasi; Kumush krediti arizada ko'rsatilmagan. Raqamlar jamoa chatiga va Gulnora opaga — Compliance ISOX'iga qo'shish uchun.
+
+  - id: incident_isox
+    type: incident
+    role: compliance
+    day: 1
+    at: "15:30"
+    from: jasur
+    brief: |
+      SHOSHILINCH: Farrux Nematov filialda 1 150 mln so'mni «Yangi Bo'ston Invest»ga o'tkazishni talab qilyapti, Kumush Vodiy
+      Bank esa xuddi shu kontrakt bo'yicha savol yubordi. 30 daqiqada: 1) ISOX'ga qo'shimcha (yangi faktlar); 2) menga
+      operatsiya bo'yicha tavsiya — siyosat bo'yicha kim nima qiladi; 3) Kumush Vodiy so'roviga qanday javob berish tartibi.
+    attachments: [doc_kumush_letter, doc_aml_policy, doc_kyc]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 1.5
+    competencies: [technical, stress_handling, communication]
+    rubric:
+      - {id: facts, description: "Yangi faktlar raqam bilan: bitta kontrakt ikki bankda (2 100 + 2 400 so'ralgan), ombor ipotekada, 1 180 qoldiqdan 1 150 (≈ 97%) bog'liq YBI'ga", weight: 2}
+      - {id: hold_procedure, description: "Tavsiya: operatsiyani 2 ish kunigacha to'xtatib turish — qaror Compliance boshlig'ida; xodim o'zi rad etmaydi va mijozga sababini aytmaydi", weight: 2}
+      - {id: interbank, description: "Kumush Vodiy'ga javob faqat rasmiy kanal orqali, Compliance boshlig'i ruxsati bilan; menejer va tahlilchi o'zi javob bermaydi"}
+    hints:
+      - "Siyosatning 3-bandi: operatsiyani to'xtatish kimning qarori?"
+      - "Pul qaysi kompaniyaga ketmoqda — ertalabki sxemangizdagi qaysi bo'g'in?"
+    reference_answer: |
+      ISOX qo'shimchasi (15:05–15:20): Kumush Vodiy Bank xuddi shu kontrakt BO-26/04 bo'yicha 19.08 da 2 100 mln bergan, ombor ularda ipotekada —
+      bizga bu yashirilgan; kontrakt jami 150% moliyalanmoqda. 15:15 da mijoz 1 180 qoldiqdan 1 150 mln (≈ 97%) bog'liq «Yangi Bo'ston Invest»ga
+      "qarz qaytarish" deb o'tkazmoqchi, shoshiltirmoqda. Belgilar: aylanma doira, ikki marta moliyalash ehtimoli, pulni tez chiqarish.
+      Tavsiya: operatsiyani 2 ish kunigacha to'xtatib turish (qaror — Jasur Ergashev), EDD; mijozga sabab aytilmaydi, filialga standart javob.
+      Kumush Vodiy: javob faqat banklararo rasmiy kanal orqali, Compliance boshlig'i ruxsati bilan.
+
+  - id: incident_client_desk
+    type: incident
+    role: manager
+    day: 1
+    at: "15:30"
+    from: kamron
+    brief: |
+      SHOSHILINCH: Farrux aka filialda, 1 150 mln o'tkazmani "hoziroq" qilishni talab qilyapti va ovozini ko'taryapti.
+      30 daqiqada yozing: 1) unga hozir aytadigan gaplaringiz (skript); 2) ichki qadamlar — kimga, nima, qachon;
+      3) nima qilish va nima deyish mumkin emas.
+    attachments: [doc_kumush_letter, doc_team_charter, doc_aml_policy]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 1.5
+    competencies: [communication, stress_handling]
+    rubric:
+      - {id: script, description: "Skript xotirjam va hurmatli: topshiriq qabul qilindi, katta summadagi operatsiyalar standart tartibda ko'rib chiqiladi, natija haqida xabar beriladi; muddat va'dasi yo'q", weight: 2}
+      - {id: no_tipoff, description: "Shubha, Compliance, Kumush Vodiy xati yoki 'to'xtatildi' haqida gap yo'q; operatsiyani o'zi bajarmaydi va o'zi rad etmaydi", weight: 2}
+      - {id: internal, description: "Ichki: darhol Jasur'ga (Compliance boshlig'i) va Gulnora'ga, topshiriq raqami va vaqt yozib qo'yiladi; zarur bo'lsa xavfsizlik xizmati"}
+    hints:
+      - "Mijoz eshitishi mumkin bo'lgan har jumlani AML tartibining 2-bandi bilan tekshiring."
+      - "Operatsiya bo'yicha qarorni kim qabul qiladi — menejermi?"
+    reference_answer: |
+      Skript: "Farrux aka, topshiriqingiz qabul qilindi. Bu summadagi operatsiyalar bankda standart tartibda ko'rib chiqiladi,
+      natija bo'yicha sizga o'zim qo'ng'iroq qilaman. Hozir aniq vaqt ayta olmayman, lekin kechiktirmaslikka harakat qilamiz."
+      Ichki: 15:20 da Jasur Ergashev va Gulnora opaga — topshiriq raqami, summa 1 150 mln, oluvchi YBI, mijozning so'zlari;
+      qaror Compliance boshlig'ida. Mijoz tajovuzkor bo'lsa — filial xavfsizligi.
+      Mumkin emas: operatsiyani o'zim o'tkazish yoki o'zim rad etish; "tekshiruv", "shubha", "Kumush Vodiy" so'zlari; "bugun o'tadi" va'dasi.
+
+  - id: incident_thanks
+    type: message
+    after: {node: incident_isox, event: submitted, minutes: 20}
+    from: jasur
+    brief: "Rahmat, jamoa. Operatsiya 2 ish kuniga to'xtatildi, ISOX yangilandi. Mijoz bilan muloqot faqat menejer orqali, belgilangan skript bilan."
+
+  - id: day1_end
+    type: day_end
+    day: 1
+    at: "17:30"
+    brief: |
+      Kun yakuni — jamoaning bitta umumiy hisoboti Gulnora va Jasurga: har rol nima topdi (raqamlar bilan), bosimga
+      qanday qaror qilindi, ariza va operatsiya holati, ertangi qadamlar. Jamoa bo'lib nimani yaxshiroq qilish mumkin edi — bitta xulosa.
+    competencies: [communication]
+    rubric:
+      - {id: by_role, description: "Har rolning natijasi aniq: 80% > 70%, tozalangan tushum, aylanma 1 800, strukturalash 588, hujjat ziddiyatlari", weight: 1.5}
+      - {id: decision, description: "Dastlabki tasdiq xati bo'yicha qaror va sababi"}
+      - {id: incident, description: "Incident holati: ikki marta moliyalash 150%, operatsiya to'xtatildi, rad etish tavsiyasi"}
+      - {id: reflection, description: "Jamoaviy ish bo'yicha aniq xulosa (masalan, ombor reestrini ertalab birga kuzatish)"}

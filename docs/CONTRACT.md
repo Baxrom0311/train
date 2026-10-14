@@ -739,9 +739,23 @@ eslatmasi va ikkinchi task → 15:00/15:30 30 daqiqalik incident → 17:30 day_e
   jadvali bo'yicha CV saralash, kamsituvchi filtr va tanish nomzod bosimi,
   ta'til kunlari va ta'til puli hisobi, noto'g'ri adresatga ketgan taklif xati.
 
-Marketing/HR qoidalari ham o'quv maqsadidagi ichki siyosat, real qonunchilik
+**Katalog (v1.2):** har sohada uch format — 1 kunlik (yuqoridagi skelet), haftalik va jamoaviy (§29).
+Haftalik ssenariylar IT haftaligi skeletida: har kuni 09:00 `standup_d{N}` va 17:30 `day{N}_end`;
+2- yoki 3-kundagi **kalit task** 4-kunning bir vaqtdagi ikki o'zaro istisno incident'ini tanlaydi
+(`missed`/`score_lt 60` — og'irroq, `score_gte 60` — boshqa muammo); ikki decision'ning xato varianti
+flag qo'yadi va keyinroq rahbarning tanqidiy xabarini chaqiradi; kalit task topshirilgach mentor izohi;
+`after` node'lar haftalikda faqat `message`. Jamoaviylar `lazurit-go-express-team-day1` skeletida (§29.1).
+
+| Soha | Haftalik | Jamoaviy (rollar) |
+|---|---|---|
+| Banking | `oqsaroy-bank-credit-week1`: o'rta biznesga 1.8 mlrd investitsion kredit — hujjat to'liqligi va KYC, CFADS/DSCR va stress (kalit), garov va qo'mita memosi, monitoring, portfel hisoboti | `oqsaroy-bank-export-fraud-team-day1` (kredit tahlilchisi, KYC/AML, filial menejeri): eksport krediti va bitta kontraktni ikki bankda moliyalash |
+| Marketing | `oydinbarg-marketing-week1`: yangi krem ishga tushirilishi — auditoriya va o'lchash rejasi, media-budjet (kalit), blogger shartlari va da'volar, A/B test, natijalar hisoboti | `oydinbarg-sale-team-day1` (performance, kopirayter, analitik): bir kunlik aksiya, prognoz va zaxira, promo-kod xatosi |
+| Data | `sabzazor-data-week1`: sodiqlik kartasi ta'siri — metrika ta'riflari, kogorta SQL va review, retention funksiyasi (`code` + yashirin testlar, kalit), pilot/nazorat ta'siri, kengash xulosasi | `sabzazor-demand-team-day1` (data engineer `code` bilan, data analyst, BI): prognoz asosidagi buyurtma kuni, backfill dublikatlari |
+| HR | `qaldirgoch-qadoq-hr-week1`: yangi liniya uchun ommaviy yollash — kamsitmaydigan e'lon, voronka va byudjet (kalit), strukturalangan intervyu, takliflar, onboarding va metrikalar | `qaldirgoch-qadoq-night-shift-team-day1` (rekruter, C&B, onboarding): tungi smena ochilishi, ish haqi fondi, maxfiy jadval chatga tushishi |
+
+Bank/Marketing/HR qoidalari ham o'quv maqsadidagi ichki siyosat, real qonunchilik
 emas. Baholovchi soha bo'yicha tanlanadi (`app/ai/personas.for_sector`);
-noma'lum soha — IT. Hujjat va brief matnida ketma-ket `a | b | c` qatorlar
+noma'lum soha — IT. Hujjat va brief matnida ketma-ket `a | b | c` qatorlar (yoki ustunlar soni teng `a | b` qatorlar)
 jadval, ``` bloklari kod sifatida, chekinishli qatorlar alohida qator bo'lib ko'rsatiladi;
 `A) Sarlavha. Izoh` bilan boshlanib, qolgan qatorlari chekinishli abzas — kartochka
 (CV, profil: `YYYY-MM – YYYY-MM|hozir: ...` qatorlari vaqt chizig'i, `Kalit: qiymat` — maydon).
@@ -2438,6 +2452,9 @@ nodes:
   tomonlama, jonli tekshiruv shu qoidalar bilan.
 - Kontent: `lazurit-go-express-team-day1` — 3 rol (backend, data analitik,
   mijozlar bilan ishlash), `min_size: 2`; umumiy standup, qaror va kun yakuni.
+  Qolgan sohalarda ham bittadan (§9.11 jadvali), hammasi shu skeletda: 09:30 da har rolga task,
+  11:30 umumiy qaror, bir rol task'i boshqa rol topshirgan natijadan keyin keladi (`after`),
+  15:30 da bitta voqeaning uch tomoni — har rolga incident.
 
 ### 29.2 Jamoa yig'ish (lobby)
 
@@ -2567,7 +2584,7 @@ Modul 4/6/10/12 faqat `runs.team_id IS NULL` filtrini qo'shadi.
 
 - Katalogda `team`li ssenariy "Jamoaviy · 2–4 kishi" belgisi bilan;
   kartada "Jamoa tuzish" (va "Yakka boshlash"). "Jamoalarim" bo'limi —
-  yig'ilayotgan jamoalar.
+  yig'ilayotgan jamoalar. Soha filtri yonida format filtri: 1 kunlik / haftalik / jamoaviy.
 - `/teams/{id}` — lobby: taklif havolasi (nusxa olish), rollar kartalari
   (band qilish/bo'shatish, egasi), a'zolar, kapitanga "Boshlash" (hozir yoki
   vaqt), "Chiqarish", "Tarqatish"; a'zoga "Chiqish". Boshlangach — Run sahifasi.
