@@ -2763,6 +2763,7 @@ o'chirilmaydi va karantinga olinmaydi — yiqilgan test sabab topilib tuzatiladi
 | `backend-tests` | `backend/`dan `pytest -q` — butun to'plam, real PostgreSQL (`pgvector/pgvector:pg16`, §3.1) va Redis 7 servislari bilan |
 | `migrations` | Bo'sh bazaga `alembic upgrade head`; `alembic check` — modellar migratsiyalardan farq qilsa (yangi migratsiya yozilmagan) yiqiladi; `downgrade base` → `upgrade head` (har migratsiyaning `downgrade()` ishlaydi); `tools/import_scenario.py --publish` — deploy'dagi kontent yuklash qadami |
 | `frontend` | `npm ci`, `npm run lint` (ESLint, ogohlantirish ham xato), `npm run build` (`tsc -b` + Vite) |
+| `e2e` | Playwright (§34): soxta soat va soxta LLM bilan to'liq stek, asosiy oqimlar brauzerda; yiqilsa trace/video artefakt |
 | `docker` | `deploy/{backend,frontend,sandbox}.Dockerfile` image'lari yig'iladi (push yo'q) |
 
 Versiyalar deploy bilan bir xil: Python 3.13 (`backend.Dockerfile`),
@@ -2914,3 +2915,113 @@ fon vazifasi, cron'lar). Modul 7: `lib/monitoring.ts`,
 `components/layout/ErrorBoundary.tsx`, `components/admin/ErrorGroups.tsx`,
 `AdminPage` tab, `lib/api.ts` (5xx `request_id`). Modul 8:
 `.env.example`, `docker-compose.yml` (`LOG_FORMAT=json`), `deploy/README.md`.
+
+## 34. E2E testlar — Playwright (Modul 7 + 8 + 2)
+
+Asosiy foydalanuvchi oqimlari haqiqiy brauzerda, haqiqiy backend (Postgres,
+Redis, arq worker, SSE) va frontend'ning production build'i bilan har PR'da
+tekshiriladi. Qo'lda skrinshot bilan tekshirish o'rnini bosmaydi, lekin
+regressiyani birlashtirishdan oldin ushlaydi. §31.2 qoidalari amal qiladi:
+`retries: 0`, test o'tkazib yuborilmaydi, yiqilgan test sababi topiladi.
+
+### 34.1 Soxta soat
+
+Run'lar real vaqtda (§9.2): ish vaqtidan tashqari boshlangan Run `scheduled`
+bo'lib qoladi, shuning uchun CI qaysi soatda ishlashidan qat'i nazar natija
+bir xil bo'lishi uchun backend jarayonlari **libfaketime** (`apt install
+faketime`, `LD_PRELOAD`) bilan ishlaydi: "hozir" = haqiqiy vaqtdan keyingi
+birinchi ish kuni (dam olish va `holidays` rasmiy bayramlarisiz) 09:00
+Toshkent, so'ng odatdagidek oqadi. Siljish bir marta hisoblanadi va API,
+worker, migratsiya, seed — barchasiga bir xil beriladi.
+
+- Ilovaning hamma vaqti Python'dan (`datetime.now`; SQL `now()` yo'q), shuning
+  uchun Postgres soati soxtalashtirilmaydi. Monotonic soat haqiqiy qoladi
+  (`FAKETIME_DONT_FAKE_MONOTONIC=1`) — asyncio/uvloop taymerlari buzilmaydi.
+- Brauzer soati haqiqiy: Run ish stoli serverning `now`idan siljish oladi (§9.5).
+- Production kodida soat uchun hech qanday test rejimi yo'q.
+
+### 34.2 Stek va test ma'lumotlari (`tools/e2e/`)
+
+| Fayl | Vazifa |
+|---|---|
+| `env.sh` | Faqat e2e uchun muhit: alohida baza (`*_e2e`), Redis DB 5, soxta `SECRET_KEY`, AI faqat soxta LLM, `MAIL_BACKEND=console`, push/SMTP/sandbox o'chiq. `backend/.env` qiymatlarini bekor qiladi |
+| `stack.sh` | Soxta LLM → siljish → `seed.py reset` → `alembic upgrade head` → `import_scenario.py --publish` → `bootstrap_admin.py` → arq worker + uvicorn (`:8100`). Bitta jarayon to'xtasa — hammasi to'xtaydi |
+| `seed.py` | `offset`, `reset` (faqat nomi `_e2e` bilan tugaydigan baza va Redis DB ≠ 0), `company` (tasdiqlangan kompaniya + HR), `student [--completed slug]`, `errors` (ochiq §32 guruhlari) — natija stdout'da JSON |
+| `seed.sh` | Playwright fixture'lari uchun: `env.sh` + soxta soat bilan `seed.py` |
+| `fake_llm.py` | §34.3 |
+
+- Foydalanuvchilar ro'yxatdan o'tish va tasdiqlash **natijasi** holatida
+  yoziladi (email va tashkilot tasdiqlangan) — bu oqimlar backend testlarida.
+- `--completed` — tugallangan Run dvigatel funksiyalari bilan (`create_run`,
+  `advance_run`, `submit_answer`, `decide`) o'tgan ish kunidagi vaqtlarda,
+  ballar qo'yiladi, so'ng `write_final_report` — sertifikat va nomzod profili
+  (§10.1, §13) real yo'l bilan paydo bo'ladi. Yo'l `test_scenario_content.py`dagi
+  kuchli yo'l bilan bir xil (hozircha `lazurit-go-backend-day1`).
+- Har test o'z foydalanuvchilarini noyob email bilan oladi — testlar bir-biriga
+  va qayta ishga tushirishga bog'liq emas, parallel ishlaydi.
+
+### 34.3 Soxta LLM
+
+`OPENAI_BASE_URL` (**yangi** sozlama, default `https://api.openai.com/v1`;
+production'da OpenAI-mos gateway yoki lokal model uchun ham) e2e'da
+`tools/e2e/fake_llm.py`ga qaratiladi (`LLM_PROVIDERS=openai`). Faqat stdlib,
+tarmoqqa chiqmaydi, javoblar deterministik:
+
+- rubrika bo'yicha baholash (`ai/evaluator.py` prompt'idagi `RUBRIC` bo'limi
+  o'qiladi) — har mezonga 82 ball va bitta izoh;
+- boshqa JSON so'rovlar — `{}`: sxemaga mos emas, chaqiruvchi AI'siz zaxira
+  yo'liga o'tadi (§9.10) — bu yo'l ham har PR'da ishlaydi;
+- oddiy matn (personaj, mentor) — bitta javob.
+
+Javob matnlari `frontend/e2e/support/fakeLlm.ts`da takrorlanadi; evaluator
+prompt formati o'zgarsa, e2e baho kutib yiqiladi — prompt va soxta LLM birga
+yangilanadi. Eski `ai/router.py` (muzlatilgan `simulations`) qamrab olinmaydi.
+
+### 34.4 Oqimlar (`frontend/e2e/*.spec.ts`)
+
+| Spec | Nimani tekshiradi |
+|---|---|
+| `run.spec.ts` | Mehmon `/register` → katalog: soha, format filtrlari va qidiruv → IT 1 kunlik Run'ni boshlash → 09:00 xabari va standup vazifasi → ilova hujjati oynasi → javob → worker bahosi (82) va izoh SSE orqali → mentor izohi chatda nishon bilan (§9.13) → personaj chati javobi → qayta yuklashda holat va katalogda "davom etayotgan" Run |
+| `vacancy-offer.spec.ts` | Ikki brauzer konteksti: kompaniya talab (`Muloqot ≥ 50`) va mashq ssenariysi bilan vakansiya e'lon qiladi → talaba "100% mos", `80 / 50` va mashq bo'limini ko'radi, izoh bilan ariza beradi → kompaniya arizani ko'radi, email yashirin → taklif yuboradi → talaba bildirishnoma va taklifni ko'rib qabul qiladi → kompaniya "Qabul qilindi" va nomzod emailini ko'radi |
+| `report.spec.ts` | Tugallangan Run hisoboti (ball, 6/6, jadval) → sertifikat kodi → mehmon `/c/{code}` ochiq tekshiruv sahifasi (ism, ssenariy, ball, QR, o'zbekcha sana) |
+
+Lokatorlar foydalanuvchi ko'radigan rol va matn bo'yicha (`getByRole`,
+`getByLabel`), `data-testid` yo'q — ko'rinmaydigan tugma testda ham topilmaydi.
+Bir xil nomli tugmalar kartaga bog'langan `aria-label` oladi (katalogdagi
+"Boshlash: {ssenariy}", "Yakka: {ssenariy}").
+
+### 34.5 Qoidalar
+
+- Har test oxirida (`e2e/support/test.ts`, avtomatik fixture) backend'da
+  **ochiq xato guruhi qolmasligi** shart (§32.3): API 5xx, worker job xatosi
+  yoki brauzerdagi kutilmagan xato (`lib/monitoring.ts`) — ko'rinadigan
+  tekshiruvlar o'tsa ham test yiqiladi.
+- Playwright `webServer`: `tools/e2e/stack.sh` va `vite build` + `vite preview`
+  (`:4173`, `/api` → `:8100`). Service worker bloklanadi (§22 keshi eski bundle
+  bermasin), `locale: uz-UZ`, `timezoneId: Asia/Tashkent`.
+- Yiqilganda trace, skrinshot va video saqlanadi; CI'da artefakt (7 kun).
+- Yangi asosiy oqim (yangi rol yoki sahifa) qo'shilsa — shu jadvalga spec ham.
+
+### 34.6 Lokal ishga tushirish
+
+PostgreSQL (pgvector) va Redis, `faketime` paketi, backend talablari o'rnatilgan
+Python kerak. `frontend/`dan:
+
+```
+npx playwright install chromium        # bir marta
+E2E_PYTHON=../backend/.venv/bin/python npm run e2e
+```
+
+Lokalda ishlab turgan stek qayta ishlatiladi (`reuseExistingServer`);
+`tools/e2e/stack.sh`ni alohida terminalda ham ishga tushirish mumkin.
+Sozlanadigan: `E2E_DATABASE_URL`, `E2E_REDIS_URL`, `E2E_API_PORT`,
+`E2E_WEB_PORT`, `E2E_LLM_PORT`, `E2E_FAKETIME_LIB`.
+
+### 34.7 Modul chegaralari
+
+Modul 7: `frontend/e2e/`, `frontend/playwright.config.ts`, `package.json`
+(`@playwright/test`, `e2e` skripti), `eslint.config.js`, `tsconfig.node.json`,
+katalog tugmalari `aria-label`i, `i18n/index.ts` (`supportedLngs` — brauzer
+`uz-UZ` bersa ham `i18n.language` = `uz`, sana o'zbekcha). Modul 8:
+`tools/e2e/`, `.github/workflows/ci.yml` (`e2e` ishi), `docker-compose.yml`
+(`OPENAI_BASE_URL`). Modul 1: `config.py`; Modul 2: `ai/llm.py` (`OPENAI_BASE_URL`).

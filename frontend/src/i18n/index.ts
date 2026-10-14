@@ -15,6 +15,9 @@ i18n
       ru: { translation: ru },
       en: { translation: en },
     },
+    // brauzer "uz-UZ"/"ru-RU" beradi — `i18n.language` doim qisqa kod bo'lsin
+    // (sana formati, til menyusi shunga qaraydi); boshqa til → fallback
+    supportedLngs: ['uz', 'ru', 'en'],
     fallbackLng: 'uz',
     defaultNS: 'translation',
     interpolation: {
