@@ -1000,3 +1000,31 @@ export interface Cv {
   experience: CvExperience[]
   settings: CvSettings
 }
+
+// Xatolarni kuzatish (CONTRACT.md §32.5)
+export type ErrorSource = 'api' | 'worker' | 'frontend'
+export type ErrorStatus = 'open' | 'resolved'
+
+export interface ErrorGroup {
+  id: string
+  source: ErrorSource
+  level: string
+  title: string
+  location: string
+  count: number
+  first_seen: string
+  last_seen: string
+  status: ErrorStatus
+}
+
+export interface ErrorGroupDetail extends ErrorGroup {
+  detail: string
+  last_request_id: string | null
+  resolved_at: string | null
+  resolved_by_name: string | null
+}
+
+export interface ErrorGroupList {
+  open_total: number
+  items: ErrorGroup[]
+}

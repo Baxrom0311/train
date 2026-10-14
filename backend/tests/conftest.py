@@ -96,13 +96,16 @@ async def setup_db(create_tables):
         manage_vacancies = Permission(id=uuid.uuid4(), key="manage_vacancies")
         practice_interviews = Permission(id=uuid.uuid4(), key="practice_interviews")
         manage_company_scenarios = Permission(id=uuid.uuid4(), key="manage_company_scenarios")
+        view_errors = Permission(id=uuid.uuid4(), key="view_errors")
 
         session.add_all([
             manage_billing, approve_companies, view_candidates, receive_offers, view_org_invoices,
             manage_universities, join_university, manage_portfolio, manage_certificates, view_platform_stats,
-            manage_vacancies, practice_interviews, manage_company_scenarios,
+            manage_vacancies, practice_interviews, manage_company_scenarios, view_errors,
         ])
-        admin_role.permissions.extend([manage_billing, approve_companies, manage_certificates, view_platform_stats])
+        admin_role.permissions.extend([
+            manage_billing, approve_companies, manage_certificates, view_platform_stats, view_errors,
+        ])
         hr_role.permissions.extend([view_candidates, view_org_invoices, manage_vacancies, manage_company_scenarios])
         uni_role.permissions.extend([manage_universities, view_org_invoices])
         student_role.permissions.extend([receive_offers, join_university, manage_portfolio, practice_interviews])

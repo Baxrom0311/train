@@ -63,6 +63,8 @@ tiklash eski JWT'larni `iat` bo'yicha bekor qiladi), email tasdiqlash (tasdiqlan
 vakansiyaga ariza yo'q), login cheklovi (Redis, `core/throttle.py`); xat backend'i `MAIL_BACKEND` — lokalda `console`.
 CI (`CONTRACT.md` §31, `.github/workflows/ci.yml`): har PR va `main` push'da pytest (Postgres+Redis), Alembic
 (`upgrade` → `check` → `downgrade base` → `upgrade`), frontend lint + build va Docker image'lari.
+Xatolarni kuzatish (`CONTRACT.md` §32, `/admin` → Xatolar): backend, worker va brauzer xatolari `error_groups`da
+guruhlanadi (`core/monitoring.py`), admin'ga email ogohlantirish; JSON loglar (`LOG_FORMAT`), `X-Request-ID`, 5xx'da xato kodi.
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da
 sandbox/                            # kod runner'i (§19), faqat stdlib
