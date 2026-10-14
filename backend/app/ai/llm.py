@@ -92,7 +92,7 @@ async def _deepseek(client, messages, json_mode, temperature, max_tokens) -> Raw
 
 async def _openai(client, messages, json_mode, temperature, max_tokens) -> RawReply:
     return await _openai_compatible(
-        client, "https://api.openai.com/v1/chat/completions", settings.OPENAI_API_KEY,
+        client, f"{settings.OPENAI_BASE_URL.rstrip('/')}/chat/completions", settings.OPENAI_API_KEY,
         settings.OPENAI_MODEL, messages, json_mode, temperature, max_tokens,
     )
 

@@ -17,3 +17,7 @@ backend/uploads/
 *.tsbuildinfo
 venv/
 dump.rdb
+
+# E2E (Playwright, §34)
+frontend/test-results/
+frontend/playwright-report/

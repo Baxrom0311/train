@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     DEEPSEEK_MODEL: str = "deepseek-chat"
     GEMINI_MODEL: str = "gemini-2.5-flash"
     OPENAI_MODEL: str = "gpt-4o-mini"
+    # OpenAI-mos API manzili (§34.3: e2e'da soxta LLM; o'z gateway'i yoki lokal model ham)
+    OPENAI_BASE_URL: str = "https://api.openai.com/v1"
     LLM_TIMEOUT_SECONDS: float = 20.0
     # §21.1: 1M token narxi (USD), "provider=kirish/chiqish,..."; bo'sh — narx hisoblanmaydi
     LLM_PRICES: str = ""

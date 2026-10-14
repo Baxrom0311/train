@@ -191,7 +191,8 @@ export default function SimulationsPage() {
                   <TeamActions scenario={s} team={teamFor(s.id)} busy={Boolean(openRun) || starting !== null}
                     onForm={() => formTeam(s.id)} onSolo={() => start(s.id)} />
                 ) : (
-                  <Button className="w-full" disabled={Boolean(openRun) || starting !== null} onClick={() => start(s.id)}>
+                  <Button className="w-full" disabled={Boolean(openRun) || starting !== null} onClick={() => start(s.id)}
+                    aria-label={`${t('simulations.startSim')}: ${s.title}`}>
                     {t('simulations.startSim')} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                   </Button>
                 )}
@@ -276,7 +277,8 @@ function TeamActions({ scenario, team, busy, onForm, onSolo }: {
       <Button className="flex-1" disabled={busy} onClick={onForm} aria-label={`${t('catalog.formTeam')}: ${scenario.title}`}>
         <UsersRound className="h-4 w-4" /> {t('catalog.formTeam')}
       </Button>
-      <Button variant="outline" disabled={busy} onClick={onSolo} title={t('catalog.soloHint')}>
+      <Button variant="outline" disabled={busy} onClick={onSolo} title={t('catalog.soloHint')}
+        aria-label={`${t('catalog.solo')}: ${scenario.title}`}>
         <User className="h-4 w-4" /> {t('catalog.solo')}
       </Button>
     </>

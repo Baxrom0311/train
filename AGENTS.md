@@ -65,6 +65,9 @@ CI (`CONTRACT.md` §31, `.github/workflows/ci.yml`): har PR va `main` push'da py
 (`upgrade` → `check` → `downgrade base` → `upgrade`), frontend lint + build va Docker image'lari.
 Xatolarni kuzatish (`CONTRACT.md` §32, `/admin` → Xatolar): backend, worker va brauzer xatolari `error_groups`da
 guruhlanadi (`core/monitoring.py`), admin'ga email ogohlantirish; JSON loglar (`LOG_FORMAT`), `X-Request-ID`, 5xx'da xato kodi.
+E2E (`CONTRACT.md` §34, `frontend/e2e/`, `tools/e2e/`): Playwright har PR'da to'liq stekda — soxta soat (libfaketime,
+keyingi ish kuni 09:00) va soxta LLM (`OPENAI_BASE_URL`); katalog → Run → baho, vakansiya → ariza → taklif, hisobot → sertifikat;
+har test oxirida ochiq xato guruhi (§32) bo'lmasligi shart.
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da
 sandbox/                            # kod runner'i (§19), faqat stdlib
@@ -113,3 +116,5 @@ arq app.ai.worker.WorkerSettings                     # baholash, yetkazish cron'
 Frontend (`frontend/`): `npm ci && npm run dev` — Vite `/api`ni
 `http://localhost:8000`ga proksilaydi (boshqa manzil: `VITE_API_TARGET`).
 Testlar: `backend/`dan `TEST_DATABASE_URL=... pytest -q`; frontend: `npm run lint && npm run build`.
+E2E (`frontend/`dan, `faketime` paketi kerak): `npx playwright install chromium`, so'ng
+`E2E_PYTHON=<backend python> npm run e2e` — stekni o'zi ko'taradi (`CONTRACT.md` §34.6).
