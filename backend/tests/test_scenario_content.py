@@ -147,7 +147,7 @@ WEEK_DAYS = {1: 7, 2: 8, 3: 9, 4: 12, 5: 13}   # chorshanba → keyingi seshanba
 
 def _week_shape(defn: ScenarioDefinition):
     """Haftalik skelet: kalit task, unga bog'liq 4-kun incident juftligi, flag xabarlari, mentor izohi."""
-    (strong,) = [n for n in defn.nodes if any(isinstance(leaf, ScoreGte) for leaf in iter_leaves(n.when))]
+    (strong,) = [n for n in defn.nodes if n.is_graded and any(isinstance(leaf, ScoreGte) for leaf in iter_leaves(n.when))]
     (key,) = score_nodes(strong.when)
     (weak,) = [n for n in defn.nodes if n.is_graded and n is not strong and key in referenced_nodes(n.when)]
     flagged = {

@@ -15,6 +15,11 @@ function isTableRow(line: string): boolean {
   return t.startsWith('|') || (t.match(/\s\|\s/g)?.length ?? 0) >= 2
 }
 
+/** Ikki ustunli jadval nomzodi (`ko'rsatkich | summa`) — ketma-ket qatorlarning ustunlari soni teng bo'lsa jadval. */
+function isPipeRow(line: string): boolean {
+  return isTableRow(line) || /\S\s\|\s\S/.test(line)
+}
+
 function cells(line: string): string[] {
   return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim())
 }
@@ -78,16 +83,18 @@ function blocks(text: string): Block[] {
     buf = []
   }
   const flushTable = () => {
-    if (table.length >= 2) {
+    const rows = table.filter((l) => !TABLE_RULE.test(l))
+    const even = rows.every((l) => cells(l).length === cells(rows[0]).length)
+    if (table.length >= 2 && (even || table.every(isTableRow))) {
       flushText()
-      out.push({ kind: 'table', rows: table.filter((l) => !TABLE_RULE.test(l)).map(cells) })
+      out.push({ kind: 'table', rows: rows.map(cells) })
     } else {
       buf.push(...table)
     }
     table = []
   }
   for (const line of text.split('\n')) {
-    if (isTableRow(line)) {
+    if (isPipeRow(line) || (table.length > 0 && TABLE_RULE.test(line))) {
       table.push(line)
     } else {
       flushTable()

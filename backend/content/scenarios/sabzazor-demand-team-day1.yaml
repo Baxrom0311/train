@@ -1,0 +1,569 @@
+# CONTRACT.md §29 — jamoaviy Data ssenariysi (2–3 talaba). Kompaniya, odamlar, tizimlar, jadvallar va raqamlar o'ylab topilgan.
+# Prognoz usuli, zaxira qoidasi va ma'lumotlar siyosati — o'quv maqsadidagi ichki qoidalar, real normativ emas.
+# Hikoya: payshanba — haftalik buyurtma kuni. Data engineer POS oqimini tozalaydi, analyst sut uchun talab prognozi
+# va buyurtma miqdorini hisoblaydi, BI analitik do'konlar uchun "Buyurtma tavsiyasi" dashboard'ini ishga tushiradi;
+# 15:30 da qayta yuklash (backfill) dublikatlari hisobotlarni buzadi.
+slug: sabzazor-demand-team-day1
+title: "Sabzazor — talab prognozi va buyurtma kuni jamoasi, 1 kun"
+sector: Data
+company_name: "Sabzazor"             # fictional: oziq-ovqat do'konlari tarmog'i
+difficulty: junior
+duration_days: 1
+
+team:
+  min_size: 2
+  roles:
+    - key: engineer
+      title: "Data engineer"
+      summary: "POS savdo oqimini dublikat va qaytarishlardan tozalaydi, incident'da ma'lumotni tuzatadi va qayta yuklashni xavfsiz qiladi"
+    - key: analyst
+      title: "Data analyst"
+      summary: "Sut uchun haftalik talab prognozi va buyurtma miqdorini hisoblaydi, incident ta'sirini raqamlarda baholaydi"
+    - key: bi
+      title: "BI analitik"
+      summary: "Do'konlar uchun buyurtma dashboard'ini loyihalaydi, prognoz aniqligini o'lchaydi, do'kon rahbarlariga xabar yozadi"
+
+personas:
+  - key: madina
+    name: "Madina Yusupova"
+    role: "Analitika bo'limi rahbari"
+    tone: "xotirjam, aniq; raqamning manbasini so'raydi; jamoada kim nima qilishini aniq kelishishni talab qiladi"
+    knows: [doc_team_charter, doc_forecast_policy, doc_sales_history, doc_incident_dup, doc_data_runbook]
+    secrets:
+      - "Ombor bugun buyurtmalarni 17:00 gacha qabul qiladi, lekin Gulnora so'rasa 17:30 gacha kutishga rozi bo'ladi."
+    busy_reply: "Rahbariyat yig'ilishidaman, 30 daqiqadan keyin yozaman."
+    deflect_reply: "Raqamni jamoa chiqaradi. Kelishuv hujjatini qayta o'qing: kim nimaga javobgar?"
+  - key: otabek
+    name: "Otabek Nazarov"
+    role: "Katta data analyst, jamoa mentori"
+    kind: mentor
+    tone: "do'stona, savol bilan yo'naltiradi; rollar orasidagi bog'liqlikni oldindan kelishishga undaydi"
+    knows: [doc_team_charter, doc_forecast_policy, doc_pos_feed]
+    busy_reply: "Boshqa jamoa bilan gaplashyapman, birozdan keyin yozaman."
+    deflect_reply: "Tayyor javobni bermayman. Bitta do'kon uchun hisobni qo'lda boshidan oxirigacha o'tkazib ko'ring."
+    nudge_reply: "«{task}» dedlayni {time}da. Qaysi qadamda turibsiz? Jamoadoshlaringizdan nimani kutayotganingizni ham yozing."
+  - key: sherzod
+    name: "Sherzod Toshev"
+    role: "Data platforma rahbari"
+    tone: "qisqa, texnik, ochiq; xatosini tan oladi, testsiz o'zgarishni yoqtirmaydi"
+    knows: [doc_team_charter, doc_pos_feed, doc_loader_code, doc_incident_dup, doc_data_runbook]
+    secrets:
+      - "14:50 dagi qayta yuklashni men ishga tushirdim: kechikib kelgan 07.10 fayllari uchun eski load_day skripti INSERT bilan ishlaydi, avval o'chirmaydi."
+      - "raw.pos_lines'da (store_id, receipt_id, line_no) bo'yicha UNIQUE cheklov yo'q — shuning uchun dublikat jimgina kiradi."
+    busy_reply: "Pipeline'ni kuzatyapman, 15 daqiqadan keyin yozaman."
+    deflect_reply: "Kodni men yozib bermayman — feed tavsifidagi har bir qoidani testga aylantiring."
+  - key: gulnora
+    name: "Gulnora Saidova"
+    role: "Ta'minot (supply chain) menejeri"
+    tone: "amaliy, shoshqaloq; buyurtma muddatini qattiq kuzatadi; do'kon rahbarlari bilan har kuni gaplashadi"
+    knows: [doc_team_charter, doc_forecast_policy, doc_sales_history, doc_forecast_accuracy]
+    secrets:
+      - "O'tgan oy SRG'da sut ortib qolib, 96 dona hisobdan chiqarilgan — do'kon rahbari ortiqcha buyurtmadan ehtiyot bo'lyapti."
+    busy_reply: "Ombor bilan qo'ng'iroqdaman, keyin yozaman."
+    deflect_reply: "Men analitik emasman — menga do'kon bo'yicha nechta quti kerakligini ayting."
+  - key: rustam
+    name: "Rustam Aliyev"
+    role: "Operatsiyalar direktori"
+    tone: "bosim o'tkazadi, javon bo'sh qolishini yomon ko'radi; 'yetishmagandan ortgani yaxshi' deb hisoblaydi"
+    knows: [doc_forecast_policy]
+    secrets:
+      - "Kecha Yunusobodda sut 18:00 da tugab qolgan, tarmoq rahbari undan so'ragan — shuning uchun hamma joyga zaxira qo'shmoqchi."
+    busy_reply: "Do'konlarni aylanyapman, kechqurun yozaman."
+    deflect_reply: "Menga uzoq tushuntirish kerak emas: javon to'la bo'lsin, isrof kam bo'lsin."
+
+documents:
+  - key: doc_team_charter
+    title: "Buyurtma kuni jamoasi: kim nima qiladi"
+    content: |
+      Sabzazor — Toshkentdagi 12 ta do'kondan iborat oziq-ovqat tarmog'i. Har payshanba do'konlar keyingi hafta uchun
+      tez buziladigan mahsulotlarni markaziy omborga buyurtma qiladi; ombor buyurtmani 17:00 gacha qabul qiladi,
+      yetkazish dushanba ertalab. Bugun (08.10) pilot: Chilonzor (CHL), Yunusobod (YUN), Sergeli (SRG) uchun
+      "Sut 2.5% 1 L" (SKU 40112) buyurtmasi birinchi marta prognoz asosida, yangi "Buyurtma tavsiyasi" dashboard'i orqali beriladi.
+
+      Jamoa:
+      - Data engineer — POS savdo oqimi (raw.pos_lines → mart.daily_sales), tozalash va yuklash. Texnik egasi — Sherzod.
+      - Data analyst — prognoz va buyurtma miqdori; incident'da ta'sir hisobi.
+      - BI analitik — dashboard, prognoz aniqligi, do'kon rahbarlariga xabarlar.
+      Buyurtmachi — Gulnora (ta'minot). Bo'lim rahbari — Madina.
+
+      Kelishuvlar:
+      - Ertalabki standup jamoaga bitta: kim nima qiladi, kim kimni kutadi, nima to'sib turibdi.
+      - Raqamlar (prognoz, quti soni, ta'sir) — faqat analystdan; boshqa rol raqam yozishdan oldin analyst bilan tekshiradi.
+      - Ma'lumot tozaligi va yuklash — engineer; "bu qator dublikatmi?" degan savolga u javob beradi.
+      - Do'konlarga matn — BI yozadi, raqamlarini analyst tasdiqlaydi.
+      - Kun oxirida jamoa bitta umumiy hisobot yozadi.
+
+  - key: doc_pos_feed
+    title: "POS savdo oqimi: raw.pos_lines tavsifi"
+    content: |
+      Har chek qatori bitta yozuv. Ustunlar:
+      ustun | turi | izoh
+      store_id | text | Do'kon kodi (CHL, YUN, SRG, ...).
+      receipt_id | text | Chek raqami — faqat do'kon ichida unikal (boshqa do'konda xuddi shu raqam bo'lishi mumkin).
+      line_no | int | Chekdagi qator raqami.
+      sku | text | Mahsulot kodi. Bo'sh bo'lsa — buzilgan qator.
+      qty | int | Dona, doim musbat. 0 yoki manfiy — kassa test qatori, hisobga olinmaydi.
+      ts_utc | text | "YYYY-MM-DD HH:MM", UTC. Hisobot kuni — Toshkent sanasi (UTC + 5 soat).
+      kind | text | sale — sotuv; return — qaytarish (qty musbat, sotuvdan ayiriladi).
+
+      Muhim: aloqa uzilsa, kassa butun paketni qayta yuboradi — bir xil (store_id, receipt_id, line_no) qatorlari
+      ikki-uch marta keladi. Bunday qator bir marta hisoblanadi.
+      Mart: mart.daily_sales (store_id, day, sku) → sof sotuv (sotuv − qaytarish), dona.
+
+  - key: doc_loader_code
+    title: "Hozirgi loader: daily_sales (DE-57 ticket)"
+    content: |
+      DE-57: "SRG sut sotuvi 28.09–04.10 haftasida ikki baravar ko'p, YUN'da kechqurungi savdo ertangi kunga o'tmayapti."
+
+      ```python
+      def daily_sales(rows):
+          out = {}
+          for r in rows:
+              day = r["ts_utc"][:10]
+              k = (r["store_id"], day, r["sku"])
+              out[k] = out.get(k, 0) + r["qty"]
+          return out
+      ```
+
+      Testlar yo'q. Yangi funksiya nomi: clean_sales(rows) -> dict[(store_id, "YYYY-MM-DD", sku), int].
+
+  - key: doc_sales_history
+    title: "Sut 2.5% 1 L (SKU 40112): haftalik sof sotuv va qoldiq"
+    content: |
+      Hafta sotuvi, dona (mart.daily_sales, Toshkent sanasi bo'yicha):
+      do'kon | 07–13.09 | 14–20.09 | 21–27.09 (aksiya −20%) | 28.09–04.10
+      CHL | 840 | 860 | 1 150 | 830
+      YUN | 610 | 590 | 820 | 620
+      SRG | 450 | 470 | 610 | 880 ⚠
+
+      ⚠ SRG 28.09–04.10: POS paketlari qayta yuborilgan (DE-57). Sherzod qo'lda tekshirdi: dublikatsiz sof sotuv — 440 dona.
+
+      Dushanba (12.10) ertalabga kutilgan qoldiq (dashboard, 14:30 holati): CHL 96, YUN 60, SRG 30 dona.
+      Keyingi hafta (12–18.10) aksiya rejada yo'q.
+
+  - key: doc_forecast_policy
+    title: "Tez buziladigan mahsulotlar: prognoz va buyurtma qoidasi (ichki qoida)"
+    content: |
+      1. Prognoz = oxirgi 4 ta to'liq haftaning o'rtachasi; aksiya haftalari chiqariladi (qolganlari o'rtachasi).
+         Keyingi haftada aksiya bo'lsa — marketing koeffitsienti alohida beriladi.
+      2. Xavfsizlik zaxirasi = prognozning 15% i (sut, saqlash muddati 7 kun).
+      3. Buyurtma = prognoz + zaxira − dushanba kutilgan qoldiq; yuqoriga, butun qutiga yaxlitlanadi (1 quti = 12 dona).
+      4. Tannarx: 9 800 so'm/dona. Muddati o'tgan sut hisobdan chiqariladi (to'liq zarar).
+      5. Qoidadan chetga chiqish (qo'lda ko'paytirish/kamaytirish) — faqat sababi yozilgan holda, ta'minot va analitika
+         rahbari roziligi bilan; dashboard'da "qo'lda o'zgartirilgan" belgisi bilan.
+
+  - key: doc_forecast_accuracy
+    title: "O'tgan hafta prognozi va dashboard talablari"
+    content: |
+      Sut 2.5% 1 L, 28.09–04.10 haftasi uchun tajriba prognozi va haqiqiy sotuv, dona:
+      do'kon | prognoz | haqiqiy (mart.daily_sales)
+      CHL | 850 | 830
+      YUN | 640 | 620
+      SRG | 455 | 880 ⚠ (tozalangani 440)
+
+      Aniqlik metrikasi (ichki standart): WAPE = Σ|haqiqiy − prognoz| / Σ haqiqiy, foizda, 1 xona aniqlikda.
+      Maqsad: WAPE ≤ 10%.
+
+      Gulnora va do'kon rahbarlarining talablari:
+      - Har do'kon rahbari faqat o'z do'konini ko'radi; tarmoq bo'yicha — ta'minot va analitika.
+      - Asosiy raqam: "nechta quti buyurtma qilish kerak", yonida prognoz, zaxira, kutilgan qoldiq.
+      - Ma'lumot qachon yangilangani ko'rinsin (ETL har kuni 06:00 da; kechiksa — ogohlantirish).
+      - Telefon orqali ochiladi; buyurtmani qo'lda o'zgartirsa — sababi yoziladi.
+
+  - key: doc_data_runbook
+    title: "Ma'lumot incident'i runbook'i"
+    content: |
+      1. Noto'g'ri raqam qarorga ketayotgan bo'lsa — avval tarqalishini to'xtating: dashboard'ga banner, eksportni pauza.
+      2. Ta'sir doirasi: qaysi jadval, do'kon, sana, qaysi hisobot va qarorlar ta'sirlangan — raqamlarda.
+      3. Tuzatish: qo'lda UPDATE emas — qayta ishga tushirsa bir xil natija beradigan (idempotent) jarayon orqali.
+      4. Foydalanuvchilarga xabar BI orqali: nima bo'ldi, nima qilish kerak, qachon tuzatiladi.
+      5. Postmortem 2 ish kuni ichida, aybdor qidirilmaydi.
+
+  - key: doc_incident_dup
+    title: "Monitoring: 08.10, 14:50–15:25"
+    content: |
+      14:50  reload_pos_day --date 2026-10-07 --stores CHL,YUN (kechikib kelgan fayllar uchun qayta yuklash, load_day.sql)
+      15:05  raw.pos_lines, 07.10: CHL 18 420 qator (kutilgan 9 210), YUN 14 060 (kutilgan 7 030), SRG 6 100 (normal)
+      15:10  mart.daily_sales va "Buyurtma tavsiyasi" yangilandi (load_day clean_sales'ni chetlab o'tadi)
+      15:20  Sut 2.5% 1 L, 07.10 sotuvi: CHL 248 (odatda ~124), YUN 176 (~88)
+             Dushanba kutilgan qoldiq: CHL 0 (14:30 da 96), YUN 0 (14:30 da 60) — qoldiq = kirim − sotuv
+             Tavsiya: CHL 81 quti (14:30 da 73), YUN 59 quti (14:30 da 54). SRG o'zgarmagan.
+      15:25  Ikki do'kon rahbari buyurtmani dashboard'dan omborga yuborishni so'ramoqda. Ombor muddati — 17:00.
+      Boshqa tez buziladigan SKU'lar (qatiq, kefir, non) ham CHL va YUN'da xuddi shunday ta'sirlangan.
+
+nodes:
+  - id: welcome
+    type: message
+    day: 1
+    at: "09:00"
+    from: madina
+    brief: |
+      Xayrli tong, jamoa! Bugun birinchi marta sut buyurtmasi prognoz asosida beriladi va do'konlar yangi dashboard'dan
+      foydalanadi. Kelishuv hujjatini o'qing va standup'da kim nima qilishini, kim kimni kutishini kelishib oling.
+
+  - id: standup
+    type: task
+    day: 1
+    at: "09:00"
+    from: madina
+    brief: |
+      Jamoa standup'i — bitta umumiy javob. Har rol bugun nima qiladi, kim kimdan nima kutadi, nima to'sib turishi
+      mumkin. Jamoa chatida kelishib, bittangiz yozing.
+    attachments: [doc_team_charter]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 0.5
+    competencies: [communication, prioritization]
+    rubric:
+      - {id: roles, description: "Har rolning bugungi ishi aniq (engineer — clean_sales va DE-57, analyst — prognoz va quti soni, BI — dashboard va aniqlik)", weight: 2}
+      - {id: dependencies, description: "Bog'liqliklar aytilgan: analyst va BI tozalangan sotuvga (SRG 440) tayanadi, BI do'konlarga matnni analyst raqamlaridan keyin yozadi", weight: 2}
+      - {id: blockers, description: "To'siq yoki xavf aytilgan (ombor muddati 17:00, SRG dublikatlari)"}
+    hints:
+      - "Kelishuv hujjatidagi qoidalarni qayta o'qing: raqamlar va do'konga matn kimdan keladi? Kim kimni kutadi?"
+    reference_answer: |
+      Engineer: DE-57 — clean_sales (dublikat, qaytarish, Toshkent sanasi) testlar bilan, tushlikkacha.
+      Analyst: 3 do'kon uchun sut prognozi va quti soni, 12:00 gacha; SRG uchun tozalangan 440 ni engineer bilan tasdiqlaydi.
+      BI: dashboard spetsifikatsiyasi va o'tgan hafta WAPE; do'konlarga xabar analyst raqamlari tayyor bo'lgach.
+      Xavf: ombor 17:00 da yopiladi; SRG ma'lumotida qayta yuborish dublikatlari.
+
+  - id: mentor_intro
+    type: message
+    day: 1
+    at: "09:15"
+    from: otabek
+    brief: |
+      Salom, jamoa! Men Otabek, bugun mentoringizman. Vazifalaringiz alohida, lekin bitta raqamga borib taqaladi:
+      do'kon nechta quti oladi. Kim kimni kutishini jamoa chatida yozib qo'ying. Qiyin bo'lsa hint so'rang.
+
+  - id: clean_sales_fix
+    type: task
+    role: engineer
+    day: 1
+    at: "09:30"
+    from: sherzod
+    brief: |
+      DE-57: hozirgi loader dublikat paketlarni ikki marta qo'shadi, qaytarishlarni sotuvga qo'shadi va sanani UTC bo'yicha oladi.
+      Feed tavsifiga mos clean_sales(rows) yozing (faqat stdlib): natija {(store_id, "YYYY-MM-DD", sku): sof dona},
+      faqat kamida bitta yaroqli qatori bor kalitlar. Javobda: kod (funksiya + testlar) va qisqa izoh — nima noto'g'ri edi
+      va SRG raqamiga qanday ta'sir qilgan. Kod maydonidagi clean_sales avtomatik testlardan ham o'tkaziladi.
+    attachments: [doc_loader_code, doc_pos_feed]
+    answer_types: [code, text]
+    due_in_minutes: 150
+    weight: 2
+    competencies: [technical]
+    checks:
+      module: solution
+      weight: 0.5
+      tests: |
+        from solution import clean_sales
+
+        def _r(store, receipt, line, qty, ts="2026-10-07 08:00", sku="40112", kind="sale"):
+            return {"store_id": store, "receipt_id": receipt, "line_no": line, "sku": sku, "qty": qty, "ts_utc": ts, "kind": kind}
+
+        def test_sums_by_store_day_sku():
+            rows = [_r("CHL", "R1", 1, 2), _r("CHL", "R2", 1, 3), _r("YUN", "R1", 1, 1)]
+            assert clean_sales(rows) == {("CHL", "2026-10-07", "40112"): 5, ("YUN", "2026-10-07", "40112"): 1}
+
+        def test_resent_line_counted_once():
+            rows = [_r("CHL", "R1", 1, 2), _r("CHL", "R1", 1, 2), _r("CHL", "R1", 1, 2)]
+            assert clean_sales(rows) == {("CHL", "2026-10-07", "40112"): 2}
+
+        def test_same_receipt_other_line_is_not_duplicate():
+            rows = [_r("CHL", "R1", 1, 2), _r("CHL", "R1", 2, 1)]
+            assert clean_sales(rows) == {("CHL", "2026-10-07", "40112"): 3}
+
+        def test_same_receipt_id_in_other_store_is_not_duplicate():
+            rows = [_r("CHL", "R1", 1, 2), _r("SRG", "R1", 1, 2)]
+            assert clean_sales(rows) == {("CHL", "2026-10-07", "40112"): 2, ("SRG", "2026-10-07", "40112"): 2}
+
+        def test_return_subtracts():
+            rows = [_r("CHL", "R1", 1, 4), _r("CHL", "V1", 1, 1, kind="return")]
+            assert clean_sales(rows) == {("CHL", "2026-10-07", "40112"): 3}
+
+        def test_day_is_tashkent_date():
+            rows = [_r("CHL", "R1", 1, 2, ts="2026-10-07 19:30"), _r("CHL", "R2", 1, 1, ts="2026-10-07 18:59")]
+            assert clean_sales(rows) == {("CHL", "2026-10-08", "40112"): 2, ("CHL", "2026-10-07", "40112"): 1}
+
+        def test_broken_rows_skipped():
+            rows = [_r("CHL", "R1", 1, 0), _r("CHL", "R2", 1, -3), _r("CHL", "R3", 1, 2, sku=""), _r("CHL", "R4", 1, 1)]
+            assert clean_sales(rows) == {("CHL", "2026-10-07", "40112"): 1}
+
+        def test_empty_feed():
+            assert clean_sales([]) == {}
+    rubric:
+      - {id: root_cause, description: "Uchala xato topilgan: dublikat paketlar ikki marta, qaytarish qo'shiladi, sana UTC; SRG 880 ≈ 2 × 440", weight: 2}
+      - {id: fix_correct, description: "Dublikat kaliti (store_id, receipt_id, line_no) — do'kon kalitda; return ayiriladi; Toshkent sanasi (+5 soat); qty ≤ 0 va bo'sh sku tashlanadi", weight: 2}
+      - {id: tests, description: "Chegara holatlari uchun testlar: qayta yuborish, boshqa line_no, boshqa do'kondagi bir xil receipt_id, 19:00 UTC dan keyin, qaytarish", weight: 1.5}
+      - {id: explanation, description: "Izoh qisqa: nima noto'g'ri edi va analyst/BI raqamlariga ta'siri (SRG o'tgan haftasi 440, 880 emas)"}
+    hints:
+      - "Bitta chek qatorini 'bir xil' deyish uchun qaysi ustunlar birga kerak? receipt_id yolg'iz yetadimi?"
+      - "Kassa 18:30 UTC da urgan chek Toshkentda qaysi kunga tegishli?"
+      - "Avval testlarni feed tavsifidagi har bir jumladan yozing, keyin funksiyani."
+    reference_answer: |
+      Xatolar: 1) qayta yuborilgan paketlar ikki-uch marta qo'shiladi (SRG 28.09–04.10: 880 ≈ 2 × 440); 2) return sotuvga qo'shiladi;
+      3) sana UTC'dan olinadi — 19:00 UTC dan keyingi savdo oldingi kunda qoladi; 4) qty ≤ 0 va bo'sh sku qatorlari kiradi.
+      ```python
+      from datetime import datetime, timedelta
+
+      def clean_sales(rows):
+          seen, out = set(), {}
+          for r in rows:
+              if not r.get("sku") or r.get("qty", 0) <= 0:
+                  continue
+              key = (r["store_id"], r["receipt_id"], r["line_no"])
+              if key in seen:
+                  continue
+              seen.add(key)
+              day = (datetime.strptime(r["ts_utc"], "%Y-%m-%d %H:%M") + timedelta(hours=5)).strftime("%Y-%m-%d")
+              k = (r["store_id"], day, r["sku"])
+              out[k] = out.get(k, 0) + (-r["qty"] if r["kind"] == "return" else r["qty"])
+          return out
+      ```
+      Testlar: qayta yuborish → bir marta; boshqa line_no va boshqa do'kon — dublikat emas; return ayiriladi; 19:30 UTC → ertangi sana.
+      Analyst va BI'ga: SRG o'tgan haftasi 440 dona, 880 emas.
+
+  - id: demand_forecast
+    type: task
+    role: analyst
+    day: 1
+    at: "09:30"
+    from: gulnora
+    brief: |
+      Salom! Bugun 17:00 gacha omborga sut buyurtmasini berishim kerak. Qoidaga ko'ra hisoblang: har do'kon (CHL, YUN, SRG)
+      uchun keyingi hafta prognozi, zaxira, buyurtma (dona va quti) va jami summa. Qaysi haftalarni nega chiqarganingizni
+      va SRG raqamini kim bilan tekshirganingizni yozing. Raqamlarni BI jamoadoshingiz do'konlarga yuboradi.
+    attachments: [doc_sales_history, doc_forecast_policy]
+    answer_types: [text, file]
+    due_in_minutes: 120
+    weight: 2
+    competencies: [technical, communication]
+    rubric:
+      - {id: weeks, description: "Aksiya haftasi (21–27.09) chiqarilgan, SRG 28.09–04.10 uchun tozalangan 440 olingan (880 emas) va engineer bilan tasdiqlangan", weight: 2}
+      - {id: forecast, description: "Prognoz: CHL ≈ 843.3, YUN ≈ 606.7, SRG ≈ 453.3 dona; zaxira 15%: ≈ 126.5 / 91.0 / 68.0", weight: 2}
+      - {id: order, description: "Buyurtma: CHL 873.8 → 73 quti (876), YUN 637.7 → 54 quti (648), SRG 491.3 → 41 quti (492); yuqoriga yaxlitlangan", weight: 2}
+      - {id: total, description: "Jami 168 quti = 2 016 dona × 9 800 = 19 756 800 so'm", weight: 1}
+      - {id: summary, description: "Gulnora uchun qisqa jadval va izoh; noto'g'ri variantlar xavfi aytilgan (aksiya haftasi bilan ~920 CHL, SRG 880 bilan 55 quti)"}
+    hints:
+      - "Qoidaning 1-bandini har ustunga qo'llang: qaysi hafta odatdagi talabni ko'rsatmaydi?"
+      - "SRG ning oxirgi haftasidagi belgi nimani anglatadi? Bu raqam kimdan tasdiqlanishi kerak?"
+      - "Buyurtmani qutiga yaxlitlashda pastga emas, yuqoriga yaxlitlanadi — nega?"
+    reference_answer: |
+      Aksiya haftasi 21–27.09 chiqarildi; SRG 28.09–04.10 uchun tozalangan 440 (engineer tasdiqladi, xom 880 — dublikat).
+      Prognoz (3 hafta o'rtachasi): CHL (840+860+830)/3 ≈ 843.3; YUN (610+590+620)/3 ≈ 606.7; SRG (450+470+440)/3 ≈ 453.3.
+      Zaxira 15%: 126.5 / 91.0 / 68.0. Buyurtma = prognoz + zaxira − qoldiq:
+      do'kon | prognoz | zaxira | qoldiq | kerak | quti | dona
+      CHL | 843.3 | 126.5 | 96 | 873.8 | 73 | 876
+      YUN | 606.7 | 91.0 | 60 | 637.7 | 54 | 648
+      SRG | 453.3 | 68.0 | 30 | 491.3 | 41 | 492
+      Jami: 168 quti, 2 016 dona, 2 016 × 9 800 = 19 756 800 so'm.
+      Xavf: SRG xom 880 bilan prognoz 600 va 55 quti bo'lardi (+168 dona); aksiya haftasi kiritilsa CHL prognozi 920.
+
+  - id: dashboard_spec
+    type: task
+    role: bi
+    day: 1
+    at: "09:30"
+    from: gulnora
+    brief: |
+      Do'kon rahbarlari uchun "Buyurtma tavsiyasi" dashboard'ini bugun ishga tushiramiz. Yozing: 1) o'tgan hafta prognozi
+      aniqligi (WAPE) — tarmoq va do'kon bo'yicha, maqsadga mosmi; 2) dashboard tuzilmasi: asosiy raqam, qo'shimcha
+      ko'rsatkichlar, filtrlar, kim nimani ko'radi; 3) ma'lumot yangiligi va xato bo'lsa nima ko'rinadi.
+    attachments: [doc_forecast_accuracy, doc_forecast_policy]
+    answer_types: [text, file, link]
+    due_in_minutes: 120
+    weight: 2
+    competencies: [technical, communication]
+    rubric:
+      - {id: wape, description: "WAPE tozalangan ma'lumotda: (20 + 20 + 15) / 1 890 ≈ 2.9% — maqsad (≤ 10%) bajarilgan; do'konlar: CHL +2.4%, YUN +3.2%, SRG +3.4% ortiqcha prognoz", weight: 2}
+      - {id: dirty_data, description: "SRG xom 880 bilan WAPE ≈ 20.0% chiqishi va bu ma'lumot xatosi ekani aytilgan, engineer bilan tekshirilgan", weight: 1.5}
+      - {id: layout, description: "Asosiy raqam — quti soni; yonida prognoz, zaxira, qoldiq; do'kon bo'yicha kirish huquqi; telefonda ochiladi", weight: 1.5}
+      - {id: freshness, description: "Yangilanish vaqti ko'rinadi, ETL kechiksa yoki ma'lumot shubhali bo'lsa banner; qo'lda o'zgartirishda sabab maydoni", weight: 1.5}
+    hints:
+      - "WAPE'ni hisoblashdan oldin uchala do'konning 'haqiqiy' raqamlariga ishonasizmi? Belgiga qarang."
+      - "Do'kon rahbari dashboard'ni ochganda 3 soniyada nimani ko'rishi kerak?"
+    reference_answer: |
+      1) WAPE (tozalangan): |830−850| + |620−640| + |440−455| = 20 + 20 + 15 = 55; 55 / 1 890 ≈ 2.9% — maqsad ≤ 10% bajarilgan.
+      Do'konlar: CHL +2.4%, YUN +3.2%, SRG +3.4% — prognoz biroz ortiqcha. Xom SRG 880 bilan WAPE 465 / 2 330 ≈ 20.0% bo'lardi —
+      bu prognoz emas, dublikat xatosi (engineer tasdiqladi).
+      2) Asosiy karta: "Dushanba uchun buyurtma: N quti"; yonida prognoz, zaxira, kutilgan qoldiq, o'tgan hafta aniqligi.
+      Filtr: SKU, hafta. Kirish: do'kon rahbari — faqat o'z do'koni; ta'minot va analitika — tarmoq. Mobil ko'rinish.
+      3) "Ma'lumot yangilangan: 06:00" belgisi; ETL kechiksa yoki engineer tekshiruvi yiqilsa — qizil banner "raqamlar tekshirilmoqda,
+      buyurtma bermang"; qo'lda o'zgartirish — sabab majburiy, belgi bilan.
+
+  - id: inflate_order
+    type: decision
+    day: 1
+    at: "11:30"
+    from: rustam
+    brief: |
+      Kecha Yunusobodda sut kechqurun tugab qoldi — bunaqasi bo'lmasin! Prognozingiz qanday chiqsa ham, hamma do'kon
+      buyurtmasiga qo'lda +25% qo'shing. Ortib qolsa — chegirmada sotamiz. Dashboard'da ham shu raqam tursin.
+      Jamoa bo'lib qaror qiling.
+    competencies: [prioritization, communication]
+    options:
+      - key: policy_and_data
+        label: "Qoidadagi buyurtmani qoldiramiz (zaxira 15% bor); +25% ≈ 504 dona (≈ 4.9 mln so'm) ortiqcha va 7 kunda buziladi deb raqam bilan javob beramiz, YUN tugashini alohida tahlil qilishni taklif qilamiz va Madina opa bilan Gulnoraga yozamiz"
+        grade: correct
+      - key: escalate
+        label: "Rustam akaga javob bermay, qarorni Madina opa va Gulnoraga qoldiramiz"
+        grade: acceptable
+      - key: add_25
+        label: "Direktor so'radi — hamma do'konga +25% qo'shib, dashboard'da shu raqamni ko'rsatamiz"
+        grade: wrong
+        flag: manual_inflate
+
+  - id: lead_on_inflate
+    type: message
+    day: 1
+    at: "12:00"
+    when: {flag: manual_inflate}
+    from: madina
+    brief: |
+      Dashboard'da hamma do'konga +25% qo'shilganini ko'rdim. Bu ≈ 500 dona ortiqcha sut — 7 kunda buziladi, ≈ 4.9 mln so'm zarar.
+      Qoidamiz bo'yicha qo'lda o'zgartirish sababi yozilgan holda va ta'minot bilan kelishib qilinadi. Qaytaring;
+      YUN'da sut nega tugaganini (soatlar bo'yicha sotuv) alohida ko'ramiz.
+
+  - id: store_message
+    type: task
+    role: bi
+    after: {node: demand_forecast, event: submitted, minutes: 30}
+    from: gulnora
+    brief: |
+      Analyst sut buyurtmasini hisoblab bo'ldi. CHL, YUN va SRG rahbarlariga qisqa xabar yozing (har biriga 2–3 gap yoki
+      bitta umumiy): dashboard'da nima ko'radi, sut uchun nechta quti tavsiya qilinadi va nega, o'zgartirmoqchi bo'lsa nima qiladi.
+      Raqamlarni analyst jamoadoshingiz bilan tekshiring.
+    attachments: [doc_forecast_policy, doc_team_charter]
+    answer_types: [text]
+    due_in_minutes: 60
+    weight: 1
+    competencies: [communication]
+    rubric:
+      - {id: accurate, description: "Raqamlar analyst bilan mos: CHL 73, YUN 54, SRG 41 quti; prognoz va 15% zaxira bor", weight: 2}
+      - {id: clear, description: "Do'kon rahbari tilida: jargon (WAPE, ETL) yo'q, nima qilish kerakligi aniq, muddat 17:00"}
+      - {id: override, description: "Qo'lda o'zgartirish tartibi: sabab yoziladi, Gulnora bilan kelishiladi"}
+    hints:
+      - "Do'kon rahbariga eng muhim uch narsa: nechta quti, nega shuncha, o'zgartirsa nima qiladi."
+    reference_answer: |
+      Hurmatli do'kon rahbarlari! "Buyurtma tavsiyasi" dashboard'ida keyingi hafta sut (2.5%, 1 L) buyurtmasi tayyor:
+      CHL — 73 quti, YUN — 54 quti, SRG — 41 quti. Hisob oxirgi uch odatiy haftaning o'rtacha sotuvi, 15% zaxira va dushanbadagi
+      qoldiq asosida. O'zgartirmoqchi bo'lsangiz, sababini dashboard'da yozing va Gulnora bilan kelishing; buyurtma 17:00 gacha.
+
+  - id: mentor_afternoon
+    type: message
+    day: 1
+    at: "14:00"
+    from: otabek
+    brief: |
+      Tushdan keyin eslatma: buyurtmalar 17:00 da omborga ketadi. Raqam o'zgarsa, jamoa chatida darhol yozing.
+      Incident bo'lsa — avval noto'g'ri raqam tarqalishini to'xtating, ta'sirni analyst hisoblaydi, do'konlarga BI yozadi.
+
+  - id: incident_pipeline
+    type: incident
+    role: engineer
+    day: 1
+    at: "15:30"
+    from: sherzod
+    brief: |
+      SHOSHILINCH: 14:50 dagi qayta yuklashdan keyin CHL va YUN 07.10 qatorlari ikki baravar. Loglar ilovada.
+      Yozing: 1) hozir nima qilasiz (17:00 gacha), 2) dublikatlarni qanday aniqlaysiz va tozalaysiz (SQL),
+      3) qayta yuklash bundan keyin xavfsiz bo'lishi uchun doimiy tuzatish.
+    attachments: [doc_incident_dup, doc_data_runbook, doc_pos_feed]
+    answer_types: [text, code]
+    due_in_minutes: 30
+    weight: 1.5
+    competencies: [stress_handling, technical]
+    rubric:
+      - {id: contain, description: "Avval tarqalishni to'xtatish: buyurtma eksporti/dashboard pauza yoki banner, BI va analyst'ga xabar", weight: 2}
+      - {id: detect, description: "Aniqlash: GROUP BY store_id, receipt_id, line_no HAVING COUNT(*) > 1; 07.10 CHL 9 210 + YUN 7 030 = 16 240 ortiqcha qator", weight: 1.5}
+      - {id: fix, description: "Tozalash qo'lda UPDATE emas: 07.10 CHL/YUN qatorlarini tranzaksiyada o'chirib bir marta qayta yuklash yoki ROW_NUMBER bilan dublikatlarni o'chirish, keyin mart qayta hisoblanadi", weight: 1.5}
+      - {id: permanent, description: "Doimiy: UNIQUE (store_id, receipt_id, line_no) + ON CONFLICT DO NOTHING yoki DELETE+INSERT; load_day ham clean_sales orqali; qator soni tekshiruvi"}
+    hints:
+      - "Runbook'ning 1-bandi: ombor muddatigacha birinchi navbatda nimani to'xtatish kerak?"
+      - "Qayta yuklashni ikki marta ishga tushirsangiz ham natija bir xil bo'lishi uchun nima kerak?"
+    reference_answer: |
+      1) Darhol: "Buyurtma tavsiyasi"da CHL va YUN uchun banner va omborga eksportni pauza; BI va analyst'ga jamoa chatida xabar.
+      2) Aniqlash:
+         SELECT store_id, receipt_id, line_no, COUNT(*) FROM raw.pos_lines
+         WHERE (ts_utc::timestamp + INTERVAL '5 hours')::date = '2026-10-07' AND store_id IN ('CHL','YUN')
+         GROUP BY 1, 2, 3 HAVING COUNT(*) > 1;
+         Ortiqcha: CHL 18 420 − 9 210 = 9 210, YUN 14 060 − 7 030 = 7 030, jami 16 240 qator.
+      Tozalash: bitta tranzaksiyada 07.10 CHL/YUN qatorlarini o'chirib, fayldan bir marta qayta yuklash (yoki ROW_NUMBER() > 1 larini
+      o'chirish), keyin mart.daily_sales va tavsiyani qayta hisoblash; 07.10 qator sonlari 9 210 / 7 030 ekanini tekshirish.
+      3) Doimiy: UNIQUE (store_id, receipt_id, line_no) + INSERT ... ON CONFLICT DO NOTHING; load_day ham clean_sales'dan o'tadi;
+      yuklashdan keyin kunlik qator soni 7 kunlik o'rtachadan 1.5× oshsa — mart yangilanmaydi. Postmortem 2 kun ichida.
+
+  - id: incident_impact
+    type: incident
+    role: analyst
+    day: 1
+    at: "15:30"
+    from: gulnora
+    brief: |
+      Dashboard'da CHL va YUN buyurtmasi to'satdan oshdi, do'konlar yuborishni so'rayapti! Sut bo'yicha ayting:
+      qaysi raqam to'g'ri, dublikat qancha ortiqcha buyurtmaga olib kelardi (quti, dona, so'm) va nega. Raqamlarni
+      jamoadoshlaringizga ham yuboring — BI do'konlarga yozadi.
+    attachments: [doc_incident_dup, doc_forecast_policy]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 1.5
+    competencies: [technical, stress_handling]
+    rubric:
+      - {id: mechanism, description: "Mexanizm: 07.10 sotuvi ikki baravar (CHL +124, YUN +88) → qoldiq = kirim − sotuv kamaygan, 0 ga tushgan → buyurtma oshgan", weight: 1.5}
+      - {id: numbers, description: "To'g'ri: CHL 73 quti, YUN 54 quti; dublikat bilan 81 va 59 — ortiqcha 8 + 5 = 13 quti = 156 dona", weight: 2}
+      - {id: money, description: "Ortiqcha summa: 156 × 9 800 = 1 528 800 so'm; SRG o'zgarmagan (41 quti); boshqa tez buziladigan SKU'lar ham tekshiriladi", weight: 1.5}
+    hints:
+      - "Prognoz o'tgan haftalardan hisoblanadi — u o'zgardimi? Unda formulaning qaysi qismi o'zgargan?"
+      - "Qoldiq 0 bo'lganda CHL uchun 'kerak' miqdorini qayta hisoblang va qutiga yaxlitlang."
+    reference_answer: |
+      Prognoz o'zgarmagan (to'liq haftalar asosida), o'zgargan qism — dushanba kutilgan qoldiq: qoldiq = kirim − sotuv, 07.10 sotuvi
+      ikki baravar (CHL 248 vs 124, YUN 176 vs 88), shuning uchun qoldiq CHL 96 − 124 → 0, YUN 60 − 88 → 0.
+      Dublikat bilan: CHL 843.3 + 126.5 − 0 = 969.8 → 81 quti (972); YUN 606.7 + 91.0 − 0 = 697.7 → 59 quti (708).
+      To'g'ri: CHL 73 quti (876), YUN 54 quti (648), SRG 41 (o'zgarmagan). Ortiqcha: 8 + 5 = 13 quti = 156 dona ≈ 1 528 800 so'm,
+      7 kunlik sut — asosan hisobdan chiqarilardi. Qatiq, kefir, non uchun ham CHL/YUN tavsiyalari tozalanguncha ishlatilmasin.
+
+  - id: incident_store_notice
+    type: incident
+    role: bi
+    day: 1
+    at: "15:30"
+    from: madina
+    brief: |
+      CHL va YUN do'kon rahbarlari dashboard'dagi oshgan buyurtmani yubormoqchi. Ularga hozir qisqa xabar va dashboard'ga banner
+      matnini yozing: nima bo'ldi, hozir nima qilmaslik kerak, to'g'ri raqam va qachon tuzatiladi. Raqamlarni analystdan oling.
+    attachments: [doc_incident_dup, doc_data_runbook]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 1.5
+    competencies: [communication, stress_handling]
+    rubric:
+      - {id: stop, description: "Aniq ko'rsatma: CHL/YUN dashboard buyurtmasini hozir yubormaslik; SRG va boshqalar odatdagidek", weight: 2}
+      - {id: numbers, description: "To'g'ri raqamlar: sut CHL 73, YUN 54 quti (dashboard'dagi 81 va 59 emas); boshqa SKU'lar tuzatilgach", weight: 1.5}
+      - {id: honest_short, description: "Qisqa, texnik jargonsiz, sabab halol (ma'lumot ikki marta yuklangan), muddat aniq (16:30 gacha, ombor 17:00)"}
+    hints:
+      - "Do'kon rahbariga birinchi gapda nima kerak: nima qilmaslik. Keyin — qachon va qanday raqam."
+    reference_answer: |
+      Banner: "CHL va YUN: 07.10 savdo ma'lumoti ikki marta yuklangan, buyurtma tavsiyalari oshib ketgan. Tuzatilmoqda — 16:30 gacha
+      buyurtma yubormang."
+      Xabar: "Hurmatli CHL va YUN rahbarlari! Dashboard'dagi oshgan buyurtmani hozir yubormang — kecha savdo ma'lumoti xato bilan ikki
+      marta yuklangan. Sut uchun to'g'ri buyurtma: CHL — 73 quti, YUN — 54 quti (dashboard'da 81 va 59). Qolgan mahsulotlar 16:30 gacha
+      tuzatiladi va yozaman; ombor 17:00 gacha qabul qiladi. SRG va boshqa do'konlarga ta'sir yo'q."
+
+  - id: incident_thanks
+    type: message
+    after: {node: incident_pipeline, event: submitted, minutes: 20}
+    from: sherzod
+    brief: "Rahmat! 07.10 qayta yuklandi — CHL 9 210, YUN 7 030 qator, tavsiyalar 73 va 54 qutiga qaytdi. UNIQUE cheklovni bugun kechqurun qo'shaman."
+
+  - id: day1_end
+    type: day_end
+    day: 1
+    at: "17:30"
+    brief: |
+      Kun yakuni — jamoaning bitta umumiy hisoboti Madina va Gulnoraga: har rol nima qildi, buyurtma raqamlari, qaror va
+      uning sababi, incident yakuni, ertangi reja. Jamoa bo'lib nimani yaxshiroq qilish mumkin edi — bitta xulosa.
+    competencies: [communication]
+    rubric:
+      - {id: by_role, description: "Har rolning natijasi aniq: clean_sales, prognoz (168 quti), dashboard va WAPE 2.9%", weight: 1.5}
+      - {id: decision, description: "+25% bo'yicha qaror va raqamli sababi yozilgan"}
+      - {id: incident, description: "Incident holati: 16 240 dublikat qator, to'g'ri buyurtmalar, doimiy tuzatish va postmortem"}
+      - {id: reflection, description: "Jamoaviy ish bo'yicha aniq xulosa bor"}

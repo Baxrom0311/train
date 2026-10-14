@@ -1,0 +1,905 @@
+# CONTRACT.md §9.11 — Bank sohasining haftalik kontenti. Bank, mijozlar, odamlar, kontragentlar va raqamlar
+# o'ylab topilgan. Chegaralar (DSCR, joriy likvidlik, ta'minot diskontlari, zaxira stavkalari, bog'liq shaxs
+# qoidalari) — o'quv maqsadidagi ichki siyosat, real normativ emas.
+# Hikoya: yangi tahlilchi bir hafta davomida «Bodomzor Mebel» MChJning 1.8 mlrd so'mlik investitsion kredit
+# arizasini to'liq olib boradi: hujjatlar → pul oqimi va DSCR (kalit, 2-kun) → garov va memo → qo'mita va
+# monitoring signali → portfel hisoboti va retro. 4-kun incident'i 2-kun tahlili sifatiga bog'liq.
+slug: oqsaroy-bank-credit-week1
+title: "Oqsaroy Bank — Junior kredit tahlilchisi, 1 hafta: o'rta biznesga investitsion kredit"
+sector: Banking
+company_name: "Oqsaroy Bank"          # fictional
+difficulty: junior
+duration_days: 5
+
+personas:
+  - key: gulnora
+    name: "Gulnora Azimova"
+    role: "Kichik va o'rta biznes kreditlash bo'limi boshlig'i"
+    tone: "rasmiy, xotirjam, raqam va siyosat bandiga tayanadi; xatoni ochiq, lekin hurmat bilan aytadi"
+    knows: [doc_onboarding, doc_credit_policy, doc_required_docs, doc_application_package, doc_bureau, doc_financials, doc_collateral, doc_committee_questions, doc_monitoring_policy, doc_portfolio]
+    secrets:
+      - "Ishlab chiqarish binosi 2025-yil 3-dekabrda «Kumush Vodiy Bank» foydasiga taqiq reestriga kiritilgan — birinchi navbatdagi garov."
+      - "Kredit qo'mitasi payshanba kuni 15:00 da yig'iladi; memo kamida bir kun oldin kotibga topshiriladi."
+    busy_reply: "Kredit qo'mitasidaman, chiqqach javob beraman."
+    deflect_reply: "Xulosani siz chiqarishingiz kerak. Siyosatdagi har talabni hisobotdagi raqam bilan birma-bir solishtiring va manbasini yozing."
+  - key: feruza
+    name: "Feruza Saidova"
+    role: "Katta kredit tahlilchisi, mentor"
+    kind: mentor
+    tone: "iliq, sabrli, formulani va siyosat bandini eslatadi, lekin hisobni o'zi qilib bermaydi"
+    knows: [doc_onboarding, doc_credit_policy, doc_monitoring_policy]
+    busy_reply: "Mijoz bilan uchrashuvdaman, keyinroq yozaman."
+    deflect_reply: "Raqamni o'zingiz hisoblang — formulasi siyosatda bor. Qaysi qadamda ikkilanayotganingizni yozing, o'sha yerdan savol beraman."
+  - key: jasur
+    name: "Jasur Ergashev"
+    role: "Compliance (KYC/AML) mutaxassisi"
+    tone: "qat'iy, qisqa, maxfiylik va manfaatlar to'qnashuviga juda e'tiborli"
+    knows: [doc_kyc, doc_credit_policy]
+    secrets:
+      - "Sherzod Tojiboyev ichki tizimda Bodomzor arizasiga ikki marta kirish so'ragan — ruxsat berilmagan."
+    busy_reply: "Tekshiruvdaman. Shoshilinch bo'lsa — bog'liq shaxslar qoidasiga ko'ra ish yuriting."
+    deflect_reply: "Kim kimga bog'liqligini o'zingiz chizing: ulush, lavozim, qarindoshlik. Keyin siyosatdagi bandga solishtiring."
+  - key: anvar
+    name: "Anvar Tojiboyev"
+    role: "Mijoz, «Bodomzor Mebel» MChJ direktori"
+    tone: "xushmuomala, o'ziga ishongan, shoshiltiradi; noqulay savolni 'bu mayda gap' deb chetlab o'tadi"
+    knows: [doc_application_package, doc_financials]
+    secrets:
+      - "«Bodomzor Savdo»ning Kumush Vodiy Bank'dagi krediti bo'yicha avgustdan to'lovlar qiyinlashgan — buni faqat to'g'ridan-to'g'ri so'ralsa aytadi."
+      - "O'z ulushi (450 mln) uchun pulni «Bodomzor Savdo» qarzini qaytarganidan keyin to'lamoqchi."
+    busy_reply: "Sexdaman, keyinroq qo'ng'iroq qilaman."
+    deflect_reply: "Men bankir emasman, hisob-kitobni o'zingiz qilasiz-da. Menga tezroq ijobiy javob kerak."
+  - key: sherzod
+    name: "Sherzod Tojiboyev"
+    role: "Zangiota filiali kredit menejeri (Anvar Tojiboyevning ukasi)"
+    tone: "samimiy, 'o'zimizniki' ohangida, norasmiy kanalni taklif qiladi"
+    knows: [doc_onboarding]
+    busy_reply: "Filialda mijoz ko'p, keyin yozaman."
+    deflect_reply: "Men shunchaki yordam bermoqchi edim, xolos."
+  - key: rustam
+    name: "Rustam Nazarov"
+    role: "Korporativ va o'rta biznes departamenti direktori"
+    tone: "bosimli, natija va mijoz bilan munosabatni birinchi qo'yadi; 'mas'uliyatni o'zim olaman' deydi"
+    knows: [doc_credit_policy]
+    secrets:
+      - "Bodomzor depoziti aslida 600 mln so'm, 2 mlrd emas — va shu oy muddati tugaydi."
+    busy_reply: "Boshqaruv yig'ilishidaman, keyin gaplashamiz."
+    deflect_reply: "Tafsilotni Gulnora bilan hal qiling, menga natija kerak."
+
+documents:
+  - key: doc_onboarding
+    title: "Kichik va o'rta biznes kreditlash bo'limi: onboarding"
+    content: |
+      Oqsaroy Bank — Toshkentdagi xususiy tijorat banki. Bo'lim kichik va o'rta biznesga kredit beradi.
+      Jamoa: Gulnora Azimova (bo'lim boshlig'i), Feruza Saidova (katta tahlilchi, mentor), 4 tahlilchi.
+      KYC, AML va manfaatlar to'qnashuvi savollari — Compliance (Jasur Ergashev).
+      Departament direktori — Rustam Nazarov.
+
+      Ish kuni 09:00–18:00, tushlik 13:00–14:00. Har kuni 09:00 da standup (yozma):
+      kecha nima qildim / bugun nima qilaman / nima to'sib turibdi. 3–5 qator. 17:30 da kun yakuni.
+
+      Asosiy qoidalar:
+      - Tahlilchi kreditni tasdiqlamaydi va mijozga va'da bermaydi. Qarorni limit bo'yicha bo'lim boshlig'i
+        (500 mln so'mgacha) yoki kredit qo'mitasi (500 mln dan yuqori) qabul qiladi.
+      - Tahlil raqamlari o'zgartirilmaydi. Siyosatdan chetlashish faqat ochiq "istisno so'rovi" sifatida,
+        sabab va himoya choralari bilan, qo'mita orqali.
+      - Mijoz ma'lumoti va tahlil qoralamalari faqat bank ichki tizimlarida; shaxsiy messenjerga yuborilmaydi,
+        arizaga aloqasi yo'q xodimlarga ko'rsatilmaydi.
+      - Mijozdan sovg'a, mehmondorchilik yoki xizmat qabul qilish taqiqlanadi. Mijoz bilan tanishlik yoki
+        qarindoshlik bo'lsa — darhol rahbarga yoziladi (manfaatlar to'qnashuvi).
+      - Har xulosa: raqamlar + qaysi siyosat bandiga asoslangani + tavsiya va shartlar.
+
+  - key: doc_credit_policy
+    title: "O'rta biznes investitsion kredit siyosati (ichki, o'quv versiyasi)"
+    content: |
+      1. Mahsulot: asbob-uskuna sotib olish uchun investitsion kredit. Stavka yillik 24%, annuitet.
+         Muddat 48 oygacha. Annuitet: to'lov = S × r / (1 − (1 + r)^−n), r = yillik / 12, n — oylar soni.
+      2. O'z ulushi: loyiha qiymatining kamida 20% i, kredit berilishidan OLDIN to'lanadi, manbasi tasdiqlanadi.
+      3. DSCR = qarzga xizmat ko'rsatish uchun pul oqimi (CFADS) / qarz to'lovlari. Talab: DSCR ≥ 1.25.
+         CFADS = EBITDA − to'langan foyda solig'i. EBITDA = yalpi foyda − operatsion xarajatlar
+         (amortizatsiyasiz). Bir martalik (takrorlanmaydigan) daromad va xarajatlar EBITDA'ga kirmaydi.
+         Foiz xarajatlari CFADS'dan ayrilmaydi — ular qarz to'lovlari tarkibida (maxrajda).
+         Qarz to'lovlari = ariza sanasidagi barcha mavjud oylik to'lovlar (qolgan muddatidan qat'i nazar)
+         + yangi kredit annuiteti. Hisob oylik yoki yillik — bir xil asosda.
+      4. Joriy likvidlik = joriy aktivlar / joriy majburiyatlar ≥ 1.2. Bog'liq shaxslarning muddati
+         90 kundan ortiq o'tgan debitorligi joriy aktivlardan chiqariladi.
+      5. Shartli majburiyatlar: qarz oluvchi uchinchi shaxs (ayniqsa bog'liq shaxs) krediti uchun kafil bo'lsa,
+         stress-DSCR hisoblanadi — kafolatlangan kreditning oylik to'lovi maxrajga qo'shiladi. Stress-DSCR < 1.0
+         bo'lsa, memo'da alohida xavf sifatida ko'rsatiladi va qo'mita kovenant yoki qo'shimcha himoya talab qiladi.
+      6. Ta'minot: tan olinadigan qiymat = bozor bahosi × diskont: ko'chmas mulk 0.7, yangi uskuna 0.6,
+         ishlatilgan uskuna 0.4, transport 0.5. Ta'minot koeffitsienti = tan olinadigan qiymat / kredit ≥ 1.2.
+         Boshqa bankda garovda turgan mulk (ikkinchi navbat) hisobga olinmaydi. Oilaviy mulk garovi uchun
+         turmush o'rtog'ining notarial roziligi shart. Sotib olinadigan uskuna garovi yetkazilgandan keyin
+         30 kun ichida rasmiylashtiriladi.
+      7. Kafillik: ulushi ≥ 25% bo'lgan har bir ta'sischining shaxsiy kafilligi majburiy. Bog'liq kompaniya
+         kafilligi mustaqil himoya hisoblanmaydi.
+      8. Kredit tarixi: oxirgi 12 oyda 30 kundan ortiq kechikish — standart tasdiqlash yo'q.
+      9. Bog'liq shaxs: bank xodimi yoki uning yaqin qarindoshi (ota-ona, aka-uka, opa-singil, turmush o'rtog'i,
+         farzand) bilan bog'liq mijoz. Ariza faqat kredit qo'mitasida, imtiyozli shartlarsiz; bog'liq xodim
+         jarayonda qatnashmaydi va ariza ma'lumotini olmaydi.
+      10. Biror talab bajarilmasa tahlilchi rad etishni yoki shartlarni (summa, muddat, garov, kovenant)
+          tavsiya qiladi va ularni raqam bilan asoslaydi.
+
+  - key: doc_required_docs
+    title: "O'rta biznes investitsion krediti: majburiy hujjatlar ro'yxati"
+    content: |
+      1. Ariza (direktor imzosi, barcha mavjud kreditlar va kafilliklar ko'rsatilgan).
+      2. Ustav va davlat ro'yxatidan o'tganlik guvohnomasi.
+      3. Ta'sischilarning kredit va garov olish haqidagi qarori (bayonnoma).
+      4. Oxirgi 2 yillik moliyaviy hisobot (oxirgi yil — auditorlik xulosasi bilan), izohlari bilan.
+      5. Oxirgi chorak balansi va moliyaviy natijalar hisoboti — ariza sanasida 90 kundan eski emas.
+      6. Barcha banklardagi hisob raqamlari bo'yicha 12 oylik aylanma ko'chirmasi.
+      7. Soliq qarzi yo'qligi haqida ma'lumotnoma — 30 kundan eski emas.
+      8. Loyiha hujjatlari: yetkazib beruvchi bilan shartnoma yoki hisob-faktura (tijorat taklifi yetarli emas).
+      9. Garov: mulk huquqi hujjati, mustaqil baholash hisoboti (6 oydan eski emas), taqiq reestri ko'chirmasi.
+      10. Oilaviy mulk garovi — turmush o'rtog'ining notarial roziligi.
+      11. Ulushi ≥ 25% ta'sischilar: pasport nusxasi va shaxsiy kafillik shartnomasi loyihasi.
+      12. Kredit byurosi ma'lumotini olishga rozilik.
+
+  - key: doc_application_package
+    title: "«Bodomzor Mebel» MChJ: ariza va taqdim etilgan hujjatlar (09.10.2026)"
+    content: |
+      Mijoz: «Bodomzor Mebel» MChJ, korpus mebel ishlab chiqarish, Toshkent viloyati Zangiota tumani,
+      9 yil faoliyat, 86 xodim. Ta'sischilar: Anvar Tojiboyev (70%), Malika Tojiboyeva (30%).
+      So'ralgan kredit: 1 800 000 000 so'm, 36 oy. Maqsad: CNC ishlov berish liniyasi (loyiha qiymati
+      2 250 mln so'm, yetkazib beruvchi «Texnomash Servis» MChJ). O'z ulushi: 450 mln so'm.
+      Arizada "mavjud kreditlar": «Yashil Lizing» MChJ, lizing, 18 mln so'm/oy. Boshqa kreditlar va kafilliklar
+      ko'rsatilmagan. Taklif qilingan kafil: «Bodomzor Savdo» MChJ.
+
+      Taqdim etilgan hujjatlar:
+      № | hujjat | sana / holat
+      1 | Ariza | 09.10.2026, imzolangan
+      2 | Ustav, guvohnoma | bor
+      3 | Ta'sischilar qarori | yo'q
+      4 | 2024 va 2025 yillik hisobot | 2025 — «Ishonch Audit» MChJ xulosasi bilan, izohlarsiz
+      5 | Choraklik balans | 30.06.2026 holatiga
+      6 | Hisob ko'chirmasi | faqat Oqsaroy Bank, 12 oy
+      7 | Soliq qarzi yo'qligi ma'lumotnomasi | 14.08.2026
+      8 | CNC liniya | «Texnomash Servis» tijorat taklifi, 2 250 mln, amal qiladi 31.10.2026 gacha
+      9a | Garov: ishlab chiqarish binosi | kadastr ko'chirmasi; baholash 20.05.2026 — 1 400 mln
+      9b | Garov: direktorning uyi (Anvar va Malika umumiy mulki) | kadastr; baholash 15.12.2025 — 950 mln
+      9c | Garov: yuk mashinasi (2021) | texpasport; baholash yo'q
+      9d | Taqiq reestri ko'chirmasi | yo'q
+      10 | Turmush o'rtog'i roziligi | yo'q
+      11 | Pasportlar | Anvar, Malika — bor; kafillik loyihasi — faqat «Bodomzor Savdo» nomidan
+      12 | Byuro roziligi | bor
+
+  - key: doc_bureau
+    title: "Kredit byurosi ko'chirmasi: «Bodomzor Mebel» MChJ (10.10.2026)"
+    content: |
+      Joriy majburiyatlar:
+      kreditor | turi | qoldiq | oylik to'lov | qolgan muddat | holat
+      Kumush Vodiy Bank | aylanma kredit | 392 mln | 24 mln | 20 oy | joriy
+      Yashil Lizing MChJ | lizing | 85 mln | 18 mln | 5 oy | joriy
+      Kechikishlar (oxirgi 24 oy): 2025-noyabr — 9 kun (Kumush Vodiy Bank), to'liq to'langan.
+      Byuro reytingi: A− (yaxshi). Kafil sifatidagi majburiyatlar byuroga hali uzatilmaydi.
+
+  - key: doc_kyc
+    title: "KYC anketasi: «Bodomzor Mebel» va bog'liq shaxslar"
+    content: |
+      A) Anvar Tojiboyev. «Bodomzor Mebel» direktori va ta'sischisi
+        Ulush: 70%
+        Boshqa biznes: «Bodomzor Savdo» MChJ — 100% ta'sischi va direktor
+        PEP: yo'q. Sanksiya ro'yxatlari: mos kelish yo'q
+        Telefon orqali ma'lum qilgan: "Savdo — alohida firma, mebelni do'konlarda sotadi"
+      B) Malika Tojiboyeva. «Bodomzor Mebel» ta'sischisi, Anvar Tojiboyevning turmush o'rtog'i
+        Ulush: 30%
+        Lavozim: bosh hisobchi
+        PEP: yo'q. Sanksiya ro'yxatlari: mos kelish yo'q
+      C) «Bodomzor Savdo» MChJ. Mebel chakana savdosi, 4 ta do'kon
+        Ta'sischi: Anvar Tojiboyev (100%)
+        Hisob raqami: Kumush Vodiy Bank
+        «Bodomzor Mebel» mahsulotining asosiy sotuvchisi (Mebel savdosining ~40% i)
+        Arizada kafil sifatida taklif qilingan
+      D) Sherzod Tojiboyev. Anvar Tojiboyevning ukasi
+        Ish joyi: Oqsaroy Bank, Zangiota filiali, kredit menejeri
+        Bodomzor arizasiga rasmiy aloqasi yo'q
+
+  - key: doc_financials
+    title: "«Bodomzor Mebel»: moliyaviy hisobot (oxirgi 12 oy) va 30.09.2026 balansi, izohlar bilan"
+    content: |
+      Moliyaviy natijalar, oxirgi 12 oy (2025-oktyabr — 2026-sentyabr), mln so'm:
+      ko'rsatkich | summa
+      Tushum | 12 000
+      Tannarx | 7 800
+      Yalpi foyda | 4 200
+      Operatsion xarajatlar (ish haqi, ijara, ma'muriy, sotish; amortizatsiyasiz) | 2 310
+      Amortizatsiya | 300
+      Boshqa daromad: eski omborni sotishdan foyda (2026-mart, bir martalik) | 540
+      Foiz xarajatlari | 120
+      Soliqdan oldingi foyda | 2 010
+      Foyda solig'i (to'langan) | 302
+      Sof foyda | 1 708
+
+      Balans, 30.09.2026, mln so'm:
+      modda | summa
+      Pul mablag'lari | 310
+      Debitorlik qarzi | 2 140
+      — shundan «Bodomzor Savdo» MChJ (muddati 140 kun o'tgan) | 1 180
+      Tovar-moddiy zaxiralar | 1 650
+      Boshqa joriy aktivlar | 100
+      Joriy aktivlar jami | 4 200
+      Kreditorlik qarzi | 1 960
+      Kreditlarning joriy qismi | 330
+      Soliq va ish haqi bo'yicha qarzlar | 310
+      Joriy majburiyatlar jami | 2 600
+      Kreditlar va lizing: uzoq muddatli qismi (qoldiq jami 477 = Kumush Vodiy 392 + lizing 85) | 147
+
+      Hisobotga izohlar (tanlangan):
+      5-band. Bog'liq tomonlar: «Bodomzor Savdo» MChJ — umumiy ta'sischi. Yil davomida unga 4 800 mln so'mlik
+      mahsulot sotilgan; to'lov muddati 30 kun, amalda 140 kungacha cho'zilgan.
+      7-band. Shartli majburiyatlar: kompaniya «Bodomzor Savdo» MChJning Kumush Vodiy Bank'dagi
+      900 mln so'mlik krediti (2025-dekabr, 36 oy, yillik 26%, oylik to'lov ≈ 36.3 mln) bo'yicha kafil.
+
+  - key: doc_collateral
+    title: "Garov paketi: yangilangan ma'lumotlar (13.10.2026)"
+    content: |
+      garov | bozor bahosi, mln | baholash sanasi | turi | izoh
+      CNC ishlov berish liniyasi (sotib olinadi) | 2 250 | yetkazib beruvchi narxi | yangi uskuna | yetkazish shartnoma imzolangach 6–8 hafta
+      Ishlab chiqarish binosi | 1 400 | 20.05.2026 | ko'chmas mulk | taqiq reestri: 03.12.2025 dan Kumush Vodiy Bank foydasiga garovda
+      Direktorning uyi (Anvar va Malika umumiy mulki) | 1 000 | 10.10.2026 (qayta baholash) | ko'chmas mulk | taqiq yo'q; Malika roziligi hali yo'q
+      Yuk mashinasi (2021) | 260 | 11.10.2026 | transport | taqiq yo'q
+
+      Kafillar:
+      A) «Bodomzor Savdo» MChJ. Taklif qilingan korporativ kafil
+        Ta'sischi: Anvar Tojiboyev (100%)
+        «Bodomzor Mebel»ga qarzi: 1 180 mln (muddati 140 kun o'tgan)
+        O'zi: Kumush Vodiy Bank kreditida «Bodomzor Mebel» kafilligida
+      B) Anvar Tojiboyev. Ta'sischi, 70%
+        Oylik shaxsiy daromad (dividend, ish haqi): ~45 mln so'm
+        Shaxsiy kafillik: hali taklif qilinmagan
+      C) Malika Tojiboyeva. Ta'sischi, 30%
+        Oylik ish haqi: 12 mln so'm
+        Shaxsiy kafillik: hali taklif qilinmagan
+
+  - key: doc_committee_questions
+    title: "Kredit qo'mitasi: «Bodomzor Mebel» bo'yicha a'zolarning oldindan savollari"
+    content: |
+      1. (Risk direktori) DSCR siyosatdan past bo'lsa, nega ijobiy (yoki shartli) tavsiya? Raqam bilan.
+      2. (Risk direktori) «Bodomzor Savdo» debitorligi va 7-band kafilligi — biz qanday himoyalanamiz?
+      3. (Garov bo'limi) Nega ishlab chiqarish binosi ta'minotga kiritilmagan? Uskuna yetkazilguncha ta'minot qancha?
+      4. (Raisning o'rinbosari) Bugun ertalab mijoz bo'yicha kelgan signal qarorga qanday ta'sir qiladi?
+      5. (Compliance) Bog'liq shaxs masalasi — jarayon qanday himoyalangan?
+      6. (Monitoring) Kredit berilsa, qaysi kovenantlar va ogohlantiruvchi signallar kuzatiladi, qanchalik tez-tez?
+
+  - key: doc_savdo_default
+    title: "Shoshilinch: qo'mita oldidan yangilangan byuro ko'chirmasi va Kumush Vodiy Bank xati"
+    content: |
+      Byuro (bugun 09:40, kafillar bo'yicha yangi bo'lim):
+      «Bodomzor Mebel» — «Bodomzor Savdo» kreditiga kafil. Kreditor: Kumush Vodiy Bank.
+      Asosiy qarz qoldig'i: 748 mln so'm. Muddati o'tgan: 72.5 mln so'm (2 oylik to'lov), kechikish 47 kun.
+
+      Kumush Vodiy Bank'ning «Bodomzor Mebel»ga xati (nusxasi mijozdan, 09:55):
+      "Asosiy qarzdor «Bodomzor Savdo» MChJ to'lovlarni 47 kun kechiktirdi. Kafillik shartnomasining 4.2-bandiga
+      ko'ra 10 bank kuni ichida muddati o'tgan 72.5 mln so'm va peni to'lanishini talab qilamiz. To'lanmasa,
+      butun qoldiqni muddatidan oldin undirish huquqimiz saqlanadi."
+
+      Kredit qo'mitasi bugun 15:00 da. Memo kotibda.
+
+  - key: doc_tax_alert
+    title: "Monitoring signali: «Bodomzor Mebel» hisobidan soliq inkassosi"
+    content: |
+      Bugun 09:35: «Bodomzor Mebel»ning Oqsaroy Bank'dagi hisobidan soliq organining inkasso topshirig'i
+      bo'yicha 46 mln so'm (QQS qarzi va peni, 2026-iyul davri) so'zsiz yechildi.
+      Hisob qoldig'i: 264 mln so'm (oldin 310 mln).
+      Mijozning izohi (telefon): "Xaridorning hisob-fakturasi noto'g'ri tasdiqlangan, akt-sverka qilyapmiz,
+      pul qaytadi." Hujjat hali berilmagan.
+      Eslatma: arizadagi soliq qarzi yo'qligi ma'lumotnomasi 14.08.2026 sanali.
+      Kredit qo'mitasi bugun 15:00 da. Memo kotibda.
+
+  - key: doc_monitoring_policy
+    title: "Kredit monitoringi va zaxiralar (ichki, o'quv versiyasi)"
+    content: |
+      Zaxira (provision) sinflari — kechikish kunlari bo'yicha, qarz qoldig'idan:
+      sinf | kechikish | zaxira stavkasi
+      1 | 0 kun | 1%
+      2 | 1–30 kun | 5%
+      3 | 31–90 kun | 25%
+      4 | 91+ kun | 50%
+      Ogohlantiruvchi signal bo'lsa (kechikish bo'lmasa ham) qarz oluvchi kuzatuv ro'yxatiga (watchlist)
+      olinadi va bir sinf yuqoriroq zaxira qo'llanadi (4-sinfdan yuqori yo'q).
+      Ogohlantiruvchi signallar: hisob aylanmasining 3 oy ketma-ket ≥ 30% pasayishi; soliq inkassosi yoki
+      hisobga to'siq; direktor yoki asosiy ta'sischi almashuvi; kovenant buzilishi (shu jumladan hisobotning
+      30+ kun kechikishi); sud da'vosi; bog'liq shaxs yoki kafolatlangan qarzdor bo'yicha kechikish.
+      PAR30 = 30 kundan ortiq kechikkan kreditlar qoldig'i / portfel. NPL = 90+ kun kechikkanlar qoldig'i / portfel.
+      Haftalik portfel hisoboti: ko'rsatkichlar, zaxira yetishmovchiligi, watchlist va har biri bo'yicha harakat.
+
+  - key: doc_portfolio
+    title: "Feruza Saidovadan topshirilgan portfel (bugungi holat)"
+    content: |
+      qarz oluvchi | qoldiq, mln | kechikish, kun | izoh
+      A. «Shirin Non» MChJ | 275 | 0 | to'lovlar joriy
+      B. «Gulzor Tekstil» MChJ | 640 | 0 | hisob aylanmasi 3 oy ketma-ket: −32%, −35%, −38%
+      C. «Nurli Yo'l Logistika» MChJ | 410 | 12 | sentyabrda direktor almashgan; soliq inkassosi 18 mln
+      D. «Toza Suv Servis» MChJ | 220 | 0 | to'lovlar joriy
+      E. «Charm Ustasi» MChJ | 380 | 47 | kechikish sababi tushuntirilmagan
+      F. «Bahor Farm» MChJ | 150 | 95 | yetkazib beruvchining sud da'vosi
+      G. «Yashil Issiqxona» MChJ | 530 | 0 | 2-chorak hisoboti 34 kun kechikdi; kovenant DSCR ≥ 1.2, amalda 1.08
+      H. «Oq Tosh Qurilish» MChJ | 295 | 28 | mavsumiy, oldin ham 20–30 kun kechikkan
+      Hisobdagi mavjud zaxira: 150 mln so'm.
+
+nodes:
+  # ── 1-kun: tanishuv va ariza to'liqligi ─────────────────────────────
+  - id: welcome
+    type: message
+    day: 1
+    at: "09:00"
+    from: gulnora
+    brief: |
+      Oqsaroy Bank'ga xush kelibsiz! Bu hafta sizning asosiy ishingiz — «Bodomzor Mebel» MChJning
+      1.8 mlrd so'mlik investitsion kredit arizasi: bugun hujjatlar, ertaga pul oqimi, chorshanba garov va memo,
+      payshanba kredit qo'mitasi, juma portfel hisoboti. Onboarding'ni o'qing — ayniqsa "raqamlar o'zgartirilmaydi" qoidasini.
+
+  - id: standup_d1
+    type: task
+    day: 1
+    at: "09:00"
+    from: gulnora
+    brief: "Standup: bugungi rejangizni onboarding formatida yozing (3–5 qator)."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Formatga mos: reja / muddat / to'siqlar, 3–5 qator"}
+      - {id: concrete, description: "Reja aniq: Bodomzor arizasi hujjatlarini tekshirish, kim bilan, qachongacha", weight: 2}
+      - {id: blockers, description: "To'siq yoki savol ochiq aytilgan (tizimlarga kirish, siyosat bilan tanishish)"}
+    hints: ["Birinchi kunda 'kecha' o'rniga nimani o'rganib, nimani tushlikkacha topshirishingizni yozing."]
+    reference_answer: "Bugun: o'rta biznes siyosati va hujjatlar ro'yxati bilan tanishaman, Bodomzor arizasining to'liqligini tekshirib, tushlikkacha yetishmovchiliklar ro'yxatini beraman; tushdan keyin Jasur bilan KYC. To'siq: kredit byurosi tizimiga kirish huquqi hali yo'q."
+
+  - id: mentor_intro
+    type: message
+    day: 1
+    at: "09:15"
+    from: feruza
+    brief: |
+      Salom! Men Feruza, shu hafta mentoringizman. Hisobni siz uchun qilmayman, lekin formulani va siyosat bandini
+      birga topamiz. Bitta maslahat: kredit tahlilida eng xavfli narsa — hujjatda bor, lekin hech kim o'qimagan qator.
+      Qiyin bo'lsa hint so'rang — har hint task balini biroz kamaytiradi.
+
+  - id: doc_checklist
+    type: task
+    day: 1
+    at: "10:00"
+    from: gulnora
+    brief: |
+      Bodomzor arizasi to'liqmi? Majburiy ro'yxat bilan taqdim etilgan paketni solishtiring.
+      Javobda: 1) yetishmayotgan yoki muddati o'tgan hujjatlar (har biri — qaysi band, nima noto'g'ri);
+      2) arizadagi ma'lumot va byuro o'rtasidagi ziddiyatlar; 3) mijozga bitta jamlangan, muloyim so'rov xati
+      (muddat bilan). Ariza sanasi — 09.10.2026.
+    attachments: [doc_required_docs, doc_application_package, doc_bureau]
+    answer_types: [text, file]
+    due_in_minutes: 150
+    weight: 1.5
+    competencies: [technical, communication]
+    rubric:
+      - {id: missing, description: "Yo'q hujjatlar topilgan: ta'sischilar qarori (3), Kumush Vodiy Bank ko'chirmasi (6), yetkazib beruvchi shartnomasi/hisob-fakturasi (8), taqiq reestri (9), turmush o'rtog'i roziligi (10), ta'sischilarning shaxsiy kafillik loyihasi (11), hisobot izohlari (4)", weight: 2}
+      - {id: outdated, description: "Muddati o'tganlar sanasi bilan: balans 30.06 (101 kun > 90), soliq ma'lumotnomasi 14.08 (56 kun > 30), uy bahosi 15.12.2025 (> 6 oy), yuk mashinasi bahosi yo'q", weight: 2}
+      - {id: inconsistency, description: "Arizada Kumush Vodiy Bank krediti (392 mln, 24 mln/oy) ko'rsatilmagan — byuroda bor; 2025-noyabrdagi 9 kunlik kechikish qayd etilgan", weight: 1.5}
+      - {id: letter, description: "Mijozga xat: bitta jamlangan ro'yxat, aniq muddat, muloyim, qaror haqida va'da yo'q", weight: 1.5}
+    hints:
+      - "Ikkala ro'yxatni yonma-yon qo'ying: majburiy band → taqdim etilgan → holat (bor / yo'q / eski)."
+      - "Sanalarni ariza sanasidan sanang: 90 kun, 30 kun va 6 oy chegaralarini tekshiring."
+      - "Arizadagi 'mavjud kreditlar' qatorini byuro jadvali bilan solishtiring."
+    reference_answer: |
+      Yo'q: 3 — ta'sischilar qarori; 4 — 2025 hisobot izohlari; 6 — Kumush Vodiy Bank ko'chirmasi (byuroda u yerda kredit bor);
+      8 — faqat tijorat taklifi, shartnoma/hisob-faktura kerak; 9 — taqiq reestri ko'chirmasi, yuk mashinasi bahosi;
+      10 — Malika Tojiboyevaning notarial roziligi (uy umumiy mulk); 11 — Anvar (70%) va Malika (30%) shaxsiy kafillik loyihasi
+      (faqat «Bodomzor Savdo» taklif qilingan).
+      Eski: balans 30.06.2026 — 101 kun (> 90), 30.09 holatiga kerak; soliq ma'lumotnomasi 14.08 — 56 kun (> 30);
+      uy bahosi 15.12.2025 — 6 oydan eski. Ziddiyat: arizada faqat lizing, byuroda Kumush Vodiy Bank krediti 392 mln (24 mln/oy) ham bor;
+      2025-noyabrda 9 kun kechikish (siyosat chegarasidan past, lekin izoh so'raladi).
+      Xat: "Hurmatli Anvar aka, arizangizni ko'rib chiqish uchun quyidagi hujjatlar kerak: ... Iltimos, 14.10 gacha yuboring.
+      Hujjatlar to'liq bo'lgach tahlil davom etadi; qaror kredit qo'mitasida qabul qilinadi."
+
+  - id: checklist_ack
+    type: message
+    after: {node: doc_checklist, event: submitted, minutes: 20}
+    from: gulnora
+    brief: "Ro'yxatni oldim, xatni Anvar akaga rasmiy kanal orqali yubordim. Ertaga 30.09 balansi va hisobot izohlari kelishi kerak."
+
+  - id: kyc_group
+    type: task
+    day: 1
+    at: "14:00"
+    from: jasur
+    brief: |
+      Bodomzor bo'yicha KYC'ni yakunlaylik. KYC anketasi asosida yozing: 1) benefitsiar egalar (ulush ≥ 25%);
+      2) bog'liq shaxslar va kompaniyalar ro'yxati — har biri nega bog'liq; 3) kredit jarayoniga ta'sir qiladigan
+      xavflar (manfaatlar to'qnashuvi, guruh ichidagi kafillik) va siyosatning qaysi bandi qo'llanadi.
+    attachments: [doc_kyc, doc_credit_policy]
+    answer_types: [text]
+    due_in_minutes: 150
+    competencies: [technical, communication]
+    rubric:
+      - {id: ubo, description: "Benefitsiar egalar: Anvar Tojiboyev (70%) va Malika Tojiboyeva (30%) — ikkalasi ≥ 25%"}
+      - {id: group, description: "«Bodomzor Savdo» — umumiy ta'sischi (Anvar 100%), asosiy sotuvchi (~40% savdo) — guruh sifatida tahlil qilish kerakligi aytilgan", weight: 2}
+      - {id: related_employee, description: "Sherzod Tojiboyev — bank xodimining ukasi: ariza bog'liq shaxs (9-band), faqat qo'mitada, Sherzod jarayondan chetda va ma'lumot olmaydi", weight: 2}
+      - {id: guarantee, description: "Savdo kafilligi guruh ichida — mustaqil himoya emas (7-band), ta'sischilar shaxsiy kafilligi kerak", weight: 1.5}
+    hints:
+      - "Har kartochkadagi 'ulush', 'ish joyi' va 'qarindoshlik' qatorlarini siyosatning 7- va 9-bandlari bilan solishtiring."
+      - "Kafil va qarz oluvchining egasi bitta odam bo'lsa, kafillik qancha mustaqil himoya beradi?"
+    reference_answer: |
+      UBO: Anvar Tojiboyev 70%, Malika Tojiboyeva 30% (turmush o'rtoqlar, bosh hisobchi). Bog'liq: «Bodomzor Savdo» (Anvar 100%,
+      Mebel savdosining ~40% i) — guruh; Sherzod Tojiboyev — Anvarning ukasi, Oqsaroy Bank Zangiota filiali kredit menejeri.
+      Xavflar: 1) bog'liq shaxs (9-band) — faqat kredit qo'mitasi, imtiyozsiz, Sherzod jarayonda qatnashmaydi va ma'lumot olmaydi;
+      2) Savdo kafilligi guruh ichida — 7-band bo'yicha mustaqil himoya emas, Anvar va Malikaning shaxsiy kafilligi talab qilinadi;
+      3) guruh ichidagi savdo va qarzlar — Savdo hisobotini ham so'rash, Mebel bilan o'zaro qarz/kafilliklarni tekshirish. PEP va sanksiya — yo'q.
+
+  - id: day1_end
+    type: day_end
+    day: 1
+    at: "17:30"
+    brief: "1-kun yakuni: Gulnora opaga — nima qildingiz, ariza bo'yicha nima ochiq, ertangi reja."
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Bugungi natija aniq: hujjat ro'yxati, mijozga xat, KYC xulosasi", weight: 1.5}
+      - {id: open_items, description: "Ochiq ishlar (yetishmayotgan hujjatlar, bog'liq shaxs) va ertangi reja"}
+
+  # ── 2-kun: pul oqimi va DSCR (kalit) ───────────────────────────────
+  - id: standup_d2
+    type: task
+    day: 2
+    at: "09:00"
+    from: gulnora
+    brief: "Standup (2-kun)."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Kecha / bugun / to'siqlar"}
+      - {id: concrete, description: "Bugungi reja aniq: pul oqimi, DSCR, likvidlik — qachongacha", weight: 2}
+    hints: ["Kechagi yetishmovchiliklardan qaysi biri bugungi hisobga to'sqinlik qiladi?"]
+    reference_answer: "Kecha: hujjatlar ro'yxati, mijozga xat, KYC (bog'liq shaxs, Savdo guruhi). Bugun: 30.09 hisobot asosida CFADS, DSCR va likvidlik, 14:30 gacha. To'siq: Kumush Vodiy ko'chirmasi hali yo'q."
+
+  - id: client_docs
+    type: message
+    day: 2
+    at: "09:20"
+    from: anvar
+    brief: |
+      Assalomu alaykum! So'ragan hisobotni yubordim — 30.09 balansi va izohlari bilan. Qolgan hujjatlar shu hafta.
+      Raqamlarimiz yaxshi, o'tgan yili foyda 1.7 mlrd bo'ldi — tez hal qilsangiz, Texnomash narxni oy oxirigacha ushlab turadi.
+
+  - id: cashflow_dscr
+    type: task
+    day: 2
+    at: "09:30"
+    from: gulnora
+    brief: |
+      Bodomzor bo'yicha asosiy tahlil. Siyosat bo'yicha hisoblang va ko'rsating: 1) CFADS (yillik va oylik) —
+      nima kirdi, nima kirmadi va nega; 2) yangi kredit to'lovi (1 800 mln, 36 oy) va DSCR; 3) joriy likvidlik —
+      nominal va siyosat bo'yicha tuzatilgan; 4) hisobot izohlaridagi xavflar va stress-DSCR; 5) siyosatga mos
+      keladigan struktura (summa yoki muddat) va xulosa. Jadval yoki Excel fayl bo'lishi mumkin.
+    attachments: [doc_credit_policy, doc_financials, doc_bureau]
+    answer_types: [text, file]
+    due_in_minutes: 240
+    weight: 3
+    competencies: [technical]
+    rubric:
+      - {id: cfads, description: "CFADS to'g'ri: EBITDA 4 200 − 2 310 = 1 890; bir martalik 540 kiritilmagan; − soliq 302 = 1 588 mln/yil ≈ 132.3 mln/oy. Sof foyda + amortizatsiya (2 008) yoki 540 bilan EBITDA ishlatilmagan", weight: 2.5}
+      - {id: dscr, description: "To'lov ≈ 70.6 mln/oy (±1%); maxraj 24 + 18 + 70.6 ≈ 112.6; DSCR ≈ 1.18 < 1.25 — bajarilmaydi (lizing qolgan muddatidan qat'i nazar kiritilgan)", weight: 2.5}
+      - {id: liquidity, description: "Joriy likvidlik nominal 4 200 / 2 600 ≈ 1.62; Savdo debitorligi 1 180 (140 kun) chiqarilsa 3 020 / 2 600 ≈ 1.16 < 1.2 — bajarilmaydi", weight: 2}
+      - {id: contingent, description: "7-band kafillik (≈36.3 mln/oy) topilgan: stress-DSCR ≈ 0.89 < 1.0; Savdo debitorligi va kafillik bitta guruh xavfi sifatida bog'langan", weight: 2}
+      - {id: structure, description: "Struktura raqam bilan: 48 oy → to'lov ≈ 58.7, DSCR ≈ 1.31; yoki 36 oyda summa ≈ 1 628 mln gacha; likvidlik uchun Savdo'dan ≥ 100 mln undirish sharti", weight: 2}
+      - {id: conclusion, description: "Xulosa aniq: so'ralgan shartlarda siyosat bajarilmaydi; qaysi shartlar bilan qo'mitaga chiqarish mumkinligi va qaysi xavf ochiq qolishi"}
+    hints:
+      - "Avval EBITDA'ni siyosat ta'rifi bo'yicha toping. Hisobotdagi qaysi qator 'takrorlanmaydi'? Foiz xarajati qayerda hisobga olinadi?"
+      - "Maxrajga byurodagi ikkala mavjud to'lovni ham qo'shing — arizada ko'rsatilmagani ham. Lizing 5 oyda tugashi siyosat bo'yicha ahamiyatga egami?"
+      - "Balansdagi debitorlikning tarkibiga va izohlarning 5- va 7-bandlariga qarang: ular bir-biriga qanday bog'liq?"
+    reference_answer: |
+      CFADS: yalpi foyda 4 200 − operatsion xarajatlar 2 310 = EBITDA 1 890 (omborni sotishdan 540 — bir martalik, kirmaydi;
+      amortizatsiya xarajatlar ichida emas). − to'langan soliq 302 = 1 588 mln/yil ≈ 132.3 mln/oy.
+      Yangi to'lov: 1 800 × 0.02 / (1 − 1.02^−36) ≈ 70.6 mln/oy. Qarz to'lovlari: Kumush Vodiy 24 + lizing 18 + 70.6 = 112.6.
+      DSCR ≈ 132.3 / 112.6 ≈ 1.18 < 1.25 — bajarilmaydi. (Xato yo'llar: sof foyda + amortizatsiya → 1.49; 540 bilan → 1.57.)
+      Likvidlik: 4 200 / 2 600 ≈ 1.62; Savdo debitorligi 1 180 (140 kun) chiqarilsa 3 020 / 2 600 ≈ 1.16 < 1.2 — bajarilmaydi;
+      1.2 uchun Savdo'dan kamida 100 mln undirilishi kerak.
+      7-band: Mebel Savdo'ning 900 mln kreditiga kafil (≈36.3 mln/oy). Stress-DSCR = 132.3 / (112.6 + 36.3) ≈ 0.89 < 1.0.
+      Savdo Mebel'ga 1 180 mln qarz va o'zi Mebel kafilligida — bitta guruh xavfi; arizada kafillik ham, Kumush krediti ham yashirilgan.
+      Struktura: 48 oy — to'lov ≈ 58.7, DSCR ≈ 132.3 / 100.7 ≈ 1.31 (stress ≈ 0.97); yoki 36 oyda maksimal summa ≈ 1 628 mln.
+      Xulosa: so'ralgan shartlarda tasdiqlab bo'lmaydi. Qo'mitaga 48 oy bilan, shartlar: Savdo'dan ≥ 100 mln undirish (likvidlik),
+      Savdo hisobotlari va to'lov intizomi tekshiruvi, yangi kafillik bermaslik kovenanti. Guruh xavfi memo'da alohida.
+
+  - id: mentor_cashflow_note
+    type: message
+    after: {node: cashflow_dscr, event: submitted, minutes: 30}
+    from: feruza
+    brief: |
+      Pul oqimi tahlilingizni ko'rdim. Ertaga garovni ko'rayotganda bitta savolni yodda tuting: kim kimga kafil
+      va bu kafillik bizning qarz oluvchining pul oqimiga qachon "tushib qolishi" mumkin? Raqamlar ertaga ham kerak bo'ladi.
+
+  - id: relative_request
+    type: decision
+    day: 2
+    at: "15:00"
+    from: sherzod
+    brief: |
+      Salom, uka! Men Sherzod, Zangiota filialidanman — Anvar akaning ukasiman. Akamning arizasini siz ko'rayotgan
+      ekansiz. Tahlil qoralamangizni Telegramimga tashlab yuboring, raqamlarda xato bo'lsa qo'mitadan oldin to'g'irlab olamiz.
+      Savdo haqida ko'p yozmang, u alohida firma. Hammasi o'zimizniki-ku, bir-birimizga yordam beraylik.
+    competencies: [communication, stress_handling]
+    options:
+      - key: decline_report
+        label: "Muloyim rad etaman: bog'liq shaxs sifatida u arizada qatnasha olmaydi va ma'lumot olmaydi, Savdo tahlili siyosat bo'yicha to'liq qoladi; yozishmani Gulnora opa va Jasurga xabar qilaman"
+        grade: correct
+      - key: decline_silent
+        label: "Rad etaman, lekin hech kimga aytmayman — o'zi tushunadi"
+        grade: acceptable
+      - key: share_draft
+        label: "Hamkasb-ku: qoralamani yuboraman va Savdo bo'limini qisqartiraman"
+        grade: wrong
+        flag: shared_draft
+
+  - id: lead_on_shared_draft
+    type: message
+    day: 2
+    at: "16:30"
+    when: {flag: shared_draft}
+    from: gulnora
+    brief: |
+      Jasur aytdi: Bodomzor tahlili qoralamasi Sherzodning Telegramida. Sherzod — mijozning ukasi, siyosatning 9-bandi
+      bo'yicha u ariza ma'lumotini olmasligi kerak edi. Bu mijoz sirini oshkor qilish va manfaatlar to'qnashuvi.
+      Compliance'ga tushuntirish yozasiz. Savdo bo'yicha tahlil to'liq qoladi — hech narsa qisqartirilmaydi.
+
+  - id: day2_end
+    type: day_end
+    day: 2
+    at: "17:30"
+    brief: "2-kun yakuni: DSCR va likvidlik xulosasi bir jumlada, ochiq xavflar, ertangi reja (garov va memo)."
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Asosiy raqamlar va xulosa aniq (DSCR, likvidlik, stress)", weight: 1.5}
+      - {id: risks, description: "Ochiq xavflar va ertangi reja aytilgan; Sherzod murojaati bo'lsa — qanday hal qilingani"}
+
+  # ── 3-kun: garov, bosim va memo ───────────────────────────────────
+  - id: standup_d3
+    type: task
+    day: 3
+    at: "09:00"
+    from: gulnora
+    brief: "Standup (3-kun). Memo ertaga ertalabgacha qo'mita kotibida bo'lishi kerak."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Kecha / bugun / to'siqlar"}
+      - {id: concrete, description: "Bugungi reja: garov tahlili tushlikkacha, memo kun oxirigacha", weight: 2}
+    hints: ["Memo muddatidan orqaga sanab, garov tahlilini qachon tugatish kerakligini yozing."]
+    reference_answer: "Kecha: CFADS 1 588, DSCR 1.18, likvidlik 1.16, stress-DSCR 0.89. Bugun: garov va kafillik 12:00 gacha, memo 17:15 gacha. To'siq: Malika roziligi va taqiq reestri."
+
+  - id: collateral_analysis
+    type: task
+    day: 3
+    at: "09:30"
+    from: gulnora
+    brief: |
+      Garov va kafillik tahlili. Yangilangan garov paketi bo'yicha: 1) har garovning tan olinadigan qiymati va
+      ta'minot koeffitsienti; 2) qaysi garov hisobga olinmaydi va nega; 3) uskuna yetkazilgunga qadar (6–8 hafta)
+      ta'minot qancha va bu oraliq xavfni qanday yopish mumkin; 4) kafillar — kim talab qilinadi, kim himoya bermaydi.
+    attachments: [doc_collateral, doc_credit_policy]
+    answer_types: [text, file]
+    due_in_minutes: 150
+    weight: 2
+    competencies: [technical]
+    rubric:
+      - {id: values, description: "Tan olinadigan qiymatlar: CNC 2 250 × 0.6 = 1 350; uy 1 000 × 0.7 = 700; yuk mashinasi 260 × 0.5 = 130; jami 2 180", weight: 2}
+      - {id: building, description: "Bino Kumush Vodiy Bank'da birinchi navbatli garovda — hisobga olinmaydi (bino bilan 1.76 — noto'g'ri)", weight: 2}
+      - {id: ratio, description: "Ta'minot 2 180 / 1 800 ≈ 1.21 ≥ 1.2 — bajariladi, lekin zaxirasi juda kichik; uy uchun Malika roziligi sharti", weight: 1.5}
+      - {id: interim, description: "Oraliq davr: uskunasiz 830 / 1 800 ≈ 0.46 — to'lov to'g'ridan-to'g'ri yetkazib beruvchiga, uskuna garovi 30 kun ichida, yoki bosqichma-bosqich berish", weight: 1.5}
+      - {id: guarantors, description: "Savdo kafilligi guruh ichida va o'zi Mebel'ga 1 180 qarzdor — himoya emas; Anvar (70%) va Malika (30%) shaxsiy kafilligi majburiy"}
+    hints:
+      - "Har garovni jadvalga yozing: bozor bahosi → diskont → tan olinadigan qiymat → hisobga olinadimi."
+      - "Taqiq reestri ustunini o'qing: boshqa bank birinchi navbatda bo'lsa, siyosat nima deydi?"
+      - "Uskuna hali yo'q paytda bankning qo'lida qaysi garovlar qoladi?"
+    reference_answer: |
+      CNC liniya: 2 250 × 0.6 = 1 350 (yetkazilgach rasmiylashtiriladi). Uy: 1 000 × 0.7 = 700 (yangi baho, Malikaning notarial roziligi shart).
+      Yuk mashinasi: 260 × 0.5 = 130. Bino (1 400 → 980) — 03.12.2025 dan Kumush Vodiy Bank'da birinchi navbatda, hisobga olinmaydi.
+      Jami 2 180 / 1 800 ≈ 1.21 ≥ 1.2 — bajariladi, zaxira ~20 mln. Bino qo'shilsa 1.76 bo'lardi — bu xato.
+      Oraliq: uskuna kelguncha 830 / 1 800 ≈ 0.46. Yopish: kredit pulini faqat «Texnomash Servis»ga o'tkazish, yetkazishdan keyin
+      30 kun ichida garov, oraliqda ta'sischilar kafilligi; yoki bosqichma-bosqich berish.
+      Kafillar: Savdo — 100% Anvarniki, Mebel'ga 1 180 mln qarzdor va o'zi Mebel kafilligida — mustaqil himoya emas.
+      Talab: Anvar (70%, ~45 mln/oy) va Malika (30%, 12 mln/oy) shaxsiy kafilligi (7-band).
+
+  - id: policy_override
+    type: decision
+    day: 3
+    at: "11:30"
+    from: rustam
+    brief: |
+      Gulnora aytdi, Bodomzor bo'yicha DSCR 1.18 chiqqan. Bu mijoz bizda 5 yildan beri, 2 mlrd depoziti bor.
+      Lizing baribir 5 oyda tugaydi — uni hisobdan chiqarib yuboring, 1.25 dan oshadi, qo'mitaga standart ariza
+      sifatida chiqaramiz. Mas'uliyatni o'zim olaman.
+    competencies: [stress_handling, communication]
+    options:
+      - key: exception_memo
+        label: "Raqamlarni o'zgartirmayman: DSCR 1.18 ni ochiq yozaman, qo'mitaga 48 oylik strukturani (1.31) va lizing tugashini sezgirlik tahlili sifatida taklif qilaman; Gulnora opaga yozaman"
+        grade: correct
+      - key: refuse_escalate
+        label: "Rad etaman va masalani to'liq Gulnora opaga topshiraman"
+        grade: acceptable
+      - key: exclude_leasing
+        label: "Direktor aytdi — lizingni maxrajdan chiqaraman, DSCR 1.40 bo'ladi"
+        grade: wrong
+        flag: policy_override
+
+  - id: lead_on_override
+    type: message
+    day: 3
+    at: "14:00"
+    when: {flag: policy_override}
+    from: gulnora
+    brief: |
+      Memo qoralamasida DSCR 1.40 ko'rdim — lizing maxrajdan chiqarilgan. Siyosatning 3-bandi: mavjud to'lovlar
+      qolgan muddatidan qat'i nazar kiritiladi. Raqamni o'zgartirish — bu istisno emas, qo'mitani chalg'itish.
+      Kim so'ragan bo'lsa ham. Lizing tugashini sezgirlik tahlili qilib yozing, DSCR 1.18 qoladi. Rustam aka bilan o'zim gaplashaman.
+
+  - id: credit_memo
+    type: task
+    day: 3
+    at: "14:15"
+    from: gulnora
+    brief: |
+      Kredit qo'mitasi uchun memo (1–2 sahifa): mijoz va loyiha; siyosat talablari jadvali (talab | qiymat | bajariladimi);
+      asosiy xavflar; tavsiya etilgan struktura va shartlar (kredit berishdan oldingi shartlar va kovenantlar);
+      bog'liq shaxs masalasi. Kecha va bugungi raqamlaringizga tayaning.
+    attachments: [doc_credit_policy, doc_financials, doc_collateral]
+    answer_types: [text, file]
+    due_in_minutes: 180
+    weight: 2
+    competencies: [communication, technical]
+    rubric:
+      - {id: table, description: "Talablar jadvali raqamlar bilan: DSCR 1.18 (48 oyda 1.31), likvidlik 1.16, ta'minot 1.21, o'z ulushi 20%, kredit tarixi, stress-DSCR", weight: 2}
+      - {id: risks, description: "Xavflar: Savdo guruhi (1 180 debitorlik + 900 kafillik), arizada yashirilgan majburiyatlar, oraliq ta'minot 0.46, o'z ulushi manbasi (pul 310 < 450)", weight: 2}
+      - {id: structure, description: "Struktura: 1 800 mln, 48 oy (yoki ≈1 628 mln, 36 oy) — tanlov raqam bilan asoslangan", weight: 1.5}
+      - {id: conditions, description: "Oldingi shartlar: o'z ulushi to'langani, Savdo'dan ≥100 mln undirish, Malika roziligi, ta'sischilar kafilligi, yangi soliq ma'lumotnomasi; kovenantlar: yangi kafillik yo'q, bog'liq debitorlik limiti, chorak hisobot, yillik DSCR ≥ 1.25", weight: 2}
+      - {id: related, description: "Bog'liq shaxs (9-band) qayd etilgan: qaror qo'mitada, imtiyozsiz, Sherzod chetda"}
+    hints:
+      - "Qo'mita a'zosi memo'ni 3 daqiqada o'qiydi: birinchi abzasda summa, muddat, tavsiya va asosiy sabab bo'lsin."
+      - "Har bajarilmagan talab uchun bitta shart yoki kovenant yozing — u raqamni qanday tuzatadi?"
+    reference_answer: |
+      Mijoz: «Bodomzor Mebel», 9 yil, tushum 12 mlrd. So'rov: 1 800 mln, 36 oy, CNC liniya (2 250 mln, o'z ulushi 450 — 20%).
+      Talablar: DSCR 36 oy 1.18 ✗ / 48 oy 1.31 ✓; likvidlik 1.62 nominal, tuzatilgan 1.16 ✗; ta'minot 2 180 / 1 800 = 1.21 ✓ (bino hisobga
+      olinmagan); kredit tarixi — 9 kun, ✓; stress-DSCR (Savdo kafilligi) 0.97 (48 oy) < 1.0 — xavf.
+      Xavflar: Savdo guruhi — 1 180 mln muddati o'tgan debitorlik va 900 mln kreditga kafillik; arizada Kumush krediti va kafillik ko'rsatilmagan;
+      uskuna kelguncha ta'minot 0.46; pul 310 < o'z ulushi 450. Bog'liq shaxs: Sherzod Tojiboyev — 9-band, qaror qo'mitada, imtiyozsiz.
+      Tavsiya: 1 800 mln, 48 oy, 24%, shartli. Oldingi shartlar: o'z ulushi to'langani, Savdo'dan ≥ 100 mln undirilgani, Malikaning roziligi,
+      Anvar va Malika kafilligi, 30 kundan eski bo'lmagan soliq ma'lumotnomasi, kredit puli faqat yetkazib beruvchiga.
+      Kovenantlar: yangi kafillik bermaslik, Savdo debitorligini 6 oyda 50% ga kamaytirish, chorak hisobot 30 kun ichida, yillik DSCR ≥ 1.25.
+
+  - id: day3_end
+    type: day_end
+    day: 3
+    at: "17:30"
+    brief: "3-kun yakuni: garov va memo holati, ertangi qo'mitaga nima tayyor, nima ochiq."
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Garov xulosasi va memo holati aniq", weight: 1.5}
+      - {id: plan, description: "Ertangi qo'mita uchun tayyorgarlik va ochiq shartlar"}
+
+  # ── 4-kun: qo'mita kuni va monitoring signali ─────────────────────
+  - id: standup_d4
+    type: task
+    day: 4
+    at: "09:00"
+    from: gulnora
+    brief: "Standup (4-kun). Bugun 15:00 da kredit qo'mitasi."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Kecha / bugun / to'siqlar"}
+      - {id: concrete, description: "Qo'mita tayyorgarligi aniq: savollarga javoblar, oxirgi daqiqa tekshiruvlari (byuro yangilash)", weight: 2}
+    hints: ["Qo'mita oldidan qaysi ma'lumotlarni yana bir bor yangilab tekshirish kerak?"]
+    reference_answer: "Kecha: garov (1.21) va memo topshirildi. Bugun: qo'mita savollariga javoblar, ertalab byuro va hisob harakatini yangilab tekshiraman. To'siq: Malika roziligi hali yo'q."
+
+  - id: incident_savdo_default
+    type: incident
+    day: 4
+    at: "10:00"
+    when: {any: [{missed: cashflow_dscr}, {score_lt: {node: cashflow_dscr, value: 60}}]}
+    from: gulnora
+    brief: |
+      SHOSHILINCH: qo'mita oldidan yangilangan byuro va Kumush Vodiy Bank xati keldi — «Bodomzor Savdo» kreditida
+      kechikish, Mebel'dan kafil sifatida pul talab qilinmoqda. Memo'da bu xavf yo'q edi. Qo'mita 15:00 da.
+      1 soat ichida yozing: 1) hozir kimga va nima deysiz (memo bilan nima qilinadi); 2) qayta hisob: stress-DSCR,
+      talab qilinayotgan summa pulga nisbatan; 3) nega bu kech aniqlandi — hujjatlarda qayerda ko'rinardi; 4) tavsiya.
+    attachments: [doc_savdo_default, doc_financials, doc_credit_policy]
+    answer_types: [text]
+    due_in_minutes: 60
+    weight: 2
+    competencies: [stress_handling, technical, communication]
+    rubric:
+      - {id: stop_first, description: "Avval: Gulnora va qo'mita kotibiga darhol xabar, memo qaytarib olinadi yoki ariza qo'mitada to'xtatiladi; mijozga va'da yo'q", weight: 2}
+      - {id: recalc, description: "Qayta hisob: stress-DSCR 132.3 / (112.6 + 36.3) ≈ 0.89 (48 oyda ≈ 0.97); talab 72.5 mln + peni ≈ 23% pulning (310); butun qoldiq 748 mln talab qilinishi mumkin", weight: 2}
+      - {id: root_cause, description: "Kech aniqlanish sababi: hisobot izohlarining 7-bandi (kafillik) va 5-band/balansdagi 1 180 mln muddati o'tgan Savdo debitorligi 2-kun tahlilida e'tiborsiz qolgan", weight: 1.5}
+      - {id: recommendation, description: "Tavsiya: ariza to'xtatiladi; guruh bo'yicha to'liq tahlil (Savdo hisobotlari), Savdo qarzini tartibga solish rejasi, qaror faqat guruh DSCR ≥ 1.25 bo'lsa"}
+    hints:
+      - "Qo'mitaga 5 soat qoldi: birinchi navbatda qaysi hujjat yo'lini to'xtatish kerak?"
+      - "Siyosatning 5-bandidagi stress-DSCR formulasiga yangi oylik summani qo'ying."
+    reference_answer: |
+      Darhol: Gulnora opa va qo'mita kotibiga — memo'da kafillik xavfi yo'q, ariza bugungi kun tartibidan olinsin; Anvar akaga hech qanday va'da yo'q.
+      Hisob: Mebel Savdo kreditiga kafil, oylik ≈ 36.3 mln. Stress-DSCR = 132.3 / (112.6 + 36.3) ≈ 0.89 (48 oy: 132.3 / 137.0 ≈ 0.97) < 1.0.
+      Talab: 72.5 mln + peni — pulning (310) ≈ 23% i; to'lanmasa 748 mln qoldiq muddatidan oldin talab qilinishi mumkin.
+      Likvidlik allaqachon 1.16 (Savdo debitorligi 1 180 chiqarilgan) — Savdo pul to'lay olmayapti, demak debitorlik ham qaytmaydi.
+      Nega kech: hisobot izohlari 7-band (kafillik) va 5-band (Savdo 140 kun kechiktiradi) 2-kun tahlilida bor edi — o'qilmagan.
+      Tavsiya: ariza to'xtatiladi; Savdo'ning hisoboti va qarz jadvali, guruh bo'yicha DSCR; Savdo qarzi tartibga solinmaguncha qaror yo'q.
+
+  - id: incident_tax_collection
+    type: incident
+    day: 4
+    at: "10:00"
+    when: {score_gte: {node: cashflow_dscr, value: 60}}
+    from: gulnora
+    brief: |
+      SHOSHILINCH: monitoring signali — «Bodomzor Mebel» hisobidan bugun soliq inkassosi yechildi. Qo'mita 15:00 da.
+      1 soat ichida yozing: 1) signal qanchalik jiddiy (raqamlarda); 2) DSCR va qo'mita taklifiga ta'siri; 3) kimga nima
+      deysiz va memo'ga nima qo'shiladi; 4) mijozdan qaysi hujjatlar va qachongacha so'raladi.
+    attachments: [doc_tax_alert, doc_financials, doc_credit_policy]
+    answer_types: [text]
+    due_in_minutes: 60
+    weight: 2
+    competencies: [stress_handling, technical, communication]
+    rubric:
+      - {id: materiality, description: "Ahamiyati: 46 mln ≈ 35% oylik CFADS (132.3), ≈ 15% pulning (310); qoldiq 264 mln", weight: 2}
+      - {id: dscr_effect, description: "Bir martalik deb olinsa yillik CFADS 1 542 → DSCR (48 oy) ≈ 1.28 ≥ 1.25; 36 oylik strukturada ≈ 1.14 — shuning uchun 48 oy sharti muhim", weight: 2}
+      - {id: link_docs, description: "Bog'lanish: soliq ma'lumotnomasi 14.08 dan — 1-kunda eski deb topilgan; endi kredit berishdan oldingi majburiy shart", weight: 1.5}
+      - {id: actions, description: "Harakat: Gulnora va qo'mita kotibiga qo'shimcha izoh; mijozdan akt-sverka va yangi ma'lumotnoma; kovenant — soliq qarzi yo'qligi; qo'mitani to'xtatish shart emas"}
+    hints:
+      - "Signalni ikkita bazaga solishtiring: oylik pul oqimi va hisobdagi pul."
+      - "1-kundagi hujjatlar ro'yxatida soliq bo'yicha nima topgan edingiz?"
+    reference_answer: |
+      Jiddiylik: 46 mln — oylik CFADS'ning ≈ 35% i, pulning ≈ 15% i; qoldiq 264 mln. Bir martalik bo'lsa — o'rtacha, operatsion signal.
+      DSCR: (1 588 − 46) / 12 ≈ 128.5 mln/oy; 48 oy strukturada 128.5 / 100.7 ≈ 1.28 ≥ 1.25. 36 oylik strukturada 128.5 / 112.6 ≈ 1.14 — yetmaydi; inkasso takrorlansa signal jiddiylashadi.
+      Bog'lanish: soliq ma'lumotnomasi 14.08 sanali — 1-kunda eski deb topilgan; endi u kredit berishdan oldingi majburiy shart.
+      Harakat: Gulnora va qo'mita kotibiga memo'ga qo'shimcha izoh; qo'mita davom etadi, lekin shartlar: akt-sverka va soliq qarzi yo'qligi
+      haqida yangi ma'lumotnoma kredit berishdan oldin, kovenant — soliq qarzi/inkasso bo'lmasligi, har oy hisob harakati monitoringi.
+      Mijozdan: akt-sverka va noto'g'ri hisob-faktura hujjatlari — 2 ish kuni ichida.
+
+  - id: committee_qa
+    type: task
+    day: 4
+    at: "14:00"
+    from: gulnora
+    brief: |
+      Qo'mita a'zolari oldindan savollar yuborishdi. Har biriga 2–3 gapdan, raqam bilan javob tayyorlang —
+      15:00 da men taqdim qilaman. 4-savolga bugungi ertalabki signal (qaysi biri kelgan bo'lsa) bo'yicha javob bering.
+    attachments: [doc_committee_questions, doc_credit_policy, doc_monitoring_policy]
+    answer_types: [text]
+    due_in_minutes: 150
+    weight: 1.5
+    competencies: [communication, technical]
+    rubric:
+      - {id: dscr_answer, description: "1: DSCR 1.18 ochiq tan olingan; 48 oy → 1.31, lizing 5 oydan keyin tugashi — faqat sezgirlik tahlili", weight: 1.5}
+      - {id: group_answer, description: "2–3: Savdo debitorligi 1 180, kafillik ≈36.3 mln/oy, stress-DSCR; bino ikkinchi navbatda — hisobga olinmagan, oraliq ta'minot 0.46 va yopish usuli", weight: 2}
+      - {id: signal_answer, description: "4: ertalabki signal raqam bilan va qarorga ta'siri (to'xtatish yoki qo'shimcha shart) aniq"}
+      - {id: related_answer, description: "5: bog'liq shaxs — qo'mita qarori, imtiyozsiz, Sherzod jarayondan chetda, murojaatlar Compliance'ga xabar qilingan"}
+      - {id: monitoring_answer, description: "6: kovenantlar va signallar ro'yxati, chastotasi (oylik hisob harakati, chorak hisobot, yillik DSCR test)", weight: 1.5}
+    hints:
+      - "Har javobni 'raqam → nima uchun muhim → biz nima qilamiz' tartibida yozing."
+      - "Monitoring siyosatidagi signallar ro'yxatidan aynan shu mijozga tegishlilarini tanlang."
+    reference_answer: |
+      1. DSCR 36 oyda 1.18 — siyosatdan past; taklif 48 oy: to'lov 58.7, DSCR 1.31. Lizing 5 oyda tugashi faqat sezgirlik (1.40), asosiy hisob emas.
+      2. Savdo Mebel'ga 1 180 mln qarz (140 kun), Mebel uning 900 mln kreditiga kafil (≈36.3 mln/oy); stress-DSCR 0.97 (48 oy). Himoya: Savdo'dan
+      ≥ 100 mln undirish oldingi shart, yangi kafillik taqiqi, debitorlikni 6 oyda 50% ga kamaytirish kovenanti.
+      3. Bino Kumush Vodiy Bank'da birinchi navbatda — 6-band bo'yicha hisobga olinmaydi. Ta'minot 1.21; uskunasiz 0.46 — pul to'g'ridan-to'g'ri yetkazib
+      beruvchiga, uskuna garovi 30 kun ichida, oraliqda ta'sischilar kafilligi.
+      4. Soliq inkassosi 46 mln (≈35% oylik CFADS) — akt-sverka va yangi ma'lumotnoma oldingi shart; yoki Savdo kechikishi — stress-DSCR 0.89/0.97, ariza to'xtatiladi.
+      5. Bog'liq shaxs (9-band): qaror qo'mitada, imtiyozsiz; Sherzod jarayonda yo'q, uning murojaati Compliance'ga xabar qilingan.
+      6. Kovenantlar: DSCR ≥ 1.25 yillik, chorak hisobot 30 kun ichida, yangi kafillik yo'q, soliq qarzi yo'q. Signallar: oylik hisob aylanmasi,
+      soliq inkassosi, Savdo to'lov intizomi (byuro har oy).
+
+  - id: day4_end
+    type: day_end
+    day: 4
+    at: "17:30"
+    brief: "4-kun yakuni: ertalabki signal qanday hal qilindi, qo'mitaga nima taqdim etildi, ertangi reja."
+    competencies: [communication]
+    rubric:
+      - {id: done, description: "Signal va qo'mita tayyorgarligi holati aniq", weight: 1.5}
+      - {id: lesson, description: "Bugungi kundan aniq xulosa (masalan, izohlarni o'qish, qo'mita oldidan yangilash)"}
+
+  # ── 5-kun: qo'mita natijasi, portfel hisoboti va retro ────────────
+  - id: standup_d5
+    type: task
+    day: 5
+    at: "09:00"
+    from: gulnora
+    brief: "Standup (5-kun). Bugundan Feruza opaning portfelini ham olasiz."
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 20
+    weight: 0.5
+    competencies: [communication, time_management]
+    rubric:
+      - {id: format, description: "Kecha / bugun / to'siqlar"}
+      - {id: concrete, description: "Bugungi reja: portfel hisoboti va Bodomzor bo'yicha keyingi qadamlar", weight: 2}
+    hints: ["Qo'mitadan keyin Bodomzor bo'yicha kimdan nima kutilyapti?"]
+    reference_answer: "Kecha: ertalabki signal tahlili va qo'mita savollariga javoblar. Bugun: portfel hisoboti 12:30 gacha, Bodomzor shartlari bo'yicha mijozga hujjat ro'yxati. To'siq: yo'q."
+
+  - id: committee_hold
+    type: message
+    day: 5
+    at: "09:15"
+    when: {any: [{missed: cashflow_dscr}, {score_lt: {node: cashflow_dscr, value: 60}}]}
+    from: gulnora
+    brief: |
+      Qo'mita natijasi: Bodomzor arizasi to'xtatildi. «Bodomzor Savdo» qarzi tartibga solinmaguncha va guruh bo'yicha
+      to'liq tahlil bo'lmaguncha qaror yo'q. Qo'mita raisi bitta gapni aytdi: "Izohlar hisobotning bir qismi." Buni yodda tutamiz.
+
+  - id: committee_conditional
+    type: message
+    day: 5
+    at: "09:15"
+    when: {score_gte: {node: cashflow_dscr, value: 60}}
+    from: gulnora
+    brief: |
+      Qo'mita natijasi: Bodomzor bo'yicha shartli ijobiy qaror — 1 800 mln, 48 oy. Oldingi shartlar memo'dagidek, ustiga
+      soliq akt-sverkasi. Risk direktori guruh xavfini ochiq ko'rsatganingiz uchun rahmat aytdi. Shartlar bajarilishini siz kuzatasiz.
+
+  - id: portfolio_report
+    type: task
+    day: 5
+    at: "09:30"
+    from: gulnora
+    brief: |
+      Feruza opadan o'tgan portfel bo'yicha haftalik hisobot: 1) jami portfel, PAR30 va NPL; 2) monitoring siyosati
+      bo'yicha talab qilinadigan zaxira va mavjud zaxira bilan farq; 3) kuzatuv ro'yxati (watchlist) — kim va nega;
+      4) har problemali qarz oluvchi bo'yicha bitta aniq harakat.
+    attachments: [doc_portfolio, doc_monitoring_policy]
+    answer_types: [text, file]
+    due_in_minutes: 180
+    weight: 2
+    competencies: [technical, prioritization]
+    rubric:
+      - {id: ratios, description: "Portfel 2 900; PAR30 = (380 + 150) / 2 900 ≈ 18.3%; NPL = 150 / 2 900 ≈ 5.2% (H 28 kun PAR30'ga kirmaydi)", weight: 2}
+      - {id: provision, description: "Zaxira signallar bilan: A 2.75, B 32, C 102.5, D 2.2, E 95, F 75, G 26.5, H 14.75 = 350.7; kamomad 200.7 mln (signalsiz 221.9 — sinf ko'tarish unutilgan)", weight: 2.5}
+      - {id: watchlist, description: "Watchlist: B (aylanma 3 oy ≥30% pasaygan), C (direktor almashgan, soliq inkassosi), G (hisobot 34 kun kechikkan, kovenant DSCR 1.08 < 1.2); E va F problemali", weight: 1.5}
+      - {id: actions, description: "Harakatlar aniq va ustuvorlik bilan: E — sababini aniqlash va restrukturizatsiya yoki undirish; F — garov/sud; G — kovenant buzilishi bo'yicha xat; B, C — uchrashuv va hisob tahlili"}
+    hints:
+      - "Avval har qarz oluvchini kechikish bo'yicha sinfga ajrating, keyin izohdagi signalni qidiring."
+      - "Signal bo'lsa sinf bittaga ko'tariladi — B, C va G qaysi sinfga o'tadi? F allaqachon eng yuqori sinfda."
+    reference_answer: |
+      Portfel: 275 + 640 + 410 + 220 + 380 + 150 + 530 + 295 = 2 900 mln. PAR30 = E 380 + F 150 = 530 → 18.3%. NPL = F 150 → 5.2%.
+      Zaxira: A 1% → 2.75; D 1% → 2.2; B (signal, 0 → 5%) → 32; G (signal, 0 → 5%) → 26.5; H 5% → 14.75; C (12 kun + signal → 25%) → 102.5;
+      E 25% → 95; F 50% → 75. Jami 350.7; mavjud 150 → kamomad 200.7 mln. (Signalsiz hisob 221.9 — noto'g'ri.)
+      Watchlist: B — aylanma −32/−35/−38%; C — direktor almashgan va 18 mln soliq inkassosi; G — hisobot 34 kun kech, DSCR 1.08 < 1.2 kovenant.
+      Harakatlar: E (47 kun) — shu hafta uchrashuv, sabab va to'lov jadvali, restrukturizatsiya yoki undirish; F (95 kun) — garovni undirish
+      va sud bo'yicha yurist bilan; G — kovenant buzilishi haqida rasmiy xat, hisobot va tuzatish rejasi; B va C — tashrif, hisob aylanmasi tahlili;
+      H — mavsumiy, kuzatish. Zaxira kamomadi 200.7 mln — moliya bo'limiga.
+
+  - id: retro
+    type: task
+    day: 5
+    at: "14:30"
+    from: feruza
+    brief: |
+      Haftalik retro (mentor bilan): 3 ta yaxshi ketgan narsa, 3 ta yaxshilash kerak bo'lgan narsa (aniq hafta voqeasi bilan)
+      va keyingi hafta uchun bitta o'lchanadigan odat. Bodomzor ishidan asosiy saboq nima?
+    attachments: [doc_onboarding]
+    answer_types: [text]
+    due_in_minutes: 120
+    competencies: [initiative, communication]
+    rubric:
+      - {id: specific, description: "Har band aniq hafta voqeasiga bog'langan (hujjatlar, DSCR, Sherzod, Rustam aka, signal, portfel)", weight: 2}
+      - {id: honest, description: "O'z xatolarini halol tan olgan, aybni boshqaga qo'ymagan"}
+      - {id: habit, description: "Keyingi hafta odati o'lchanadigan (masalan, har tahlilda izohlar va byuroni qo'mita oldidan yangilash)", weight: 1.5}
+    hints: ["Har kundan bitta voqeani eslang: qaysi qaror yoki raqam keyingi kunlarga ta'sir qildi?"]
+    reference_answer: "Yaxshi: 1-kunda yashirilgan Kumush kreditini topdim; DSCR'ni siyosat ta'rifi bilan, bir martalik daromadsiz hisobladim; bosimga qaramay raqamni o'zgartirmadim. Yaxshilash: izohlarni birinchi kunda o'qish (kafillik); garovda taqiq reestrini oldin so'rash; standup'da to'siqlarni aniqroq yozish. Odat: har tahlilda 'izohlar va shartli majburiyatlar' bandi va qo'mita oldidan byuroni yangilash — 100%. Saboq: hujjatdagi har qator — xavf manbai, bosim esa raqamni o'zgartirish sababi emas."
+
+  - id: day5_end
+    type: day_end
+    day: 5
+    at: "17:30"
+    brief: "Hafta yakuni: Gulnora opaga haftalik hisobot — Bodomzor bo'yicha natija, portfel, ochiq ishlar va keyingi hafta rejasi."
+    competencies: [communication]
+    rubric:
+      - {id: delivered, description: "Hafta natijalari aniq: ariza tahlili, memo, qo'mita, portfel hisoboti", weight: 1.5}
+      - {id: open_items, description: "Ochiq ishlar (shartlar, watchlist harakatlari, zaxira kamomadi) va keyingi reja"}
+      - {id: reflection, description: "Haftadan asosiy xulosa"}

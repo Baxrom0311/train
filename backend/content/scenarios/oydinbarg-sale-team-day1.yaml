@@ -1,0 +1,487 @@
+# CONTRACT.md §29 — jamoaviy Marketing ssenariysi (2–3 talaba). Brend, odamlar, platformalar va barcha raqamlar
+# o'ylab topilgan. Brendbuk, aksiya shartlari, "eski narx" qoidasi, reklama va inqiroz tartibi — o'quv maqsadidagi
+# ichki siyosat, real qonunchilik yoki normativ emas. Reklama kanallari umumiy nomlar bilan yozilgan.
+# Hikoya: «Oydinbarg kuni» — yillik bir kunlik aksiya. Performance marketolog budjetni soatlarga bo'ladi, kopirayter
+# aksiya matnlarini yozadi, analitik prognoz va zaxirani hisoblaydi; 15:30 da promokod xatosi va salbiy viral post.
+slug: oydinbarg-sale-team-day1
+title: "Oydinbarg — «Oydinbarg kuni» aksiyasi jamoasi, 1 kun"
+sector: Marketing
+company_name: "Oydinbarg"            # fictional: mahalliy tabiiy kosmetika brendi
+difficulty: junior
+duration_days: 1
+
+team:
+  min_size: 2
+  roles:
+    - key: performance
+      title: "Performance marketolog"
+      summary: "Aksiya kuni reklama budjetini kanal va soatlarga bo'ladi, limitlarni qo'yadi, incident'da reklama va promokodni boshqaradi"
+    - key: content
+      title: "Kontent menejer / kopirayter"
+      summary: "Aksiya e'lonlari, zaxira haqidagi xabarlar va incident'da mijozlarga ochiq javobni yozadi"
+    - key: analyst
+      title: "Marketing analitik"
+      summary: "Aksiya prognozi, zaxira tugash vaqti va incident ta'sirini raqamlarda hisoblaydi; jamoaga raqam beradi"
+
+personas:
+  - key: dilnoza
+    name: "Dilnoza Yusupova"
+    role: "Marketing bo'limi rahbari, aksiya egasi"
+    tone: "xotirjam, talabchan, raqam va brend qoidalariga tayanadi; jamoadan aniq kelishuv kutadi"
+    knows: [doc_team_charter, doc_sale_terms, doc_brand_rules, doc_crisis_policy]
+    secrets:
+      - "Promokod uzilishi bo'lsa, aksiyani 1 soatga (00:59 gacha) uzaytirishga direktor bilan oldindan kelishib qo'ygan."
+    busy_reply: "Direktor bilan yig'ilishdaman, chiqqach javob beraman."
+    deflect_reply: "Xulosani jamoa chiqarsin. Raqamni analitikdan, matnni kopirayterdan, reklama sozlamasini performance'dan oling."
+  - key: shoxrux
+    name: "Shoxrux Aliqulov"
+    role: "Senior performance marketolog, jamoa mentori"
+    kind: mentor
+    tone: "iliq, sabrli, savol bilan yo'naltiradi; jamoada kim kimni kutishini aniq kelishishga undaydi"
+    knows: [doc_team_charter, doc_ads_benchmarks, doc_sale_history]
+    busy_reply: "Boshqa kampaniyani sozlayapman, birozdan keyin yozaman."
+    deflect_reply: "Javobni o'zingiz topsangiz yaxshiroq. Jamoadoshlaringiz bilan qaysi raqam kimdan kelishini kelishib oling."
+    nudge_reply: "«{task}» dedlayni {time}da. Qaysi joyda to'xtadingiz? Jamoa chatida kimni kutayotganingizni yozing va bitta hisobni menga ko'rsating."
+  - key: kamola
+    name: "Kamola Nazarova"
+    role: "SMM menejer"
+    tone: "do'stona, tez yozadi, emoji'ni yaxshi ko'radi, lekin brend qoidalarini biladi"
+    knows: [doc_brand_rules, doc_sale_terms, doc_crisis_policy]
+    secrets:
+      - "Viral post muallifi — doimiy mijoz, oldin ham brendni maqtagan; u faqat kod ishlamaganidan jahli chiqqan."
+    busy_reply: "Aksiya storilarini joylayapman, keyinroq yozaman."
+    deflect_reply: "Matnni o'zingiz yozib ko'ring — aksiya shartlari va brendbukni yoningizga qo'ying, keyin ko'rib beraman."
+  - key: rustam
+    name: "Rustam Toshpo'latov"
+    role: "Tijorat direktori"
+    tone: "shoshqaloq, sotuv raqamiga e'tiborli, marketing qoidalariga sabrsiz; bosim o'tkazadi"
+    knows: [doc_sale_terms]
+    secrets:
+      - "O'tgan yilgi aksiyada ham «eski narx»ni oshirib ko'rsatish taklif qilingan, Dilnoza rad etgan edi."
+    busy_reply: "Distribyutorlar bilan uchrashuvdaman, keyin gaplashamiz."
+    deflect_reply: "Men marketolog emasman. Menga bugun rekord sotuv kerak."
+  - key: bobur
+    name: "Bobur Hamidov"
+    role: "Veb-do'kon (e-commerce) menejeri"
+    tone: "texnik, qisqa yozadi, xatosini tan oladi, lekin shoshilib ortiqcha tuzatadi"
+    knows: [doc_sale_terms, doc_incident_promo]
+    secrets:
+      - "To'g'ri qoidani (min 200 000, to'plamlarsiz) 10 daqiqada qayta yoqish mumkin — sozlama tayyor, faqat tekshiruv kerak."
+    busy_reply: "Sayt sozlamalarida ishlayapman, 15 daqiqadan keyin yozaman."
+    deflect_reply: "Qaysi qoidani qanday sozlashni ayting — men sozlayman va siz bilan birga tekshiramiz."
+
+documents:
+  - key: doc_team_charter
+    title: "«Oydinbarg kuni» jamoasi: kim nima qiladi"
+    content: |
+      «Oydinbarg kuni» — yillik bir kunlik aksiya: bugun 10:00 dan 23:59 gacha saytda va botda OYDIN25 promokodi.
+      Jamoa: performance marketolog (reklama budjeti, soatlik limitlar, kreativlar holati), kontent menejer (e'lonlar,
+      saytdagi va kanallardagi matnlar, izohlarga javob), marketing analitik (prognoz, zaxira, natija va ta'sir hisobi).
+      Aksiya egasi — Dilnoza; promokod va sayt sozlamalari — Bobur (veb-do'kon).
+
+      Kelishuvlar:
+      - Standup jamoaga bitta: kim nima qiladi, kim kimdan nima kutadi, nima to'sib turibdi.
+      - Raqamlar faqat analitikdan: mijozga yoki rahbarga raqam yozishdan oldin analitik bilan tekshiring.
+      - Mijozga ketadigan har qanday matnni kontent menejer yozadi; aksiya sharti va reklama holatini performance tasdiqlaydi.
+      - Reklamani to'xtatish/yoqish — performance; promokodni sozlash — Bobur, performance bilan birga tekshiriladi.
+      - 16:00 da jamoa qisqa holat yozadi; kun oxirida bitta umumiy hisobot.
+
+  - key: doc_sale_terms
+    title: "Aksiya shartlari va assortiment"
+    content: |
+      OYDIN25 — 25% chegirma, buyurtma summasi (chegirmagacha) ≥ 200 000 so'm bo'lsa. To'plamlar bilan qo'shilmaydi
+      (to'plam narxi allaqachon −20%). Muddat: bugun 10:00–23:59. Bir buyurtmaga bitta promokod.
+      Mahsulot | Narx, so'm | O'zgaruvchan xarajat, so'm | Ombordagi zaxira, dona
+      «Qishki qalqon» yuz kremi 50 ml | 149 000 | 59 600 | 900
+      «Bodom va shi» qo'l kremi 75 ml | 99 000 | 49 500 | 2 500
+      «Anor» lab balzami | 45 000 | 12 000 | 400
+      «Qish to'plami» (3 mahsulot) | 293 000 → to'plam narxi 234 400 | 121 100 | 600
+      Bitta mahsulot 200 000 so'mga yetmaydi — OYDIN25 ikki va undan ko'p mahsulotli savatda ishlaydi.
+      Saytdagi "eski narx" (chizilgan narx) — oxirgi 30 kundagi haqiqiy sotuv narxi bo'lishi shart (ichki qoida).
+
+  - key: doc_brand_rules
+    title: "Brendbuk: aksiya matnlari uchun qisqa qoidalar"
+    content: |
+      Ovoz: samimiy, xotirjam, "siz" murojaati. Taqiqlangan: "davolaydi", "100%", "mo'jiza", "eng zo'r", "kafolatlangan",
+      kasallik nomlari, raqobatchi nomi. Aksiya: chegirma foizi, minimal summa, istisnolar va muddat bitta joyda yoziladi.
+      Zaxira haqida faqat haqiqiy raqam yoki halol taxmin ("kechqurungacha tugashi mumkin"); soxta shoshiltirish
+      ("faqat 3 ta qoldi" — rost bo'lmasa) va soxta "eski narx" taqiqlanadi.
+      Format: lenta posti ≤ 120 so'z, 1 CTA, ≤ 2 emoji, ≤ 3 xeshteg, #oydinbarg; messenjer posti ≤ 3 xatboshi, havola yoki
+      bot buyrug'i bilan tugaydi; SMS ≤ 160 belgi, faqat SMS roziligi bor 4 200 mijozga, "STOP" bilan obunadan chiqish.
+
+  - key: doc_sale_history
+    title: "O'tgan yilgi «Oydinbarg kuni» va oddiy kun ko'rsatkichlari"
+    content: |
+      O'tgan yil: 1 400 buyurtma (aksiya 10:00–24:00). Bu yil kutilayotgan o'sish: +15% (obunachilar va bot foydalanuvchilari).
+      O'rtacha savat (chegirmagacha): 260 000 so'm. O'zgaruvchan xarajat — o'rtacha savat narxining 42% i (ro'yxat narxidan).
+      Oddiy kun: 180 buyurtma, o'rtacha savat 230 000 so'm, chegirmasiz, reklamasiz hisobda.
+      Buyurtmalarning kun bo'yi to'planishi (o'tgan yil, jami ulush):
+      soat | 14:00 gacha | 18:00 gacha | 21:00 gacha | 24:00 gacha
+      ulush | 35% | 62% | 85% | 100%
+      Har 100 buyurtmada sotilgan dona (o'tgan oy savati): «Qishki qalqon» 60, «Bodom va shi» 85, «Anor» balzami 30.
+      Taxmin: soatlar oralig'ida buyurtmalar bir tekis keladi.
+
+  - key: doc_ads_benchmarks
+    title: "Aksiya kuni reklama: benchmark, cheklov va qoidalar"
+    content: |
+      Kunlik budjet: 12 000 000 so'm. Ichki qoida: aksiya kuni kanal CAC ≤ 60 000 so'm (aksiyada xaridlarning bir qismi
+      reklamasiz ham kelardi, shuning uchun qimmat kanal foyda bermaydi); jamoaviy maqsad — umumiy CAC ≤ 35 000.
+      Kanal | Narx modeli | CPC / narx | CR (klik → buyurtma) | Cheklov
+      Retargeting | CPM 25 000 so'm | CTR 2.5% | 7.0% | auditoriya 40 000, kuniga chastota ≤ 2
+      Qidiruv (kontekstli) reklama | klik, 1 000 so'm | — | 4.0% | kuniga ≈ 3 000 klik
+      Messenjer kanallarida post | 1 200 000 so'm/post, ≈ 1 500 so'm/klik | — | 3.5% | 3 ta joy bor
+      Qisqa video reklama | klik, 1 500 so'm | — | 2.2% | cheklov yo'q
+      Kabinetda har kanalga soatlik yoki kunlik limit qo'yiladi; optimizatsiya maqsadi — xarid.
+      Promokod ko'rsatilgan kreativlar: retargeting, qisqa video va messenjer postlari.
+
+  - key: doc_crisis_policy
+    title: "Ijtimoiy tarmoqlarda xato va inqiroz: tartib"
+    content: |
+      1. Xato yoki tarqalayotgan salbiy postga 30 daqiqa ichida birinchi ochiq javob.
+      2. Xato jim o'chirilmaydi; tuzatish ochiq e'lon qilinadi.
+      3. Salbiy izohlar o'chirilmaydi (faqat haqorat, spam yoki shaxsiy ma'lumot yashiriladi).
+      4. Ohang: uzr, nima bo'lgani, nima qilinyapti, mijoz uchun keyingi qadam. Ayblovsiz, bahssiz.
+      5. Kompensatsiya, narx va muddat bo'yicha qarorni marketing rahbari qabul qiladi; matnda unga zid va'da yo'q.
+      6. Allaqachon berilgan buyurtmalar e'lon qilingan shartda bajariladi (xato mijoz foydasiga bo'lsa ham).
+      7. Ichki: xatoga oid reklama to'xtatiladi, sotuv va call-markazga xabar, sabab va qayta bo'lmasligi uchun chora.
+
+  - key: doc_incident_promo
+    title: "Veb-do'kon: OYDIN25 bo'yicha xabar (15:00–15:25)"
+    content: |
+      15:00  Bobur: OYDIN25 qoidasida xato topildi — 10:00 dan beri kod to'plamlarga ham ishlayapti va 200 000 minimal
+             summa tekshirilmayapti.
+      10:00–15:00 OYDIN25 bilan buyurtmalar: 610 ta
+               to'g'ri (≥ 200 000, to'plamsiz): 402
+               to'plam + OYDIN25: 148 (to'plam narxi 234 400 → 175 800 so'm)
+               200 000 dan kam savat: 60 (o'rtacha savat chegirmagacha 120 000 so'm)
+      15:10  Bobur "xavfsizlik uchun" OYDIN25 ni butunlay o'chirdi — endi hamma uchun "Promokod yaroqsiz".
+      15:10–15:25  OYDIN25 kiritib, xato ko'rib tashlab ketilgan savatlar: 140 (o'rtacha chegirmali summa 195 000 so'm).
+      15:25  Mashhur foydalanuvchining posti: "Oydinbarg aldadi: reklama 25% deydi, kod ishlamaydi!" — 2 300 ulashish,
+             izohlar ko'paymoqda.
+      Reklama: promokodli kreativlar hozir ham ishlayapti (14:00–18:00 rejasi bo'yicha soatiga ≈ 580 000 so'm).
+      Dilnoza qarori: berilgan buyurtmalar bajariladi; kod to'g'ri qoida bilan imkon qadar tez qayta yoqiladi;
+      uzilish uchun aksiya 00:59 gacha uzaytiriladi.
+
+nodes:
+  - id: welcome
+    type: message
+    day: 1
+    at: "09:00"
+    from: dilnoza
+    brief: |
+      Xayrli tong, jamoa! Bugun «Oydinbarg kuni» — aksiya 10:00 da boshlanadi. Jamoa hujjatini o'qing va standup'da
+      kim nima qilishini, kim kimdan raqam yoki matn kutishini kelishib oling.
+
+  - id: standup
+    type: task
+    day: 1
+    at: "09:00"
+    from: dilnoza
+    brief: |
+      Jamoa standup'i — bitta umumiy javob. Har rol bugun nima qiladi, kim kimdan nima kutadi va nima to'sib turishi
+      mumkin. Jamoa chatida kelishib, bittangiz yozing.
+    attachments: [doc_team_charter]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 0.5
+    competencies: [communication, prioritization]
+    rubric:
+      - {id: roles, description: "Har rolning bugungi ishi aniq (performance — budjet va soatlik limitlar, kontent — e'lon matnlari, analitik — prognoz va zaxira)", weight: 2}
+      - {id: dependencies, description: "Kim kimni kutishi ko'rsatilgan (zaxira raqami analitikdan kontentga, aksiya sharti performance va Bobur bilan tekshiriladi)", weight: 2}
+      - {id: blockers, description: "To'siq yoki ochiq savol aytilgan (masalan, promokod sozlamasi tekshirilganmi)"}
+    hints:
+      - "Jamoa hujjatidagi kelishuvlarni qayta o'qing: raqamlar, matn va promokod kimdan keladi?"
+    reference_answer: |
+      Performance: 12 mln ni kanal va soatlarga bo'lish, limitlar va kreativlar — 10:00 startgacha asosiy qismi, 11:30 gacha to'liq.
+      Kontent: lenta, messenjer, SMS va sayt banneri matnlari — 10:00 gacha birinchi e'lon.
+      Analitik: buyurtma va foyda prognozi, zaxira tugash vaqti — 11:30 gacha; raqamlarni kontent va performance'ga beradi.
+      Bog'liqlik: zaxira bo'yicha matn analitik raqamidan keyin; aksiya shartini kontent performance va Bobur bilan tekshiradi.
+      To'siq: OYDIN25 qoidasi (min 200 000, to'plamsiz) saytda test qilinganmi — Bobur bilan 10:00 gacha tekshiramiz.
+
+  - id: mentor_intro
+    type: message
+    day: 1
+    at: "09:15"
+    from: shoxrux
+    brief: |
+      Salom, jamoa! Men Shoxrux, bugun mentoringizman. Har biringizning vazifasi alohida, natija esa umumiy: aksiya kuni
+      bir-biringizni kutadigan joylarni oldindan kelishing. Qiyin bo'lsa "hint" so'rang — har hint balni biroz kamaytiradi.
+
+  - id: ads_pacing
+    type: task
+    role: performance
+    day: 1
+    at: "09:30"
+    from: shoxrux
+    brief: |
+      Aksiya kunining 12 mln so'mlik reklama budjetini taqsimlang. Har kanal uchun: budjet (cheklovlardan kelib chiqib),
+      kutilgan klik va buyurtma, CAC; jami CAC. Qoidaga to'g'ri kelmaydigan kanal bo'yicha qaror. So'ng sarfni soatlarga
+      bo'ling (14:00, 18:00, 21:00 va 24:00 gacha jami qancha) va kabinetga qanday limit qo'yasiz — yozing.
+    attachments: [doc_ads_benchmarks, doc_sale_history]
+    answer_types: [text, file]
+    due_in_minutes: 120
+    weight: 2
+    competencies: [technical, prioritization]
+    rubric:
+      - {id: caps, description: "Cheklovlar to'g'ri: retargeting 40 000 × 2 = 80 000 ko'rsatish → 2.0 mln, 2 000 klik, 140 buyurtma; qidiruv 3 000 × 1 000 = 3.0 mln, 120; messenjer 3 × 1.2 = 3.6 mln, 2 400 klik, 84", weight: 2}
+      - {id: cac, description: "CAC: retargeting ≈ 14 290, qidiruv 25 000, messenjer ≈ 42 860, qisqa video 1 500 / 2.2% ≈ 68 180 — qoidadan (60 000) yuqori", weight: 2}
+      - {id: decision, description: "Qisqa video to'liq 3.4 mln olmaydi: o'chiriladi yoki ≤ 1 mln test; asosiy uch kanal 8.6 mln, 344 buyurtma, CAC 25 000 ≤ 35 000; qolgan pul zaxira", weight: 2}
+      - {id: pacing, description: "Soatlik bo'linish buyurtma egri chizig'iga mos: 8.6 mln uchun 14:00 gacha ≈ 3.01, 18:00 — 5.33, 21:00 — 7.31, 24:00 — 8.6 mln (yoki test bilan mutanosib); har kanalga limit", weight: 1.5}
+      - {id: setup, description: "Kabinet: optimizatsiya — xarid, promokodli kreativlar ro'yxati, limitlar; kreativ va aksiya shartini kontent bilan kelishish aytilgan"}
+    hints:
+      - "Retargeting budjeti auditoriya, chastota va CPM'dan chiqadi; messenjer — joylar sonidan."
+      - "Har kanal CAC'ini aksiya qoidasidagi chegara bilan solishtiring. Qolgan pul albatta sarflanishi kerakmi?"
+      - "Kun bo'yi sarfni buyurtmalarning to'planish ulushlari bilan bo'ling — odamlar kelmaydigan soatda pul sarflamang."
+    reference_answer: |
+      Retargeting: 40 000 × 2 = 80 000 ko'rsatish × 25 000/1000 = 2.0 mln; 2 000 klik × 7% = 140 buyurtma; CAC ≈ 14 290.
+      Qidiruv: 3 000 klik × 1 000 = 3.0 mln; 120 buyurtma; CAC 25 000.
+      Messenjer: 3 × 1.2 = 3.6 mln; 2 400 klik × 3.5% = 84; CAC ≈ 42 860.
+      Qisqa video: CAC 1 500 / 0.022 ≈ 68 180 > 60 000 — qoidaga zid. Qolgan 3.4 mln bilan ≈ 50 buyurtma, foyda kam va ko'pi baribir kelardi.
+      Qaror: qisqa video — 1 mln lik test (≈ 15 buyurtma), 18:00 da CAC qoidadan yuqori bo'lsa o'chadi; 2.4 mln zaxira.
+      Jami asosiy: 8.6 mln, 344 buyurtma, CAC 25 000 (test bilan 9.6 mln, ≈ 359, CAC ≈ 26 770).
+      Soatlar (8.6 mln): 14:00 gacha ≈ 3.01 mln (35%), 18:00 gacha 5.33 mln (62%), 21:00 gacha 7.31 mln (85%), 24:00 gacha 8.6 mln.
+      Kabinet: maqsad — xarid; har kanalga kunlik limit va 14/18/21 da tekshiruv; promokodli kreativlar: retargeting, messenjer,
+      qisqa video — aksiya shartini (min 200 000, to'plamsiz) kontent bilan bir xil yozamiz.
+
+  - id: sale_copy
+    type: task
+    role: content
+    day: 1
+    at: "09:30"
+    from: kamola
+    brief: |
+      Aksiya e'lonlarini tayyorlang: 1) lenta posti; 2) messenjer kanal posti; 3) SMS (kimlarga yuborilishini ham yozing);
+      4) sayt banneri uchun bir qator. Aksiya shartlari to'liq va bir xil bo'lsin.
+    attachments: [doc_sale_terms, doc_brand_rules]
+    answer_types: [text]
+    due_in_minutes: 120
+    weight: 1.5
+    competencies: [communication, initiative]
+    rubric:
+      - {id: terms, description: "Shartlar to'liq va to'g'ri: 25%, buyurtma ≥ 200 000 so'm, to'plamlarga qo'shilmaydi, bugun 10:00–23:59, OYDIN25", weight: 2}
+      - {id: no_false, description: "Bitta mahsulotga '−25%' deb va'da yo'q (149 000 < 200 000); soxta 'eski narx' va soxta shoshiltirish yo'q", weight: 1.5}
+      - {id: format, description: "Formatlar: lenta ≤ 120 so'z, 1 CTA, ≤ 2 emoji, ≤ 3 xeshteg + #oydinbarg; messenjer ≤ 3 xatboshi, havola/bot; SMS ≤ 160 belgi, STOP bilan", weight: 1.5}
+      - {id: sms_consent, description: "SMS faqat roziligi bor 4 200 mijozga"}
+    hints:
+      - "Aksiya shartidagi minimal summani mahsulot narxlari bilan solishtiring: bitta krem bilan kod ishlaydimi?"
+      - "Har matnda to'rtta narsa bo'lsin: foiz, minimal summa, istisno, muddat."
+    reference_answer: |
+      Lenta: "Bugun «Oydinbarg kuni»! 200 000 so'mdan buyurtmalarga OYDIN25 kodi bilan 25% chegirma — masalan, «Qishki qalqon» va
+      «Bodom va shi» birga 248 000 o'rniga 186 000 so'm. Kod to'plamlarga qo'shilmaydi. Muddat — bugun 23:59 gacha. Buyurtma —
+      profildagi havola orqali 🤍 #oydinbarg #oydinbargkuni"
+      Messenjer: 1) Bugun 10:00–23:59 — «Oydinbarg kuni». 2) OYDIN25: 200 000 so'mdan buyurtmaga 25%; to'plamlar allaqachon −20%,
+      kod ularga qo'shilmaydi. 3) Buyurtma: bot, /start.
+      SMS (faqat roziligi bor 4 200 mijozga): "Oydinbarg kuni: OYDIN25 bilan 200 000 so'mdan buyurtmaga -25%, bugun 23:59 gacha. Buyurtma: bot /start. Obunani bekor qilish: STOP"
+      Banner: "OYDIN25 — 200 000 so'mdan buyurtmaga 25%, bugun 23:59 gacha (to'plamlarga qo'shilmaydi)".
+
+  - id: sale_forecast
+    type: task
+    role: analyst
+    day: 1
+    at: "09:30"
+    from: dilnoza
+    brief: |
+      11:30 gacha aksiya prognozi kerak: buyurtmalar, daromad, yalpi foyda (reklama 12 mln bilan), oddiy kun bilan
+      solishtirish va aksiya oddiy kundan foydali bo'lishi uchun kamida nechta buyurtma kerak. Zaxira: qaysi mahsulot
+      qachon tugashi mumkin. Raqamlarni jamoaga ham bering — kontent va performance ularga tayanadi.
+    attachments: [doc_sale_history, doc_sale_terms]
+    answer_types: [text, file]
+    due_in_minutes: 120
+    weight: 2
+    competencies: [technical, communication]
+    rubric:
+      - {id: forecast, description: "Prognoz (±1%): 1 400 × 1.15 = 1 610 buyurtma; savat 260 000 × 0.75 = 195 000; daromad ≈ 313.95 mln; xarajat 109 200, foyda 85 800/buyurtma; yalpi foyda ≈ 138.14 mln, reklamadan keyin ≈ 126.14 mln", weight: 2}
+      - {id: breakeven, description: "Oddiy kun: 180 × 230 000 × 58% ≈ 24.01 mln; zararsizlik (24.01 + 12) / 85 800 ≈ 420 buyurtma", weight: 1.5}
+      - {id: stock, description: "Zaxira: qalqon talab ≈ 966 > 900 (≈ 66 kam), balzam ≈ 483 > 400 (≈ 83 kam), bodom ≈ 1 369 < 2 500 — yetadi", weight: 2}
+      - {id: timing, description: "Tugash vaqti chiziqli taxmin: balzam ≈ 82.8% → ≈ 20:40 (18:00–21:00 oralig'i), qalqon ≈ 93.2% → ≈ 22:40 (21:00–24:00)", weight: 1.5}
+      - {id: handoff, description: "Jamoa uchun qisqa xulosa: kontentga zaxira raqamlari, performance'ga kech soatlarda qaysi mahsulot reklamasini kamaytirish"}
+    hints:
+      - "Chegirma ro'yxat narxidan olinadi, o'zgaruvchan xarajat esa ro'yxat narxining 42% i — bitta buyurtmadan foydani shu ikkisidan toping."
+      - "Har mahsulot uchun talab = buyurtmalar × har 100 buyurtmadagi dona / 100. Zaxira talabning necha foizi?"
+      - "Zaxira foizini kun bo'yi to'planish jadvaliga qo'ying va ikki soat oralig'ida chiziqli bo'ling."
+    reference_answer: |
+      Buyurtma: 1 400 × 1.15 = 1 610. Savat: 260 000 → 195 000 (−25%). Daromad 1 610 × 195 000 ≈ 313.95 mln.
+      Xarajat 260 000 × 42% = 109 200; foyda 85 800/buyurtma; yalpi foyda ≈ 138.14 mln; 12 mln reklamadan keyin ≈ 126.14 mln.
+      Oddiy kun: 180 × 230 000 × 58% ≈ 24.01 mln. Aksiya oddiy kundan foydali bo'lishi uchun: (24.01 + 12) / 0.0858 ≈ 420 buyurtma.
+      Zaxira: «Qishki qalqon» 1 610 × 0.60 ≈ 966 > 900 (≈ 66 kam) — 900/966 ≈ 93.2% → ≈ 22:40;
+      «Anor» balzami 1 610 × 0.30 ≈ 483 > 400 (≈ 83 kam) — 82.8% → 18:00 + (82.8 − 62)/(85 − 62) × 3 soat ≈ 20:40;
+      «Bodom va shi» ≈ 1 369 < 2 500 — yetadi.
+      Jamoaga: kontent — balzam 20:00–21:00, qalqon 22:00–23:00 atrofida tugashi mumkin, halol ogohlantirish; performance — 20:00 dan
+      keyin balzamli kreativlarni o'chirish, qalqon reklamasini 21:00 dan kamaytirish.
+
+  - id: fake_discount
+    type: decision
+    day: 1
+    at: "11:30"
+    from: rustam
+    brief: |
+      Jamoa, "−25%" zerikarli ko'rinyapti. Saytda «Qishki qalqon»ning eski narxini 199 000 deb chizib qo'yinglar, yangisi
+      119 000 — "−40%" bo'ladi, hamma oladi. Kod 200 000 ga yetmasa ham bannerda "hamma narsa −40% gacha" deb yozinglar.
+      Rekord kerak, Dilnozaga keyin o'zim aytaman. Qaror qiling.
+    competencies: [communication, stress_handling]
+    options:
+      - key: real_price
+        label: "Rad etamiz: eski narx haqiqiy 149 000 qoladi, shartlar to'liq yoziladi. Muqobil: ikki mahsulotli savat misoli (248 000 → 186 000) va to'plamni (−20%) ko'rsatamiz; Dilnoza opaga yozamiz"
+        grade: correct
+      - key: ask_lead
+        label: "O'zgartirmay turamiz va Dilnoza opadan so'raymiz"
+        grade: acceptable
+      - key: inflate_price
+        label: "Direktor aytdi — eski narxni 199 000 qilib, bannerga '−40% gacha' yozamiz"
+        grade: wrong
+        flag: fake_discount
+
+  - id: lead_on_fake_discount
+    type: message
+    day: 1
+    at: "12:00"
+    when: {flag: fake_discount}
+    from: dilnoza
+    brief: |
+      Saytda «Qishki qalqon» eski narxi 199 000 bo'lib qolibdi — qaytardim. U hech qachon 199 000 turmagan: bu soxta chegirma,
+      ichki qoidamizga zid va mijoz skrinshot qilsa, aksiya kuni aldov janjaliga aylanadi. Direktor so'rasa ham, narx va
+      shartlar bo'yicha qarorni men bilan kelishing.
+
+  - id: stock_note
+    type: task
+    role: content
+    after: {node: sale_forecast, event: submitted, minutes: 30}
+    from: kamola
+    brief: |
+      Analitik prognozni topshirdi. Zaxirasi yetmasligi mumkin bo'lgan mahsulotlar uchun tayyorlang: 1) saytdagi mahsulot
+      kartasida qisqa ogohlantirish; 2) tugaganda chiqadigan xabar (muqobil taklif bilan); 3) kechki messenjer posti uchun
+      2–3 gap. Raqamlarni analitik jamoadoshingiz bilan tekshiring.
+    attachments: [doc_sale_terms, doc_brand_rules]
+    answer_types: [text]
+    due_in_minutes: 60
+    weight: 1
+    competencies: [communication]
+    rubric:
+      - {id: accurate, description: "Mahsulotlar to'g'ri: «Anor» balzami (400 dona, ≈ 20:00–21:00) va «Qishki qalqon» (900, ≈ 22:00–23:00); «Bodom va shi» yetarli — ogohlantirish yo'q", weight: 2}
+      - {id: honest, description: "Halol: haqiqiy qoldiq yoki 'kechqurungacha tugashi mumkin'; soxta 'faqat 3 ta qoldi' yo'q", weight: 1.5}
+      - {id: alternative, description: "Tugaganda muqobil: yetkazib berish sanasi bilan buyurtma yoki boshqa mahsulot; OYDIN25 sharti saqlangan"}
+    hints:
+      - "Analitikning raqamlaridan faqat ikki mahsulot uchun ogohlantirish kerak. Qaysilari va qachon?"
+    reference_answer: |
+      Karta: "«Anor» balzami — omborda 400 dona, aksiya kuni kechqurungacha tugashi mumkin." «Qishki qalqon» uchun: "900 dona — 22:00 dan keyin tugashi mumkin."
+      Tugaganda: "«Anor» balzami bugun tugadi. Keyingi partiyadan buyurtma berishingiz mumkin — yetkazish sanasini menejer aytadi;
+      yoki «Bodom va shi» kremi bilan savatni 200 000 so'mga yetkazib, OYDIN25 dan foydalaning."
+      Kechki post: "«Oydinbarg kuni» 23:59 gacha davom etadi. «Anor» balzami tugadi, «Qishki qalqon»dan oz qoldi — real qoldiq saytda.
+      OYDIN25: 200 000 so'mdan buyurtmaga 25%."
+
+  - id: mentor_afternoon
+    type: message
+    day: 1
+    at: "14:00"
+    from: shoxrux
+    brief: |
+      Tushdan keyin eslatma: kim nimani kutayotganini jamoa chatiga yozib qo'ying. Muammo chiqsa — avval ta'sirni to'xtatish
+      (reklama, sozlama), raqamlarni analitik tasdiqlaydi, mijozga matnni kontent yozadi.
+
+  - id: incident_ads
+    type: incident
+    role: performance
+    day: 1
+    at: "15:30"
+    from: bobur
+    brief: |
+      SHOSHILINCH: OYDIN25 qoidasida xato bor edi, men 15:10 da kodni butunlay o'chirdim — endi hamma uchun yaroqsiz, reklama esa
+      hali "25%" deyapti va tarmoqda "aldov" posti tarqalyapti. 30 daqiqada yozing: 1) hozirgi qadamlar (reklama va kod),
+      2) to'g'ri qoidani yoqishdan oldin qanday tekshiramiz, 3) reklamani qachon va qanday qayta yoqamiz.
+    attachments: [doc_incident_promo, doc_crisis_policy, doc_ads_benchmarks]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 1.5
+    competencies: [stress_handling, technical, prioritization]
+    rubric:
+      - {id: stop_ads, description: "Avval promokodli kreativlarni (retargeting, qisqa video, messenjer) pauza — ishlamaydigan va'da uchun soatiga ≈ 580 000 so'm ketmoqda; kodsiz kreativlar yoki qidiruv qolishi mumkin", weight: 2}
+      - {id: restore_code, description: "Kodni o'chiq qoldirmaslik: Bobur bilan to'g'ri qoida (≥ 200 000, to'plamsiz) ~10 daqiqada yoqiladi; uch holat testi: 250 000 → 25%, 150 000 → tushunarli rad, to'plam → rad", weight: 2}
+      - {id: resume, description: "Reklama test o'tgandan keyin, shartlari to'liq (min summa, istisno, 00:59 gacha) yangilangan kreativ bilan qayta yoqiladi; limitlar 00:59 gacha qayta hisoblanadi"}
+      - {id: team, description: "Jamoa bilan kelishuv: ta'sir raqami analitikdan, ochiq javob matni kontentdan; rahbarga holat 30 daqiqada", weight: 1.5}
+    hints:
+      - "Runbook mantiqi: pul va ishonch hozir nimaga ketyapti? Birinchi navbatda shuni to'xtating."
+      - "Xatoli kodni o'chirish ham xato bo'ldi. To'g'ri qoidani yoqishdan oldin qaysi uchta savatni sinab ko'rish kerak?"
+    reference_answer: |
+      15:30–15:35: promokodli kreativlar (retargeting, messenjer, qisqa video) pauza — soatiga ≈ 580 000 so'm ishlamaydigan va'daga ketyapti.
+      Qidiruvdagi kodsiz e'lonlar qoladi. Bobur bilan to'g'ri qoidani yoqamiz (≥ 200 000 chegirmagacha, to'plamlar istisno) — o'chiq
+      qoldirmaymiz. Test: 250 000 savat → 187 500; 150 000 → "Kod 200 000 so'mdan buyurtmalarga"; to'plam → "To'plamga qo'shilmaydi".
+      15:50 gacha test o'tsa — kreativlarni "200 000 so'mdan, to'plamlarsiz, 00:59 gacha" matni bilan yangilab qayta yoqamiz; qolgan
+      budjet va soatlik limitlar 00:59 gacha qayta bo'linadi. Raqamlar — analitikdan, ochiq javob — kontentdan; 16:00 da Dilnoza opaga holat.
+
+  - id: incident_impact
+    type: incident
+    role: analyst
+    day: 1
+    at: "15:30"
+    from: dilnoza
+    brief: |
+      OYDIN25 xatosi bo'yicha raqamlar kerak: xato bilan qancha buyurtma o'tdi, ortiqcha berilgan chegirma qancha,
+      bu buyurtmalar zarardami, kod o'chirilgandan beri qancha savat yo'qotildi. Kun prognoziga ta'sirini ham yozing.
+      Raqamlarni jamoadoshlaringizga yuboring — kontent ochiq javob yozadi.
+    attachments: [doc_incident_promo, doc_sale_terms]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 1.5
+    competencies: [technical, stress_handling]
+    rubric:
+      - {id: leakage, description: "Ortiqcha chegirma: to'plam 148 × 58 600 = 8 672 800; kichik savat 60 × 30 000 = 1 800 000; jami 10 472 800 so'm (±1%)", weight: 2}
+      - {id: margin, description: "Zarar emas: to'plam 175 800 − 121 100 = 54 700 foyda, kichik savat 90 000 − 50 400 = 39 600 — boy berilgan foyda; xatoli buyurtmalar 208/610 ≈ 34%", weight: 1.5}
+      - {id: abandoned, description: "O'chirilgandan beri 140 savat × 195 000 ≈ 27.3 mln so'm daromad xavf ostida — kodni tez to'g'ri yoqish xatoli chegirmadan muhimroq", weight: 1.5}
+      - {id: context, description: "Kun prognoziga ta'sir: ≈ 10.5 mln / 138.1 mln ≈ 7.6% yalpi foyda; berilgan buyurtmalar bajariladi"}
+    hints:
+      - "Ikki xil xato — ikki xil ortiqcha chegirma. Har birini alohida hisoblang."
+      - "Xatoli buyurtma zarar keltiryaptimi? Chegirmali narxni o'zgaruvchan xarajat bilan solishtiring."
+    reference_answer: |
+      Xatoli buyurtmalar: 148 + 60 = 208 (610 dan ≈ 34%).
+      To'plam: 234 400 × 25% = 58 600 ortiqcha; 148 × 58 600 = 8 672 800. Kichik savat: 120 000 × 25% = 30 000; 60 × 30 000 = 1 800 000.
+      Jami ortiqcha chegirma ≈ 10 472 800 so'm. Zarar emas: to'plam 175 800 − 121 100 = 54 700, kichik savat 90 000 − 50 400 = 39 600
+      foyda — boy berilgan foyda. Kod o'chirilgach: 140 savat × 195 000 ≈ 27.3 mln daromad xavf ostida — kodni to'g'ri qoida bilan
+      darhol qaytarish kerak. Kun prognozi yalpi foydasining (≈ 138.1 mln) ≈ 7.6% i. Berilgan buyurtmalar bajariladi (qoida 6).
+
+  - id: incident_reply
+    type: incident
+    role: content
+    day: 1
+    at: "15:30"
+    from: kamola
+    brief: |
+      "Oydinbarg aldadi" posti tarqalyapti. 30 daqiqada tayyorlang: 1) sahifamizda ochiq tuzatish posti; 2) viral post
+      ostiga javob; 3) izohlar uchun qisqa shablon. Qaysi raqam va qaror qayerdan kelganini jamoadoshlaringiz bilan tekshiring.
+    attachments: [doc_crisis_policy, doc_incident_promo, doc_brand_rules]
+    answer_types: [text]
+    due_in_minutes: 30
+    weight: 1.5
+    competencies: [communication, stress_handling]
+    rubric:
+      - {id: honest, description: "Uzr va nima bo'lgani: kod qoidasida xato, 15:10 dan vaqtincha ishlamadi; mijozni ayblamaydi, bahs yo'q", weight: 1.5}
+      - {id: terms, description: "To'g'ri shartlar: 200 000 so'mdan, to'plamlarga qo'shilmaydi; kod qayta ishlayapti; aksiya 00:59 gacha uzaytirildi (rahbar qarori); berilgan buyurtmalar o'zgarmaydi", weight: 2}
+      - {id: policy, description: "Salbiy izohlar va post o'chirilmaydi; rahbar qaroridan tashqari va'da (qo'shimcha chegirma) yo'q; savatini yo'qotganlarga aniq qadam", weight: 1.5}
+    hints:
+      - "Inqiroz tartibidagi 4- va 5-bandlar: ohang qanday bo'ladi va qaysi va'dani faqat rahbar beradi?"
+    reference_answer: |
+      Post: "Kechirasiz! Bugun 15:10 dan OYDIN25 kodi xato tufayli vaqtincha ishlamadi. Kod qayta ishlayapti: 200 000 so'mdan
+      buyurtmalarga 25% (to'plamlarga qo'shilmaydi). Noqulaylik uchun aksiyani 00:59 gacha uzaytirdik. Avval berilgan barcha
+      buyurtmalar o'zgarishsiz bajariladi."
+      Viral post ostiga: "Haqlisiz, kod 15:10 dan bir muddat ishlamadi — bu bizning xatomiz, uzr. Hozir u qayta ishlayapti,
+      aksiya 00:59 gacha. Savatingiz saqlanmagan bo'lsa, shaxsiy xabarda yordam beramiz."
+      Shablon: "Uzr so'raymiz! OYDIN25 qayta ishlayapti: 200 000 so'mdan buyurtmaga 25%, to'plamlarsiz, 00:59 gacha." Izohlar o'chirilmaydi.
+
+  - id: incident_thanks
+    type: message
+    after: {node: incident_ads, event: submitted, minutes: 20}
+    from: dilnoza
+    brief: "Rahmat, jamoa: kod to'g'ri qoida bilan ishlayapti, reklama yangilangan shartlar bilan qayta yoqildi. Ertaga sababi va tekshiruv tartibini birga yozamiz."
+
+  - id: day1_end
+    type: day_end
+    day: 1
+    at: "17:30"
+    brief: |
+      Kun yakuni — jamoaning bitta umumiy hisoboti Dilnozaga: har rol nima qildi, budjet va prognoz raqamlari, Rustam akaning
+      taklifi bo'yicha qaror, promokod incident'i yakuni va ertangi reja. Jamoa bo'lib nimani yaxshiroq qilish mumkin edi — bitta xulosa.
+    competencies: [communication]
+    rubric:
+      - {id: by_role, description: "Har rolning natijasi aniq sanalgan (budjet 8.6 mln + test, prognoz 1 610, matnlar)", weight: 1.5}
+      - {id: decision, description: "Eski narx bo'yicha qaror va sababi yozilgan"}
+      - {id: incident, description: "Incident raqamlari (≈ 10.47 mln ortiqcha chegirma, 140 savat) va keyingi qadamlar"}
+      - {id: reflection, description: "Jamoaviy ish bo'yicha aniq xulosa (masalan, promokodni aksiyadan oldin uch holatda birga tekshirish)"}
