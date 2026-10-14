@@ -193,7 +193,7 @@ def candidates_csv(rows: list[tuple[str, Profile]]) -> str:
     return write_csv(
         ["full_name", "overall_score", "runs_completed", "sectors", *keys, "last_completed_at"],
         (
-            [name, p.overall_score, len(p.runs), ", ".join(p.sectors),
+            [name, p.overall_score, p.runs_completed, ", ".join(p.sectors),
              *(p.competencies.get(k) for k in keys), p.last_completed_at]
             for name, p in rows
         ),

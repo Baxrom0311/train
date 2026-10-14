@@ -9,6 +9,8 @@ Tekshirilgan ssenariyni DB'ga yozish (CONTRACT.md §9.3.1).
   joyida yangilanadi, aks holda `import_scenario` kabi yangi qoralama.
 - `publish_version` — versiyani o'zgarmas qiladi; avvalgi `published`
   versiyalar `archived` bo'ladi (ularga bog'langan Run'lar ishlashda davom etadi).
+- Katalogdagi nom, kompaniya yoki soha o'zgarsa — ssenariyni o'tganlarning
+  nomzod profili qayta yoziladi (§33.2).
 
 Hujjatlar shu yerda bo'laklanadi (`rag.build_chunks`); embedding'lar fon
 job'ida to'ldiriladi (`rag.embed_pending_chunks`), import tashqi API'ga bog'liq emas.
@@ -25,6 +27,7 @@ from app.models.scenario import Scenario, ScenarioDocument, ScenarioVersion
 from app.scenario.rag import build_chunks
 from app.scenario.engine import forget_definition
 from app.scenario.schema import ScenarioDefinition
+from app.talent.profile import refresh_scenario_profiles
 
 
 def dump_definition(defn: ScenarioDefinition) -> dict:
@@ -40,13 +43,16 @@ async def import_scenario(
     definition = dump_definition(defn)
 
     scenario = (await db.execute(select(Scenario).where(Scenario.slug == defn.slug))).scalars().first()
+    profiles_stale = False
     if scenario is None:
         scenario = Scenario(slug=defn.slug, owner_company_id=owner_company_id)
         db.add(scenario)
         update_catalog = True   # yangi qator — maydonlar baribir kerak
     if update_catalog:
-        _update_catalog(scenario, defn)
+        profiles_stale = _update_catalog(scenario, defn)
     await db.flush()
+    if profiles_stale:
+        await refresh_scenario_profiles(db, scenario.id)
 
     latest = (
         await db.execute(
@@ -101,12 +107,15 @@ async def save_draft(
     return latest
 
 
-def _update_catalog(scenario: Scenario, defn: ScenarioDefinition) -> None:
+def _update_catalog(scenario: Scenario, defn: ScenarioDefinition) -> bool:
+    """Katalog maydonlari; nomzod profilidagi maydonlar (§10.4 `runs`) o'zgardimi — qaytaradi."""
+    before = (scenario.title, scenario.company_name, scenario.sector)
     scenario.title = defn.title
     scenario.sector = defn.sector
     scenario.company_name = defn.company_name
     scenario.difficulty = defn.difficulty
     scenario.duration_days = defn.duration_days
+    return scenario.id is not None and before != (scenario.title, scenario.company_name, scenario.sector)
 
 
 async def _write_documents(db: AsyncSession, version: ScenarioVersion, defn: ScenarioDefinition) -> None:
@@ -142,5 +151,7 @@ async def publish_version(db: AsyncSession, version: ScenarioVersion) -> None:
     version.published_at = datetime.now(timezone.utc)
     # katalog nashr qilingan ta'rifni ko'rsatadi (qoralama sarlavhasini emas)
     scenario = await db.get(Scenario, version.scenario_id)
-    _update_catalog(scenario, ScenarioDefinition.model_validate(version.definition))
+    profiles_stale = _update_catalog(scenario, ScenarioDefinition.model_validate(version.definition))
     await db.flush()
+    if profiles_stale:
+        await refresh_scenario_profiles(db, scenario.id)

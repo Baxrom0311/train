@@ -16,6 +16,7 @@ from app.models.scenario import Run, Scenario, ScenarioVersion
 from app.models.talent import CandidateVisibility, TalentOffer
 from app.models.user import User
 from app.scenario.clock import WorkCalendar
+from app.talent.profile import refresh_profiles
 
 pytestmark = pytest.mark.asyncio
 
@@ -79,6 +80,8 @@ async def _run(db, user, version, *, score, competencies, status=RunStatus.COMPL
         },
     )
     db.add(run)
+    await db.commit()
+    await refresh_profiles(db, [user.id])   # write_final_report kabi (§33.2)
     await db.commit()
     return run
 

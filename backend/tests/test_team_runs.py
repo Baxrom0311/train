@@ -20,7 +20,7 @@ from app.scenario.importer import import_scenario, publish_version
 from app.scenario.reports import write_final_report
 from app.scenario.schema import ScenarioDefinition
 from app.scenario.team import assign_roles, redistribute
-from app.talent.profile import build_profiles
+from app.talent.profile import load_profiles
 from tests.test_runs_api import FIXTURE, _login, clock, queue  # noqa: F401 — fixture'lar
 from tests.test_runs_chat import ai  # noqa: F401
 from tests.test_runs_engine import T, _events
@@ -545,7 +545,7 @@ async def test_full_team_day_and_report(db_session, test_user_factory, team_scen
     assert "technical" in members["Ali"]["competency_scores"]
 
     # sertifikat yo'q, profilga kirmaydi; hisobot — barcha faol a'zolarga
-    assert await build_profiles(db_session, [ali.id, bobur.id, charos.id]) == {}
+    assert await load_profiles(db_session, [ali.id, bobur.id, charos.id]) == {}
     ready = (await db_session.execute(
         select(Notification.user_id).where(Notification.kind == "report_ready")
     )).scalars().all()

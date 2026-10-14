@@ -15,7 +15,7 @@ from app.models.billing import University
 from app.models.credential import Certificate
 from app.models.enums import RunStatus, Sector
 from app.scenario.reports import write_final_report
-from app.talent.profile import build_profiles
+from app.talent.profile import load_profiles
 from tests.test_runs_engine import T, setup  # noqa: F401
 from tests.test_runs_reports import _completed_run, _summarizers
 from tests.test_talent_hunt import _headers, _run, _scenario, _student
@@ -147,7 +147,7 @@ async def test_revoke(client, db_session, world):
     data = (await client.get(f"/api/v1/certificates/{code}")).json()
     assert data["status"] == "revoked" and data["revoked_reason"] == "Javoblar ko'chirilgan"
     # profil (kompaniya, universitet, portfolio) — faqat bekor qilinmagan ish
-    profile = (await build_profiles(db_session, [world["aziza"].id]))[world["aziza"].id]
+    profile = (await load_profiles(db_session, [world["aziza"].id]))[world["aziza"].id]
     assert [r.scenario_title for r in profile.runs] == ["bank-day1 title"]
 
 

@@ -3,8 +3,8 @@ Talent Hunt moduli modellari (CONTRACT.md §5, §6 Modul 4 egaligi).
 """
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Boolean, DateTime, Enum as SAEnum, ForeignKey, Index, Integer, JSON, String, UniqueConstraint, text
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Boolean, DateTime, Enum as SAEnum, Float, ForeignKey, Index, Integer, JSON, String, UniqueConstraint, text
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 from app.models.rbac import GUID
@@ -207,4 +207,31 @@ class ApplicationAssessment(Base):
     created_by = mapped_column(GUID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow)
     started_at = mapped_column(DateTime(timezone=True), nullable=True)
+    updated_at = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow, onupdate=_utcnow)
+
+
+class TalentProfile(Base):
+    """
+    Nomzod profili — §10.1 hisobining saqlangan natijasi (CONTRACT.md §33).
+    Run yakunlanganda, sertifikat bekor qilinganda va ssenariy katalog
+    maydonlari o'zgarganda `talent.profile.refresh_profiles` qayta yozadi;
+    profilga kiradigan Run'i yo'q foydalanuvchida qator yo'q.
+    """
+    __tablename__ = "talent_profiles"
+    __table_args__ = (
+        Index("ix_talent_profiles_sectors", "sectors", postgresql_using="gin"),
+        Index("ix_talent_profiles_competencies", "competencies", postgresql_using="gin"),
+        Index("ix_talent_profiles_overall_score", "overall_score"),
+        Index("ix_talent_profiles_last_completed_at", "last_completed_at"),
+    )
+
+    user_id = mapped_column(GUID, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    overall_score = mapped_column(Float, nullable=True)
+    runs_completed = mapped_column(Integer, nullable=False)
+    sectors = mapped_column(ARRAY(String(20)), nullable=False)
+    # {kompetensiya: o'rtacha ball}; ma'lumot yo'q kompetensiya kalit sifatida yo'q
+    competencies = mapped_column(JSONB, nullable=False)
+    last_completed_at = mapped_column(DateTime(timezone=True), nullable=False)
+    # profilga kirgan Run'lar xulosasi, yangilari oldin (§10.4 `runs`)
+    runs = mapped_column(JSONB, nullable=False)
     updated_at = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow, onupdate=_utcnow)

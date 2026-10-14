@@ -71,7 +71,7 @@ def _profile(overall, competencies, sector="IT"):
         run_id=uuid.uuid4(), scenario_id=uuid.uuid4(), scenario_title="x", company_name="x", sector=sector,
         completed_at=NOW, overall_score=overall, competency_scores=competencies, strengths=[],
     )
-    return Profile(uuid.uuid4(), runs=[run])
+    return Profile.from_runs(uuid.uuid4(), [run])
 
 
 # ── Moslik (sof funksiya) ────────────────────────────────────────────

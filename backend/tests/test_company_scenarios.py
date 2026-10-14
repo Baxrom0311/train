@@ -22,7 +22,7 @@ from app.models.notification import Notification
 from app.models.scenario import Run, Scenario
 from app.notifications.emails import render
 from app.scenario.reports import write_final_report
-from app.talent.profile import build_profiles
+from app.talent.profile import load_profiles
 from tests.test_runs_api import FIXTURE
 from tests.test_vacancies import _no_expire, _open_vacancy, world  # noqa: F401 — fixture'lar
 
@@ -172,7 +172,7 @@ async def test_assessment_flow(client, db_session, world, data, clock):
     assert item["state"] == "completed"
     assert item["result"]["summary"] == "Talaba buyurtmalar xatosini tez topdi." and item["result"]["strengths"] == ["Tahlil"]
     # profil (moslik, portfolio, hisobotlar) — faqat platforma Run'lari
-    profile = (await build_profiles(db_session, [w.shy.id]))[w.shy.id]
+    profile = (await load_profiles(db_session, [w.shy.id]))[w.shy.id]
     assert uuid.UUID(sid) not in {r.scenario_id for r in profile.runs}
 
     # muddati o'tgan: boshlab bo'lmaydi; bekor qilish faqat boshlanmaganni

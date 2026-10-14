@@ -45,6 +45,7 @@ from app.scenario.engine import REPORT_DUE, definition_for
 from app.scenario.evaluation import public_checks
 from app.scenario.schema import Node, ScenarioDefinition
 from app.scenario.team import TeamView, team_view
+from app.talent.profile import refresh_profiles
 
 EVAL_WAIT = timedelta(minutes=15)
 AWAITING = (AIEvalStatus.PENDING, AIEvalStatus.QUEUED_RETRY)
@@ -324,6 +325,8 @@ async def write_final_report(db: AsyncSession, run_id: uuid.UUID, now: datetime,
         run.final_report = report
         run.competency_scores = scores
         code = await issue_for_run(db, run)   # §13.1 — shu tranzaksiyada
+        if report["certificate"]:
+            await refresh_profiles(db, [run.user_id])   # §33.2 — nomzod profili ham
         await report_ready(db, run, code, now)   # §15.2
         await assessment_finished(db, run, now)  # §26.5 — sinov bo'lsa kompaniyaga
     await db.commit()
