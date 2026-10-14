@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
 import { Building2, CheckCircle2, Hourglass, Loader2, Plus, Receipt, School, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -7,6 +8,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import ErrorGroups from '@/components/admin/ErrorGroups'
 import PlatformStats from '@/components/admin/PlatformStats'
 import InvoiceList from '@/components/billing/InvoiceList'
 import { Stat } from '@/components/ui/stat'
@@ -14,9 +16,10 @@ import { useAuth } from '@/context/AuthContext'
 import { api, ApiError } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { formatDateTime } from '@/lib/time'
-import type { AdminStats, Invoice, InvoiceStatus, Org, OrgList } from '@/lib/types'
+import type { AdminStats, ErrorGroupList, Invoice, InvoiceStatus, Org, OrgList } from '@/lib/types'
 
-type Tab = 'pending' | 'verified' | 'invoices' | 'platform'
+type Tab = 'pending' | 'verified' | 'invoices' | 'platform' | 'errors'
+const TABS: Tab[] = ['pending', 'verified', 'invoices', 'platform', 'errors']
 const SELECT = 'h-10 rounded-xl border border-input bg-background/60 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring'
 
 const flatten = (list: OrgList) => [...list.companies, ...list.universities]
@@ -27,8 +30,26 @@ export default function AdminPage() {
   const canOrgs = can('approve_companies')
   const canBilling = can('manage_billing')
   const canPlatform = can('view_platform_stats')
-  const [tab, setTab] = useState<Tab>(canOrgs ? 'pending' : canBilling ? 'invoices' : 'platform')
+  const canErrors = can('view_errors')
+  // §32.6: ogohlantirish xatidagi havola — `/admin?tab=errors`
+  const [params, setParams] = useSearchParams()
+  const allowed: Record<Tab, boolean> = {
+    pending: canOrgs, verified: canOrgs, invoices: canBilling, platform: canPlatform, errors: canErrors,
+  }
+  const [tab, setTab] = useState<Tab>(
+    () => TABS.find((x) => x === params.get('tab') && allowed[x]) ?? TABS.find((x) => allowed[x]) ?? 'platform',
+  )
   const [stats, setStats] = useState<AdminStats | null>(null)
+  const [errorsOpen, setErrorsOpen] = useState<number | undefined>(undefined)
+
+  useEffect(() => {
+    if (canErrors) api<ErrorGroupList>('/admin/errors?limit=1').then((l) => setErrorsOpen(l.open_total)).catch(() => {})
+  }, [canErrors])
+
+  const selectTab = (next: Tab) => {
+    setTab(next)
+    if (params.has('tab')) setParams({}, { replace: true })
+  }
 
   const loadStats = useCallback(() => {
     // §11.2: faqat approve_companies | manage_billing; statistika ruxsati yolg'iz bo'lsa so'ralmaydi
@@ -37,10 +58,11 @@ export default function AdminPage() {
   useEffect(loadStats, [loadStats])
 
   const tabs: { key: Tab; label: string; count?: number; show: boolean }[] = [
-    { key: 'pending', label: t('admin.tabs.pending'), count: stats ? stats.pending_companies + stats.pending_universities : undefined, show: canOrgs },
-    { key: 'verified', label: t('admin.tabs.verified'), show: canOrgs },
-    { key: 'invoices', label: t('admin.tabs.invoices'), count: stats?.invoices_pending, show: canBilling },
-    { key: 'platform', label: t('admin.tabs.platform'), show: canPlatform },
+    { key: 'pending', label: t('admin.tabs.pending'), count: stats ? stats.pending_companies + stats.pending_universities : undefined, show: allowed.pending },
+    { key: 'verified', label: t('admin.tabs.verified'), show: allowed.verified },
+    { key: 'invoices', label: t('admin.tabs.invoices'), count: stats?.invoices_pending, show: allowed.invoices },
+    { key: 'platform', label: t('admin.tabs.platform'), show: allowed.platform },
+    { key: 'errors', label: t('admin.tabs.errors'), count: errorsOpen, show: allowed.errors },
   ]
 
   return (
@@ -61,7 +83,7 @@ export default function AdminPage() {
 
       <nav className="glass flex w-fit max-w-full gap-1 overflow-x-auto rounded-2xl p-1 [scrollbar-width:none]">
         {tabs.filter((x) => x.show).map((x) => (
-          <button key={x.key} type="button" onClick={() => setTab(x.key)}
+          <button key={x.key} type="button" onClick={() => selectTab(x.key)}
             className={cn('flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-colors',
               tab === x.key ? 'bg-brand text-primary-foreground shadow' : 'text-muted-foreground hover:text-foreground')}>
             {x.label}
@@ -74,6 +96,7 @@ export default function AdminPage() {
       {tab === 'verified' && <VerifiedOrgs />}
       {tab === 'invoices' && <Invoices onChange={loadStats} />}
       {tab === 'platform' && <PlatformStats />}
+      {tab === 'errors' && <ErrorGroups onOpenTotal={setErrorsOpen} />}
     </div>
   )
 }

@@ -16,6 +16,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 from sqlalchemy import select
 
 from app.config import settings
+from app.core.logging import setup_logging
+from app.core.monitoring import error_alerts_job, error_maintenance_job, monitor
 from app.models.simulation import Submission, SimulationTask, Simulation
 from app.models.enums import AIEvalStatus
 from app.ai.guardrail import validate_submission_content
@@ -144,11 +146,13 @@ async def retry_ai_eval(ctx: dict, submission_id: str) -> None:
 
 
 async def startup(ctx: dict) -> None:  # noqa: ARG001
-    pass
+    # §32: arq CLI o'z log sozlamasini qo'ygan — API bilan bir xil formatga o'tkaziladi
+    setup_logging("worker")
+    monitor.start("worker")
 
 
 async def shutdown(ctx: dict) -> None:  # noqa: ARG001
-    pass
+    await monitor.stop()
 
 
 HEALTH_CHECK_INTERVAL = 60   # soniya; kalit TTL'i shundan 1 soniya ko'p (arq)
@@ -181,6 +185,9 @@ class WorkerSettings:
         cron(requeue_stale_interviews, minute=set(range(2, 60, 5)), second=40, unique=True),
         # §25.5: arizachi bilan suhbatga ≤ 2 soat qoldi
         cron(interview_reminders_job, minute=set(range(0, 60, 5)), second=5, unique=True, timeout=50),
+        # §32.6: yangi xatolar haqida admin'ga email; §32.3: eski guruhlarni tozalash (04:10 Toshkent = 23:10 UTC)
+        cron(error_alerts_job, minute=set(range(1, 60, 5)), second=50, unique=True, timeout=50),
+        cron(error_maintenance_job, hour=23, minute=10, unique=True),
     ]
     redis_settings = RedisSettings.from_dsn(settings.REDIS_URL)
     # §18.1: `/api/v1/health` shu kalitni tekshiradi — worker o'lsa ~1 daqiqada ko'rinadi

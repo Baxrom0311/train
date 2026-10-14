@@ -40,6 +40,9 @@ x-backend-env: &backend-env
   VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
   VAPID_SUBJECT: ${VAPID_SUBJECT:-}
   DOCS_ENABLED: ${DOCS_ENABLED:-true}
+  # §32.1: production'da bir qator = bir JSON
+  LOG_FORMAT: ${LOG_FORMAT:-json}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
   # §19.2: talaba kodi faqat alohida runner'da bajariladi
   SANDBOX_URL: http://sandbox:8100
   SANDBOX_TOKEN: ${SANDBOX_TOKEN:?SANDBOX_TOKEN kerak (openssl rand -hex 32)}

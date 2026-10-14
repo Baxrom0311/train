@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     # §18.1: production'da false — /docs, /redoc, /openapi.json yopiladi
     DOCS_ENABLED: bool = True
 
+    # §32.1: text — lokal, o'qishga qulay; json — production (bir qator = bir JSON)
+    LOG_FORMAT: Literal["text", "json"] = "text"
+    LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
+
     # §19.2: talaba kodi runner'i. Bo'sh — lokal rejim (faqat dev/test):
     # skript shu konteynerda, yashirin testlar o'chiq.
     SANDBOX_URL: str = ""

@@ -99,6 +99,22 @@ docker compose -f deploy/docker-compose.yml logs -f --tail=100 worker
 
 Loglar `json-file`, har servisga 10 MB × 5 fayl.
 
+### Xatolar va loglar (§32)
+
+Backend, worker va brauzerdagi kutilmagan xatolar guruhlanib `/admin` →
+"Xatolar" bo'limida ko'rinadi (`view_errors` ruxsati, admin'da bor). Yangi
+xato paydo bo'lsa yoki hal qilingani qaytsa admin'larga ~5 daqiqada bitta
+email keladi (SMTP sozlangan bo'lsa). Foydalanuvchi "Xato kodi: 1a2b3c4d"
+desa — shu so'rovning log qatorlari:
+
+```bash
+docker compose -f deploy/docker-compose.yml logs backend | grep 1a2b3c4d
+```
+
+`LOG_FORMAT=json` (standart) — har qator bitta JSON (`ts`, `level`,
+`logger`, `message`, `request_id`, `exc`), log yig'uvchiga (Loki va h.k.)
+to'g'ridan ulanadi; lokal o'qish uchun `.env`da `LOG_FORMAT=text`.
+
 ## Zaxira nusxa va tiklash
 
 `backup` servisi har kuni `BACKUP_HOUR`da (Toshkent) `deploy/backups/`ga

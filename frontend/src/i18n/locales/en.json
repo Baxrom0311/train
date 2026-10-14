@@ -191,7 +191,9 @@
     "next": "Next",
     "previous": "Previous",
     "appName": "TryJob",
-    "appTagline": "Virtual Work Simulations Platform"
+    "appTagline": "Virtual Work Simulations Platform",
+    "serverError": "Something went wrong on the server. Please try again shortly.",
+    "serverErrorCode": "Something went wrong on the server. Error code: {{code}}"
   },
   "theme": {
     "light": "Light theme",
@@ -454,12 +456,13 @@
   },
   "admin": {
     "title": "Admin panel",
-    "subtitle": "Organization applications, invoices and platform statistics",
+    "subtitle": "Organization applications, invoices, platform statistics and errors",
     "tabs": {
       "pending": "Applications",
       "verified": "Organizations",
       "invoices": "Invoices",
-      "platform": "Statistics"
+      "platform": "Statistics",
+      "errors": "Errors"
     },
     "stats": {
       "pending": "Pending applications",
@@ -1893,5 +1896,32 @@
     },
     "pendingVerify": "We sent a verification link to {{email}} — you can open it while your application awaits approval.",
     "verifyToApply": "Verify your email before applying (see the bar at the top of the page)."
+  },
+  "crash": {
+    "title": "Something went wrong",
+    "text": "This page could not be displayed. The error has been reported — try reloading the page.",
+    "reload": "Reload"
+  },
+  "errors": {
+    "status": "Status",
+    "open": "Open",
+    "resolved": "Resolved",
+    "source": "Source",
+    "sources": {
+      "all": "All",
+      "api": "Server",
+      "worker": "Background jobs",
+      "frontend": "Browser"
+    },
+    "emptyOpen": "No open errors — all good.",
+    "emptyResolved": "No resolved errors yet.",
+    "lastSeen": "Last seen: {{date}}",
+    "countTitle": "How many times it occurred",
+    "firstSeen": "First seen",
+    "lastSeenLabel": "Last seen",
+    "requestId": "Request ID",
+    "resolvedBy": "Resolved by",
+    "resolve": "Mark resolved",
+    "copy": "Copy"
   }
 }

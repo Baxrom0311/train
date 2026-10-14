@@ -1,9 +1,26 @@
 import pkgutil
 import importlib
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app import api
 from app.config import settings
+from app.core.logging import setup_logging
+from app.core.monitoring import RequestContextMiddleware, monitor
+
+# §32.1: uvicorn loglari ham shu formatda (u app'ni o'z log sozlamasidan keyin import qiladi)
+setup_logging("api")
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    # §32.3: ERROR+ loglar error_groups'ga; to'xtashda navbat oxirigacha yoziladi
+    monitor.start("api")
+    try:
+        yield
+    finally:
+        await monitor.stop()
+
 
 # §18.1: DOCS_ENABLED=false — API sxemasi tashqariga ochilmaydi
 _docs = settings.DOCS_ENABLED
@@ -12,7 +29,11 @@ app = FastAPI(
     docs_url="/docs" if _docs else None,
     redoc_url="/redoc" if _docs else None,
     openapi_url="/openapi.json" if _docs else None,
+    lifespan=lifespan,
 )
+
+# §32.2: CORS'dan oldin qo'shiladi — ya'ni uning ichida, 500 javobida ham CORS sarlavhalari bo'ladi
+app.add_middleware(RequestContextMiddleware)
 
 # Aniq ro'yxatdagi originlar + credentials (cookie/Authorization header).
 # "*" bilan allow_credentials=True birga ISHLATILMAYDI (xavfsizlik).

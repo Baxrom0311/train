@@ -1,4 +1,5 @@
 // Backend API mijozi: JWT (access + refresh) localStorage'da, 401 bo'lsa bir marta refresh.
+import i18n from '@/i18n'
 import type { Me } from './types'
 
 const BASE = '/api/v1'
@@ -9,11 +10,24 @@ export class ApiError extends Error {
   status: number
   /** Javobning `detail`i — tuzilgan xatolar uchun (masalan, muharrirdagi `{errors}`). */
   detail: unknown
-  constructor(status: number, message: string, detail?: unknown) {
+  /** 5xx: server log'idagi so'rov id'si (CONTRACT.md §32.2) — foydalanuvchi adminga aytadi. */
+  requestId: string | null
+  constructor(status: number, message: string, detail?: unknown, requestId: string | null = null) {
     super(message)
     this.status = status
     this.detail = detail
+    this.requestId = requestId
   }
+}
+
+/** Server xatosi (5xx): ichki matn o'rniga umumiy xabar va xato kodi. */
+function failure(r: Response, body: unknown): ApiError {
+  const detail = (body as { detail?: unknown } | null)?.detail
+  if (r.status < 500) return new ApiError(r.status, errorMessage(body, r.statusText), detail)
+  const requestId = (body as { request_id?: unknown } | null)?.request_id
+  const id = typeof requestId === 'string' ? requestId : r.headers.get('X-Request-ID')
+  const message = id ? i18n.t('common.serverErrorCode', { code: id.slice(0, 8) }) : i18n.t('common.serverError')
+  return new ApiError(r.status, message, detail, id)
 }
 
 export const tokens = {
@@ -85,7 +99,7 @@ export async function api<T>(path: string, opts: Options = {}, retried = false):
     return api<T>(path, opts, true)
   }
   const body = r.status === 204 ? null : await r.json().catch(() => null)
-  if (!r.ok) throw new ApiError(r.status, errorMessage(body, r.statusText), (body as { detail?: unknown } | null)?.detail)
+  if (!r.ok) throw failure(r, body)
   return body as T
 }
 
@@ -93,7 +107,7 @@ export async function api<T>(path: string, opts: Options = {}, retried = false):
 export async function download(path: string, fallbackName: string, retried = false): Promise<void> {
   const r = await fetch(`${BASE}${path}`, { headers: authHeaders() })
   if (r.status === 401 && !retried && (await refreshTokens())) return download(path, fallbackName, true)
-  if (!r.ok) throw new ApiError(r.status, errorMessage(await r.json().catch(() => null), r.statusText))
+  if (!r.ok) throw failure(r, await r.json().catch(() => null))
   const name = /filename="([^"]+)"/.exec(r.headers.get('Content-Disposition') ?? '')?.[1] ?? fallbackName
   const url = URL.createObjectURL(await r.blob())
   const a = Object.assign(document.createElement('a'), { href: url, download: name })

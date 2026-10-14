@@ -162,7 +162,7 @@ schema / endpoint shakli) orqali gaplashadi.
 
 | # | Modul | Egalik qiladigan papkalar | Bog'liqligi |
 |---|---|---|---|
-| 1 | **Core & Auth & RBAC** | `backend/app/core/`, `backend/app/models/user.py`, `backend/app/models/rbac.py`, `backend/app/api/auth.py` | Yo'q (birinchi quriladi) |
+| 1 | **Core & Auth & RBAC** | `backend/app/core/`, `backend/app/models/user.py`, `backend/app/models/rbac.py`, `backend/app/api/auth.py`, xatolarni kuzatish `models/monitoring.py`, `api/monitoring.py` (§32) | Yo'q (birinchi quriladi) |
 | 2 | **Simulations & AI Mentor** | `backend/app/models/simulation.py`, `backend/app/models/ai_usage.py`, `backend/app/api/simulations.py`, `backend/app/api/submissions.py`, `backend/app/ai/` | (1)ga bog'liq |
 | 3 | **Billing & Admin approval** | `backend/app/models/billing.py`, `backend/app/api/billing.py`, `backend/app/api/admin.py` | (1)ga bog'liq |
 | 4 | **Talent Hunt** | `backend/app/models/talent.py`, `backend/app/api/talent_hunt.py`, `backend/app/api/vacancies.py`, `backend/app/talent/` | (1),(3),(9)ga bog'liq — ball Run natijalaridan (§10); vakansiya, ariza, suhbat bosqichlari va ishga olish voronkasi (§23, §25, §27) |
@@ -2788,3 +2788,129 @@ Node 22 (`frontend.Dockerfile`), Postgres/Redis image'lari `docker-compose.yml`d
 Modul 8: `.github/workflows/ci.yml`. Modul 7: `frontend/eslint.config.js`,
 `package.json` (`lint` skripti, ESLint devDependencies). Modul 1:
 `backend/alembic/` (0006 `downgrade()` tuzatildi).
+
+## 32. Xatolarni kuzatish va loglar (Modul 1 + 2 + 3 + 7 + 8)
+
+Pilot serverida nima buzilganini admin foydalanuvchi shikoyat qilishidan
+oldin ko'rsin: backend, worker va brauzerdagi kutilmagan xatolar bir joyda,
+guruhlangan holda. Tashqi xizmat (Sentry va h.k.) talab qilinmaydi — hammasi
+shu Postgres'da, §18 tamoyili saqlanadi.
+
+### 32.1 Strukturali log (`core/logging.py`)
+
+- `.env`: `LOG_FORMAT` = `text` (default, lokal) | `json` (production
+  `.env.example`), `LOG_LEVEL` (default `INFO`).
+- `json` — bir qator bitta JSON: `ts` (UTC ISO), `level`, `logger`, `message`,
+  `source` (`api` | `worker`), `request_id` (so'rov ichida bo'lsa), `exc`
+  (traceback, bo'lsa) va access log maydonlari. Docker `json-file` rotatsiyasi
+  (§18.4) o'zgarmaydi.
+- API va worker bir xil sozlanadi: uvicorn va arq loglari ham shu formatda
+  (o'z handler'lari olib tashlanadi, root'ga o'tadi); `uvicorn.access`
+  o'chiriladi — o'rniga o'zimizning access log.
+- `httpx`/`httpcore` — `WARNING` (har AI so'rovi INFO'da log'ni to'ldirmasin).
+
+### 32.2 So'rov identifikatori va access log
+
+- ASGI middleware (CORS ichida — 500 javobida ham CORS sarlavhalari bor):
+  kiruvchi `X-Request-ID` (`[A-Za-z0-9._-]{1,64}`) qabul qilinadi, aks holda
+  yangi (32 hex). Javobda `X-Request-ID`; so'rov davomida barcha log
+  qatorlarida `request_id`.
+- Har so'rovdan keyin `app.access` logger'iga bitta qator: `method`, `path`
+  (query string **yozilmaydi** — token/parol tushmasin), `status`,
+  `duration_ms`. `/api/v1/health` — `DEBUG` (healthcheck har 10 soniya).
+- Kutilmagan xato: log `ERROR` + traceback (bir marta), javob
+  `500 {"detail": "Internal Server Error", "request_id"}` — ichki tafsilot
+  qaytmaydi. Javob boshlanib bo'lgan bo'lsa (SSE) — ulanish yopiladi.
+
+### 32.3 Xato guruhlari (`error_groups`, migratsiya `0029`)
+
+`id, fingerprint (64 hex, unique), source (api|worker|frontend), level,
+title (≤ 300), location (≤ 300), detail (≤ 16 000, oxirgi hodisa), count,
+first_seen, last_seen, last_request_id, status (open|resolved), resolved_at,
+resolved_by_id (FK users, SET NULL), notified_at`.
+
+- **Manbalar.** Root logger'dagi handler `ERROR`+ yozuvlarni yig'adi (API va
+  worker): kutilmagan so'rov xatolari (§32.2), arq job xatolari (arq `failed`
+  logi — `Retry` kirmaydi), ilova kodidagi `log.error`/`log.exception`.
+  Brauzer xatolari — §32.4. Kuzatuvning o'z logger'i (`app.core.monitoring`)
+  yig'ilmaydi (cheksiz aylanish yo'q).
+- **Fingerprint** = sha256(`source`, so'ng: exception bo'lsa — turi + eng ichki
+  ilova (`app/`) freymi `fayl:funksiya` + joy; aks holda logger nomi + xabar
+  **shabloni** (`record.msg`, argumentlarsiz)). Shuning uchun id/email bilan
+  farq qiladigan bir xil xato bitta guruh bo'ladi.
+- **Joy** (`location`): API — `METHOD /route/{template}`; worker — arq job
+  nomi; boshqa log — `logger:funksiya`; frontend — sahifa yo'li.
+- **Yozish.** Handler sinxron: yozuv xotiradagi chegaralangan navbatga
+  (1000) tushadi, fon vazifasi har soniyada bitta sessiyada
+  `INSERT … ON CONFLICT (fingerprint) DO UPDATE` (count += n, last_seen,
+  detail, last_request_id). Yozib bo'lmasa — `WARNING` log, xato yutiladi
+  (kuzatuv hech qachon so'rovni yoki job'ni buzmaydi). To'xtashda navbat
+  oxirigacha yoziladi.
+- **Qayta ochilish.** `resolved` guruhda yangi hodisa — `open`,
+  `resolved_at` va `notified_at` tozalanadi (regressiya yana xabar qilinadi).
+- **Chegara.** Bir manbadan soatiga ≤ 200 **yangi** guruh; oshsa yangi
+  fingerprint tashlab yuboriladi (mavjud guruhlar hisoblanishda davom etadi).
+- **Saqlash muddati.** `error_maintenance` cron (har kuni 04:10 Toshkent):
+  `resolved` va `last_seen` 30 kundan eski, yoki har qanday 90 kundan eski
+  guruh o'chiriladi.
+- **Maxfiylik.** So'rov tanasi, sarlavhalar, query string, cookie va
+  foydalanuvchi id saqlanmaydi; faqat xabar va traceback.
+
+### 32.4 Brauzer xatolari
+
+```
+POST /api/v1/client-errors     ochiq (login sahifasida ham ishlaydi), 204
+  {kind: "error"|"unhandledrejection"|"render", message (1..500),
+   stack? (≤ 8000), path (≤ 300)}
+```
+
+- IP bo'yicha cheklov: 10 daqiqada 30 ta (§30.4 `throttle`, oshsa 429).
+- `path` — faqat yo'l: `?` va `#`dan keyingisi serverda ham kesiladi
+  (`#token=`, §30). Foydalanuvchi aniqlanmaydi, token tekshirilmaydi.
+- Fingerprint: `kind` + xabar (raqamlar `0` ga almashtiriladi) + stack'ning
+  birinchi freymidagi funksiya nomi (fayl hash'i va qator raqamisiz — har
+  deploy yangi guruh ochmaydi).
+- Frontend (`lib/monitoring.ts`): `window.onerror`, `unhandledrejection`
+  (`ApiError` kirmaydi — server xatosi backend'da yig'ilgan) va React
+  `ErrorBoundary` (sahifa yiqilsa: "Nimadir noto'g'ri ketdi" + qayta yuklash,
+  boshqa sahifaga o'tganda tiklanadi). Bir sahifa yuklanishida bir xil xato
+  bir marta, jami ≤ 10 ta; brauzer kengaytmalari (`*-extension://`)
+  xatolari yuborilmaydi. Yuborish `fetch(keepalive)`, xato yutiladi.
+- API mijozi 5xx javobida `request_id`ni xabarga qo'shadi ("Xato kodi: …") —
+  foydalanuvchi shikoyat qilsa admin log'dan topadi.
+
+### 32.5 Admin (Modul 3 interfeysi, ruxsat `view_errors`)
+
+`view_errors` (**yangi**, `admin`; migratsiya `0029`).
+
+```
+GET  /api/v1/admin/errors?status=open|resolved&source=api|worker|frontend&limit=50
+  → {open_total, items: [{id, source, level, title, location, count,
+                          first_seen, last_seen, status}]}      last_seen kamayish tartibida
+GET  /api/v1/admin/errors/{id}         → + detail, last_request_id, resolved_at, resolved_by_name
+POST /api/v1/admin/errors/{id}/resolve → guruh (status=resolved)
+```
+
+`/admin` → "Xatolar" bo'limi: holat va manba filtri, ochiqlar soni tab
+nishonida, guruh kartasi (manba, sarlavha, joy, soni, birinchi/oxirgi
+marta), ochilganda traceback va so'rov id'si, "Hal qilindi" tugmasi.
+
+### 32.6 Ogohlantirish
+
+`error_alerts` cron (har 5 daqiqa): `open` va `notified_at IS NULL` guruhlar
+bo'lsa — `view_errors` ruxsatli faol, emaili tasdiqlangan foydalanuvchilarga
+bitta email (§15.3 `mailer`): ≤ 10 ta sarlavha va joy, qolganlari soni,
+`PUBLIC_URL/admin?tab=errors` havolasi. Keyin `notified_at = now` (email
+o'chiq bo'lsa ham — keyinroq yoqilganda eski xatolar to'planib ketmaydi).
+
+### 32.7 Modul chegaralari
+
+Modul 1: `core/logging.py`, `core/monitoring.py` (handler, middleware,
+yozish, cron'lar), `models/monitoring.py`, `api/monitoring.py`
+(`/client-errors` va `/admin/errors`), `main.py` (middleware, lifespan,
+log sozlamasi), `config.py`, `alembic/` `0029`, `tests/conftest.py`
+(`view_errors` seed). Modul 2: `ai/worker.py` (log sozlamasi, kuzatuv
+fon vazifasi, cron'lar). Modul 7: `lib/monitoring.ts`,
+`components/layout/ErrorBoundary.tsx`, `components/admin/ErrorGroups.tsx`,
+`AdminPage` tab, `lib/api.ts` (5xx `request_id`). Modul 8:
+`.env.example`, `docker-compose.yml` (`LOG_FORMAT=json`), `deploy/README.md`.

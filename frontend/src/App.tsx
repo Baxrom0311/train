@@ -5,6 +5,7 @@ import Navbar from './components/Navbar'
 import Backdrop from './components/layout/Backdrop'
 import OfflineBanner from './components/layout/OfflineBanner'
 import VerifyEmailBanner from './components/layout/VerifyEmailBanner'
+import RouteErrorBoundary from './components/layout/ErrorBoundary'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
@@ -58,46 +59,48 @@ export default function App() {
             <Navbar />
             <OfflineBanner />
             <VerifyEmailBanner />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
-              <Route path="/verify-email" element={<VerifyEmailPage />} />
-              <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
-              <Route path="/simulations" element={<RequireAuth><SimulationsPage /></RequireAuth>} />
-              <Route path="/runs/:id" element={<RequireAuth><RunPage /></RequireAuth>} />
-              <Route path="/runs/:id/report" element={<RequireAuth><RunReportPage /></RequireAuth>} />
-              <Route path="/teams/join/:code" element={<RequireAuth><TeamJoinPage /></RequireAuth>} />
-              <Route path="/teams/:id" element={<RequireAuth><TeamPage /></RequireAuth>} />
-              <Route path="/notifications" element={<RequireAuth><NotificationsPage /></RequireAuth>} />
-              <Route path="/offers" element={<RequirePermission permission="receive_offers"><OffersPage /></RequirePermission>} />
-              <Route path="/vacancies" element={<RequirePermission permission="receive_offers"><VacanciesPage /></RequirePermission>} />
-              <Route path="/vacancies/:id" element={<RequirePermission permission="receive_offers"><VacancyPage /></RequirePermission>} />
-              <Route path="/interviews" element={<RequirePermission permission="practice_interviews"><InterviewsPage /></RequirePermission>} />
-              <Route path="/interviews/:id" element={<RequirePermission permission="practice_interviews"><InterviewPage /></RequirePermission>} />
-              <Route path="/company/vacancies" element={<RequirePermission permission="manage_vacancies"><CompanyVacanciesPage /></RequirePermission>} />
-              <Route path="/company/vacancies/new" element={<RequirePermission permission="manage_vacancies"><VacancyEditorPage key="new" /></RequirePermission>} />
-              <Route path="/company/vacancies/:id" element={<RequirePermission permission="manage_vacancies"><CompanyVacancyPage /></RequirePermission>} />
-              <Route path="/company/vacancies/:id/edit" element={<RequirePermission permission="manage_vacancies"><VacancyEditorPage /></RequirePermission>} />
-              <Route path="/company/scenarios" element={<RequirePermission permission="manage_company_scenarios"><ScenarioListPage key="company" scope={COMPANY_SCOPE} /></RequirePermission>} />
-              <Route path="/company/scenarios/new" element={<RequirePermission permission="manage_company_scenarios"><ScenarioEditorPage key="company-new" scope={COMPANY_SCOPE} /></RequirePermission>} />
-              <Route path="/company/scenarios/:id/edit" element={<RequirePermission permission="manage_company_scenarios"><ScenarioEditorPage key="company" scope={COMPANY_SCOPE} /></RequirePermission>} />
-              <Route path="/talents" element={<RequirePermission permission="view_candidates"><TalentsPage /></RequirePermission>} />
-              <Route path="/talents/offers" element={<RequirePermission permission="view_candidates"><SentOffersPage /></RequirePermission>} />
-              <Route path="/talents/report" element={<RequirePermission permission="view_candidates"><CompanyReportPage /></RequirePermission>} />
-              <Route path="/admin" element={<RequirePermission permission={['approve_companies', 'manage_billing', 'view_platform_stats']}><AdminPage /></RequirePermission>} />
-              <Route path="/admin/scenarios" element={<RequirePermission permission="manage_simulations"><ScenarioListPage /></RequirePermission>} />
-              <Route path="/admin/scenarios/new" element={<RequirePermission permission="manage_simulations"><ScenarioEditorPage key="new" /></RequirePermission>} />
-              <Route path="/admin/scenarios/:id/edit" element={<RequirePermission permission="manage_simulations"><ScenarioEditorPage /></RequirePermission>} />
-              <Route path="/university" element={<RequirePermission permission="manage_universities"><UniversityPage /></RequirePermission>} />
-              <Route path="/portfolio" element={<RequirePermission permission="manage_portfolio"><PortfolioPage /></RequirePermission>} />
-              <Route path="/cv" element={<RequirePermission permission="manage_portfolio"><CvPage /></RequirePermission>} />
-              <Route path="/c/:code" element={<CertificatePage />} />
-              <Route path="/p/:slug" element={<PortfolioPublicPage />} />
-              <Route path="/billing" element={<RequirePermission permission="view_org_invoices"><BillingPage /></RequirePermission>} />
-            </Routes>
+            <RouteErrorBoundary>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/verify-email" element={<VerifyEmailPage />} />
+                <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
+                <Route path="/simulations" element={<RequireAuth><SimulationsPage /></RequireAuth>} />
+                <Route path="/runs/:id" element={<RequireAuth><RunPage /></RequireAuth>} />
+                <Route path="/runs/:id/report" element={<RequireAuth><RunReportPage /></RequireAuth>} />
+                <Route path="/teams/join/:code" element={<RequireAuth><TeamJoinPage /></RequireAuth>} />
+                <Route path="/teams/:id" element={<RequireAuth><TeamPage /></RequireAuth>} />
+                <Route path="/notifications" element={<RequireAuth><NotificationsPage /></RequireAuth>} />
+                <Route path="/offers" element={<RequirePermission permission="receive_offers"><OffersPage /></RequirePermission>} />
+                <Route path="/vacancies" element={<RequirePermission permission="receive_offers"><VacanciesPage /></RequirePermission>} />
+                <Route path="/vacancies/:id" element={<RequirePermission permission="receive_offers"><VacancyPage /></RequirePermission>} />
+                <Route path="/interviews" element={<RequirePermission permission="practice_interviews"><InterviewsPage /></RequirePermission>} />
+                <Route path="/interviews/:id" element={<RequirePermission permission="practice_interviews"><InterviewPage /></RequirePermission>} />
+                <Route path="/company/vacancies" element={<RequirePermission permission="manage_vacancies"><CompanyVacanciesPage /></RequirePermission>} />
+                <Route path="/company/vacancies/new" element={<RequirePermission permission="manage_vacancies"><VacancyEditorPage key="new" /></RequirePermission>} />
+                <Route path="/company/vacancies/:id" element={<RequirePermission permission="manage_vacancies"><CompanyVacancyPage /></RequirePermission>} />
+                <Route path="/company/vacancies/:id/edit" element={<RequirePermission permission="manage_vacancies"><VacancyEditorPage /></RequirePermission>} />
+                <Route path="/company/scenarios" element={<RequirePermission permission="manage_company_scenarios"><ScenarioListPage key="company" scope={COMPANY_SCOPE} /></RequirePermission>} />
+                <Route path="/company/scenarios/new" element={<RequirePermission permission="manage_company_scenarios"><ScenarioEditorPage key="company-new" scope={COMPANY_SCOPE} /></RequirePermission>} />
+                <Route path="/company/scenarios/:id/edit" element={<RequirePermission permission="manage_company_scenarios"><ScenarioEditorPage key="company" scope={COMPANY_SCOPE} /></RequirePermission>} />
+                <Route path="/talents" element={<RequirePermission permission="view_candidates"><TalentsPage /></RequirePermission>} />
+                <Route path="/talents/offers" element={<RequirePermission permission="view_candidates"><SentOffersPage /></RequirePermission>} />
+                <Route path="/talents/report" element={<RequirePermission permission="view_candidates"><CompanyReportPage /></RequirePermission>} />
+                <Route path="/admin" element={<RequirePermission permission={['approve_companies', 'manage_billing', 'view_platform_stats', 'view_errors']}><AdminPage /></RequirePermission>} />
+                <Route path="/admin/scenarios" element={<RequirePermission permission="manage_simulations"><ScenarioListPage /></RequirePermission>} />
+                <Route path="/admin/scenarios/new" element={<RequirePermission permission="manage_simulations"><ScenarioEditorPage key="new" /></RequirePermission>} />
+                <Route path="/admin/scenarios/:id/edit" element={<RequirePermission permission="manage_simulations"><ScenarioEditorPage /></RequirePermission>} />
+                <Route path="/university" element={<RequirePermission permission="manage_universities"><UniversityPage /></RequirePermission>} />
+                <Route path="/portfolio" element={<RequirePermission permission="manage_portfolio"><PortfolioPage /></RequirePermission>} />
+                <Route path="/cv" element={<RequirePermission permission="manage_portfolio"><CvPage /></RequirePermission>} />
+                <Route path="/c/:code" element={<CertificatePage />} />
+                <Route path="/p/:slug" element={<PortfolioPublicPage />} />
+                <Route path="/billing" element={<RequirePermission permission="view_org_invoices"><BillingPage /></RequirePermission>} />
+              </Routes>
+            </RouteErrorBoundary>
           </div>
         </BrowserRouter>
       </AuthProvider>

@@ -12,9 +12,11 @@ from .credential import Certificate, CvSettings, Portfolio
 from .notification import Notification, NotificationSettings, PushSubscription
 from .ai_usage import AIUsage
 from .interview import Interview, InterviewMessage
+from .monitoring import ErrorGroup
 from app.database import Base
 
 __all__ = [
+    "ErrorGroup",
     "User",
     "AccountToken",
     "Role",

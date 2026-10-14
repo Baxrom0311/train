@@ -191,7 +191,9 @@
     "next": "Keyingi",
     "previous": "Oldingi",
     "appName": "TryJob",
-    "appTagline": "Virtual ish simulyatsiyalari platformasi"
+    "appTagline": "Virtual ish simulyatsiyalari platformasi",
+    "serverError": "Serverda xatolik yuz berdi. Birozdan keyin qayta urinib ko'ring.",
+    "serverErrorCode": "Serverda xatolik yuz berdi. Xato kodi: {{code}}"
   },
   "theme": {
     "light": "Yorug' mavzu",
@@ -454,12 +456,13 @@
   },
   "admin": {
     "title": "Admin panel",
-    "subtitle": "Tashkilot arizalari, invoice'lar va platforma statistikasi",
+    "subtitle": "Tashkilot arizalari, invoice'lar, platforma statistikasi va xatolar",
     "tabs": {
       "pending": "Arizalar",
       "verified": "Tashkilotlar",
       "invoices": "Invoice'lar",
-      "platform": "Statistika"
+      "platform": "Statistika",
+      "errors": "Xatolar"
     },
     "stats": {
       "pending": "Kutilayotgan arizalar",
@@ -1893,5 +1896,32 @@
     },
     "pendingVerify": "{{email}} manziliga tasdiqlash havolasi yubordik — admin tasdiqlashini kutayotganda ham ochishingiz mumkin.",
     "verifyToApply": "Ariza berish uchun avval email manzilingizni tasdiqlang (sahifa tepasidagi yo'lak)."
+  },
+  "crash": {
+    "title": "Nimadir noto'g'ri ketdi",
+    "text": "Sahifani ko'rsatib bo'lmadi. Xato haqida xabar yuborildi — sahifani qayta yuklab ko'ring.",
+    "reload": "Qayta yuklash"
+  },
+  "errors": {
+    "status": "Holat",
+    "open": "Ochiq",
+    "resolved": "Hal qilingan",
+    "source": "Manba",
+    "sources": {
+      "all": "Hammasi",
+      "api": "Server",
+      "worker": "Fon ishlari",
+      "frontend": "Brauzer"
+    },
+    "emptyOpen": "Ochiq xato yo'q — hammasi joyida.",
+    "emptyResolved": "Hal qilingan xatolar hali yo'q.",
+    "lastSeen": "Oxirgi marta: {{date}}",
+    "countTitle": "Necha marta takrorlangan",
+    "firstSeen": "Birinchi marta",
+    "lastSeenLabel": "Oxirgi marta",
+    "requestId": "So'rov id",
+    "resolvedBy": "Hal qildi",
+    "resolve": "Hal qilindi",
+    "copy": "Nusxa olish"
   }
 }
