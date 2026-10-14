@@ -26,7 +26,7 @@ from app.database import get_db
 from app.models.billing import University
 from app.models.credential import Certificate, CvSettings, Portfolio
 from app.models.user import User
-from app.talent.profile import build_profiles
+from app.talent.profile import load_profile, refresh_profiles
 
 router = APIRouter(prefix="/api/v1", tags=["Credentials"])
 users_router = APIRouter(prefix="/api/v1/users", tags=["Credentials - me"])
@@ -278,7 +278,7 @@ async def get_portfolio(slug: str, db: AsyncSession = Depends(get_db)):
     if user is None or not user.is_active:
         raise HTTPException(status_code=404, detail="Portfolio not found")
 
-    profile = (await build_profiles(db, [user.id])).get(user.id)
+    profile = await load_profile(db, user.id, runs=False)
     certificates = (await db.execute(
         select(Certificate)
         .where(Certificate.user_id == user.id, Certificate.revoked_at.is_(None))
@@ -347,7 +347,7 @@ async def _cv(db: AsyncSession, user: User) -> Cv:
     portfolio = await db.get(Portfolio, user.id)
     settings = await db.get(CvSettings, user.id)
     hidden = [uuid.UUID(i) for i in settings.hidden_run_ids] if settings else []
-    profile = (await build_profiles(db, [user.id])).get(user.id)
+    profile = await load_profile(db, user.id)
     entries = await experience(db, profile, set(hidden))
     return Cv(
         generated_at=datetime.now(timezone.utc),
@@ -405,5 +405,6 @@ async def revoke_certificate(
         raise HTTPException(status_code=409, detail="Certificate is already revoked")
     cert.revoked_at = datetime.now(timezone.utc)
     cert.revoked_reason = data.reason.strip()
+    await refresh_profiles(db, [cert.user_id])   # bekor qilingan ish profildan chiqadi (§10.1, §33.2)
     await db.commit()
     return _own(cert)

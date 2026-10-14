@@ -2,7 +2,7 @@
 Universitet portali — talabalarning ssenariy dvigateli natijalari (CONTRACT.md §12).
 Modul 6 egaligi: backend/app/api/university_portal.py.
 
-Profil §10.1 bilan bir xil hisoblanadi (`build_profiles`); javoblar, chat va
+Profil §10.1 bilan bir xil (saqlangan `talent_profiles`, §33); javoblar, chat va
 fayllar universitetga ko'rsatilmaydi. `candidate_visibility` bu yerga
 ta'sir qilmaydi — u faqat kompaniyalar uchun.
 """
@@ -24,7 +24,7 @@ from app.models.billing import University
 from app.models.enums import OrgType, RunStatus, Sector
 from app.models.scenario import Run, Scenario, ScenarioVersion
 from app.models.user import User
-from app.talent.profile import Profile, RunSummary, build_profiles
+from app.talent.profile import Profile, RunSummary, load_profile, load_profiles
 
 router = APIRouter(prefix="/api/v1/university", tags=["University Portal"])
 users_router = APIRouter(prefix="/api/v1/users", tags=["University Portal - Affiliation"])
@@ -169,7 +169,7 @@ def _row(user: User, profile: Profile | None, active: list[InProgressRun]) -> St
         email=user.email,
         joined_at=user.created_at,
         overall_score=profile.overall_score if profile else None,
-        runs_completed=len(profile.runs) if profile else 0,
+        runs_completed=profile.runs_completed if profile else 0,
         runs_in_progress=len(active),
         sectors=profile.sectors if profile else [],
         top_competencies=profile.top_competencies if profile else {},
@@ -196,7 +196,7 @@ async def _load(db: AsyncSession, university_id: uuid.UUID):
     if not students:
         return [], {}, {}
     ids = [s.id for s in students]
-    return students, await build_profiles(db, ids), await _in_progress(db, ids)
+    return students, await load_profiles(db, ids), await _in_progress(db, ids)
 
 
 def _sort_key(sort: SortBy):
@@ -250,7 +250,7 @@ async def get_overview(university: VerifiedUniversity, db: AsyncSession = Depend
         university=UniversityOut.model_validate(university),
         students_total=len(students),
         students_with_results=len(profiles),
-        runs_completed=sum(len(p.runs) for p in profiles.values()),
+        runs_completed=sum(p.runs_completed for p in profiles.values()),
         runs_in_progress=sum(len(a) for a in active.values()),
         avg_score=_avg(p.overall_score for p in profiles.values()),
         sectors=sectors,
@@ -293,7 +293,7 @@ async def _own_student(db: AsyncSession, university_id: uuid.UUID, user_id: uuid
 @router.get("/students/{user_id}", response_model=StudentDetail)
 async def get_student(user_id: uuid.UUID, university: VerifiedUniversity, db: AsyncSession = Depends(get_db)):
     student = await _own_student(db, university.id, user_id)
-    profile = (await build_profiles(db, [student.id])).get(student.id)
+    profile = await load_profile(db, student.id)
     active = (await _in_progress(db, [student.id])).get(student.id, [])
     return StudentDetail(
         **_row(student, profile, active).model_dump(),

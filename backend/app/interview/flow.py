@@ -30,7 +30,7 @@ from app.models.interview import Interview, InterviewMessage
 from app.models.user import User
 from app.scenario.clock import TASHKENT
 from app.talent import vacancies as matching
-from app.talent.profile import Profile, build_profiles
+from app.talent.profile import Profile, load_profile
 
 log = logging.getLogger(__name__)
 
@@ -135,7 +135,7 @@ async def start(
     vacancy, company = found
     await _expire_stale(db, user.id, now)
     await _check_can_start(db, user.id, now)
-    profile = (await build_profiles(db, [user.id])).get(user.id) or Profile(user.id)
+    profile = await load_profile(db, user.id, runs=False) or Profile(user.id)
     gaps = [g.competency for g in matching.fit(profile, vacancy).gaps]
     requirements = dict(vacancy.requirements or {})
     interview = Interview(

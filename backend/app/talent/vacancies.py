@@ -9,7 +9,7 @@ from __future__ import annotations
 import uuid
 from collections import Counter
 from dataclasses import dataclass
-from statistics import fmean
+from decimal import ROUND_HALF_UP, Decimal
 
 from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,21 +40,19 @@ class Fit:
     gaps: list[Gap]
     sector_match: bool
 
-    def sort_key(self, overall: float | None) -> tuple:
-        return (self.meets, self.fit, self.sector_match, overall if overall is not None else -1)
-
 
 def fit(profile: Profile, vacancy: Vacancy) -> Fit:
-    """§23.2: talablar bo'yicha `min(1, ball / talab)` o'rtachasi; talab yo'q — umumiy ball."""
+    """§23.2: talablar bo'yicha `min(1, ball / talab)` o'rtachasi; talab yo'q — umumiy ball (§33.3: 0.1 gacha, half-up)."""
     requirements: dict[str, int] = vacancy.requirements or {}
     competencies = profile.competencies
     overall = profile.overall_score
     if requirements:
-        ratios = []
-        for key, required in requirements.items():
-            actual = competencies.get(key)
-            ratios.append(1.0 if required <= 0 else min(1.0, (actual or 0) / required))
-        value = round(fmean(ratios) * 100, 1)
+        # o'nlik arifmetika — SQL'dagi `search.fit_expr` (numeric) bilan aynan bir xil natija
+        ratios = [
+            Decimal(1) if required <= 0 else min(Decimal(1), Decimal(str(competencies.get(key) or 0)) / required)
+            for key, required in requirements.items()
+        ]
+        value = float((sum(ratios) * 100 / len(ratios)).quantize(Decimal("0.1"), ROUND_HALF_UP))
     else:
         value = overall if overall is not None else 0.0
     gaps = [

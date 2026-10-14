@@ -165,7 +165,7 @@ schema / endpoint shakli) orqali gaplashadi.
 | 1 | **Core & Auth & RBAC** | `backend/app/core/`, `backend/app/models/user.py`, `backend/app/models/rbac.py`, `backend/app/api/auth.py`, xatolarni kuzatish `models/monitoring.py`, `api/monitoring.py` (§32) | Yo'q (birinchi quriladi) |
 | 2 | **Simulations & AI Mentor** | `backend/app/models/simulation.py`, `backend/app/models/ai_usage.py`, `backend/app/api/simulations.py`, `backend/app/api/submissions.py`, `backend/app/ai/` | (1)ga bog'liq |
 | 3 | **Billing & Admin approval** | `backend/app/models/billing.py`, `backend/app/api/billing.py`, `backend/app/api/admin.py` | (1)ga bog'liq |
-| 4 | **Talent Hunt** | `backend/app/models/talent.py`, `backend/app/api/talent_hunt.py`, `backend/app/api/vacancies.py`, `backend/app/talent/` | (1),(3),(9)ga bog'liq — ball Run natijalaridan (§10); vakansiya, ariza, suhbat bosqichlari va ishga olish voronkasi (§23, §25, §27) |
+| 4 | **Talent Hunt** | `backend/app/models/talent.py`, `backend/app/api/talent_hunt.py`, `backend/app/api/vacancies.py`, `backend/app/talent/`, `tools/rebuild_talent_profiles.py` (§33) | (1),(3),(9)ga bog'liq — ball Run natijalaridan (§10); vakansiya, ariza, suhbat bosqichlari va ishga olish voronkasi (§23, §25, §27) |
 | 5 | **Case Cup** | `backend/app/api/case_cups.py` | (1),(2)ga bog'liq |
 | 6 | **University Portal** | `backend/app/api/university_portal.py` | (1),(3),(9)ga bog'liq — natijalar Run'lardan (§12) |
 | 7 | **Frontend (React+shadcn)** | `frontend/` | Har modul backend API'si tayyor bo'lgach, mos ekranlar — vertical slice, lekin alohida agent/task |
@@ -844,6 +844,8 @@ ko'rinmaydi; yashirilgan kompaniya uchun "topilmadi" (404), "yashirilgan" emas.
   hisobotdagi AI xulosasi (kuchli tomonlar).
 - Modul 4 `runs`/`scenario_*` jadvallarini **faqat o'qiydi** (§9.10
   interfeysi); dvigatel kodiga tegmaydi.
+- Hisob natijasi `talent_profiles` jadvalida saqlanadi va o'sha joydan
+  o'qiladi (§33) — har so'rovda Run'lardan qayta hisoblanmaydi.
 
 ### 10.2 Takliflar (`talent_offers`)
 
@@ -1760,13 +1762,14 @@ Nomzod profili (§10.1, eng yaxshi Run'lar) va vakansiya talablaridan:
 
 - `requirements` bo'sh — `fit = overall_score` (yo'q bo'lsa 0).
 - Aks holda har talab uchun `min(1, ball / talab)` (kompetensiya bo'yicha ball
-  yo'q — 0, talab 0 — 1), `fit` = ularning o'rtachasi × 100 (1 xona).
+  yo'q — 0, talab 0 — 1), `fit` = ularning o'rtachasi × 100 (1 xona, o'nlik
+  arifmetikada half-up yaxlitlanadi — SQL'dagi hisob bilan bir xil, §33.3).
 - `gaps: [{competency, required, actual | null}]` — `actual < required`
   bo'lganlar (talab tartibida).
 - `meets` — `gaps` bo'sh va (`min_score` yo'q yoki `overall_score ≥ min_score`).
 - `sector_match` — vakansiya sohasida tugallangan Run bor.
 - Saralash (nomzodlar ro'yxatida): `meets`, keyin `fit`, `sector_match`,
-  `overall_score` — kamayish tartibida.
+  `overall_score` — kamayish tartibida (teng bo'lsa `user_id`; §33.3).
 
 ### 23.3 Maxfiylik va ariza
 
@@ -2914,3 +2917,87 @@ fon vazifasi, cron'lar). Modul 7: `lib/monitoring.ts`,
 `components/layout/ErrorBoundary.tsx`, `components/admin/ErrorGroups.tsx`,
 `AdminPage` tab, `lib/api.ts` (5xx `request_id`). Modul 8:
 `.env.example`, `docker-compose.yml` (`LOG_FORMAT=json`), `deploy/README.md`.
+
+---
+
+## 33. Saqlangan nomzod profillari (Modul 4 + 9 + 10)
+
+§10.1 profili avval har so'rovda hisoblanardi: nomzodlar ro'yxati, vakansiya
+mosligi, hisobot va CSV kompaniyaga ko'rinadigan **barcha** talabalarning
+**barcha** tugallangan Run'larini (yakuniy hisobot JSON'i bilan) xotiraga
+o'qib, Python'da filtrlab, ro'yxatni kesib sahifalardi. Endi profil Run
+yakunlanganda bir marta hisoblanib jadvalga yoziladi; filtr, moslik,
+saralash va sahifalash SQL'da. API shakli va natijalari o'zgarmaydi.
+
+### 33.1 Jadval (`talent_profiles`, migratsiya `0030`)
+
+`user_id (PK, FK users ON DELETE CASCADE), overall_score (float, null),
+runs_completed, sectors (varchar[], tartiblangan), competencies (JSONB
+{kompetensiya: ball}), last_completed_at, runs (JSONB — §10.4 `runs`
+elementlari + `run_id`, `scenario_id`; yangilari oldin), updated_at`.
+
+- Qiymatlar §10.1 qoidasi bilan aynan bir xil (eng yaxshi Run har ssenariyga,
+  o'rtachalar 1 xona). Profilga kiradigan Run'i yo'q foydalanuvchida qator
+  **yo'q** — "kamida bitta tugallangan Run" sharti shu.
+- Indekslar: `sectors` va `competencies` (GIN), `overall_score`,
+  `last_completed_at`.
+- Ko'rinish (§5), `is_active` va ism profilda saqlanmaydi — so'rov paytida
+  `candidate_visibility` va `users` bilan birlashtiriladi (talaba sozlamani
+  o'zgartirsa darhol ta'sir qiladi).
+- Migratsiya `0030` jadvalni mavjud Run'lardan to'ldiradi (§10.1 hisobining
+  migratsiya ichidagi nusxasi — ilova kodini import qilmaydi).
+
+### 33.2 Yozish (`talent/profile.py` `refresh_profiles`)
+
+`refresh_profiles(db, user_ids)` — Run'lardan qayta hisoblab upsert qiladi
+(Run'i qolmagan bo'lsa — o'chiradi). Commit chaqiruvchida: profil uni
+o'zgartirgan yozuv bilan **bitta tranzaksiyada**. Chaqiriladigan joylar
+(boshqa modullar uchun interfeys):
+
+| Hodisa | Joy | Kimlar |
+|---|---|---|
+| Yakuniy hisobot yozildi (`certificate=true`: tugallangan, kompaniya sinovi va jamoaviy emas) | Modul 9 `scenario/reports.py` `write_final_report` | Run egasi |
+| Sertifikat bekor qilindi | Modul 10 `api/credentials.py` `revoke_certificate` | sertifikat egasi |
+| Ssenariy nomi, kompaniyasi yoki sohasi o'zgardi (nashr, katalogli import) | Modul 9 `scenario/importer.py` (`refresh_scenario_profiles`) | ssenariyni tugatganlar |
+
+- **Parallellik.** Har foydalanuvchiga `pg_advisory_xact_lock` (id tartibida —
+  deadlock yo'q): ikki Run bir vaqtda yakunlansa, ikkinchisi birinchisining
+  commit'ini kutadi va ikkala Run'ni ham ko'radi.
+- **Ta'mirlash.** `tools/rebuild_talent_profiles.py` — hamma profilni
+  qayta hisoblaydi (200 tadan, alohida tranzaksiyalarda; sayt ishlab turganda
+  ham xavfsiz). Bazani qo'lda tuzatgandan yoki §10.1 qoidasi o'zgargan
+  relizdan keyin.
+
+### 33.3 O'qish (`talent/search.py`, `load_profiles`)
+
+- `load_profiles(db, user_ids, runs=True|False)` — saqlangan profillar
+  (`runs=False` — Run ro'yxatisiz, kartalar uchun). Talaba sahifalari,
+  universitet portali (§12), portfolio va CV (§13, §28), suhbat mashqi (§24)
+  shundan o'qiydi.
+- **Nomzodlar ro'yxati** (`GET /talents`, §10.4): ko'rinadigan va faol
+  nomzodlar SQL'da filtrlanadi (`sectors @>`, `competencies ?`,
+  `coalesce(ball, -1) ≥ min_score`), saralanadi (`score`: ball, keyin
+  `last_completed_at`; `recent`: `last_completed_at`; teng bo'lsa `user_id` —
+  sahifalar orasida nomzod takrorlanmaydi), `LIMIT/OFFSET` va alohida
+  `count(*)` bilan `total`.
+- **Mos nomzodlar** (§23.3): §23.2 `fit` va `meets` SQL ifodasi (`numeric`,
+  `round(…, 1)` half-up) — `fit ≥ 50` filtri, tartib va `LIMIT 50` SQL'da;
+  javobdagi `fit`, `gaps`, `sector_match` topilgan ≤ 50 profil uchun
+  Python'dagi `vacancies.fit` bilan (ikkalasi bir xil natija beradi).
+  Vakansiyalar ro'yxatidagi `counts.matches` — barcha vakansiyalar uchun
+  bitta so'rov (`count(*) FILTER (WHERE meets)`).
+- **Hisobot va CSV** (§20): ko'rinadigan nomzodlar SQL'da ball bo'yicha
+  saralanib, Run ro'yxatisiz o'qiladi; `pool` ko'rsatkichlari shu yengil
+  qatorlardan.
+- Arizalar ro'yxati (§23.3) va talabaning vakansiya kartalari — faqat kerakli
+  foydalanuvchilar profili (`load_profiles`), moslik Python'da.
+
+### 33.4 Modul chegaralari
+
+Modul 4: `models/talent.py` (`TalentProfile`), `talent/profile.py`,
+`talent/search.py`, `talent/vacancies.py` (`fit` o'nlik arifmetikada),
+`api/talent_hunt.py`, `api/vacancies.py`, `alembic/` `0030`,
+`tools/rebuild_talent_profiles.py`. Modul 9: `scenario/reports.py`,
+`scenario/importer.py` (§33.2 chaqiruvlari). Modul 10: `api/credentials.py`
+(bekor qilish, portfolio/CV o'qishi). Modul 6 `api/university_portal.py`,
+Modul 14 `interview/flow.py` — `build_profiles` o'rniga `load_profiles`.

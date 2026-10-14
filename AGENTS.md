@@ -65,6 +65,8 @@ CI (`CONTRACT.md` §31, `.github/workflows/ci.yml`): har PR va `main` push'da py
 (`upgrade` → `check` → `downgrade base` → `upgrade`), frontend lint + build va Docker image'lari.
 Xatolarni kuzatish (`CONTRACT.md` §32, `/admin` → Xatolar): backend, worker va brauzer xatolari `error_groups`da
 guruhlanadi (`core/monitoring.py`), admin'ga email ogohlantirish; JSON loglar (`LOG_FORMAT`), `X-Request-ID`, 5xx'da xato kodi.
+Nomzod profillari (`CONTRACT.md` §33): §10.1 profili Run yakunlanganda `talent_profiles`ga yoziladi (`talent/profile.py`
+`refresh_profiles`); nomzodlar qidiruvi, vakansiya mosligi va CSV — SQL'da (`talent/search.py`); ta'mir: `tools/rebuild_talent_profiles.py`.
 ```
 backend/app/{core,models,api,ai}/   # §6 modul chegaralari CONTRACT.md'da
 sandbox/                            # kod runner'i (§19), faqat stdlib

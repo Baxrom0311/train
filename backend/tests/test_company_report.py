@@ -201,12 +201,10 @@ async def test_candidates_csv_has_no_hidden_or_email(client, world):
 
 
 def _profile(score, last):
-    p = Profile(user_id=None)
-    p.runs.append(RunSummary(
+    return Profile.from_runs(None, [RunSummary(
         run_id=None, scenario_id=None, scenario_title="t", company_name="c", sector="IT",
         completed_at=last, overall_score=score, competency_scores={}, strengths=[],
-    ))
-    return p
+    )])
 
 
 def test_score_bands_edges():

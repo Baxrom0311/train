@@ -25,7 +25,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.talent_hunt import CandidateCard, ReportDays, candidate_card, company_of, csv_response, visible_profiles
+from app.api.talent_hunt import CandidateCard, ReportDays, candidate_card, company_of, csv_response
 from app.core.deps import require_permission, require_verified_email
 from app.database import get_db
 from app.models.billing import Company
@@ -41,9 +41,9 @@ from app.notifications.assessments import assessment_assigned
 from app.scenario import notify as run_notify
 from app.scenario.engine import EngineError, advance_run, create_run
 from app.notifications.vacancies import application_received, application_rejected
-from app.talent import assessments, hiring, meetings
+from app.talent import assessments, hiring, meetings, search
 from app.talent import vacancies as matching
-from app.talent.profile import Profile, build_profiles
+from app.talent.profile import Profile, load_profile, load_profiles
 
 router = APIRouter(prefix="/api/v1/vacancies", tags=["Vacancies"])
 org_router = APIRouter(prefix="/api/v1/company/vacancies", tags=["Vacancies - Company"])
@@ -682,14 +682,13 @@ async def _with_counts(db: AsyncSession, company: Company, vacancies: list[Vacan
     if not vacancies:
         return []
     counts = await _application_counts(db, [v.id for v in vacancies])
-    _, profiles = await visible_profiles(db, company)
+    matches = await search.match_counts(db, company.id, vacancies)
     out = []
     for v in vacancies:
         total, new = counts.get(v.id, (0, 0))
-        matches = sum(1 for p in profiles if matching.fit(p, v).meets)
         out.append(CompanyVacancyOut(
             **VacancyOut.model_validate(v).model_dump(),
-            counts=VacancyCounts(applications=total, new=new, matches=matches),
+            counts=VacancyCounts(applications=total, new=new, matches=matches[v.id]),
         ))
     return out
 
@@ -833,21 +832,18 @@ async def set_vacancy_status(vacancy_id: uuid.UUID, body: VacancyStatusIn, staff
 
 @org_router.get("/{vacancy_id}/matches", response_model=list[MatchOut])
 async def get_matches(vacancy_id: uuid.UUID, staff: Staff, db: AsyncSession = Depends(get_db)):
-    """§23.3: faqat ko'rinadigan nomzodlar, fit ≥ 50, ko'pi bilan 50 ta."""
+    """§23.3: faqat ko'rinadigan nomzodlar, fit ≥ 50, ko'pi bilan 50 ta; tanlov va tartib SQL'da (§33.3)."""
     _, company = staff
     vacancy = await _own_vacancy(db, company, vacancy_id)
-    users, profiles = await visible_profiles(db, company)
+    found = await search.matches(db, company.id, vacancy)
     applied = set((await db.execute(
         select(VacancyApplication.user_id).where(
             VacancyApplication.vacancy_id == vacancy.id, VacancyApplication.status != ApplicationStatus.WITHDRAWN,
         )
     )).scalars())
-    scored = [(p, matching.fit(p, vacancy)) for p in profiles]
-    scored = [(p, f) for p, f in scored if f.fit >= matching.MATCH_MIN_FIT]
-    scored.sort(key=lambda pf: pf[1].sort_key(pf[0].overall_score), reverse=True)
     return [
-        MatchOut(**candidate_card(users[p.user_id], p).model_dump(), fit=_fit_out(f), applied=p.user_id in applied)
-        for p, f in scored[:matching.MAX_MATCHES]
+        MatchOut(**candidate_card(user, p).model_dump(), fit=_fit_out(matching.fit(p, vacancy)), applied=user.id in applied)
+        for user, p in found
     ]
 
 
@@ -865,7 +861,7 @@ async def get_applications(vacancy_id: uuid.UUID, staff: Staff, db: AsyncSession
             User.is_active.is_(True),
         )
     )).all()
-    profiles = await build_profiles(db, [user.id for _, user in rows]) if rows else {}
+    profiles = await load_profiles(db, [user.id for _, user in rows], runs=False) if rows else {}
     interviews = await meetings.history(db, [application.id for application, _ in rows])
     tests = await assessments.items(db, [application.id for application, _ in rows])
     order = {
@@ -1081,7 +1077,7 @@ async def list_vacancies(current_user: Candidate, db: AsyncSession = Depends(get
     if sector is not None:
         q = q.where(Vacancy.sector == sector)
     rows = (await db.execute(q)).all()
-    profile = (await build_profiles(db, [current_user.id])).get(current_user.id)
+    profile = await load_profile(db, current_user.id, runs=False)
     mine = await _my_applications(db, current_user.id)
     cards = [VacancyCard(**_vacancy_card(v, c, profile, mine.get(v.id))) for v, c in rows]
     cards.sort(key=lambda c: (c.my_fit.fit if c.my_fit else -1, c.published_at or c.created_at), reverse=True)
@@ -1091,7 +1087,7 @@ async def list_vacancies(current_user: Candidate, db: AsyncSession = Depends(get
 @router.get("/{vacancy_id}", response_model=VacancyDetail)
 async def get_vacancy(vacancy_id: uuid.UUID, current_user: Candidate, db: AsyncSession = Depends(get_db)):
     vacancy, company = await _student_vacancy(db, current_user, vacancy_id)
-    profile = (await build_profiles(db, [current_user.id])).get(current_user.id)
+    profile = await load_profile(db, current_user.id)
     application = (await _my_applications(db, current_user.id)).get(vacancy.id)
     # profil yo'q — hamma talab "yetishmaydi", mashq ro'yxati shundan
     gaps = matching.fit(profile or Profile(current_user.id), vacancy).gaps
@@ -1124,7 +1120,7 @@ async def apply(
     vacancy, _ = await _student_vacancy(db, current_user, vacancy_id, lock=True)
     if vacancy.status != VacancyStatus.OPEN:
         raise HTTPException(status_code=409, detail="Vacancy is closed")
-    if current_user.id not in await build_profiles(db, [current_user.id]):
+    if await load_profile(db, current_user.id, runs=False) is None:
         raise HTTPException(status_code=422, detail="Complete at least one scenario before applying")
 
     now = _now()

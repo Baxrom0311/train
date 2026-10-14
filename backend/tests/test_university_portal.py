@@ -14,6 +14,7 @@ from app.models.billing import Company, University
 from app.models.enums import RunStatus, ScenarioVersionStatus, Sector
 from app.models.scenario import Run, Scenario, ScenarioVersion
 from app.models.user import User
+from app.talent.profile import refresh_profiles
 
 pytestmark = pytest.mark.asyncio
 
@@ -70,6 +71,8 @@ async def _run(db, user, version, *, score=None, competencies=None, status=RunSt
             "summary": {"summary": "Yaxshi", "strengths": ["Aniq yozadi"], "improvements": []},
         } if done else None,
     ))
+    await db.commit()
+    await refresh_profiles(db, [user.id])   # write_final_report kabi (§33.2)
     await db.commit()
 
 
